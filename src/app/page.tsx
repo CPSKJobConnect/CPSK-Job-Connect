@@ -1,103 +1,122 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Building, GraduationCap } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="flex flex-col w-full">
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        {/* Header */}
+        <div>
+          {/* Hero Section */}
+            <div className="flex flex-row justify-center items-start w-full min-h-[500px] px-0 py-[90px] bg-gradient-to-b from-[#ffffff26] via-[#f2fdfa26] to-[#e6fcf526] rounded-[40px] shadow-[0px_4px_4px_#0000003f] bg-cover bg-center bg-no-repeat max-w-[1440px] mx-auto" style={{ backgroundImage: "url('/assets/images/Kasetsart_Uni_View.png')"}}>
+              <div className="flex flex-row justify-center items-center w-[94%]">
+                {/* Hero Text */}
+                <div className="flex flex-col gap-[24px] justify-start items-start flex-1 mb-[60px] ml-[24px]">
+                  <h1 className="text-[27px] sm:text-[40px] md:text-[54px] font-poppins font-bold leading-[40px] sm:leading-[60px] md:leading-[81px] text-left bg-gradient-to-b from-[#2ba07c] to-[#0f3a2d] bg-clip-text text-transparent w-[60%]">
+                    Start Your Journey with
+                  </h1>
+                  <h1 className="text-[27px] sm:text-[40px] md:text-[54px] font-poppins font-bold leading-[40px] sm:leading-[60px] md:leading-[81px] text-left bg-gradient-to-b from-[#2ba07c] to-[#0f3a2d] bg-clip-text text-transparent w-auto">
+                    CPSK Job Connect
+                  </h1>
+                </div>
+                {/* Hero Image */}
+                <div className="w-[44%]">
+                  <Image
+                    src="/assets/images/people_connect_illustration.png"
+                    alt="Online Connection Illustration"
+                    width={518}
+                    height={390}
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+            </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div className="text-center">
+          <p className="h2 text-gray-600 m-8">
+            Choose your role to join our platform
+          </p>
+        </div>
+
+        {/* Role Selection Cards */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* Company Card */}
+          <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-orange-100">
+            <CardContent className="p-8 text-center">
+              <div>
+                <Image
+                  src="/assets/images/company_home.svg"
+                  alt="Online Connection Illustration"
+                  width={100}                  height={100}
+                  className="w-full h-auto mb-6"                />
+              </div>
+              <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-orange-200 transition-colors">
+                <Building className="w-10 h-10 text-orange-600" />
+              </div>
+              <h2 className="h2 text-gray-900 mb-4">Company</h2>
+              <p className="body-1 text-gray-600 mb-6">
+                Connect with talented students and find the perfect candidates for your team
+              </p>
+              <div className="space-y-3">
+                <Link href="/login/company" className="block">
+                  <Button className="w-full button bg-orange-600 hover:bg-orange-700">
+                    Company Login
+                  </Button>
+                </Link>
+                <Link href="/register/company" className="block">
+                  <Button variant="outline" className="w-full border-orange-200 text-orange-700 hover:bg-orange-69 button">
+                    Create Company Account
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Student Card */}
+          <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-green-100">
+            <CardContent className="p-8 text-center">
+              <div>
+                <Image
+                  src="/assets/images/student_home.svg"
+                  alt="Online Connection Illustration"
+                  width={100}                  height={100}
+                  className="w-full h-auto mb-6"                />
+              </div>
+              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-200 transition-colors">
+                <GraduationCap className="w-10 h-10 text-green-600" />
+              </div>
+              <h2 className="h2 text-gray-900 mb-4">Student</h2>
+              <p className="text-gray-600 body-1 mb-6">
+                Find internships and job opportunities that match your skills and interests
+              </p>
+              <div className="space-y-3">
+                <Link href="/login/student" className="block">
+                  <Button className="button w-full bg-green-600 hover:bg-green-700">
+                    Student Login
+                  </Button>
+                </Link>
+                <Link href="/register/student" className="block">
+                  <Button variant="outline" className="button w-full border-green-200 text-green-700 hover:bg-green-50">
+                    Create Student Account
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Illustration
+        <div className="mt-12 text-center">
+          <div className="inline-flex items-center justify-center w-64 h-32 bg-white rounded-lg shadow-sm">
+            <div className="text-4xl">🔍</div>
+          </div>
+        </div> */}
+      </div>
     </div>
   );
 }
