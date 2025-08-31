@@ -87,7 +87,7 @@ export default function Home() {
                   width={100}                  height={100}
                   className="w-full h-auto mb-6"                />
               </div>
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-200 transition-colors">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-200 transition-colors">
                 <GraduationCap className="w-10 h-10 text-green-600" />
               </div>
               <h2 className="h2 text-gray-900 mb-4">Student</h2>
