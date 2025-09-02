@@ -19,20 +19,14 @@ import { IoIosArrowDown } from "react-icons/io";
 import { TbCurrencyBaht } from "react-icons/tb";
 import { LuTags } from "react-icons/lu";
 import { MdOutlineDateRange } from "react-icons/md";
+import { JobFilterInfo } from "@/types/filter";
 
 interface JobFilterBarProps {
-    filter: {
-        categories: string[];
-        locations: string[];
-        types: string[];
-        arrangements: string[];
-        salaryRanges: string[];
-    }
+    filter: JobFilterInfo | null;
     onSearch?: (filters: any) => void;
 }
 
 const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
-  const { categories, locations, types, arrangements, salaryRanges } = filter;
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [filters, setFilters] = useState({
     keyword: "",
@@ -83,7 +77,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                     <SelectContent>
                         <SelectGroup>
                         <SelectLabel>Job Category</SelectLabel>
-                        {categories.map((category, idx) => (
+                        {filter?.categories?.map((category, idx) => (
                             <SelectItem key={idx} value={category}>{category}</SelectItem>
                         ))}
                         </SelectGroup>
@@ -101,7 +95,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                     <SelectContent>
                         <SelectGroup>
                             <SelectLabel>Locations</SelectLabel>
-                            {locations.map((location, idx) => (
+                            {filter?.locations?.map((location, idx) => (
                                 <SelectItem key={idx} value={location}>{location}</SelectItem>
                             ))}
                         </SelectGroup>
@@ -131,7 +125,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                     <SelectContent>
                         <SelectGroup>
                             <SelectLabel>Min Salary</SelectLabel>
-                            {salaryRanges.map((salary, idx) => (
+                            {filter?.salaryRanges?.map((salary, idx) => (
                                 <SelectItem key={idx} value={salary}>{salary}</SelectItem>
                             ))}
                         </SelectGroup>
@@ -149,7 +143,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                     <SelectContent>
                         <SelectGroup>
                             <SelectLabel>Max Salary</SelectLabel>
-                            {salaryRanges.map((salary, idx) => (
+                            {filter?.salaryRanges?.map((salary, idx) => (
                                 <SelectItem key={idx} value={salary}>{salary}</SelectItem>
                             ))}
                         </SelectGroup>
@@ -167,7 +161,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                     <SelectContent>
                         <SelectGroup>
                             <SelectLabel>Types</SelectLabel>
-                            {types.map((type, idx) => (
+                            {filter?.types?.map((type, idx) => (
                                 <SelectItem key={idx} value={type}>{type}</SelectItem>
                             ))}
                         </SelectGroup>
@@ -185,7 +179,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                     <SelectContent>
                         <SelectGroup>
                             <SelectLabel>Arrangements</SelectLabel>
-                            {arrangements.map((arrangement, idx) => (
+                            {filter?.arrangements?.map((arrangement, idx) => (
                                 <SelectItem key={idx} value={arrangement}>{arrangement}</SelectItem>
                             ))}
                         </SelectGroup>
