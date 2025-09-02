@@ -7,26 +7,11 @@ import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineTimer, MdOutlinePeopleAlt } from "react-icons/md";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBinFill } from "react-icons/ri";
+import { JobInfo } from "@/types/job";
 
-interface JobInfoProps {
-  companyLogo: string;
-  companyBg: string;
-  jobName: string;
-  companyName: string;
-  location: string;
-  posted: string;
-  applied: number;
-  tags: string[];
-  description: {
-    aboutRole: string;
-    requirements: string[];
-    qualifications: string[];
-  };
-  type: string;
-}
 
 interface JobDescriptionProps {
-  job: JobInfoProps;
+  job: JobInfo;
   size: "sm" | "md";
   onApply: boolean;
   onEdit: boolean;

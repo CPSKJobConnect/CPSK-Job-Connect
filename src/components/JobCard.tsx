@@ -7,15 +7,10 @@ import { MdOutlinePeopleAlt } from "react-icons/md";
 import { FaRegStar } from "react-icons/fa";
 import { MdOutlineShare } from "react-icons/md";
 import { Button } from "./ui/button";
+import { JobInfo } from "@/types/job";
 
 interface JobCardProps {
-  companyLogo: string;
-  jobName: string;
-  companyName: string;
-  location: string;
-  posted: string;
-  applied: number;
-  tags: string[];
+  info: JobInfo;
   size?: "sm" | "md";
 }
 
@@ -33,15 +28,15 @@ const JobCard = (job: JobCardProps) => {
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
           <Image
-            src={job.companyLogo}
+            src={job.info.companyLogo}
             alt="companyLogo"
             width={60}
             height={60}
             className="h-auto bg-white translate-y-1 shadow-md rounded-md"
           />
           <div className="p-2">
-            <p className="font-bold text-md">{job.jobName}</p>
-            <p className="text-gray-600">{job.companyName}</p>
+            <p className="font-bold text-md">{job.info.jobName}</p>
+            <p className="text-gray-600">{job.info.companyName}</p>
           </div>
         </div>
         <div className="flex gap-3 p-2">
@@ -53,20 +48,20 @@ const JobCard = (job: JobCardProps) => {
       <div className="flex gap-4 py-2">
         <div className="flex gap-1">
           <div className="py-1"><IoLocationOutline /></div>
-          <span>{job.location}</span>
+          <span>{job.info.location}</span>
         </div>
         <div className="flex gap-1">
           <div className="py-1"><MdOutlineTimer /></div>
-          <span>{job.posted}</span>
+          <span>{job.info.posted}</span>
         </div>
         <div className="flex gap-1">
           <div className="py-1"><MdOutlinePeopleAlt /></div>
-          <span>{job.applied} applied</span>
+          <span>{job.info.applied} applied</span>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
-        {job.tags.map((tag, idx) => (
+        {job.info.tags.map((tag, idx) => (
           <span key={idx} className="bg-green-100 text-green-800 px-2 py-1 rounded-md text-sm">
             {tag}
           </span>
