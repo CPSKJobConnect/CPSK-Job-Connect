@@ -3,9 +3,12 @@ export interface JobInfo {
     companyBg: string;
     jobName: string;
     companyName: string;
+    category: string[];
     location: string;
     posted: string;
     applied: number;
+    minSalary: string;
+    maxSalary: string;
     tags: string[];
     description: {
       aboutRole: string;
@@ -13,5 +16,6 @@ export interface JobInfo {
       qualifications: string[];
     };
     type: string;
+    arrangement: string;
   }
   
