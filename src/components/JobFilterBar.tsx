@@ -28,7 +28,7 @@ interface JobFilterBarProps {
 
 const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [filters, setFilters] = useState({
+  const defaultFilters = {
     keyword: "",
     jobCategory: "",
     location: "",
@@ -37,23 +37,33 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
     minSalary: "",
     maxSalary: "",
     datePost: "",
-  });
+  };
+  const [filters, setFilters] = useState(defaultFilters);
 
   useEffect(() => {
-    console.log("Filters updated:", filters);
-    if (onSearch) {
-      onSearch(filters);
-    }
+    console.log(filters);
   }, [filters]);
-  
 
   const updateFilter = (field: string, value: string) => {
     setFilters((prev) => ({...prev, [field]: value}))
-  }
+  };
+
+  const handleClearAll = () => {
+    setFilters(defaultFilters);
+    if (onSearch) onSearch(defaultFilters);
+  };
 
   return (
     <div 
-    className="w-full h-auto border border-orange-20 bg-[#FFAE7B] rounded-xl p-3 shadow-md">
+  className="w-full h-auto rounded-2xl p-4 shadow-md border border-gray-100 bg-white">
+        <div className="flex flex-col justify-center items-center mb-4">
+            <p className="font-semibold text-2xl text-gray-800">
+                Find Your Dream Job
+            </p>
+            <p className="text-gray-600 text-sm mt-1 text-center">
+                Discover opportunities that match your skills and aspirations
+            </p>
+        </div>
         <div className="flex flex-col md:flex-row justify-between gap-3 items-stretch md:items-center">
             <div className="relative flex-[2]">
                 <IoMdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
@@ -62,7 +72,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                     placeholder="Search by job title, company or skills..."
                     value={filters.keyword}
                     onChange={(e) => updateFilter("keyword", e.target.value)}
-                    className="pl-10 pr-3 py-2 bg-white rounded-md border-none"
+                    className="pl-10 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm"
                 />
             </div>
 
@@ -71,7 +81,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                 <BiCategory className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"/>
                 <Select value={filters.jobCategory} 
                 onValueChange={(val) => updateFilter("jobCategory", val)}>
-                    <SelectTrigger className="pl-10 pr-3 py-2 bg-white rounded-md border-none w-full">
+                    <SelectTrigger className="pl-10 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
                         <SelectValue placeholder="Job Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -80,24 +90,6 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                         {filter?.categories?.map((category, idx) => (
                             <SelectItem key={idx} value={category}>{category}</SelectItem>
                         ))}
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-            </div>
-
-            <div className="relative flex-1">
-                <IoLocationOutline className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"/>
-                <Select value={filters.location} 
-                onValueChange={(val) => updateFilter("location", val)}>
-                    <SelectTrigger className="pl-10 pr-3 py-2 bg-white rounded-md border-none w-full">
-                        <SelectValue placeholder="Location" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectLabel>Locations</SelectLabel>
-                            {filter?.locations?.map((location, idx) => (
-                                <SelectItem key={idx} value={location}>{location}</SelectItem>
-                            ))}
                         </SelectGroup>
                     </SelectContent>
                 </Select>
@@ -116,10 +108,28 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
     {isOpen && (
         <div className="flex flex-col md:flex-row justify-between gap-3 items-stretch md:items-center p-2">
             <div className="relative flex-1">
+                <IoLocationOutline className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"/>
+                <Select value={filters.location} 
+                onValueChange={(val) => updateFilter("location", val)}>
+                    <SelectTrigger className="pl-10 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
+                        <SelectValue placeholder="Location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectLabel>Locations</SelectLabel>
+                            {filter?.locations?.map((location, idx) => (
+                                <SelectItem key={idx} value={location}>{location}</SelectItem>
+                            ))}
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="relative flex-1">
                 <TbCurrencyBaht className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <Select value={filters.minSalary} 
                 onValueChange={(val) => updateFilter("minSalary", val)}>
-                    <SelectTrigger className="pl-8 pr-3 py-2 bg-white rounded-md border-none w-full">
+                    <SelectTrigger className="pl-8 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
                         <SelectValue placeholder="Min Salary" />
                     </SelectTrigger>
                     <SelectContent>
@@ -137,7 +147,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                 <TbCurrencyBaht className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <Select value={filters.maxSalary} 
                 onValueChange={(val) => updateFilter("maxSalary", val)}>
-                    <SelectTrigger className="pl-8 pr-3 py-2 bg-white rounded-md border-none w-full">
+                    <SelectTrigger className="pl-8 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
                         <SelectValue placeholder="Max Salary" />
                     </SelectTrigger>
                     <SelectContent>
@@ -155,7 +165,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                 <LuTags className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <Select value={filters.jobType} 
                 onValueChange={(val) => updateFilter("jobType", val)}>
-                    <SelectTrigger className="pl-9 pr-3 py-2 bg-white rounded-md border-none w-full">
+                    <SelectTrigger className="pl-9 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
                         <SelectValue placeholder="Job Type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -173,7 +183,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                 <LuTags className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <Select value={filters.jobArrangement} 
                 onValueChange={(val) => updateFilter("jobArrangement", val)}>
-                    <SelectTrigger className="pl-9 pr-3 py-2 bg-white rounded-md border-none w-full">
+                    <SelectTrigger className="pl-9 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
                         <SelectValue placeholder="Job Arrangement" />
                     </SelectTrigger>
                     <SelectContent>
@@ -191,16 +201,17 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                 <MdOutlineDateRange className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <Select value={filters.datePost} 
                 onValueChange={(val) => updateFilter("datePost", val)}>
-                    <SelectTrigger className="pl-9 pr-3 py-2 bg-white rounded-md border-none w-full">
+                    <SelectTrigger className="pl-9 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
                         <SelectValue placeholder="Date Posted" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectGroup>
                         <SelectLabel>Date Posted</SelectLabel>
-                        <SelectItem value="Today">Today</SelectItem>
-                        <SelectItem value="Part Time">This Week</SelectItem>
-                        <SelectItem value="Internship">This Month</SelectItem>
-                        <SelectItem value="Internship">Last 3 Months</SelectItem>
+                        <SelectItem value="today">Today</SelectItem>
+                        <SelectItem value="3days">Last 3 Days</SelectItem>
+                        <SelectItem value="5days">Last 5 Days</SelectItem>
+                        <SelectItem value="week">This Week</SelectItem>
+                        <SelectItem value="2weeks">Last 2 Weeks</SelectItem>
                         </SelectGroup>
                     </SelectContent>
                 </Select>
@@ -208,6 +219,22 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
         </div>
         ) 
     }
+    <div className="flex flex-row w-full gap-5 px-28 mt-5">
+        <button
+            onClick={() => {if (onSearch) onSearch(filters);}}
+            className="w-full p-2 rounded-xl flex items-center justify-center gap-1 bg-gradient-to-r from-[#FFB689] to-[#FFA66E]"
+            >
+            <IoMdSearch className="w-4 h-4 text-white" />
+            <p className="text-white text-sm font-bold">Search Jobs</p>
+        </button>
+
+        <button
+            onClick={handleClearAll}
+            className="w-full p-2 rounded-xl flex items-center justify-center gap-1 border border-[#FD873E]"
+            >
+            <p className="text-[#FD873E] text-sm font-bold">Clear All</p>
+        </button>
+    </div>
     </div>
   );
 };
