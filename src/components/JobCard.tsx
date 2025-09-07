@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import { formatPostedDate } from "@/lib/dateHelper";
 import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineTimer } from "react-icons/md";
 import { MdOutlinePeopleAlt } from "react-icons/md";
@@ -13,6 +14,15 @@ interface JobCardProps {
   info: JobInfo;
   size?: "sm" | "md";
 }
+
+const typeColors: Record<string, string> = {
+  fulltime: "bg-pink-200 text-gray-800",
+  parttime: "bg-blue-200 text-gray-800",
+  internship: "bg-green-100 text-gray-800",
+  contract: "bg-yellow-200 text-gray-800",
+  hybrid: "bg-purple-200 text-gray-800"
+};
+
 
 const JobCard = (job: JobCardProps) => {
   const baseStyle =
@@ -52,7 +62,7 @@ const JobCard = (job: JobCardProps) => {
         </div>
         <div className="flex gap-1">
           <div className="py-1"><MdOutlineTimer /></div>
-          <span>{job.info.posted}</span>
+          <span>{formatPostedDate(job.info.posted)}</span>
         </div>
         <div className="flex gap-1">
           <div className="py-1"><MdOutlinePeopleAlt /></div>
@@ -61,8 +71,15 @@ const JobCard = (job: JobCardProps) => {
       </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
+      <span
+        className={`px-2 py-1 rounded-md text-sm shadow-md ${
+          typeColors[job.info.type] || "bg-white text-gray-800"
+        }`}
+      >
+        {job.info.type}
+      </span>
         {job.info.tags.map((tag, idx) => (
-          <span key={idx} className="bg-green-100 text-green-800 px-2 py-1 rounded-md text-sm">
+          <span key={idx} className="bg-white text-grey-800 shadow-md px-2 py-1 rounded-md text-sm">
             {tag}
           </span>
         ))}
