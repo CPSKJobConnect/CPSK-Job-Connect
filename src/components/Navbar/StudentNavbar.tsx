@@ -22,7 +22,7 @@ export default function StudentNavbar() {
 
         <div className="flex items-center gap-4 px-4">
             <Link href="/jobs" 
-            className={`px-3 py-2 rounded-md transition-colors ${
+            className={`px-3 py-2 rounded-md transition-colors font-semibold ${
                 pathname === "/jobs"
                   ? "bg-white/20 text-white"
                   : "text-gray-200 hover:bg-white/10 hover:text-white"
@@ -30,7 +30,7 @@ export default function StudentNavbar() {
             Find Jobs
             </Link>
             <Link href="/my-application" 
-            className={`px-3 py-2 rounded-md transition-colors ${
+            className={`px-3 py-2 rounded-md transition-colors font-semibold ${
                 pathname === "/my-application"
                   ? "bg-white/20 text-white"
                   : "text-gray-200 hover:bg-white/10 hover:text-white"
