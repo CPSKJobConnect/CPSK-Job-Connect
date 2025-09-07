@@ -222,7 +222,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
     <div className="flex flex-row w-full gap-5 px-28 mt-5">
         <button
             onClick={() => {if (onSearch) onSearch(filters);}}
-            className="w-full p-2 rounded-xl flex items-center justify-center gap-1 bg-gradient-to-r from-[#FFB689] to-[#FFA66E]"
+            className="w-full p-2 rounded-xl flex items-center justify-center gap-1 bg-gradient-to-r from-[#FFB689] to-[#FFA66E] hover:brightness-110 transition"
             >
             <IoMdSearch className="w-4 h-4 text-white" />
             <p className="text-white text-sm font-bold">Search Jobs</p>
@@ -230,7 +230,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
 
         <button
             onClick={handleClearAll}
-            className="w-full p-2 rounded-xl flex items-center justify-center gap-1 border border-[#FD873E]"
+            className="w-full p-2 rounded-xl flex items-center justify-center gap-1 border border-[#FD873E] hover:bg-[#FFCFB2]/40 transition"
             >
             <p className="text-[#FD873E] text-sm font-bold">Clear All</p>
         </button>

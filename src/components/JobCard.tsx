@@ -1,14 +1,23 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import { JobInfo } from "@/types/job";
 import { formatPostedDate } from "@/lib/dateHelper";
 import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineTimer } from "react-icons/md";
 import { MdOutlinePeopleAlt } from "react-icons/md";
 import { FaRegStar } from "react-icons/fa";
 import { MdOutlineShare } from "react-icons/md";
+import { MdOutlineLink } from "react-icons/md";
+import { MdOutlineReportProblem } from "react-icons/md";
 import { Button } from "./ui/button";
-import { JobInfo } from "@/types/job";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface JobCardProps {
   info: JobInfo;
@@ -51,7 +60,22 @@ const JobCard = (job: JobCardProps) => {
         </div>
         <div className="flex gap-3 p-2">
           <FaRegStar className="w-5 h-5" />
-          <MdOutlineShare className="w-5 h-5" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <MdOutlineShare className="w-5 h-5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="start">
+                <DropdownMenuItem>
+                  <MdOutlineLink/>
+                  <p>Copy Link</p>
+                </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <MdOutlineReportProblem className="text-red-600"/>
+                <p className="text-red-600">Report Post</p>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
