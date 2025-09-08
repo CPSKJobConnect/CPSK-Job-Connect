@@ -1,4 +1,3 @@
-import { userAgent } from "next/server";
 import { z } from "zod";
 
 export const loginSchema = z.object({

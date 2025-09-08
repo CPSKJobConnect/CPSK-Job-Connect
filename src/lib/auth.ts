@@ -1,113 +1,133 @@
-// lib/auth.ts
-import NextAuth from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { PrismaClient } from "@prisma/client"
-import bcrypt from "bcryptjs"
-import { loginSchema } from "./validations"
-import { Role } from "@/types/auth"
+import { prisma } from "@/lib/db";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google"
+import bycrypt from "bcryptjs";
+import CredentialsProvider from "next-auth/providers/credentials";
 
-const prisma = new PrismaClient()
-
-export const { auth, handlers, signIn, signOut } = NextAuth({
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  providers: [
+  session: {
+    strategy: "jwt"
+  },
+  providers : [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!
+    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-        role: { label: "Role", type: "text" }
+        email: {
+          label: "Email",
+          type: "email",
+          placeholder: "Enter your email"
+        },
+        password: {
+          label: "Password",
+          type: "password",
+          placeholder: "Enter your password"
+        }
       },
       async authorize(credentials) {
-        try {
-          // Validate credentials
-          const { email, password } = loginSchema.parse(credentials)
-          const role = credentials?.role as Role
+        if (!credentials?.email || !credentials.password) {
+          throw new Error("Invalid credentials");
+          return null;
+        }
+        const user = await prisma.account.findUnique({
+          where: {
+            email: credentials.email,
+          },
+          include: {
+            accountRole: true,
+            student: true,
+            company: true,
+          },
+    
+        });
+        if (!user || !user.password) {
+          return null;
+        }
 
-          // Find user account
-          const account = await prisma.account.findUnique({
-            where: { email },
-            include: {
-              accountRole: true,
-              student: true,
-              company: true,
-            },
-          })
+        const isPasswordValid = await bycrypt.compare(credentials.password, user.password);
+        if (!isPasswordValid) {
+          return null;
+        }
 
-          if (!account) return null
+        return {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          role: user.accountRole?.name,
+          image: user.image, // maybe
+        }
+      },
+    }),
+  ],
+  pages: {
+    signIn: "/login",
+    newUser: "/register",
+  },
+  callbacks: {
+    async jwt({token, user, account}) {
+      if (user) {
+        token.role = user.role;
+        token.username = user.username;
+      }
 
-          // Verify password
-          const isValid = await bcrypt.compare(password, account.password)
-          if (!isValid) return null
-
-          // Check role match
-          const userRole = account.accountRole?.name.toLowerCase()
-          if (userRole !== role) return null
-
-          // Return user object
-          return {
-            id: account.id.toString(),
-            email: account.email,
-            name: account.username,
-            role: userRole as Role,
-            profileComplete: !!(account.student || account.company),
+      // for OAuth users
+      if (account?.provider === "google") {
+        const existingUser = await prisma.account.findUnique({
+          where: {
+            email: user.email!
+          },
+          include: {
+            accountRole: true,
           }
-        } catch (error) {
-          return null
+        })
+        if (existingUser) {
+          token.role = existingUser.accountRole?.name
+          token.username = existingUser.username
         }
       }
-    })
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role
-        token.profileComplete = user.profileComplete
-      }
-      return token
+      return token;
     },
-    async session({ session, token }) {
-      if (session.user) {
+    async session({session, token}) {
+      if (token) {
         session.user.id = token.sub!
-        session.user.role = token.role
-        session.user.profileComplete = token.profileComplete
+        session.user.role = token.role as string
+        session.user.username = token.username as string
       }
-      return session
-    }
-  },
-  pages: {
-    signIn: '/', // Redirect to home for role selection
-  },
-  session: {
-    strategy: "jwt",
-  },
-})
-
-// Utility functions
-export async function requireAuth() {
-  const session = await auth()
-  if (!session?.user) {
-    throw new Error('Authentication required')
-  }
-  return session
-}
-
-export async function requireRole(allowedRoles: Role[]) {
-  const session = await requireAuth()
-  if (!allowedRoles.includes(session.user.role)) {
-    throw new Error('Insufficient permissions')
-  }
-  return session
-}
-
-export async function getUserWithProfile(userId: number) {
-  return await prisma.account.findUnique({
-    where: { id: userId },
-    include: {
-      accountRole: true,
-      student: true,
-      company: true,
+      return session;
     },
-  })
+    async signIn({user, account, profile}) {
+      if (account?.provider === "google") {
+        try {
+          const existingUser = await prisma.account.findUnique({
+            where: {
+              email: user.email!
+            },
+          })
+          if (!existingUser) {
+            // Create new user but without role (needs to complete registration)
+            await prisma.account.create({
+              data: {
+                email: user.email!,
+                username: profile?.name || user.name,
+                image: user.image!,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                emailVerified: new Date(),
+              }
+            })
+          }
+          return true
+        } catch (error) {
+          console.log("Error creating user:", error);
+          return false;
+        }
+      }
+      return true;
+    }
+  }
 }
