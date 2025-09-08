@@ -1,3 +1,5 @@
+import { FileMeta } from "./file";
+
 export type Role = "student" | "company" | "admin";
 
 export interface BaseUser {
@@ -16,6 +18,11 @@ export interface BaseUser {
     faculty: string;
     year: number;
     phone: string;
+    documents: {
+      resume: FileMeta[];
+      cv: FileMeta[];
+      portfolio: FileMeta[];
+    }
   }
   
   // Company
