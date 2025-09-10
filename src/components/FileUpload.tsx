@@ -20,21 +20,22 @@ const FileUpload = (props: FileUploadProps) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       props.onFileSelect(e.target.files[0]);
+      e.target.value = "";
     }
   };
 
   return (
     <div
       onClick={handleClick}
-      className="flex flex-col gap-2 shadow-md justify-center items-center w-full rounded-md p-6 border border-gray-200 cursor-pointer hover:bg-gray-50 transition"
+      className="flex flex-col gap-2 shadow-md justify-center items-center w-full rounded-md p-6 border border-gray-100/50 cursor-pointer hover:bg-gray-50 transition"
     >
-      <PiUploadSimpleBold className="w-7 h-7 text-[#098760]" />
+      <PiUploadSimpleBold className="w-7 h-7 text-[#1FD29A]" />
       <p className="font-semibold text-sm">{props.title}</p>
       <p className="text-sm text-gray-600">
         {props.acceptedTypes.map((type) => type.toUpperCase()).join(", ")} files
       </p>
 
-      <div className="flex flex-row gap-1 bg-[#1FD29A] rounded-md shadow-sm px-3 py-1 mt-2">
+      <div className="flex flex-row gap-1 bg-[#10B981] rounded-md shadow-sm px-3 py-1 mt-2 text-white hover:bg-[#059669] transition">
         <IoDocumentTextOutline className="w-4 h-4" />
         <p className="text-sm">Choose file</p>
       </div>
