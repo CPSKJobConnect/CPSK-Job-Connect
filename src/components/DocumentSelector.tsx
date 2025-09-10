@@ -1,7 +1,5 @@
 "use client";
 import React, { useEffect } from "react";
-import { LuFolderClosed } from "react-icons/lu";
-import { IoDocumentTextOutline } from "react-icons/io5";
 import {
   Dialog,
   DialogContent,
@@ -34,14 +32,10 @@ const DocumentSelector = (props: DocumentSelectorProps) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="flex flex-col gap-2 shadow-md justify-center items-center w-full rounded-md p-4 border border-gray-100 cursor-pointer hover:bg-gray-50">
-          <LuFolderClosed className="w-6 h-6 text-[#098760]" />
-          <p className="font-semibold text-sm">{props.title}</p>
-          <p className="text-sm text-gray-600">{props.description}</p>
-          <div className="flex flex-row gap-1 bg-[#1FD29A] rounded-md shadow-sm px-3 py-1 mt-2">
-            <IoDocumentTextOutline className="w-4 h-4" />
-            <p className="text-sm">Choose file</p>
-          </div>
+        <div 
+        className="flex shadow-md justify-center items-center w-full rounded-sm px-4 py-1 cursor-pointer bg-[#ABE9D6] hover:bg-[#2DA68C] hover:text-white text-gray-700 text-sm font-semibold"
+        >
+          <p>{props.title}</p>
         </div>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
