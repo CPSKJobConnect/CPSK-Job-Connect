@@ -38,12 +38,19 @@ export const authOptions: NextAuthOptions = {
           where: {
             email: credentials.email,
           },
-          include: {
-            accountRole: true,
-            student: true,
-            company: true,
-          },
-    
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            password: true,
+            role: true,
+            image: true,
+            accountRole: {
+              select: {
+                name: true
+              }
+            }
+          }
         });
         if (!user || !user.password) {
           return null;
@@ -55,11 +62,11 @@ export const authOptions: NextAuthOptions = {
         }
 
         return {
-          id: user.id,
+          id: user.id.toString(),
           email: user.email,
-          username: user.username,
+          name: user.username,
           role: user.accountRole?.name,
-          image: user.image, // maybe
+          image: user.image,
         }
       },
     }),
@@ -81,13 +88,18 @@ export const authOptions: NextAuthOptions = {
           where: {
             email: user.email!
           },
-          include: {
-            accountRole: true,
+          select: {
+            username: true,
+            accountRole: {
+              select: {
+                name: true
+              }
+            }
           }
         })
         if (existingUser) {
           token.role = existingUser.accountRole?.name
-          token.username = existingUser.username
+          token.username = existingUser.username || undefined
         }
       }
       return token;
@@ -107,6 +119,9 @@ export const authOptions: NextAuthOptions = {
             where: {
               email: user.email!
             },
+            select: {
+              id: true
+            }
           })
           if (!existingUser) {
             // Create new user but without role (needs to complete registration)

@@ -33,7 +33,7 @@ export interface AuthFormData {
   studentId?: string
   name?: string
   faculty?: string
-  year?: number
+  year?: number | "Alumni"
   phone?: string
   transcript?: FileList
   // Company fields
