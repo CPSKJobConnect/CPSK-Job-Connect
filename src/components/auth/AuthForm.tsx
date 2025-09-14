@@ -9,16 +9,17 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { companyRegisterSchema, loginSchema, studentRegisterSchema } from "@/lib/validations"
-import { AuthFormData, UserRole } from "@/types/auth"
+import { AuthFormData, Role } from "@/types/auth"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Building, GraduationCap, Upload } from "lucide-react"
+import { Upload } from "lucide-react"
 import { signIn, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
+import { ROLE_CONFIGS, getFieldsForRole } from "@/lib/role-config"
 
 interface AuthFormProps {
-  role: UserRole
+  role: Role
   mode: "login" | "register"
 }
 
@@ -51,32 +52,16 @@ export function AuthForm({ role, mode }: AuthFormProps) {
     if (awaitingSession && session?.user?.role) {
       setAwaitingSession(false)
       setIsLoading(false)
-      router.push(`/${session.user.role}/dashboard`)
+      const userRoleConfig = ROLE_CONFIGS[session.user.role as Role]
+      router.push(userRoleConfig?.redirectPath || `/${session.user.role}/dashboard`)
     }
   }, [session, awaitingSession, router])
 
-  const config = useMemo(() => {
-    return role === "student" 
-      ? {
-          color: "green",
-          icon: GraduationCap,
-          title: "Student",
-          bgColor: "bg-green-50",
-          borderColor: "border-green-200",
-          buttonColor: "bg-green-600 hover:bg-green-700",
-          inputColor: "bg-gray-50"
-        }
-      : {
-          color: "orange", 
-          icon: Building,
-          title: "Company",
-          bgColor: "bg-orange-50",
-          borderColor: "border-orange-200", 
-          buttonColor: "bg-orange-600 hover:bg-orange-700",
-          inputColor: "bg-gray-50"
-        }
-  }, [role])
-  const Icon = config.icon
+  const roleConfig = useMemo(() => ROLE_CONFIGS[role], [role])
+  const Icon = roleConfig.icon
+
+  // Dynamic form fields based on role and mode
+  const formFields = useMemo(() => getFieldsForRole(role, mode), [role, mode])
 
   const onSubmit = async (data: AuthFormData) => {
     console.log("Form submitted with data:", data)
@@ -172,7 +157,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
     setIsLoading(true)
     try {
       await signIn("google", { 
-        callbackUrl: `/${role}/dashboard`,
+        callbackUrl: roleConfig.redirectPath,
         redirect: true 
       })
     } catch (error) {
@@ -190,13 +175,13 @@ export function AuthForm({ role, mode }: AuthFormProps) {
   }, [])
 
   return (
-    <Card className={`w-full max-w-md ${config.bgColor} ${config.borderColor}`}>
+    <Card className={`w-full max-w-md bg-white ${roleConfig.secondaryColor.split(' ')[0]}`}>
       <CardHeader className="text-center">
-        <div className={`w-16 h-16 bg-${config.color}-100 rounded-full flex items-center justify-center mx-auto mb-4`}>
-          <Icon className={`w-8 h-8 text-${config.color}-600`} />
+        <div className={`w-16 h-16 ${roleConfig.secondaryColor.split(' ').slice(1, 3).join(' ').replace('text-', 'bg-').replace('-700', '-100')} rounded-full flex items-center justify-center mx-auto mb-4`}>
+          <Icon className={`w-8 h-8 ${roleConfig.secondaryColor.split(' ').slice(1, 3).join(' ')}`} />
         </div>
         <CardTitle className="text-2xl">
-          {mode === "login" ? "Login" : "Create Account"} as {config.title}
+          {mode === "login" ? "Login" : "Create Account"} as {roleConfig.title}
         </CardTitle>
       </CardHeader>
       
@@ -216,7 +201,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
               id="email"
               type="email"
               {...register("email")}
-              className={`mt-1 ${config.inputColor}`}
+              className="mt-1 bg-gray-50"
             />
             {errors.email && (
               <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
@@ -229,7 +214,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
               id="password"
               type="password"
               {...register("password")}
-              className={`mt-1 ${config.inputColor}`}
+              className="mt-1 bg-gray-50"
             />
             {errors.password && (
               <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
@@ -244,7 +229,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                   id="confirmPassword"
                   type="password"
                   {...register("confirmPassword")}
-                  className={`mt-1 ${config.inputColor}`}
+                  className="mt-1 bg-gray-50"
                 />
                 {errors.confirmPassword && (
                   <p className="text-sm text-red-600 mt-1">{errors.confirmPassword.message}</p>
@@ -258,7 +243,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     <Input
                       id="studentId"
                       {...register("studentId")}
-                      className={`mt-1 ${config.inputColor}`}
+                      className="mt-1 bg-gray-50"
                     />
                     {errors.studentId && (
                       <p className="text-sm text-red-600 mt-1">{errors.studentId.message}</p>
@@ -270,7 +255,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     <Input
                       id="name"
                       {...register("name")}
-                      className={`mt-1 ${config.inputColor}`}
+                      className="mt-1 bg-gray-50"
                     />
                     {errors.name && (
                       <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
@@ -280,7 +265,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                   <div>
                     <Label htmlFor="faculty">Faculty</Label>
                     <Select onValueChange={(value) => setValue("faculty", value)}>
-                      <SelectTrigger className={`mt-1 ${config.inputColor}`}>
+                      <SelectTrigger className="mt-1 bg-gray-50">
                         <SelectValue placeholder="Select faculty" />
                       </SelectTrigger>
                       <SelectContent>
@@ -300,7 +285,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                   <div>
                     <Label htmlFor="year">Year</Label>
                     <Select onValueChange={(value) => setValue("year", value === "Alumni" ? value : parseInt(value))}>
-                      <SelectTrigger className={`mt-1 ${config.inputColor}`}>
+                      <SelectTrigger className="mt-1 bg-gray-50">
                         <SelectValue placeholder="Select year" />
                       </SelectTrigger>
                       <SelectContent>
@@ -324,7 +309,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     <Input
                       id="phone"
                       {...register("phone")}
-                      className={`mt-1 ${config.inputColor}`}
+                      className="mt-1 bg-gray-50"
                     />
                     {errors.phone && (
                       <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
@@ -333,7 +318,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
 
                   <div>
                     <Label htmlFor="transcript">Transcript (Optional)</Label>
-                    <div className={`mt-1 flex items-center space-x-2 ${config.inputColor}`}>
+                    <div className="mt-1 flex items-center space-x-2 bg-gray-50">
                       <Input
                         id="transcript"
                         type="file"
@@ -358,7 +343,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     <Input
                       id="companyName"
                       {...register("companyName")}
-                      className={`mt-1 ${config.inputColor}`}
+                      className="mt-1 bg-gray-50"
                     />
                     {errors.companyName && (
                       <p className="text-sm text-red-600 mt-1">{errors.companyName.message}</p>
@@ -370,7 +355,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     <Textarea
                       id="address"
                       {...register("address")}
-                      className={`mt-1 ${config.inputColor}`}
+                      className="mt-1 bg-gray-50"
                       rows={3}
                     />
                     {errors.address && (
@@ -384,7 +369,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                       id="website"
                       type="url"
                       {...register("website")}
-                      className={`mt-1 ${config.inputColor}`}
+                      className="mt-1 bg-gray-50"
                       placeholder="https://example.com"
                     />
                     {errors.website && (
@@ -397,7 +382,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     <Textarea
                       id="description"
                       {...register("description")}
-                      className={`mt-1 ${config.inputColor}`}
+                      className="mt-1 bg-gray-50"
                       rows={4}
                       placeholder="Describe your company..."
                     />
@@ -411,7 +396,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     <Input
                       id="phone"
                       {...register("phone")}
-                      className={`mt-1 ${config.inputColor}`}
+                      className="mt-1 bg-gray-50"
                     />
                     {errors.phone && (
                       <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
@@ -424,7 +409,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                       id="year"
                       type="number"
                       {...register("year", { valueAsNumber: true })}
-                      className={`mt-1 ${config.inputColor}`}
+                      className="mt-1 bg-gray-50"
                       min="1900"
                       max={new Date().getFullYear()}
                     />
@@ -439,7 +424,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
 
           <Button
             type="submit"
-            className={`w-full ${config.buttonColor}`}
+            className={`w-full ${roleConfig.primaryColor}`}
             disabled={isLoading}
           >
             {isLoading 
@@ -456,7 +441,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className={`${config.bgColor} px-2 text-muted-foreground`}>Or continue with</span>
+              <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
             </div>
           </div>
 
@@ -493,9 +478,9 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           {mode === "login" ? (
             <p className="text-sm">
               Don&apos;t have an account?{" "}
-              <a 
-                href={`/register/${role}`} 
-                className={`text-${config.color}-600 hover:text-${config.color}-500 font-medium`}
+              <a
+                href={`/register/${role}`}
+                className={`${roleConfig.secondaryColor.split(' ').slice(1, 3).join(' ')} hover:opacity-80 font-medium`}
               >
                 Sign up
               </a>
@@ -503,9 +488,9 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           ) : (
             <p className="text-sm">
               Already have an account?{" "}
-              <a 
-                href={`/login/${role}`} 
-                className={`text-${config.color}-600 hover:text-${config.color}-500 font-medium`}
+              <a
+                href={`/login/${role}`}
+                className={`${roleConfig.secondaryColor.split(' ').slice(1, 3).join(' ')} hover:opacity-80 font-medium`}
               >
                 Sign in
               </a>

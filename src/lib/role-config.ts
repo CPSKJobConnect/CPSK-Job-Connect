@@ -10,7 +10,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     primaryColor: "bg-green-600 hover:bg-green-700",
     secondaryColor: "border-green-200 text-green-700 hover:bg-green-50",
     icon: GraduationCap,
-    redirectPath: "/dashboard",
+    redirectPath: "student/dashboard",
   },
   company: {
     role: "company",

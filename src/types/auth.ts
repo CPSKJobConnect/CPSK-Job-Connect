@@ -1,4 +1,5 @@
 import { DefaultSession } from "next-auth";
+import React from "react";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -24,6 +25,26 @@ declare module "next-auth/jwt" {
 }
 
 export type UserRole = "student" | "company";
+export type Role = "student" | "company" | "admin";
+
+export interface FormField {
+  name: string;
+  label: string;
+  type: "text" | "email" | "password" | "number" | "file" | "textarea";
+  placeholder?: string;
+  required: boolean;
+  accept?: string;
+}
+
+export interface RoleConfig {
+  role: Role;
+  title: string;
+  description: string;
+  primaryColor: string;
+  secondaryColor: string;
+  icon: React.ComponentType<{ className?: string; size?: number }>;
+  redirectPath: string;
+}
 
 export interface AuthFormData {
   email: string
