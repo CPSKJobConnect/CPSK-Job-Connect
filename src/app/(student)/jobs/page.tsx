@@ -1,11 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import JobCard from "@/components/JobCard";
-import JobFilterBar from "@/components/JobFilterBar";
+import JobFilterBar from "@/app/(student)/jobs/JobFilterBar";
 import JobDescriptionCard from "@/components/JobDescriptionCard";
 import { filterJobs } from "@/lib/jobFilter";
 import { JobInfo } from "@/types/job";
 import { JobFilterInfo } from "@/types/filter";
+import { fakeJobData } from "public/data/fakeJobDescription";
+import { fakeFilterInfo } from "public/data/fakeFilterInfo";
 import { FaRegFileAlt } from "react-icons/fa";
 import { MdTipsAndUpdates } from "react-icons/md";
 import { IoMdSearch } from "react-icons/io";
@@ -20,7 +22,8 @@ export default function Page() {
 
   useEffect(() => {
     // fetch job data
-
+    setFilterInfo(fakeFilterInfo);
+    setJobData(fakeJobData);
   }, []);
 
   useEffect(() => {
