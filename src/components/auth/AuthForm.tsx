@@ -356,7 +356,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     <Input
                       id="companyName"
                       {...register("companyName")}
-                      className="mt-1"
+                      className={`mt-1 ${config.inputColor}`}
                     />
                     {errors.companyName && (
                       <p className="text-sm text-red-600 mt-1">{errors.companyName.message}</p>
@@ -368,7 +368,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     <Textarea
                       id="address"
                       {...register("address")}
-                      className="mt-1"
+                      className={`mt-1 ${config.inputColor}`}
                       rows={3}
                     />
                     {errors.address && (
@@ -382,7 +382,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                       id="website"
                       type="url"
                       {...register("website")}
-                      className="mt-1"
+                      className={`mt-1 ${config.inputColor}`}
                       placeholder="https://example.com"
                     />
                     {errors.website && (
@@ -395,7 +395,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     <Textarea
                       id="description"
                       {...register("description")}
-                      className="mt-1"
+                      className={`mt-1 ${config.inputColor}`}
                       rows={4}
                       placeholder="Describe your company..."
                     />
@@ -409,7 +409,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     <Input
                       id="phone"
                       {...register("phone")}
-                      className="mt-1"
+                      className={`mt-1 ${config.inputColor}`}
                     />
                     {errors.phone && (
                       <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
@@ -422,7 +422,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                       id="year"
                       type="number"
                       {...register("year", { valueAsNumber: true })}
-                      className="mt-1"
+                      className={`mt-1 ${config.inputColor}`}
                       min="1900"
                       max={new Date().getFullYear()}
                     />
@@ -454,7 +454,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              <span className={`${config.bgColor} px-2 text-muted-foreground`}>Or continue with</span>
             </div>
           </div>
 
