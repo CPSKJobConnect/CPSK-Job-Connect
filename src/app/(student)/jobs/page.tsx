@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import JobCard from "@/components/JobCard";
-import JobFilterBar from "@/components/JobFilterBar";
+import JobFilterBar from "@/app/(student)/jobs/JobFilterBar";
 import JobDescriptionCard from "@/components/JobDescriptionCard";
 import { filterJobs } from "@/lib/jobFilter";
 import { JobInfo } from "@/types/job";
