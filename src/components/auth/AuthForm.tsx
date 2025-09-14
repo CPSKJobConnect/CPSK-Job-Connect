@@ -162,6 +162,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
       }
     } catch (error) {
       setError("An unexpected error occurred. Please try again later.")
+      console.log("Error during form submission:", error)
     } finally {
       setIsLoading(false)
     }
@@ -176,6 +177,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
       })
     } catch (error) {
       setError("Google sign-in failed")
+      console.log("Google sign-in error:", error)
       setIsLoading(false)
     }
   }, [role])
