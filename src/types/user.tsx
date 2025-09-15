@@ -4,6 +4,8 @@ export interface BaseUser {
     id: number;
     account_id: number;
     name: string;
+    profile_url: string;
+    bg_profile_url: string;
     role: Role;
   }
   
