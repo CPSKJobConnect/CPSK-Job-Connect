@@ -23,10 +23,14 @@ import { IoIosAdd } from "react-icons/io";
 import { IoIosClose } from "react-icons/io";
 
 
-const SkillCombobox = () => {
+interface SkillComboboxProps {
+  selectedSkill: string[];
+  setSelectedSkill: (skills: string[]) => void;
+}
+
+const SkillCombobox = ({ selectedSkill, setSelectedSkill }: SkillComboboxProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [value, setValue] = useState<string>("");
-  const [selectedSkill, setSelectedSkill] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [existingSkills, setExistingSkills] = useState<string[]>([]);
 
@@ -35,19 +39,23 @@ const SkillCombobox = () => {
     setExistingSkills(mockSkill);
   }, [])
 
+  useEffect(() => {
+    console.log("selected skill: ", selectedSkill)
+  }, [selectedSkill])
+
   const handleSkillAdded = () => {
     if (searchTerm && !existingSkills.includes(searchTerm)) {
         setExistingSkills((prev) => [...prev, searchTerm]);
     }
 
     if (searchTerm && !selectedSkill.includes(searchTerm)) {
-        setSelectedSkill((prev) => [...prev, searchTerm]);
+        setSelectedSkill([...selectedSkill, searchTerm]);
     }
   };
 
   const handleSelectSkill = (skill: string) => {
     if (!selectedSkill.includes(skill)) {
-       setSelectedSkill((prev) => [...prev, skill]);
+      setSelectedSkill([...selectedSkill, skill]);
     }
     setOpen(false);
   };
@@ -66,7 +74,7 @@ const SkillCombobox = () => {
                 <IoIosClose
                     className="w-4 h-4 cursor-pointer hover:text-red-500"
                     onClick={() =>
-                    setSelectedSkill((prev) => prev.filter((s) => s !== skill))
+                      setSelectedSkill(selectedSkill.filter((s) => s !== skill))
                     }
                 />
                 </div>
