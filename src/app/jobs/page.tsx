@@ -1,16 +1,18 @@
 "use client";
-import { useState, useEffect } from "react";
+import JobFilterBar from "@/app/jobs/JobFilterBar";
+import { JobFilters as FilterFormData } from "@/app/jobs/JobFilterBar";
+import { JobFilters } from "@/lib/jobFilter";
 import JobCard from "@/components/JobCard";
-import JobFilterBar from "@/app/(student)/jobs/JobFilterBar";
 import JobDescriptionCard from "@/components/JobDescriptionCard";
 import { filterJobs } from "@/lib/jobFilter";
-import { JobInfo } from "@/types/job";
 import { JobFilterInfo } from "@/types/filter";
-import { fakeJobData } from "public/data/fakeJobDescription";
+import { JobInfo } from "@/types/job";
 import { fakeFilterInfo } from "public/data/fakeFilterInfo";
+import { fakeJobData } from "public/data/fakeJobDescription";
+import { useEffect, useState } from "react";
 import { FaRegFileAlt } from "react-icons/fa";
-import { MdTipsAndUpdates } from "react-icons/md";
 import { IoMdSearch } from "react-icons/io";
+import { MdTipsAndUpdates } from "react-icons/md";
 
 export default function Page() {
   const [jobData, setJobData] = useState<JobInfo[]>([]);
@@ -18,7 +20,7 @@ export default function Page() {
   const [filterInfo, setFilterInfo] = useState<JobFilterInfo | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [jobToShow, setJobToShow] = useState<JobInfo[]>([]);
-  const [filterApplied, setFilterAppiled] = useState(false);
+  const [filterApplied, setFilterApplied] = useState(false);
 
   useEffect(() => {
     // fetch job data
@@ -36,11 +38,24 @@ export default function Page() {
     } else {
       setJobToShow(jobData);
     }
-  }, [filteredJob, jobData]);
+  }, [filteredJob, jobData, filterApplied]);
 
-  const handleSearch = (filters: any) => {
-    setFilterAppiled(true);
-    const result = filterJobs(jobData, filters);
+  const handleSearch = (filters: FilterFormData) => {
+    setFilterApplied(true);
+
+    // Convert form data to filter format
+    const jobFilters: JobFilters = {
+      keyword: filters.keyword || undefined,
+      jobCategory: filters.jobCategory || undefined,
+      location: filters.location || undefined,
+      jobType: filters.jobType || undefined,
+      jobArrangement: filters.jobArrangement || undefined,
+      minSalary: filters.minSalary ? Number(filters.minSalary) : undefined,
+      maxSalary: filters.maxSalary ? Number(filters.maxSalary) : undefined,
+      datePost: filters.datePost || undefined,
+    };
+
+    const result = filterJobs(jobData, jobFilters);
     setFilteredJob(result);
   };
 

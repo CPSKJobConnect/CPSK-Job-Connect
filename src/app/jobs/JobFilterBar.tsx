@@ -12,7 +12,7 @@ import {
 import { JobFilterInfo } from "@/types/filter";
 import { useEffect, useState } from "react";
 
-interface JobFilters {
+export interface JobFilters {
     keyword: string;
     jobCategory: string;
     location: string;
