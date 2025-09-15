@@ -1,7 +1,6 @@
 "use client";
-import { useState } from "react";
 import FileUpload from "@/components/FileUpload";
-import DocumentSelector from "@/components/DocumentSelector";
+import DocumentSelector from "@/app/(student)/job-apply/[id]/DocumentSelector";
 import { IoMdClose } from "react-icons/io";
 import { FileMeta } from "@/types/file";
 

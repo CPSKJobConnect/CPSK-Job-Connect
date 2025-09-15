@@ -1,12 +1,10 @@
 "use client";
-
-import { JobInfo } from "@/types/job";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { MdOutlinePerson } from "react-icons/md";
 import { MdOutlineMail } from "react-icons/md";
 import { FiPhone } from "react-icons/fi";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 
 
 interface StudentInfoProps {
@@ -36,6 +34,12 @@ const StudentInfoCard = (props: StudentInfoProps) => {
   };
 
   const handleChange = (field: string, value: string) => {
+    if (field === "phone") {
+        if (/^\d*$/.test(value) && value.length <= 10) {
+            setFormData({ ...formData, [field]: value});
+        }
+        return;
+    }
     setFormData({ ...formData, [field]: value });
   };
   
@@ -84,7 +88,7 @@ const StudentInfoCard = (props: StudentInfoProps) => {
                       type="text"
                       value={formData.email}
                       onChange={(e) => handleChange("email", e.target.value)}
-                      disabled={!isEditing}
+                      disabled={true}
                       className="border border-gray-100 pl-10 pr-3 py-2 border-gray-100"
                     ></Input>
                 </div>
