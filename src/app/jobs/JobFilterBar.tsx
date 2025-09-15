@@ -1,6 +1,5 @@
 "use client";
-import React from "react";
-import { Input } from "../../../components/ui/input";
+import { Input } from "@/components/ui/input";
 import {
     Select,
     SelectContent,
@@ -9,26 +8,35 @@ import {
     SelectLabel,
     SelectTrigger,
     SelectValue,
-  } from "@/components/ui/select"
-import { useState, useEffect } from "react";
-import { IoMdSearch } from "react-icons/io";
-import { IoLocationOutline } from "react-icons/io5";
-import { BiCategory } from "react-icons/bi";
-import { LuFilter } from "react-icons/lu";
-import { IoIosArrowDown } from "react-icons/io";
-import { TbCurrencyBaht } from "react-icons/tb";
-import { LuTags } from "react-icons/lu";
-import { MdOutlineDateRange } from "react-icons/md";
+} from "@/components/ui/select";
 import { JobFilterInfo } from "@/types/filter";
+import { useEffect, useState } from "react";
+
+export interface JobFilters {
+    keyword: string;
+    jobCategory: string;
+    location: string;
+    jobType: string;
+    jobArrangement: string;
+    minSalary: string;
+    maxSalary: string;
+    datePost: string;
+}
+import { BiCategory } from "react-icons/bi";
+import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
+import { IoLocationOutline } from "react-icons/io5";
+import { LuFilter, LuTags } from "react-icons/lu";
+import { MdOutlineDateRange } from "react-icons/md";
+import { TbCurrencyBaht } from "react-icons/tb";
 
 interface JobFilterBarProps {
     filter: JobFilterInfo | null;
-    onSearch?: (filters: any) => void;
+    onSearch?: (filters: JobFilters) => void;
 }
 
 const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const defaultFilters = {
+  const defaultFilters: JobFilters = {
     keyword: "",
     jobCategory: "",
     location: "",
@@ -38,7 +46,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
     maxSalary: "",
     datePost: "",
   };
-  const [filters, setFilters] = useState(defaultFilters);
+  const [filters, setFilters] = useState<JobFilters>(defaultFilters);
 
   useEffect(() => {
     console.log(filters);
