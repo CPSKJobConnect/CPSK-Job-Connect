@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { ROLE_CONFIGS } from "@/lib/role-config"
 import { companyRegisterSchema, loginSchema, studentRegisterSchema } from "@/lib/validations"
 import { AuthFormData, Role } from "@/types/auth"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -15,7 +16,6 @@ import { signIn, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
-import { ROLE_CONFIGS, getFieldsForRole } from "@/lib/role-config"
 
 interface AuthFormProps {
   role: Role
@@ -58,9 +58,6 @@ export function AuthForm({ role, mode }: AuthFormProps) {
 
   const roleConfig = useMemo(() => ROLE_CONFIGS[role], [role])
   const Icon = roleConfig.icon
-
-  // Dynamic form fields based on role and mode
-  const formFields = useMemo(() => getFieldsForRole(role, mode), [role, mode])
 
   const onSubmit = async (data: AuthFormData) => {
     console.log("Form submitted with data:", data)
@@ -164,7 +161,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
       console.log("Google sign-in error:", error)
       setIsLoading(false)
     }
-  }, [role])
+  }, [roleConfig.redirectPath])
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
