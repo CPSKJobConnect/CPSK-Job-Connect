@@ -11,6 +11,17 @@ import {
 } from "@/components/ui/select";
 import { JobFilterInfo } from "@/types/filter";
 import { useEffect, useState } from "react";
+
+interface JobFilters {
+    keyword: string;
+    jobCategory: string;
+    location: string;
+    jobType: string;
+    jobArrangement: string;
+    minSalary: string;
+    maxSalary: string;
+    datePost: string;
+}
 import { BiCategory } from "react-icons/bi";
 import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
 import { IoLocationOutline } from "react-icons/io5";
@@ -20,12 +31,12 @@ import { TbCurrencyBaht } from "react-icons/tb";
 
 interface JobFilterBarProps {
     filter: JobFilterInfo | null;
-    onSearch?: (filters: any) => void;
+    onSearch?: (filters: JobFilters) => void;
 }
 
 const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const defaultFilters = {
+  const defaultFilters: JobFilters = {
     keyword: "",
     jobCategory: "",
     location: "",
@@ -35,7 +46,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
     maxSalary: "",
     datePost: "",
   };
-  const [filters, setFilters] = useState(defaultFilters);
+  const [filters, setFilters] = useState<JobFilters>(defaultFilters);
 
   useEffect(() => {
     console.log(filters);

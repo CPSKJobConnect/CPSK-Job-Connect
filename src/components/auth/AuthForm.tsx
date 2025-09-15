@@ -1,4 +1,3 @@
-// components/auth/AuthForm.tsx
 "use client"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
