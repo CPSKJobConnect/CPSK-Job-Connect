@@ -1,8 +1,10 @@
 'use client';
 
+import './navbar01.css';
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState, useRef } from 'react';
+import Link from "next/link"
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -19,26 +21,9 @@ import { cn } from '@/lib/utils';
 // Simple logo component for the navbar
 const Logo = (props: React.SVGAttributes<SVGElement>) => {
   return (
-    <svg width='1em' height='1em' viewBox='0 0 324 323' fill='currentColor' xmlns='http://www.w3.org/2000/svg' {...props}>
-      <rect
-        x='88.1023'
-        y='144.792'
-        width='151.802'
-        height='36.5788'
-        rx='18.2894'
-        transform='rotate(-38.5799 88.1023 144.792)'
-        fill='currentColor'
-      />
-      <rect
-        x='85.3459'
-        y='244.537'
-        width='151.802'
-        height='36.5788'
-        rx='18.2894'
-        transform='rotate(-38.5799 85.3459 244.537)'
-        fill='currentColor'
-      />
-    </svg>
+    <span id='logo' className="hidden font-bold text-xl sm:inline-block text-white">
+      CPSK Job Connect
+    </span>
   );
 };
 
@@ -93,10 +78,7 @@ export interface Navbar01Props extends React.HTMLAttributes<HTMLElement> {
 
 // Default navigation links
 const defaultNavigationLinks: Navbar01NavLink[] = [
-  { href: '#', label: 'Home', active: true },
-  { href: '#features', label: 'Features' },
-  { href: '#pricing', label: 'Pricing' },
-  { href: '#about', label: 'About' },
+  { href: 'https://github.com/CPSKJobConnect/CPSK-Job-Connect/wiki', label: 'About' },
 ];
 
 export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
@@ -153,7 +135,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
       <header
         ref={combinedRef}
         className={cn(
-          'sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6 [&_*]:no-underline',
+          'sticky top-0 z-50 w-full border-b bg-[#006C67] backdrop-blur supports-[backdrop-filter]:bg-[#006C67]/95 px-4 md:px-6 [&_*]:no-underline',
           className
         )}
         {...props}
@@ -202,29 +184,33 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                 onClick={(e) => e.preventDefault()}
                 className="flex items-center space-x-2 text-primary hover:text-primary/90 transition-colors cursor-pointer"
               >
-                <div className="text-2xl">
-                  {logo}
-                </div>
-                <span className="hidden font-bold text-xl sm:inline-block">shadcn.io</span>
+                {/* LOGO */}
+                <div>{logo}</div>
               </button>
               {/* Navigation menu */}
               {!isMobile && (
                 <NavigationMenu className="flex">
                 <NavigationMenuList className="gap-1">
                   {navigationLinks.map((link, index) => (
-                    <NavigationMenuItem key={index}>
-                      <button
-                        onClick={(e) => e.preventDefault()}
-                        className={cn(
-                          "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer no-underline",
-                          link.active 
-                            ? "bg-accent text-accent-foreground" 
-                            : "text-foreground/80 hover:text-foreground"
-                        )}
-                      >
-                        {link.label}
-                      </button>
-                    </NavigationMenuItem>
+                  <NavigationMenuItem key={index}>
+                    <NavigationMenuLink
+                      asChild
+                      className={cn(
+                        "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none",
+                        link.active
+                          ? "bg-accent text-accent-foreground"
+                          : "text-foreground/80 hover:text-foreground"
+                      )}
+                    >
+                      {link.href.startsWith("http") ? (
+                        <a href={link.href} target="_blank" rel="noopener noreferrer">
+                          {link.label}
+                        </a>
+                      ) : (
+                        <Link href={link.href}>{link.label}</Link>
+                      )}
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
                   ))}
                 </NavigationMenuList>
                 </NavigationMenu>
@@ -234,25 +220,15 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
           {/* Right side */}
           <div className="flex items-center gap-3">
             <Button
-              variant="ghost"
+              id='signin-btn'
               size="sm"
-              className="text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+              className="text-sm font-medium px-4 h-9 rounded-md"
               onClick={(e) => {
                 e.preventDefault();
                 if (onSignInClick) onSignInClick();
               }}
             >
               {signInText}
-            </Button>
-            <Button
-              size="sm"
-              className="text-sm font-medium px-4 h-9 rounded-md shadow-sm"
-              onClick={(e) => {
-                e.preventDefault();
-                if (onCtaClick) onCtaClick();
-              }}
-            >
-              {ctaText}
             </Button>
           </div>
         </div>
