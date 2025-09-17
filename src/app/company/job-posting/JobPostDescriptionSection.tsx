@@ -71,7 +71,7 @@ const JobPostDescriptionSection = ({ formData, setFormData }: JobPostDescription
                     }
                 })}
                 required={true}
-                placeholder="List nice-to-have qualifications (e.g., AWS experience, CI/CD knowledge...)"
+                placeholder="List nice-to-have requirements (e.g., AWS experience, CI/CD knowledge...)"
                 className="border border-gray-200 min-h-[120px]"
                 />
             </div>
@@ -88,7 +88,7 @@ const JobPostDescriptionSection = ({ formData, setFormData }: JobPostDescription
                     }
                 })}
                 required={true}
-                placeholder="List minimum requirements (e.g., Bachelor's degree, 2+ years of experience...)"
+                placeholder="List minimum qualifications (e.g., Bachelor's degree, 2+ years of experience...)"
                 className="border border-gray-200 min-h-[120px]"
                 />
             </div>

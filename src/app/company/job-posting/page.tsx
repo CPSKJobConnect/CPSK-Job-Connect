@@ -23,6 +23,9 @@ export default function Page() {
 
   const validateForm = (formData: JobPostFormData) => {
     const errors: string[] = [];
+    const today = new Date();
+    const deadline = new Date(formData.deadline);
+
     const requiredFields: { key: keyof JobPostFormData; label: string }[] = [
       { key: "title", label: "Title" },
       { key: "department", label: "Department" },
@@ -41,6 +44,10 @@ export default function Page() {
   
     if (formData.minSalary && formData.maxSalary && +formData.minSalary > +formData.maxSalary) {
       errors.push("Min Salary should be less than Max Salary");
+    }
+
+    if (deadline < today) {
+      errors.push("The deadline must be a future date.");
     }
   
     if (!formData.skills || formData.skills.length === 0) {
@@ -64,7 +71,11 @@ export default function Page() {
   
   const handlePost = () => {
     // post job
-  }
+  };
+
+  const handleDraft = () => {
+    // draft job
+  };
 
   return (
     <div className="flex flex-col p-4 gap-8">
@@ -93,21 +104,34 @@ export default function Page() {
         </TabsContent>
       </Tabs>
 
-      <div className="flex justify-start">
-      <Button
-      className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold"
-      onClick={() => {
-        const errors = validateForm(formData);
-        if (errors.length > 0) {
-          errors.forEach(err => toast.error(err, { duration: 5000 }));
-        } else {
-          handlePost();
-        }
-      }}
-    >
-      Publish Job
-    </Button>
+      <div className="flex justify-start gap-3">
+        <Button
+        className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold"
+        onClick={() => {
+          const errors = validateForm(formData);
+          if (errors.length > 0) {
+            errors.forEach(err => toast.error(err, { duration: 5000 }));
+          } else {
+            handlePost();
+          }
+        }}
+        >
+        Publish Job
+        </Button>
 
+        <Button
+          className="bg-gray-200 text-gray-700 hover:bg-gray-300 font-semibold"
+          onClick={() => {
+            const errors = validateForm(formData);
+            if (errors.length > 0) {
+              errors.forEach(err => toast.error(err, { duration: 5000 }));
+            } else {
+              handleDraft();
+            }
+          }}
+        >
+          Draft
+        </Button>
       </div>
     </div>
   );
