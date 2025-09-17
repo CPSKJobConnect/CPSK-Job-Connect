@@ -7,8 +7,10 @@ import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineTimer, MdOutlinePeopleAlt } from "react-icons/md";
 import { IoDocumentTextOutline } from "react-icons/io5";
 import { FileMeta } from "@/types/file";
-import DocumentUploadSection from "@/components/DocumentUploadSection";
-import StudentInfoCard from "@/components/StudentInfoCard";
+import mockStudents from "public/data/fakeStudent";
+import { fakeJobData } from "public/data/fakeJobDescription";
+import DocumentUploadSection from "./DocumentUploadSection";
+import StudentInfoCard from "./StudentInfoCard";
 import { Button } from "@/components/ui/button";
 import { Student } from "@/types/user";
 
@@ -36,12 +38,21 @@ export default function Page() {
 
     useEffect(() => {
       // fetch job data
- 
+      if (!params?.id) return;
+      const foundJob = fakeJobData.find(j => j.id.toString() === params.id);
+      if (!foundJob) {
+        router.push("/jobs");
+        return;
+      }
+
+      setJob(foundJob);
 
       // fetch student's documents
-
+      setResumeExisting(mockStudents[0].documents.resume)
+      setPortfolioExisting(mockStudents[0].documents.portfolio)
 
       // fetch student data
+      setStudent(mockStudents[0])
     }, [params.id])
     
     if (!job) {
