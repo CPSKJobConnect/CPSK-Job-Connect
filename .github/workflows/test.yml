@@ -39,7 +39,7 @@ jobs:
       # 5. Optional: upload coverage report
       - name: Upload coverage report
         if: success()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage
