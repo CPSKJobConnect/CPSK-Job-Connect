@@ -55,8 +55,8 @@ model Student {
 }
 
 model Company {
-  id                  Int        @id @default(autoincrement())
-  account_id          Int        @unique
+  id                  Int       @id @default(autoincrement())
+  account_id          Int       @unique
   name                String
   address             String
   year                Int
@@ -64,25 +64,25 @@ model Company {
   description         String
   register_day        DateTime
   registration_status String
-  created_at          DateTime   @default(now())
-  updated_at          DateTime   @updatedAt
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
   website             String?
-  account             Account    @relation(fields: [account_id], references: [id])
-  jobPosts            Job_Post[]
+  account             Account   @relation(fields: [account_id], references: [id])
+  jobPosts            JobPost[]
 }
 
 model Document {
-  id           Int           @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   account_id   Int
   doc_type_id  Int
   file_path    String
   filename     String
-  created_at   DateTime      @default(now())
-  account      Account       @relation(fields: [account_id], references: [id])
-  documentType Document_type @relation(fields: [doc_type_id], references: [id])
+  created_at   DateTime     @default(now())
+  account      Account      @relation(fields: [account_id], references: [id])
+  documentType DocumentType @relation(fields: [doc_type_id], references: [id])
 }
 
-model Document_type {
+model DocumentType {
   id        Int        @id @default(autoincrement())
   name      String
   documents Document[]
@@ -106,40 +106,43 @@ model Report {
   account    Account  @relation(fields: [account_id], references: [id])
 }
 
-model Job_Post {
-  id           Int           @id @default(autoincrement())
-  company_id   Int
-  title        String
-  description  String
-  min_salary   Int
-  max_salary   Int
-  deadline     DateTime
-  created_at   DateTime      @default(now())
-  updated_at   DateTime      @updatedAt
-  applications Application[]
-  company      Company       @relation(fields: [company_id], references: [id])
-  jobTags      Job_Tag[]     @relation("JobPostTags")
+model JobPost {
+  id             Int           @id @default(autoincrement())
+  company_id     Int
+  jobName        String
+  location       String
+  aboutRole      String
+  requirements   String[]
+  qualifications String[]
+  min_salary     Int
+  max_salary     Int
+  deadline       DateTime
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+  applications   Application[]
+  company        Company       @relation(fields: [company_id], references: [id])
+  jobTags        JobTag[]      @relation("JobPostTags")
 }
 
-model Job_Tag {
-  id       Int        @id @default(autoincrement())
+model JobTag {
+  id       Int       @id @default(autoincrement())
   name     String
-  jobPosts Job_Post[] @relation("JobPostTags")
+  jobPosts JobPost[] @relation("JobPostTags")
 }
 
 model Application {
-  id                Int                @id @default(autoincrement())
+  id                Int               @id @default(autoincrement())
   job_post_id       Int
   student_id        Int
   status            Int
-  applied_at        DateTime           @default(now())
-  updated_at        DateTime           @updatedAt
-  jobPost           Job_Post           @relation(fields: [job_post_id], references: [id])
-  applicationStatus Application_status @relation(fields: [status], references: [id])
-  student           Student            @relation(fields: [student_id], references: [id])
+  applied_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  jobPost           JobPost           @relation(fields: [job_post_id], references: [id])
+  applicationStatus ApplicationStatus @relation(fields: [status], references: [id])
+  student           Student           @relation(fields: [student_id], references: [id])
 }
 
-model Application_status {
+model ApplicationStatus {
   id           Int           @id @default(autoincrement())
   name         String
   applications Application[]
