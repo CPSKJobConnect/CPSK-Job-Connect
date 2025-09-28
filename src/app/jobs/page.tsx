@@ -7,12 +7,11 @@ import JobDescriptionCard from "@/components/JobDescriptionCard";
 import { filterJobs } from "@/lib/jobFilter";
 import { JobFilterInfo } from "@/types/filter";
 import { JobInfo } from "@/types/job";
-import { fakeFilterInfo } from "public/data/fakeFilterInfo";
-import { fakeJobData } from "public/data/fakeJobDescription";
 import { useEffect, useState } from "react";
 import { FaRegFileAlt } from "react-icons/fa";
 import { IoMdSearch } from "react-icons/io";
 import { MdTipsAndUpdates } from "react-icons/md";
+import {Job_Post} from "@prisma/client";
 
 export default function Page() {
   const [jobData, setJobData] = useState<JobInfo[]>([]);
@@ -23,14 +22,39 @@ export default function Page() {
   const [filterApplied, setFilterApplied] = useState(false);
 
   useEffect(() => {
-    // fetch job data
-    setFilterInfo(fakeFilterInfo);
-    setJobData(fakeJobData);
-  }, []);
+    const fetchJobs = async () => {
+      try {
+        const res = await fetch("/api/jobs");
+        const data = await res.json();
 
-  useEffect(() => {
-    console.log(selectedCardId);
-  }, [selectedCardId]);
+        const mappedData: JobInfo[] = data.map((job: Job_Post) => ({
+          id: job.id,
+          jobName: job.title,
+          description: job.description,
+          minSalary: job.min_salary.toString(),
+          maxSalary: job.max_salary.toString(),
+          posted: job.created_at,
+          location: "Bangkok",
+          type: "Full-time",
+          arrangement: "On-site",
+        }));
+
+        setJobData(mappedData);
+
+        setFilterInfo({
+          categories: ["Engineering", "Marketing"],
+          locations: ["Bangkok", "Remote"],
+          types: ["Full-time", "Part-time"],
+          arrangements: ["On-site", "Remote"],
+          salaryRanges: ['10000','15000','20000','25000','30000','35000','40000','45000','50000',]
+        });
+      } catch (err) {
+        console.error("Error fetching jobs:", err);
+      }
+    };
+
+    fetchJobs();
+  }, []);
 
   useEffect(() => {
     if (filteredJob.length > 0 || (filteredJob.length === 0 && filterApplied)) {
