@@ -107,7 +107,7 @@ model Report {
 }
 
 model JobPost {
-  id             Int           @id @default(autoincrement())
+  id             Int              @id @default(autoincrement())
   company_id     Int
   jobName        String
   location       String
@@ -117,17 +117,38 @@ model JobPost {
   min_salary     Int
   max_salary     Int
   deadline       DateTime
-  created_at     DateTime      @default(now())
-  updated_at     DateTime      @updatedAt
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
   applications   Application[]
-  company        Company       @relation(fields: [company_id], references: [id])
-  jobTags        JobTag[]      @relation("JobPostTags")
+  company        Company          @relation(fields: [company_id], references: [id])
+  types          JobType[]        @relation("JobTypesOnPosts")
+  arrangements   JobArrangement[] @relation("JobArrangementsOnPosts")
+  categories     JobCategory[]    @relation("JobCategoriesOnPosts")
+  tags           JobTag[]         @relation("JobTagesOnPosts")
+}
+
+model JobType {
+  id   Int       @id @default(autoincrement())
+  name String    @unique
+  jobs JobPost[] @relation("JobTypesOnPosts")
+}
+
+model JobArrangement {
+  id   Int       @id @default(autoincrement())
+  name String    @unique
+  jobs JobPost[] @relation("JobArrangementsOnPosts")
+}
+
+model JobCategory {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  posts JobPost[] @relation("JobCategoriesOnPosts")
 }
 
 model JobTag {
   id       Int       @id @default(autoincrement())
   name     String
-  jobPosts JobPost[] @relation("JobPostTags")
+  jobPosts JobPost[] @relation("JobTagesOnPosts")
 }
 
 model Application {
