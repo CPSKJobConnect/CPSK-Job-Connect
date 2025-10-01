@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import { FaRegFileAlt } from "react-icons/fa";
 import { IoMdSearch } from "react-icons/io";
 import { MdTipsAndUpdates } from "react-icons/md";
-import {Job_Post} from "@prisma/client";
+import {JobPost} from "@prisma/client";
 
 export default function Page() {
   const [jobData, setJobData] = useState<JobInfo[]>([]);
@@ -26,20 +26,7 @@ export default function Page() {
       try {
         const res = await fetch("/api/jobs");
         const data = await res.json();
-
-        const mappedData: JobInfo[] = data.map((job: Job_Post) => ({
-          id: job.id,
-          jobName: job.title,
-          description: job.description,
-          minSalary: job.min_salary.toString(),
-          maxSalary: job.max_salary.toString(),
-          posted: job.created_at,
-          location: "Bangkok",
-          type: "Full-time",
-          arrangement: "On-site",
-        }));
-
-        setJobData(mappedData);
+        setJobData(data);
 
         setFilterInfo({
           categories: ["Engineering", "Marketing"],
