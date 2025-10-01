@@ -76,7 +76,6 @@ model Document {
   account_id   Int
   doc_type_id  Int
   file_path    String
-  filename     String
   created_at   DateTime     @default(now())
   account      Account      @relation(fields: [account_id], references: [id])
   documentType DocumentType @relation(fields: [doc_type_id], references: [id])
