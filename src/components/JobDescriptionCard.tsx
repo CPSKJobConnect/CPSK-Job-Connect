@@ -30,7 +30,7 @@ const typeColors: Record<string, string> = {
 const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) => {
   const router = useRouter();
   const baseStyle =
-    "rounded-xl shadow-md border border-gray-100 bg-white flex flex-col gap-2 transition mb-5 overflow-hidden";
+    "rounded-xl shadow-md border border-gray-100 bg-white flex flex-col gap-2 transition mb-5";
 
   const sizeStyle = {
     sm: "w-full sm:w-[400px]",
@@ -90,7 +90,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
       </div>
 
       <div className="mt-10 px-4">
-        <p className="font-bold text-lg">{job.jobName}</p>
+        <p className="font-bold text-lg">{job.title}</p>
         <p className="text-gray-600">{job.companyName}</p>
       </div>
 
@@ -117,7 +117,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
         >
           {job.type}
         </span>
-        {job.tags.map((tag, idx) => (
+        {job.skills.map((tag, idx) => (
           <span
             key={idx}
             className="bg-green-100 text-green-800 px-2 py-1 rounded-md text-sm"
@@ -127,25 +127,28 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
         ))}
       </div>
 
+      <div className="flex-1 overflow-y-auto px-4 py-2">
       <div className="flex flex-col gap-4 p-5">
         <div>
           <p className="font-bold">About Role</p>
-          <p>{job.description.aboutRole}</p>
+          <p>{job.description.overview}</p>
+        </div>
+
+        <div>
+          <p className="font-bold">Responsibilities</p>
+          <p>{job.description.responsibility}</p>
         </div>
 
         <div>
           <p className="font-bold">Requirements</p>
-          {job.description.requirements.map((requirement, index) => (
-            <p key={index}>- {requirement}</p>
-          ))}
+          <p>{job.description.requirement}</p>
         </div>
 
         <div>
           <p className="font-bold">Qualifications</p>
-          {job.description.qualifications.map((qualification, index) => (
-            <p key={index}>- {qualification}</p>
-          ))}
+          <p>{job.description.qualification}</p>
         </div>
+      </div>
       </div>
 
       <div className="px-4 py-4 flex justify-start gap-3 mt-auto">

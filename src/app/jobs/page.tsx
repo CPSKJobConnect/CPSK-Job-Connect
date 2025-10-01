@@ -8,7 +8,7 @@ import { filterJobs } from "@/lib/jobFilter";
 import { JobFilterInfo } from "@/types/filter";
 import { JobInfo } from "@/types/job";
 import { fakeFilterInfo } from "public/data/fakeFilterInfo";
-import { fakeJobData } from "public/data/fakeJobDescription";
+import { fakeJobData } from "@/fakeJobDescription";
 import { useEffect, useState } from "react";
 import { FaRegFileAlt } from "react-icons/fa";
 import { IoMdSearch } from "react-icons/io";

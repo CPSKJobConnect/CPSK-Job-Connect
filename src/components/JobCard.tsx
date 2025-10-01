@@ -54,7 +54,7 @@ const JobCard = (job: JobCardProps) => {
             className="h-auto bg-white translate-y-1 shadow-md rounded-md"
           />
           <div className="p-2">
-            <p className="font-bold text-md">{job.info.jobName}</p>
+            <p className="font-bold text-md">{job.info.title}</p>
             <p className="text-gray-600">{job.info.companyName}</p>
           </div>
         </div>
@@ -102,7 +102,7 @@ const JobCard = (job: JobCardProps) => {
       >
         {job.info.type}
       </span>
-        {job.info.tags.map((tag, idx) => (
+        {job.info.skills.map((tag, idx) => (
           <span key={idx} className="bg-white text-grey-800 shadow-md px-2 py-1 rounded-md text-sm">
             {tag}
           </span>

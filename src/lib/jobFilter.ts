@@ -17,7 +17,7 @@ export function filterJobs(jobs: JobInfo[], filters: JobFilters): JobInfo[] {
   
     if (filters.keyword) {
         result = result.filter((job) =>
-          job.jobName.toLowerCase().includes((filters.keyword ?? "").toLowerCase()),
+          job.title.toLowerCase().includes((filters.keyword ?? "").toLowerCase()),
         );
       }
   
@@ -42,14 +42,14 @@ export function filterJobs(jobs: JobInfo[], filters: JobFilters): JobInfo[] {
       if (filters.minSalary) {
         result = result.filter(
           (job) =>
-            Number(job.minSalary.replace(/,/g, "")) >= Number(filters.minSalary),
+            Number(job.salary.min) >= Number(filters.minSalary),
         );
       }
   
       if (filters.maxSalary) {
         result = result.filter(
           (job) =>
-            Number(job.maxSalary.replace(/,/g, "")) <= Number(filters.maxSalary),
+            Number(job.salary.max) <= Number(filters.maxSalary),
         );
       }
   

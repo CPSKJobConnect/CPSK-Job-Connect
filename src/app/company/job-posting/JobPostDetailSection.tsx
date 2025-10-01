@@ -115,8 +115,12 @@ const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => 
                 <Input
                   type="text"
                   name="minSalary"
-                  value={formData.minSalary}
-                  onChange={(e) => setFormData({ ...formData, minSalary: Number(e.target.value) })}
+                  value={formData.salary.min}
+                  onChange={(e) => setFormData({ ...formData, 
+                    salary: {
+                      ...formData.salary,
+                      min: Number(e.target.value)
+                  }})}
                   required={true}
                   placeholder="30000"
                 />
@@ -126,8 +130,12 @@ const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => 
                 <Input
                   type="text"
                   name="maxSalary"
-                  value={formData.maxSalary}
-                  onChange={(e) => setFormData({ ...formData, maxSalary: Number(e.target.value) })}
+                  value={formData.salary.max}
+                  onChange={(e) => setFormData({ ...formData, 
+                    salary: {
+                      ...formData.salary,
+                      max: Number(e.target.value)
+                  }})}
                   required={true}
                   placeholder="60000"
                 />
