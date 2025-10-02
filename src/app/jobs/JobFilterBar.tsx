@@ -11,6 +11,12 @@ import {
 } from "@/components/ui/select";
 import { JobFilterInfo } from "@/types/filter";
 import { useEffect, useState } from "react";
+import { BiCategory } from "react-icons/bi";
+import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
+import { IoLocationOutline } from "react-icons/io5";
+import { LuFilter, LuTags } from "react-icons/lu";
+import { MdOutlineDateRange } from "react-icons/md";
+import { TbCurrencyBaht } from "react-icons/tb";
 
 export interface JobFilters {
     keyword: string;
@@ -22,12 +28,6 @@ export interface JobFilters {
     maxSalary: string;
     datePost: string;
 }
-import { BiCategory } from "react-icons/bi";
-import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
-import { IoLocationOutline } from "react-icons/io5";
-import { LuFilter, LuTags } from "react-icons/lu";
-import { MdOutlineDateRange } from "react-icons/md";
-import { TbCurrencyBaht } from "react-icons/tb";
 
 interface JobFilterBarProps {
     filter: JobFilterInfo | null;
@@ -37,7 +37,7 @@ interface JobFilterBarProps {
 const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const defaultFilters: JobFilters = {
-    keyword: "",
+    keyword: 123, // TypeScript error: number instead of string
     jobCategory: "",
     location: "",
     jobType: "",
@@ -46,6 +46,8 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
     maxSalary: "",
     datePost: "",
   };
+
+
   const [filters, setFilters] = useState<JobFilters>(defaultFilters);
 
   useEffect(() => {
