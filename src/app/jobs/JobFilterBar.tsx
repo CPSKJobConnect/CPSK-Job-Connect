@@ -37,7 +37,7 @@ interface JobFilterBarProps {
 const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const defaultFilters: JobFilters = {
-    keyword: 123, // TypeScript error: number instead of string
+    keyword: "", // TypeScript error: number instead of string
     jobCategory: "",
     location: "",
     jobType: "",
