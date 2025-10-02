@@ -59,7 +59,6 @@ model Company {
   account_id          Int       @unique
   name                String
   address             String
-  year                Int
   phone               String
   description         String
   register_day        DateTime
