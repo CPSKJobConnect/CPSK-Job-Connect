@@ -21,25 +21,21 @@ export default function Page() {
   const [filterApplied, setFilterApplied] = useState(false);
 
   useEffect(() => {
-    const fetchJobs = async () => {
+    const fetchJobsAndFilters = async () => {
       try {
-        const res = await fetch("/api/jobs");
-        const data = await res.json();
-        setJobData(data);
+        const resJobs = await fetch("/api/jobs");
+        const dataJobs = await resJobs.json();
+        setJobData(dataJobs);
 
-        setFilterInfo({
-          categories: ["Engineering", "Marketing"],
-          locations: ["Bangkok", "Remote"],
-          types: ["Full-time", "Part-time"],
-          arrangements: ["On-site", "Remote"],
-          salaryRanges: ['10000','15000','20000','25000','30000','35000','40000','45000','50000',]
-        });
+        const resFilters = await fetch("/api/jobs/filter");
+        const dataFilters = await resFilters.json();
+        setFilterInfo(dataFilters);
       } catch (err) {
-        console.error("Error fetching jobs:", err);
+        console.error("Error fetching jobs or filters:", err);
       }
     };
 
-    fetchJobs();
+    fetchJobsAndFilters();
   }, []);
 
   useEffect(() => {
