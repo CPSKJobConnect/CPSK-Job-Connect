@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'asqgbzbwlosorjztdnac.supabase.co',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
       config.watchOptions = {
