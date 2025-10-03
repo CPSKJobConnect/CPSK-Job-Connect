@@ -11,7 +11,6 @@ import { useEffect, useState } from "react";
 import { FaRegFileAlt } from "react-icons/fa";
 import { IoMdSearch } from "react-icons/io";
 import { MdTipsAndUpdates } from "react-icons/md";
-import {JobPost} from "@prisma/client";
 
 export default function Page() {
   const [jobData, setJobData] = useState<JobInfo[]>([]);
