@@ -17,7 +17,8 @@ model Account {
   created_at        DateTime       @default(now())
   updated_at        DateTime       @updatedAt
   emailVerified     DateTime?
-  image             String?
+  logoUrl           String?
+  backgroundUrl     String?
   provider          String?
   providerAccountId String?
   accountRole       AccountRole?   @relation(fields: [role], references: [id])
