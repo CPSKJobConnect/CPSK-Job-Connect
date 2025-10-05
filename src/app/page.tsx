@@ -1,11 +1,14 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ROLE_CONFIGS } from "@/lib/role-config";
 import { Building, GraduationCap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 
 export default function Home() {
+  const studentConfig = ROLE_CONFIGS.student;
+  const companyConfig = ROLE_CONFIGS.company;
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
       <div className="flex flex-col w-full">
@@ -39,46 +42,49 @@ export default function Home() {
         </div>
         <div className="text-center">
           <p className="h2 text-gray-600 m-8">
-            Choose your role to join our platform
+            Which of these best describes you?
           </p>
         </div>
 
         {/* Role Selection Cards */}
         <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
           {/* Company Card */}
-          <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-orange-100">
-            <CardContent className="p-8 text-center">
-              <div>
-                <Image
-                  src="/assets/images/company_home.svg"
-                  alt="Online Connection Illustration"
-                  width={100}                  height={100}
-                  className="w-full h-auto mb-6"                />
-              </div>
-              <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-orange-200 transition-colors">
-                <Building className="w-10 h-10 text-orange-600" />
-              </div>
-              <h2 className="h2 text-gray-900 mb-4">Company</h2>
-              <p className="body-1 text-gray-600 mb-6">
-                Connect with talented students and find the perfect candidates for your team
-              </p>
-              <div className="space-y-3">
-                <Link href="/login/company" className="block">
-                  <Button className="w-full button bg-orange-600 hover:bg-orange-700">
-                    Company Login
-                  </Button>
-                </Link>
-                <Link href="/register/company" className="block">
-                  <Button variant="outline" className="w-full border-orange-200 text-orange-700 hover:bg-orange-69 button">
-                    Create Company Account
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+          <Link href="/login/company" className="block">
+            <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-orange-100 border-b-4 border-orange-200">
+              <CardContent className="p-8 text-center">
+                <div>
+                  <Image
+                    src="/assets/images/company_home.svg"
+                    alt="Online Connection Illustration"
+                    width={100}                  height={100}
+                    className="w-full h-auto mb-6"                />
+                </div>
+                <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-orange-200 transition-colors">
+                  <Building className="w-10 h-10 text-orange-600" />
+                </div>
+                <h2 className="h2 text-gray-900 mb-4">I am a Company</h2>
+                <p className="body-1 text-gray-600">
+                  Connect with talented students and find the perfect candidates for your team
+                </p>
+                {/* <div className="space-y-3"> */}
+                  {/* <Link href="/login/company" className="block">
+                    <Button className="w-full button bg-orange-600 hover:bg-orange-700">
+                      Company Login
+                    </Button>
+                  </Link> */}
+                  {/* <Link href="/register/company" className="block">
+                    <Button variant="outline" className="w-full border-orange-200 text-orange-700 hover:bg-orange-69 button">
+                      Create Company Account
+                    </Button>
+                  </Link> */}
+                {/* </div> */}
+              </CardContent>
+            </Card>
+          </Link>
 
           {/* Student Card */}
-          <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-green-100">
+          <Link href="/login/student" className="block">
+          <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-green-100 border-b-4 border-green-200">
             <CardContent className="p-8 text-center">
               <div>
                 <Image
@@ -90,24 +96,25 @@ export default function Home() {
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-200 transition-colors">
                 <GraduationCap className="w-10 h-10 text-green-600" />
               </div>
-              <h2 className="h2 text-gray-900 mb-4">Student</h2>
-              <p className="text-gray-600 body-1 mb-6">
+              <h2 className="h2 text-gray-900 mb-4">I am a Student</h2>
+              <p className="text-gray-600 body-1">
                 Find internships and job opportunities that match your skills and interests
               </p>
-              <div className="space-y-3">
-                <Link href="/login/student" className="block">
+              {/* <div className="space-y-3"> */}
+                {/* <Link href="/login/student" className="block">
                   <Button className="button w-full bg-green-600 hover:bg-green-700">
                     Student Login
                   </Button>
-                </Link>
-                <Link href="/register/student" className="block">
+                </Link> */}
+                {/* <Link href="/register/student" className="block">
                   <Button variant="outline" className="button w-full border-green-200 text-green-700 hover:bg-green-50">
                     Create Student Account
                   </Button>
-                </Link>
-              </div>
+                </Link> */}
+              {/* </div> */}
             </CardContent>
           </Card>
+          </Link>
         </div>
 
         {/* Illustration
