@@ -17,10 +17,14 @@ export default withAuth(
     // If accessing protected routes without authentication
     if (!isPublicRoute && !token) {
       if (pathname.startsWith("/student")) {
-        return NextResponse.redirect(new URL("/login/student", req.url))
+        const loginUrl = new URL("/login/student", req.url)
+        loginUrl.searchParams.set("callbackUrl", pathname)
+        return NextResponse.redirect(loginUrl)
       }
       if (pathname.startsWith("/company")) {
-        return NextResponse.redirect(new URL("/login/company", req.url))
+        const loginUrl = new URL("/login/company", req.url)
+        loginUrl.searchParams.set("callbackUrl", pathname)
+        return NextResponse.redirect(loginUrl)
       }
       return NextResponse.redirect(new URL("/", req.url))
     }
@@ -52,19 +56,9 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token, req }) => {
-        const { pathname } = req.nextUrl
-
-        // Allow access to public routes
-        const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/auth", "/api/register"]
-        const isPublicRoute = publicRoutes.some(route =>
-          pathname === route || pathname.startsWith(`${route}/`)
-        )
-
-        if (isPublicRoute) return true
-
-        // Require authentication for protected routes
-        return !!token
+      authorized: ({ token }) => {
+        // Always return true to let the middleware function handle all redirects
+        return true
       },
     },
   }
