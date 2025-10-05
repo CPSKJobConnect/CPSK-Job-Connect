@@ -11,6 +11,12 @@ import {
 } from "@/components/ui/select";
 import { JobFilterInfo } from "@/types/filter";
 import { useEffect, useState } from "react";
+import { BiCategory } from "react-icons/bi";
+import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
+import { IoLocationOutline } from "react-icons/io5";
+import { LuFilter, LuTags } from "react-icons/lu";
+import { MdOutlineDateRange } from "react-icons/md";
+import { TbCurrencyBaht } from "react-icons/tb";
 
 export interface JobFilters {
     keyword: string;
@@ -22,12 +28,6 @@ export interface JobFilters {
     maxSalary: string;
     datePost: string;
 }
-import { BiCategory } from "react-icons/bi";
-import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
-import { IoLocationOutline } from "react-icons/io5";
-import { LuFilter, LuTags } from "react-icons/lu";
-import { MdOutlineDateRange } from "react-icons/md";
-import { TbCurrencyBaht } from "react-icons/tb";
 
 interface JobFilterBarProps {
     filter: JobFilterInfo | null;
@@ -89,7 +89,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                 <BiCategory className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"/>
                 <Select value={filters.jobCategory} 
                 onValueChange={(val) => updateFilter("jobCategory", val)}>
-                    <SelectTrigger className="pl-10 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
+                    <SelectTrigger className="pl-10 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full cursor-pointer">
                         <SelectValue placeholder="Job Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -105,7 +105,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
 
             <button
                 onClick={() => setIsOpen((prev) => !prev)}
-                className="p-2 rounded-xl flex items-center justify-center gap-1"
+                className="p-2 rounded-xl flex items-center justify-center gap-1 cursor-pointer"
                 >
                 <LuFilter className="w-4 h-4 text-[#006C67]" />
                 <p className="text-[#006C67] text-sm font-bold">Filters</p>
@@ -230,7 +230,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
     <div className="flex flex-row w-full gap-5 px-28 mt-5">
         <button
             onClick={() => {if (onSearch) onSearch(filters);}}
-            className="w-full p-2 rounded-xl flex items-center justify-center gap-1 bg-gradient-to-r from-[#FFB689] to-[#FFA66E] hover:brightness-110 transition"
+            className="w-full p-2 rounded-xl flex items-center justify-center gap-1 bg-gradient-to-r from-[#FFB689] to-[#FFA66E] hover:brightness-110 transition cursor-pointer"
             >
             <IoMdSearch className="w-4 h-4 text-white" />
             <p className="text-white text-sm font-bold">Search Jobs</p>
@@ -238,7 +238,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
 
         <button
             onClick={handleClearAll}
-            className="w-full p-2 rounded-xl flex items-center justify-center gap-1 border border-[#FD873E] hover:bg-[#FFCFB2]/40 transition"
+            className="w-full p-2 rounded-xl flex items-center justify-center gap-1 border border-[#FD873E] hover:bg-[#FFCFB2]/40 transition cursor-pointer"
             >
             <p className="text-[#FD873E] text-sm font-bold">Clear All</p>
         </button>

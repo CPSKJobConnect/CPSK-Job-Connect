@@ -9,8 +9,8 @@ export default withAuth(
     const role = token?.role
 
     // Public routes
-    const publicRoutes = ["/", "/login", "/register", "/jobs"]
-    const isPublicRoute = publicRoutes.some(route => 
+    const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/jobs"]
+    const isPublicRoute = publicRoutes.some(route =>
       pathname === route || pathname.startsWith(`${route}/`)
     )
 

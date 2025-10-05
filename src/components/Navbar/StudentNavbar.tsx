@@ -29,7 +29,7 @@ export default function StudentNavbar() {
               }`}>
             Find Jobs
             </Link>
-            <Link href="/my-application" 
+            <Link href="student/my-application" 
             className={`px-3 py-2 rounded-md transition-colors font-semibold ${
                 pathname === "/my-application"
                   ? "bg-white/20 text-white"

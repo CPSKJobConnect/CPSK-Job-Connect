@@ -17,10 +17,10 @@ model Account {
   created_at        DateTime       @default(now())
   updated_at        DateTime       @updatedAt
   emailVerified     DateTime?
-  logoUrl           String?
-  backgroundUrl     String?
   provider          String?
   providerAccountId String?
+  backgroundUrl     String?
+  logoUrl           String?
   accountRole       AccountRole?   @relation(fields: [role], references: [id])
   company           Company?
   documents         Document[]
@@ -106,10 +106,8 @@ model Report {
 }
 
 model JobPost {
-  id                 Int           @id @default(autoincrement())
+  id                 Int            @id @default(autoincrement())
   company_id         Int
-  job_type_id        Int
-  job_arrangement_id Int
   jobName            String
   location           String
   aboutRole          String
@@ -118,16 +116,16 @@ model JobPost {
   min_salary         Int
   max_salary         Int
   deadline           DateTime
-  created_at         DateTime      @default(now())
-  updated_at         DateTime      @updatedAt
+  created_at         DateTime       @default(now())
+  updated_at         DateTime       @updatedAt
+  job_arrangement_id Int
+  job_type_id        Int
   applications       Application[]
-
-  categories JobCategory[] @relation("JobCategoriesOnPosts")
-  tags       JobTag[]      @relation("JobTagesOnPosts")
-
-  company        Company        @relation(fields: [company_id], references: [id])
-  jobType        JobType        @relation(fields: [job_type_id], references: [id])
-  jobArrangement JobArrangement @relation(fields: [job_arrangement_id], references: [id])
+  company            Company        @relation(fields: [company_id], references: [id])
+  jobArrangement     JobArrangement @relation(fields: [job_arrangement_id], references: [id])
+  jobType            JobType        @relation(fields: [job_type_id], references: [id])
+  categories         JobCategory[]  @relation("JobCategoriesOnPosts")
+  tags               JobTag[]       @relation("JobTagesOnPosts")
 }
 
 model JobType {

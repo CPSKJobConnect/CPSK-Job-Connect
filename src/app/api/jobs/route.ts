@@ -5,10 +5,10 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // const session = await getServerSession(authOptions);
+    // if (!session) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
 
     const jobs = await prisma.jobPost.findMany({
       include: {
@@ -47,7 +47,7 @@ export async function GET() {
       tags: job.tags.map((tag) => tag.name),
       arrangement: job.jobArrangement.name,
     }));
-    console.log("Mapped jobs to JSON:", mappedData);
+    // console.log("Mapped jobs to JSON:", mappedData);
     return NextResponse.json(mappedData);
   } catch (error) {
     console.error("API error:", error);
