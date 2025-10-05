@@ -44,7 +44,6 @@ export const authOptions: NextAuthOptions = {
             username: true,
             password: true,
             role: true,
-            image: true,
             accountRole: {
               select: {
                 name: true
@@ -66,7 +65,6 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.username,
           role: user.accountRole?.name,
-          image: user.image,
         }
       },
     }),
@@ -129,7 +127,6 @@ export const authOptions: NextAuthOptions = {
               data: {
                 email: user.email!,
                 username: profile?.name || user.name,
-                image: user.image!,
                 provider: account.provider,
                 providerAccountId: account.providerAccountId,
                 emailVerified: new Date(),

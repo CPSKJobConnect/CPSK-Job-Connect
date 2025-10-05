@@ -103,7 +103,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           formData.append("website", data.website || "")
           formData.append("description", data.description!)
           formData.append("phone", data.phone!)
-          formData.append("year", data.year!.toString())
+          // formData.append("year", data.year!.toString())
         }
 
 
@@ -399,7 +399,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     )}
                   </div>
 
-                  <div>
+                  {/* <div>
                     <Label htmlFor="year">Founded Year</Label>
                     <Input
                       id="year"
@@ -412,7 +412,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     {errors.year && (
                       <p className="text-sm text-red-600 mt-1">{errors.year.message}</p>
                     )}
-                  </div>
+                  </div> */}
                 </>
               )}
             </>

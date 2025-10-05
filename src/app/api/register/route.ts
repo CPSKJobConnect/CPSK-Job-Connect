@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
           account_id: account.id,
           name: (validatedData.data as CompanyData).companyName,
           address: (validatedData.data as CompanyData).address,
-          year: (validatedData.data as CompanyData).year,
+          // year: (validatedData.data as CompanyData).year, // Removed from schema
           phone: (validatedData.data as CompanyData).phone,
           description: (validatedData.data as CompanyData).description,
           website: (validatedData.data as CompanyData).website || null,
