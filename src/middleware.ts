@@ -42,8 +42,8 @@ export default withAuth(
         return NextResponse.redirect(new URL("/company/dashboard", req.url))
       }
 
-      // Redirect authenticated users from auth pages to their dashboard
-      if (isPublicRoute && pathname !== "/" && role) {
+      // Redirect authenticated users from auth pages and homepage to their dashboard
+      if (isPublicRoute && role) {
         return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
       }
     }
