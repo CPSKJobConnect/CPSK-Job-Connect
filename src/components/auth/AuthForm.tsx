@@ -177,7 +177,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           <Icon className={`w-8 h-8 ${roleConfig.secondaryColor.split(' ').slice(1, 3).join(' ')}`} />
         </div>
         <CardTitle className="text-2xl">
-          {mode === "login" ? "Sign In" : "Create Account"} as {roleConfig.title}
+          {mode === "login" ? "Sign in" : "Create Account"} as {roleConfig.title}
         </CardTitle>
       </CardHeader>
       
