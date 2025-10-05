@@ -17,10 +17,10 @@ model Account {
   created_at        DateTime       @default(now())
   updated_at        DateTime       @updatedAt
   emailVerified     DateTime?
+  logoUrl           String?
+  backgroundUrl     String?
   provider          String?
   providerAccountId String?
-  backgroundUrl     String?
-  logoUrl           String?
   accountRole       AccountRole?   @relation(fields: [role], references: [id])
   company           Company?
   documents         Document[]
@@ -68,7 +68,7 @@ model Company {
   updated_at          DateTime  @updatedAt
   website             String?
   account             Account   @relation(fields: [account_id], references: [id])
-  JobPost             JobPost[]
+  jobPosts            JobPost[]
 }
 
 model Document {
@@ -79,6 +79,12 @@ model Document {
   created_at   DateTime     @default(now())
   account      Account      @relation(fields: [account_id], references: [id])
   documentType DocumentType @relation(fields: [doc_type_id], references: [id])
+}
+
+model DocumentType {
+  id        Int        @id @default(autoincrement())
+  name      String
+  documents Document[]
 }
 
 model Notification {
@@ -99,6 +105,55 @@ model Report {
   account    Account  @relation(fields: [account_id], references: [id])
 }
 
+model JobPost {
+  id                 Int           @id @default(autoincrement())
+  company_id         Int
+  job_type_id        Int
+  job_arrangement_id Int
+  jobName            String
+  location           String
+  aboutRole          String
+  requirements       String[]
+  qualifications     String[]
+  min_salary         Int
+  max_salary         Int
+  deadline           DateTime
+  created_at         DateTime      @default(now())
+  updated_at         DateTime      @updatedAt
+  applications       Application[]
+
+  categories JobCategory[] @relation("JobCategoriesOnPosts")
+  tags       JobTag[]      @relation("JobTagesOnPosts")
+
+  company        Company        @relation(fields: [company_id], references: [id])
+  jobType        JobType        @relation(fields: [job_type_id], references: [id])
+  jobArrangement JobArrangement @relation(fields: [job_arrangement_id], references: [id])
+}
+
+model JobType {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  posts JobPost[]
+}
+
+model JobArrangement {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  posts JobPost[]
+}
+
+model JobCategory {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  posts JobPost[] @relation("JobCategoriesOnPosts")
+}
+
+model JobTag {
+  id       Int       @id @default(autoincrement())
+  name     String
+  jobPosts JobPost[] @relation("JobTagesOnPosts")
+}
+
 model Application {
   id                Int               @id @default(autoincrement())
   job_post_id       Int
@@ -109,6 +164,12 @@ model Application {
   jobPost           JobPost           @relation(fields: [job_post_id], references: [id])
   applicationStatus ApplicationStatus @relation(fields: [status], references: [id])
   student           Student           @relation(fields: [student_id], references: [id])
+}
+
+model ApplicationStatus {
+  id           Int           @id @default(autoincrement())
+  name         String
+  applications Application[]
 }
 
 model Session {
@@ -128,63 +189,4 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
-}
-
-model ApplicationStatus {
-  id           Int           @id @default(autoincrement())
-  name         String
-  applications Application[]
-}
-
-model DocumentType {
-  id        Int        @id @default(autoincrement())
-  name      String
-  documents Document[]
-}
-
-model JobArrangement {
-  id      Int       @id @default(autoincrement())
-  name    String    @unique
-  JobPost JobPost[]
-}
-
-model JobCategory {
-  id      Int       @id @default(autoincrement())
-  name    String    @unique
-  JobPost JobPost[] @relation("JobCategoriesOnPosts")
-}
-
-model JobPost {
-  id                 Int            @id @default(autoincrement())
-  company_id         Int
-  jobName            String
-  location           String
-  aboutRole          String
-  requirements       String[]
-  qualifications     String[]
-  min_salary         Int
-  max_salary         Int
-  deadline           DateTime
-  created_at         DateTime       @default(now())
-  updated_at         DateTime
-  job_arrangement_id Int
-  job_type_id        Int
-  applications       Application[]
-  Company            Company        @relation(fields: [company_id], references: [id])
-  JobArrangement     JobArrangement @relation(fields: [job_arrangement_id], references: [id])
-  JobType            JobType        @relation(fields: [job_type_id], references: [id])
-  JobCategory        JobCategory[]  @relation("JobCategoriesOnPosts")
-  JobTag             JobTag[]       @relation("JobTagesOnPosts")
-}
-
-model JobTag {
-  id      Int       @id @default(autoincrement())
-  name    String
-  JobPost JobPost[] @relation("JobTagesOnPosts")
-}
-
-model JobType {
-  id      Int       @id @default(autoincrement())
-  name    String    @unique
-  JobPost JobPost[]
 }
