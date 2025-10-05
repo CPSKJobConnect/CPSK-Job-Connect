@@ -9,7 +9,7 @@ export default withAuth(
     const role = token?.role
 
     // Public routes
-    const publicRoutes = ["/", "/login", "/register"]
+    const publicRoutes = ["/", "/login", "/register", "/jobs"]
     const isPublicRoute = publicRoutes.some(route => 
       pathname === route || pathname.startsWith(`${route}/`)
     )
@@ -54,13 +54,13 @@ export default withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl
-        
+
         // Allow access to public routes
-        const publicRoutes = ["/", "/login", "/register", "/api/auth", "/api/register"]
-        const isPublicRoute = publicRoutes.some(route => 
+        const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/auth", "/api/register"]
+        const isPublicRoute = publicRoutes.some(route =>
           pathname === route || pathname.startsWith(`${route}/`)
         )
-
+        
         if (isPublicRoute) return true
 
         // Require authentication for protected routes

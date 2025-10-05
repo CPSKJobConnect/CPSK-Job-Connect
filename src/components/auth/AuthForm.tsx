@@ -420,7 +420,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
 
           <Button
             type="submit"
-            className={`w-full ${roleConfig.primaryColor}`}
+            className={`w-full ${roleConfig.primaryColor} cursor-pointer`}
             disabled={isLoading}
           >
             {isLoading 
@@ -444,7 +444,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="w-full cursor-pointer"
             onClick={handleGoogleSignIn}
             disabled={isLoading}
           >
