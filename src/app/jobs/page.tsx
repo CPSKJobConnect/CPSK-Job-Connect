@@ -7,8 +7,6 @@ import JobDescriptionCard from "@/components/JobDescriptionCard";
 import { filterJobs } from "@/lib/jobFilter";
 import { JobFilterInfo } from "@/types/filter";
 import { JobInfo } from "@/types/job";
-import { fakeFilterInfo } from "public/data/fakeFilterInfo";
-import { fakeJobData } from "public/data/fakeJobDescription";
 import { useEffect, useState } from "react";
 import { FaRegFileAlt } from "react-icons/fa";
 import { IoMdSearch } from "react-icons/io";
@@ -23,14 +21,22 @@ export default function Page() {
   const [filterApplied, setFilterApplied] = useState(false);
 
   useEffect(() => {
-    // fetch job data
-    setFilterInfo(fakeFilterInfo);
-    setJobData(fakeJobData);
-  }, []);
+    const fetchJobsAndFilters = async () => {
+      try {
+        const resJobs = await fetch("/api/jobs");
+        const dataJobs = await resJobs.json();
+        setJobData(dataJobs);
 
-  useEffect(() => {
-    console.log(selectedCardId);
-  }, [selectedCardId]);
+        const resFilters = await fetch("/api/jobs/filter");
+        const dataFilters = await resFilters.json();
+        setFilterInfo(dataFilters);
+      } catch (err) {
+        console.error("Error fetching jobs or filters:", err);
+      }
+    };
+
+    fetchJobsAndFilters();
+  }, []);
 
   useEffect(() => {
     if (filteredJob.length > 0 || (filteredJob.length === 0 && filterApplied)) {
