@@ -60,7 +60,7 @@ export default withAuth(
         const isPublicRoute = publicRoutes.some(route =>
           pathname === route || pathname.startsWith(`${route}/`)
         )
-        
+
         if (isPublicRoute) return true
 
         // Require authentication for protected routes
