@@ -56,7 +56,7 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => {
+      authorized: () => {
         // Always return true to let the middleware function handle all redirects
         return true
       },
