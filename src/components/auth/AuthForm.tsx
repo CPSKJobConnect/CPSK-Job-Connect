@@ -13,7 +13,7 @@ import { AuthFormData, Role } from "@/types/auth"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Upload } from "lucide-react"
 import { signIn, useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 
@@ -28,7 +28,10 @@ export function AuthForm({ role, mode }: AuthFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [awaitingSession, setAwaitingSession] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { data: session } = useSession()
+
+  const callbackUrl = searchParams.get("callbackUrl")
 
   const schema = mode === "login" 
     ? loginSchema 
@@ -51,10 +54,16 @@ export function AuthForm({ role, mode }: AuthFormProps) {
     if (awaitingSession && session?.user?.role) {
       setAwaitingSession(false)
       setIsLoading(false)
-      const userRoleConfig = ROLE_CONFIGS[session.user.role as Role]
-      router.push(userRoleConfig?.redirectPath || `/${session.user.role}/dashboard`)
+
+      // Redirect to callbackUrl if provided, otherwise to dashboard
+      if (callbackUrl) {
+        router.push(callbackUrl)
+      } else {
+        const userRoleConfig = ROLE_CONFIGS[session.user.role as Role]
+        router.push(userRoleConfig?.redirectPath || `/${session.user.role}/dashboard`)
+      }
     }
-  }, [session, awaitingSession, router])
+  }, [session, awaitingSession, router, callbackUrl])
 
   const roleConfig = useMemo(() => ROLE_CONFIGS[role], [role])
   const Icon = roleConfig.icon
