@@ -1,13 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { ROLE_CONFIGS } from "@/lib/role-config";
 import { Building, GraduationCap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 
 export default function Home() {
-  const studentConfig = ROLE_CONFIGS.student;
-  const companyConfig = ROLE_CONFIGS.company;
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
