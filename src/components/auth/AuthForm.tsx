@@ -60,7 +60,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
   const Icon = roleConfig.icon
 
   const onSubmit = async (data: AuthFormData) => {
-    console.log("Form submitted with data:", data)
+    // console.log("Form submitted with data:", data)
     setIsLoading(true)
     setError("")
 

@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   try {
     console.log("Registration API called");
     const formData = await req.formData();
-    console.log("FormData received, entries:", Array.from(formData.entries()));
+    // console.log("FormData received, entries:", Array.from(formData.entries()));
     const role = formData.get("role") as string;
     // console.log("Role:", role);
     if (!["student", "company"].includes(role)) {
