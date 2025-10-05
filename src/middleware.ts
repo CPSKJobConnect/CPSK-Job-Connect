@@ -47,11 +47,9 @@ export default withAuth(
       }
 
       // Redirect authenticated users from auth pages and homepage to their dashboard
-      if (isPublicRoute && role) {
+      if (isPublicRoute && role && !pathname.startsWith("/api")) {
         if (pathname === "/jobs") {
-          {
-            return NextResponse.next()
-          }
+          return NextResponse.next() // allow access to public jobs page for authenticated users
         }
         return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
       }

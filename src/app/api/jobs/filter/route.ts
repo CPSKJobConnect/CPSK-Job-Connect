@@ -27,7 +27,7 @@ export async function GET(req: Request) {
     });
     const locationsSet = new Set(locationsRaw.map((loc) => loc.location));
     const locations = Array.from(locationsSet);
-
+    
     return NextResponse.json({
       categories: categories.map((c) => c.name),
       locations,
