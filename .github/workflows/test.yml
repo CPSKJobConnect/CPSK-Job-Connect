@@ -34,7 +34,7 @@ jobs:
 
       # 4. Typescript Check
       - name: Run Typescript Check
-        run: npm run tsc --noEmit
+        run: npm run type-check
 
       # 5. Run tests with coverage
       - name: Run Jest tests
