@@ -34,7 +34,7 @@ export const companyRegisterSchema = z.object({
   confirmPassword: z.string(),
   companyName: z.string().min(3, "Company name is required"),
   address: z.string().min(3, "Address is required"),
-  year: z.number().min(1800, "Year must be valid").max(new Date().getFullYear(), "Year cannot be in the future"),
+  // year: z.number().min(1800, "Year must be valid").max(new Date().getFullYear(), "Year cannot be in the future"),
   website: z.string().url("Website must be a valid URL").or(z.literal("")).optional(),
   description: z.string().min(10,  "Description must be atleast 10 characters."),
   phone: z.string().regex(/^\d{10,}$/, "Phone number must be at least 10 digits and only digits"),
