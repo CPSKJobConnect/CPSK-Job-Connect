@@ -66,9 +66,12 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col gap-6 px-10">
+    <div className="flex flex-col gap-6 px-10 mt-7">
       <div className="sticky top-0 z-10 mb-1">
-        <JobFilterBar filter={filterInfo} onSearch={handleSearch} />
+        <JobFilterBar
+          filter={filterInfo}
+          onSearch={handleSearch}
+        />
       </div>
       {jobToShow.length > 0 ? (
         <div className="flex flex-col md:flex-col lg:flex-row sm:flex-col gap-8 h-screen">
