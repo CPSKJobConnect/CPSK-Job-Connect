@@ -11,25 +11,45 @@ export async function GET() {
     }
 
     const student = await prisma.student.findFirst({
-        where: {
-            account: {
-                email: session.user.email
-            }
-        },
-        include: {
-            account: {
-                include: {
-                    documents: true
-                }
-            }
+      where: {
+        account: { email: session.user.email }
+      },
+      include: {
+        account: {
+          include: { documents: true }
         }
+      }
     });
 
     if (!student) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    return NextResponse.json(student);
+    const [firstname, ...lastnameParts] = student.name.split(" ");
+    const lastname = lastnameParts.join(" ");
+
+    const responseStudent = {
+      id: student.id,
+      account_id: student.account_id,
+      profile_url: student.account.logoUrl ?? "",
+      bg_profile_url: student.account.backgroundUrl ?? "",
+      email: student.account.email,
+      role: "student",
+      student_id: student.student_id,
+      firstname,
+      lastname,
+      faculty: student.faculty,
+      year: Number(student.year),
+      phone: student.phone,
+      documents: {
+        resume: student.account.documents.filter(d => d.doc_type_id === 1),
+        cv: student.account.documents.filter(d => d.doc_type_id === 2),
+        portfolio: student.account.documents.filter(d => d.doc_type_id === 3),
+      }
+    };
+
+    return NextResponse.json(responseStudent);
+
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json({ error: "Failed to fetch student" }, { status: 500 });
