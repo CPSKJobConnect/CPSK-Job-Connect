@@ -8,7 +8,6 @@ import { MdOutlineTimer, MdOutlinePeopleAlt } from "react-icons/md";
 import { IoDocumentTextOutline } from "react-icons/io5";
 import { FileMeta } from "@/types/file";
 import mockStudents from "public/data/fakeStudent";
-import { fakeJobData } from "public/data/fakeJobDescription";
 import DocumentUploadSection from "./DocumentUploadSection";
 import StudentInfoCard from "./StudentInfoCard";
 import { Button } from "@/components/ui/button";
@@ -37,15 +36,24 @@ export default function Page() {
 
 
     useEffect(() => {
-      // fetch job data
-      if (!params?.id) return;
-      const foundJob = fakeJobData.find(j => j.id.toString() === params.id);
-      if (!foundJob) {
-        router.push("/jobs");
-        return;
-      }
+        if (!params?.id) return;
 
-      setJob(foundJob);
+        const fetchJob = async () => {
+            try {
+                const res = await fetch(`/api/jobs/${params.id}`);
+                if (!res.ok) {
+                    router.push("/jobs");
+                    return;
+                }
+                const data: JobInfo = await res.json();
+                setJob(data);
+            }   catch (error) {
+                console.error("Failed to fetch job:", error);
+                router.push("/jobs");
+            }
+        };
+
+        fetchJob();
 
       // fetch student's documents
       setResumeExisting(mockStudents[0].documents.resume)
@@ -53,7 +61,7 @@ export default function Page() {
 
       // fetch student data
       setStudent(mockStudents[0])
-    }, [params.id])
+    },  [params.id, router]);
     
     if (!job) {
       return <div>Loading...</div>;
