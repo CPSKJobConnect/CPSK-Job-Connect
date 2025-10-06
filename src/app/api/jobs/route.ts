@@ -1,6 +1,4 @@
 import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -9,6 +7,7 @@ export async function GET() {
     // if (!session) {
     //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     // }
+    const test: string = 1234 // Intentional type error for testing
 
     const jobs = await prisma.jobPost.findMany({
       include: {
