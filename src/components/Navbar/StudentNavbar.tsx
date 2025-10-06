@@ -9,7 +9,7 @@ export default function StudentNavbar() {
   const pathname = usePathname();
 
   const links: Navbar01NavLink[] = [
-    { href: '/jobs', label: 'Find Jobs', active: pathname === '/jobs' },
+    { href: '/jobs', label: 'Browse Jobs', active: pathname === '/jobs' },
     { href: '/student/my-application', label: 'My Applications', active: pathname === '/student/my-application' },
   ];
 
