@@ -1,13 +1,11 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, context: { params: { id: string } }) {
   try {
+    const { id } = await context.params;
     const job = await prisma.jobPost.findUnique({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       include: {
         categories: true,
         tags: true,
