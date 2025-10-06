@@ -1,7 +1,6 @@
 "use client";
 
 import { Navbar01 } from "@/components/ui/shadcn-io/navbar-01";
-import './jobslayout.css';
 
 type Props = {
   children: React.ReactNode;
@@ -9,7 +8,7 @@ type Props = {
 
 export default function StudentLayout({ children }: Props) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white">
       <div className="fixed top-0 left-0 w-full z-50">
         <Navbar01 />
       </div>
