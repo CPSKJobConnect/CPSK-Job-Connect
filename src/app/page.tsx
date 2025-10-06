@@ -47,7 +47,7 @@ export default function Home() {
           </div>
 
           {/* Role Selection Cards */}
-          <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+          <div id='role-selection' className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
             {/* Company Card */}
             <Link href="/login/company" className="block">
             <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-orange-100 border border-orange-200">

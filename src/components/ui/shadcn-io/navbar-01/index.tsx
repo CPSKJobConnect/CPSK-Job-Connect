@@ -17,13 +17,19 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { 
+  MantineProvider
+} from '@mantine/core';
 
 // Simple logo component for the navbar
-const Logo = (props: React.SVGAttributes<SVGElement>) => {
+const Logo = ({ className, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
   return (
-    <span id='logo' className="hidden font-bold text-xl sm:inline-block text-white">
-      CPSK Job Connect
-    </span>
+    <img
+      src="/assets/icons/logo.png" // same logo as StudentNavbar
+      alt="Logo"
+      className={cn("block h-30 mt-1 w-auto", className)}
+      {...props}
+    />
   );
 };
 
@@ -64,10 +70,17 @@ export interface Navbar01NavLink {
   active?: boolean;
 }
 
+
+// Default navigation links
+const defaultNavigationLinks: Navbar01NavLink[] = [
+  { href: 'https://github.com/CPSKJobConnect/CPSK-Job-Connect/wiki', label: 'About' },
+];
+
 export interface Navbar01Props extends React.HTMLAttributes<HTMLElement> {
   logo?: React.ReactNode;
   logoHref?: string;
   navigationLinks?: Navbar01NavLink[];
+  rightContent?: React.ReactNode; // NEW: custom right content like avatar/buttons
   signInText?: string;
   signInHref?: string;
   ctaText?: string;
@@ -76,11 +89,6 @@ export interface Navbar01Props extends React.HTMLAttributes<HTMLElement> {
   onCtaClick?: () => void;
 }
 
-// Default navigation links
-const defaultNavigationLinks: Navbar01NavLink[] = [
-  { href: 'https://github.com/CPSKJobConnect/CPSK-Job-Connect/wiki', label: 'About' },
-];
-
 export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
   (
     {
@@ -88,13 +96,14 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
       logo = <Logo />,
       logoHref = '#',
       navigationLinks = defaultNavigationLinks,
+      rightContent, // destructure so it doesn't go to header
       signInText = 'Sign In',
       signInHref = '#signin',
       ctaText = 'Get Started',
       ctaHref = '#get-started',
       onSignInClick,
       onCtaClick,
-      ...props
+      ...props // only native props
     },
     ref
   ) => {
@@ -105,138 +114,138 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
       const checkWidth = () => {
         if (containerRef.current) {
           const width = containerRef.current.offsetWidth;
-          setIsMobile(width < 768); // 768px is md breakpoint
+          setIsMobile(width < 768);
         }
       };
-
       checkWidth();
-
       const resizeObserver = new ResizeObserver(checkWidth);
-      if (containerRef.current) {
-        resizeObserver.observe(containerRef.current);
-      }
-
-      return () => {
-        resizeObserver.disconnect();
-      };
+      if (containerRef.current) resizeObserver.observe(containerRef.current);
+      return () => resizeObserver.disconnect();
     }, []);
 
-    // Combine refs
-    const combinedRef = React.useCallback((node: HTMLElement | null) => {
-      containerRef.current = node;
-      if (typeof ref === 'function') {
-        ref(node);
-      } else if (ref) {
-        ref.current = node;
-      }
-    }, [ref]);
+    const combinedRef = React.useCallback(
+      (node: HTMLElement | null) => {
+        containerRef.current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref) ref.current = node;
+      },
+      [ref]
+    );
 
     return (
-      <header
-        ref={combinedRef}
-        className={cn(
-          'sticky top-0 z-50 w-full border-b bg-[#006C67] backdrop-blur supports-[backdrop-filter]:bg-[#006C67]/95 px-4 md:px-6 [&_*]:no-underline',
-          className
-        )}
-        {...props}
-      >
-        <div className="container mx-auto flex h-16 max-w-screen-2xl items-center justify-between gap-4">
-          {/* Left side */}
-          <div className="flex items-center gap-2">
-            {/* Mobile menu trigger */}
-            {isMobile && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    className="group h-9 w-9 hover:bg-accent hover:text-accent-foreground"
-                    variant="ghost"
-                    size="icon"
-                  >
-                    <HamburgerIcon />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-48 p-2">
-                <NavigationMenu className="max-w-none">
-                  <NavigationMenuList className="flex-col items-start gap-1">
-                    {navigationLinks.map((link, index) => (
-                      <NavigationMenuItem key={index} className="w-full">
-                        <button
-                          onClick={(e) => e.preventDefault()}
-                          className={cn(
-                            "flex w-full items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer no-underline",
-                            link.active 
-                              ? "bg-accent text-accent-foreground" 
-                              : "text-foreground/80"
-                          )}
-                        >
-                          {link.label}
-                        </button>
-                      </NavigationMenuItem>
-                    ))}
-                  </NavigationMenuList>
-                </NavigationMenu>
-                </PopoverContent>
-              </Popover>
-            )}
-            {/* Main nav */}
-            <div className="flex items-center gap-6">
-              <button 
-                onClick={(e) => e.preventDefault()}
-                className="flex items-center space-x-2 text-primary hover:text-primary/90 transition-colors cursor-pointer"
-              >
-                {/* LOGO */}
-                <div>{logo}</div>
-              </button>
-              {/* Navigation menu */}
-              {!isMobile && (
-                <NavigationMenu className="flex">
-                <NavigationMenuList className="gap-1">
-                  {navigationLinks.map((link, index) => (
-                  <NavigationMenuItem key={index}>
-                    <NavigationMenuLink
-                      asChild
-                      className={cn(
-                        "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none",
-                        link.active
-                          ? "bg-accent text-accent-foreground"
-                          : "text-foreground/80 hover:text-foreground"
-                      )}
+      <MantineProvider>
+        <header
+          ref={combinedRef}
+          className={cn(
+            'fixed top-0 z-50 w-full border-b bg-[#006C67] backdrop-blur supports-[backdrop-filter]:bg-[#006C67]/95 px-4 md:px-6 [&_*]:no-underline',
+            className
+          )}
+          {...props} // safe now, rightContent is not included
+        >
+          <div className="container mx-auto flex h-16 max-w-screen-2xl items-center justify-between gap-4">
+            {/* Left side */}
+            <div className="flex items-center">
+              {/* Mobile menu trigger */}
+              {isMobile && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      className="group h-9 w-9 hover:bg-accent hover:text-accent-foreground"
+                      variant="ghost"
+                      size="icon"
                     >
-                      {link.href.startsWith("http") ? (
-                        <a href={link.href} target="_blank" rel="noopener noreferrer">
-                          {link.label}
-                        </a>
-                      ) : (
-                        <Link href={link.href}>{link.label}</Link>
-                      )}
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                  ))}
-                </NavigationMenuList>
-                </NavigationMenu>
+                      <HamburgerIcon />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-48 p-2">
+                    <NavigationMenu className="max-w-none">
+                      <NavigationMenuList className="flex-col items-start gap-1">
+                        {navigationLinks.map((link, index) => (
+                          <NavigationMenuItem key={index} className="w-full">
+                            <button
+                              onClick={(e) => e.preventDefault()}
+                              className={cn(
+                                "flex w-full items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer no-underline",
+                                link.active ? "bg-accent text-accent-foreground" : "text-foreground/80"
+                              )}
+                            >
+                              {link.label}
+                            </button>
+                          </NavigationMenuItem>
+                        ))}
+                      </NavigationMenuList>
+                    </NavigationMenu>
+                  </PopoverContent>
+                </Popover>
+              )}
+
+              {/* Main nav */}
+
+              {/* Logo */}
+              <div className="flex items-center">
+                <button
+                  onClick={(e) => e.preventDefault()}
+                  aria-label="Home"
+                  className="inline-flex items-center justify-center p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {logo}
+                </button>
+
+                {/* Left side */}
+                {!isMobile && (
+                  <NavigationMenu className="flex">
+                    <NavigationMenuList className="gap-1">
+                      {navigationLinks.map((link, index) => (
+                        <NavigationMenuItem key={index}>
+                          <NavigationMenuLink
+                            asChild
+                            className={cn(`px-3 py-2 rounded-md font-semibold transition-colors ${
+                              link.active ? "bg-white/20 text-white" : "text-gray-200 hover:bg-white/10 hover:text-white"}`)}
+                          >
+                            {link.href.startsWith("http") ? (
+                              <a href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a>
+                            ) : (
+                              <Link href={link.href}>{link.label}</Link>
+                            )}
+                          </NavigationMenuLink>
+                        </NavigationMenuItem>
+                      ))}
+                    </NavigationMenuList>
+                  </NavigationMenu>
+                )}
+              </div>
+            </div>
+
+            {/* Right side */}
+            <div className="flex items-center gap-3">
+              {rightContent || (
+                <Button
+                  id="signin-btn"
+                  size="sm"
+                  className="text-sm font-medium px-4 h-9 rounded-md"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const section = document.getElementById("role-selection");
+                    if (section) {
+                      section.scrollIntoView({ behavior: "smooth" });
+                    } else {
+                      // fallback if not found
+                      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+                    }
+                  }}
+                >
+                  {signInText}
+                </Button>
               )}
             </div>
           </div>
-          {/* Right side */}
-          <div className="flex items-center gap-3">
-            <Button
-              id='signin-btn'
-              size="sm"
-              className="text-sm font-medium px-4 h-9 rounded-md"
-              onClick={(e) => {
-                e.preventDefault();
-                if (onSignInClick) onSignInClick();
-              }}
-            >
-              {signInText}
-            </Button>
-          </div>
-        </div>
-      </header>
+        </header>
+      </MantineProvider>
     );
   }
 );
 
 Navbar01.displayName = 'Navbar01';
+
 
 export { Logo, HamburgerIcon };
