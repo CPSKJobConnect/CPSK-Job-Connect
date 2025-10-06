@@ -53,14 +53,26 @@ export default function Page() {
             }
         };
 
-        fetchJob();
+        const fetchStudent = async () => {
+            try {
+                const res = await fetch(`/api/students/[id]`);
+                if (!res.ok) {
+                    console.error("Failed to fetch student");
+                    return;
+                }
+                const data: Student = await res.json();
+                setStudent(data);
+            } catch (error) {
+                console.error("Failed to fetch student:", error);
+            }
+        };
 
+        fetchJob();
+        fetchStudent();
       // fetch student's documents
       setResumeExisting(mockStudents[0].documents.resume)
       setPortfolioExisting(mockStudents[0].documents.portfolio)
 
-      // fetch student data
-      setStudent(mockStudents[0])
     },  [params.id, router]);
     
     if (!job) {
@@ -126,12 +138,12 @@ export default function Page() {
         </div>
         <div className="flex flex-row gap-5 px-10 items-stretch">
           <div className="basis-1/4">
-            <StudentInfoCard 
-              firstname={student.firstname} 
-              lastname={student.lastname} 
-              email={student.email} 
-              phone={student.phone} 
-              faculty={student.faculty} 
+            <StudentInfoCard
+              firstname={student.firstname}
+              lastname={student.lastname}
+              email={student.email}
+              phone={student.phone}
+              faculty={student.faculty}
             />
           </div>
 
