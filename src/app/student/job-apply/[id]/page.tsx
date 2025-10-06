@@ -62,6 +62,8 @@ export default function Page() {
                 }
                 const data: Student = await res.json();
                 setStudent(data);
+                setResumeExisting(data.documents.resume)
+                setPortfolioExisting(data.documents.portfolio)
             } catch (error) {
                 console.error("Failed to fetch student:", error);
             }
@@ -69,10 +71,6 @@ export default function Page() {
 
         fetchJob();
         fetchStudent();
-      // fetch student's documents
-      setResumeExisting(mockStudents[0].documents.resume)
-      setPortfolioExisting(mockStudents[0].documents.portfolio)
-
     },  [params.id, router]);
     
     if (!job) {
