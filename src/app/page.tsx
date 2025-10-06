@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Building, GraduationCap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import '@/app/globals.css';
 
 
 export default function Home() {
@@ -16,7 +17,11 @@ export default function Home() {
           {/* Header */}
           <div>
             {/* Hero Section */}
-              <div className="flex flex-row justify-center items-start w-full min-h-[500px] px-0 py-[90px] bg-gradient-to-b from-[#ffffff26] via-[#f2fdfa26] to-[#e6fcf526] rounded-[40px] shadow-[0px_4px_4px_#0000003f] bg-cover bg-center bg-no-repeat max-w-[1440px] mx-auto" style={{ backgroundImage: "url('/assets/images/Kasetsart_Uni_View.png')"}}>
+              <div
+                id='hero-bg'
+                className="mt-20 flex flex-row justify-center items-start w-[90%] mb-[20px] min-h-[500px] px-0 py-[90px] bg-gradient-to-b from-[#ffffff26] via-[#f2fdfa26] to-[#e6fcf526] rounded-[40px] shadow-[0px_4px_4px_#0000003f] bg-cover bg-center bg-no-repeat max-w-[1440px] mx-auto"
+                style={{ backgroundImage: "url('/assets/images/Kasetsart_Uni_View.png')" }}
+              >
                 <div className="flex flex-row justify-center items-center w-[94%]">
                   {/* Hero Text */}
                   <div className="flex flex-col gap-[24px] justify-start items-start flex-1 mb-[60px] ml-[24px]">
@@ -48,9 +53,10 @@ export default function Home() {
 
           {/* Role Selection Cards */}
           <div id='role-selection' className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+
             {/* Company Card */}
             <Link href="/login/company" className="block">
-            <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-orange-100 border border-orange-200">
+              <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-orange-100 border border-orange-200">
                 <CardContent className="p-8 text-center">
                   <div>
                     <Image
@@ -80,42 +86,46 @@ export default function Home() {
                   {/* </div> */}
                 </CardContent>
               </Card>
-          </Link>
+            </Link>
 
-          {/* Student Card */}
-          <Link href="/login/student" className="block">
-          <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-green-100 border border-green-200">
-            <CardContent className="p-8 text-center">
-              <div>
-                <Image
-                  src="/assets/images/student_home.svg"
-                  alt="Online Connection Illustration"
-                  width={100}                  height={100}
-                  className="w-full h-auto mb-6"                />
-              </div>
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-200 transition-colors">
-                <GraduationCap className="w-10 h-10 text-green-600" />
-              </div>
-              <h2 className="h2 text-gray-900 mb-4">I am a Student</h2>
-              <p className="text-gray-600 body-1">
-                Find internships and job opportunities that match your skills and interests
-              </p>
-              {/* <div className="space-y-3"> */}
-                {/* <Link href="/login/student" className="block">
-                  <Button className="button w-full bg-green-600 hover:bg-green-700">
-                    Student Login
-                  </Button>
-                </Link> */}
-                {/* <Link href="/register/student" className="block">
-                  <Button variant="outline" className="button w-full border-green-200 text-green-700 hover:bg-green-50">
-                    Create Student Account
-                  </Button>
-                </Link> */}
-              {/* </div> */}
-            </CardContent>
-          </Card>
-          </Link>
-        </div>
+            {/* Student Card */}
+            <Link href="/login/student" className="block">
+              <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-green-100 border border-green-200">
+                <CardContent className="p-8 text-center">
+                  <div>
+                    <Image
+                      src="/assets/images/student_home.svg"
+                      alt="Online Connection Illustration"
+                      width={100}
+                      height={100}
+                      className="w-full h-auto mb-6"
+                    />
+                  </div>
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-200 transition-colors">
+                    <GraduationCap className="w-10 h-10 text-green-600" />
+                  </div>
+                  <h2 className="h2 text-gray-900 mb-4">
+                    I am a Student
+                  </h2>
+                  <p className="text-gray-600 body-1">
+                    Find internships and job opportunities that match your skills and interests
+                  </p>
+                  {/* <div className="space-y-3"> */}
+                    {/* <Link href="/login/student" className="block">
+                      <Button className="button w-full bg-green-600 hover:bg-green-700">
+                        Student Login
+                      </Button>
+                    </Link> */}
+                    {/* <Link href="/register/student" className="block">
+                      <Button variant="outline" className="button w-full border-green-200 text-green-700 hover:bg-green-50">
+                        Create Student Account
+                      </Button>
+                    </Link> */}
+                  {/* </div> */}
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
 
           {/* Illustration
           <div className="mt-12 text-center">
