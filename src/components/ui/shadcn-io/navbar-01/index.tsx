@@ -4,6 +4,7 @@ import './navbar01.css';
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from "next/link"
 import {
   NavigationMenu,
@@ -63,13 +64,19 @@ const HamburgerIcon = ({ className, ...props }: React.SVGAttributes<SVGElement>)
   </svg>
 );
 
-// Types
+// Types for left side
 export interface Navbar01NavLink {
   href: string;
   label: string;
   active?: boolean;
 }
 
+// Types 2 for right side
+export interface Navbar01NavLink2 {
+  href: string;
+  label: string;
+  active?: boolean;
+}
 
 // Default navigation links
 const defaultNavigationLinks: Navbar01NavLink[] = [
@@ -131,6 +138,12 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
       },
       [ref]
     );
+
+    const pathname = usePathname();
+
+    const RightSideLinks: Navbar01NavLink2[] = [
+      { href: '/jobs', label: 'Browse Jobs', active: pathname === '/jobs' },
+    ];
 
     return (
       <MantineProvider>
@@ -219,23 +232,35 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
             {/* Right side */}
             <div className="flex items-center gap-3">
               {rightContent || (
-                <Button
-                  id="signin-btn"
-                  size="sm"
-                  className="text-sm font-medium px-4 h-9 rounded-md"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const section = document.getElementById("role-selection");
-                    if (section) {
-                      section.scrollIntoView({ behavior: "smooth" });
-                    } else {
-                      // fallback if not found
-                      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-                    }
-                  }}
-                >
-                  {signInText}
-                </Button>
+                <>
+                  <Link
+                    href="/jobs"
+                    className={cn(
+                      "px-3 py-2 rounded-md font-semibold transition-colors",
+                      pathname === "/jobs"
+                        ? "bg-white/20 text-white"
+                        : "text-gray-200 hover:bg-white/10 hover:text-white"
+                    )}
+                  >
+                    Browse Jobs
+                  </Link>
+                  <Button
+                    id="signin-btn"
+                    size="sm"
+                    className="text-sm font-medium px-4 h-9 rounded-md"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const section = document.getElementById("role-selection");
+                      if (section) {
+                        section.scrollIntoView({ behavior: "smooth" });
+                      } else {
+                        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+                      }
+                    }}
+                  >
+                    {signInText}
+                  </Button>
+                </>
               )}
             </div>
           </div>
