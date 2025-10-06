@@ -1,13 +1,13 @@
 "use client";
 
-import Image from "next/image";
-import { Button } from "./ui/button";
-import { useRouter } from "next/navigation";
-import { IoLocationOutline } from "react-icons/io5";
-import { MdOutlineTimer, MdOutlinePeopleAlt } from "react-icons/md";
-import { FiEdit } from "react-icons/fi";
-import { RiDeleteBinFill } from "react-icons/ri";
 import { JobInfo } from "@/types/job";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { FiEdit } from "react-icons/fi";
+import { IoLocationOutline } from "react-icons/io5";
+import { MdOutlinePeopleAlt, MdOutlineTimer } from "react-icons/md";
+import { RiDeleteBinFill } from "react-icons/ri";
+import { Button } from "./ui/button";
 
 
 interface JobDescriptionProps {
@@ -16,6 +16,14 @@ interface JobDescriptionProps {
   onApply: boolean;
   onEdit: boolean;
 }
+
+const typeColors: Record<string, string> = {
+  fulltime: "bg-pink-200 text-gray-800",
+  parttime: "bg-blue-200 text-gray-800",
+  internship: "bg-green-100 text-gray-800",
+  contract: "bg-yellow-200 text-gray-800",
+  hybrid: "bg-purple-200 text-gray-800"
+};
 
 
 
@@ -30,7 +38,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
   }[size];
 
   const handleApply = () => {
-    router.push("/job-apply");
+    router.push(`student/job-apply/${job.id}`);
   };
 
   const handleSave = () => {
@@ -102,6 +110,13 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
       </div>
 
       <div className="flex flex-wrap gap-2 px-4 mt-2">
+        <span
+          className={`px-2 py-1 rounded-md text-sm shadow-md ${
+            typeColors[job.type] || "bg-white text-gray-800"
+          }`}
+        >
+          {job.type}
+        </span>
         {job.tags.map((tag, idx) => (
           <span
             key={idx}
