@@ -7,7 +7,6 @@ import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineTimer, MdOutlinePeopleAlt } from "react-icons/md";
 import { IoDocumentTextOutline } from "react-icons/io5";
 import { FileMeta } from "@/types/file";
-import mockStudents from "public/data/fakeStudent";
 import DocumentUploadSection from "./DocumentUploadSection";
 import StudentInfoCard from "./StudentInfoCard";
 import { Button } from "@/components/ui/button";
@@ -33,7 +32,6 @@ export default function Page() {
     const [selectedResume, setSelectedResume] = useState<FileMeta | null>(null);
     const [uploadedPortfolio, setUploadedPortfolio] = useState<File | null>(null);
     const [selectedPortfolio, setSelectedPortfolio] = useState<FileMeta | null>(null);
-
 
     useEffect(() => {
         if (!params?.id) return;
@@ -73,13 +71,62 @@ export default function Page() {
         fetchStudent();
     },  [params.id, router]);
     
-    if (!job) {
-      return <div>Loading...</div>;
+    const handleSubmit = async () => {
+    if (!uploadedResume && !selectedResume) {
+      alert("Please select or upload your Resume before submitting.");
+      return;
+    }
+    if (!uploadedPortfolio && !selectedPortfolio) {
+      alert("Please select or upload your Portfolio before submitting.");
+      return;
     }
 
-    if (!student) {
-      return <div>Loading...</div>;
+    if (!student || !job) {
+      alert("Student or Job data is missing.");
+      return;
     }
+
+    const formData = new FormData();
+    formData.append("userId", String(student.id));
+    formData.append("jobId", String(job.id));
+
+    if (uploadedResume) {
+      formData.append("resume", uploadedResume);
+    } else if (selectedResume) {
+      formData.append("resumeId", String(selectedResume.id));
+    }
+
+    if (uploadedPortfolio) {
+      formData.append("portfolio", uploadedPortfolio);
+    } else if (selectedPortfolio) {
+      formData.append("portfolioId", String(selectedPortfolio.id));
+    }
+
+    try {
+      const res = await fetch("/api/jobs/apply", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error(data);
+        alert("Failed to submit application.");
+        return;
+      }
+
+      alert("Application submitted successfully!");
+      console.log("Application response:", data);
+    } catch (err) {
+      console.error(err);
+      alert("Error submitting application.");
+    }
+  };
+
+  if (!job || !student) {
+    return <div>Loading...</div>;
+  }
 
     return (
       <>
@@ -178,7 +225,7 @@ export default function Page() {
           </div>
         </div>
         <div className="px-10 py-5">
-        <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white font-md px-10">
+        <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white font-md px-10" onClick={handleSubmit}>
           Submit
         </Button>
         </div>
