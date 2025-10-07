@@ -27,7 +27,7 @@ export default function Page() {
   useEffect(() => {
     fetch("/api/jobs/type").then(res => res.json()).then(setJobTypes);
     fetch("/api/jobs/arrangement").then(res => res.json()).then(setJobArrangements);
-    fetch("/api/jobs/categorie").then(res => res.json()).then(setJobCategories);
+    fetch("/api/jobs/category").then(res => res.json()).then(setJobCategories);
     fetch("/api/jobs/tag").then(res => res.json()).then(setJobTags);
   }, []);
 
@@ -100,9 +100,12 @@ export default function Page() {
           <TabsTrigger value="description">Description</TabsTrigger>
         </TabsList>
         <TabsContent value="detail">
-          <JobPostDetailSection 
-          formData={formData}
-          setFormData={setFormData}
+          <JobPostDetailSection
+            formData={formData}
+            setFormData={setFormData}
+            jobTypes={jobTypes}
+            jobArrangements={jobArrangements}
+            jobCategories={jobCategories}
           />
         </TabsContent>
 
