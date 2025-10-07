@@ -13,13 +13,23 @@ import { JobPostFormData } from "@/types/job";
 import { defaultJobPostForm } from "@/types/job";
 import { toast } from "sonner"
 
-
 export default function Page() {
   const [formData, setFormData] = useState<JobPostFormData>(defaultJobPostForm);
+  const [jobTypes, setJobTypes] = useState<{id:number,name:string}[]>([]);
+  const [jobArrangements, setJobArrangements] = useState<{id:number,name:string}[]>([]);
+  const [jobCategories, setJobCategories] = useState<{id:number,name:string}[]>([]);
+  const [jobTags, setJobTags] = useState<{id:number,name:string}[]>([]);
 
   useEffect(() => {
     console.log("post form: ", formData);
   }, [formData]);
+
+  useEffect(() => {
+    fetch("/api/jobs/type").then(res => res.json()).then(setJobTypes);
+    fetch("/api/jobs/arrangement").then(res => res.json()).then(setJobArrangements);
+    fetch("/api/jobs/categorie").then(res => res.json()).then(setJobCategories);
+    fetch("/api/jobs/tag").then(res => res.json()).then(setJobTags);
+  }, []);
 
   const validateForm = (formData: JobPostFormData) => {
     const errors: string[] = [];
