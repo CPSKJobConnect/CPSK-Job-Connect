@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockCompanies } from "@/mockCompany";
+import { mockCompanies } from "public/data/mockCompany";
 import { JobPostFormData} from "@/types/job";
 import CategoryCombobox from "@/components/CategoryCombobox";
 

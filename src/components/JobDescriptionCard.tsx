@@ -15,7 +15,7 @@ import { Input } from "./ui/input";
 import { JobPostFormData } from "@/types/job";
 import SkillCombobox from "./SkillCombobox";
 import CategoryCombobox from "./CategoryCombobox";
-import { mockCompanies } from "@/mockCompany";
+import { mockCompanies } from "public/data/mockCompany";
 import {
   Select,
   SelectContent,
@@ -86,6 +86,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
 
   const handleEdit = () => {
     console.log(formData);
+    setIsEditing(false);
     
   };
 

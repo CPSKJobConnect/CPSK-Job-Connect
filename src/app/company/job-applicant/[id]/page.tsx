@@ -8,7 +8,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { mockJobInCompany } from "public/data/mockJobInCompany";
-import { JobInfo, JobPostFormData } from "@/types/job";
+import { JobInfo } from "@/types/job";
 import ApplicationList from "../ApplicationList";
 import { fakeJobData } from "public/data/fakeJobDescription";
 import { mockApplicantList } from "public/data/mockApplicantList";
@@ -65,11 +65,11 @@ export default function Page() {
             </div>
           </div>
           <div className="flex md:flex-row sm:flex-col gap-8">
-            <div className="basis-1/5 h-full">
+            <div className="basis-1/5">
               <AllJobPost info={jobPost} onSelectCard={(id) => setSelectedCardId(id)} />
             </div>
-            <div className="basis-4/5 h-full">
-              <div className="flex flex-col gap-5 rounded-md shadow-md p-3">
+            <div className="basis-4/5">
+              <div className="flex flex-col rounded-md shadow-md p-3 max-h-[120vh]">
                 <div>
                   {selectedCardId !== null ? (
                     <JobDescriptionCard

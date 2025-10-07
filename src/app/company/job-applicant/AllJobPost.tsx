@@ -60,7 +60,7 @@ const AllJobPost = ({ info, onSelectCard }: AllJobPostProps) => {
   
 
   return (
-    <div className="flex flex-col rounded-md shadow-md w-full gap-2 p-4 overflow-y-hidden">
+    <div className="flex flex-col rounded-md shadow-md w-full gap-2 p-4 overflow-y-hidden max-h-[120vh]">
       <p className="text-md font-semibold text-gray-700">Job Posts ({filteredJobPost.length})</p>
 
       <div className="flex flex-col gap-3 flex-1">
