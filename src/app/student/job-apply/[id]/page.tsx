@@ -32,6 +32,7 @@ export default function Page() {
     const [selectedResume, setSelectedResume] = useState<FileMeta | null>(null);
     const [uploadedPortfolio, setUploadedPortfolio] = useState<File | null>(null);
     const [selectedPortfolio, setSelectedPortfolio] = useState<FileMeta | null>(null);
+    const [alreadyApplied, setAlreadyApplied] = useState(false);
 
     useEffect(() => {
         if (!params?.id) return;
@@ -70,7 +71,26 @@ export default function Page() {
         fetchJob();
         fetchStudent();
     },  [params.id, router]);
-    
+
+    useEffect(() => {
+    if (!student || !job) return;
+
+    const checkApplication = async () => {
+      try {
+        const res = await fetch("/api/jobs/check-application", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ studentId: student.id, jobId: job.id }),
+        });
+        const data = await res.json();
+        setAlreadyApplied(data.applied);
+      } catch (err) {
+        console.error("Failed to check application:", err);
+      }
+    };
+
+    checkApplication();
+  }, [student, job]);
     const handleSubmit = async () => {
     if (!uploadedResume && !selectedResume) {
       alert("Please select or upload your Resume before submitting.");
@@ -225,8 +245,8 @@ export default function Page() {
           </div>
         </div>
         <div className="px-10 py-5">
-        <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white font-md px-10" onClick={handleSubmit}>
-          Submit
+        <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white font-md px-10" onClick={handleSubmit} disabled={alreadyApplied}>
+          {alreadyApplied ? "Already Applied" : "Submit"}
         </Button>
         </div>
       </>
