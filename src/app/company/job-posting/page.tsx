@@ -103,9 +103,29 @@ export default function Page() {
     }
   };
 
-  const handleDraft = () => {
-    // draft job
-  };
+  const handleDraft = async () => {
+  try {
+    const res = await fetch("/api/jobs/create_post", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...formData,
+        is_published: false,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      alert("💾 Draft saved successfully!");
+    } else {
+      const err = await res.json();
+      alert(`❌ Failed to save draft: ${err.error || "Unknown error"}`);
+    }
+  } catch (error) {
+    console.error("Error saving draft:", error);
+    alert("⚠️ Something went wrong while saving draft.");
+  }
+};
 
   return (
     <div className="flex flex-col p-4 gap-8">
