@@ -28,7 +28,6 @@ export default function Page() {
 
     const requiredFields: { key: keyof JobPostFormData; label: string }[] = [
       { key: "title", label: "Title" },
-      { key: "department", label: "Department" },
       { key: "location", label: "Location" },
       { key: "type", label: "Type" },
       { key: "arrangement", label: "Arrangement" },
