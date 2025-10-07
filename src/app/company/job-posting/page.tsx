@@ -79,8 +79,28 @@ export default function Page() {
     return errors;
   };
   
-  const handlePost = () => {
-    // post job
+  const handlePost = async () => {
+    try {
+      const res = await fetch("/api/jobs/create_post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          is_published: true,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert("✅ Job posted successfully!");
+      } else {
+        const err = await res.json();
+        alert(`❌ Failed to post job: ${err.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error posting job:", error);
+      alert("⚠️ Something went wrong while posting the job.");
+    }
   };
 
   const handleDraft = () => {
