@@ -50,12 +50,12 @@ export async function POST(req: Request) {
     jobName: body.title,
     location: body.location,
     aboutRole: body.description?.overview || "",
-    requirements: Array.isArray(body.description?.requirement)
-      ? body.description.requirement
-      : [body.description?.requirement || ""],
-    qualifications: Array.isArray(body.description?.qualification)
-      ? body.description.qualification
-      : [body.description?.qualification || ""],
+    requirements: body.description?.requirement
+      ? body.description.requirement.split(",").map(s => s.trim())
+      : [],
+    qualifications: body.description?.qualification
+      ? body.description.qualification.split(",").map(s => s.trim())
+      : [],
     min_salary: Number(body.minSalary) || 0,
     max_salary: Number(body.maxSalary) || 0,
     deadline: new Date(body.deadline),
