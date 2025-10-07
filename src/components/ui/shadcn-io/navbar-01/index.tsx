@@ -235,136 +235,58 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
 
             {/* Right side */}
             <div className="flex items-center gap-3">
-              {session ? ( // 👇 When logged in
-                <>
-                  {/* Student role -> show Browse Jobs + Avatar */}
-                  {session.user?.role === "student" ? (
-                    <>
-                      <Link
-                        href="/jobs"
-                        className={cn(
-                          "px-3 py-2 rounded-md font-semibold transition-colors",
-                          pathname === "/jobs"
-                            ? "bg-white/20 text-white"
-                            : "text-gray-200 hover:bg-white/10 hover:text-white"
-                        )}
-                      >
-                        Browse Jobs
-                      </Link>
-
-                      {/* Avatar */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center">
-                            {session?.user?.logoUrl ? (
-                              <Image
-                                src={session.user.logoUrl}
-                                alt="Profile"
-                                width={40}
-                                height={40}
-                                className="object-cover"
-                              />
-                            ) : (
-                              <span className="text-gray-600 font-semibold text-sm">
-                                {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
-                              </span>
-                            )}
-                          </div>
-                        </PopoverTrigger>
-
-                        <PopoverContent className="w-40">
-                          <p className="text-sm font-medium mb-2">{session.user?.name}</p>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full text-red-500 hover:text-red-600"
-                            onClick={() => signOut({ callbackUrl: "/" })}
-                          >
-                            Sign out
-                          </Button>
-                        </PopoverContent>
-                      </Popover>
-                    </>
-                  ) : (
-                    // Non-student role -> show Avatar and rightContent (if any)
-                    <>
-                      {rightContent && <div className="flex items-center gap-3">{rightContent}</div>}
-
-                      {/* Avatar */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center">
-                            {session?.user?.logoUrl ? (
-                              <Image
-                                src={session.user.logoUrl}
-                                alt="Profile"
-                                width={40}
-                                height={40}
-                                className="object-cover"
-                              />
-                            ) : (
-                              <span className="text-gray-600 font-semibold text-sm">
-                                {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
-                              </span>
-                            )}
-                          </div>
-                        </PopoverTrigger>
-
-                        <PopoverContent className="w-40">
-                          <p className="text-sm font-medium mb-2">{session.user?.name}</p>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full text-red-500 hover:text-red-600"
-                            onClick={() => signOut({ callbackUrl: "/" })}
-                          >
-                            Sign out
-                          </Button>
-                        </PopoverContent>
-                      </Popover>
-                    </>
-                  )}
-                </>
+              {rightContent ? (
+                // Use custom rightContent if provided
+                rightContent
+              ) : session ? (
+                // Logged in (default template)
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center">
+                      {session.user?.logoUrl ? (
+                        <Image
+                          src={session.user.logoUrl}
+                          alt="Profile"
+                          width={40}
+                          height={40}
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-600 font-semibold text-sm">
+                          {session.user?.name?.charAt(0)?.toUpperCase() || "U"}
+                        </span>
+                      )}
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-40">
+                    <p className="text-sm font-medium mb-2">{session.user?.name}</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-red-500 hover:text-red-600"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                    >
+                      Sign out
+                    </Button>
+                  </PopoverContent>
+                </Popover>
               ) : (
-                // 👇 When logged out
-                <>
-                  <Link
-                    href="/jobs"
-                    className={cn(
-                      "px-3 py-2 rounded-md font-semibold transition-colors",
-                      pathname === "/jobs"
-                        ? "bg-white/20 text-white"
-                        : "text-gray-200 hover:bg-white/10 hover:text-white"
-                    )}
-                  >
-                    Browse Jobs
-                  </Link>
-
-                  <Button
-                    id="signin-btn"
-                    size="sm"
-                    className="text-sm font-medium px-4 h-9 rounded-md"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (window.location.pathname !== "/") {
-                        // redirect to homepage with a flag in the URL
-                        router.push("/#role-selection");
-                      } else {
-                        const section = document.getElementById("role-selection");
-                        if (section) {
-                          section.scrollIntoView({ behavior: "smooth" });
-                        } else {
-                          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-                        }
-                      }
-                    }}
-                  >
-                    {signInText}
-                  </Button>
-                </>
+                // Logged out (default template)
+                <Button
+                  id="signin-btn"
+                  size="sm"
+                  className="text-sm font-medium px-4 h-9 rounded-md"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const section = document.getElementById("role-selection");
+                    if (section) section.scrollIntoView({ behavior: "smooth" });
+                    else window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+                  }}
+                >
+                  Sign In
+                </Button>
               )}
             </div>
-
 
           </div>
         </header>
