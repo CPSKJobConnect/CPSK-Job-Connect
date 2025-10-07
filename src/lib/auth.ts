@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/db";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google"
 import bycrypt from "bcryptjs";
+import { NextAuthOptions, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -45,6 +45,7 @@ export const authOptions: NextAuthOptions = {
             password: true,
             role: true,
             logoUrl: true,
+            backgroundUrl: true,
             accountRole: {
               select: {
                 name: true
@@ -66,8 +67,9 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.username,
           role: user.accountRole?.name,
-          image: user.logoUrl,
-        }
+          logoUrl: user.logoUrl,
+          backgroundUrl: user.backgroundUrl,
+        } as User
       },
     }),
   ],
@@ -76,6 +78,8 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role;
         token.username = user.username;
+        token.logoUrl = user.logoUrl;
+        token.backgroundUrl = user.backgroundUrl;
       }
 
       // for OAuth users
@@ -86,6 +90,8 @@ export const authOptions: NextAuthOptions = {
           },
           select: {
             username: true,
+            logoUrl: true,
+            backgroundUrl: true,
             accountRole: {
               select: {
                 name: true
@@ -96,6 +102,8 @@ export const authOptions: NextAuthOptions = {
         if (existingUser) {
           token.role = existingUser.accountRole?.name
           token.username = existingUser.username || undefined
+          token.logoUrl = existingUser.logoUrl || undefined
+          token.backgroundUrl = existingUser.backgroundUrl || undefined
         }
       }
       return token;
@@ -105,6 +113,8 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.sub!
         session.user.role = token.role as string
         session.user.username = token.username as string
+        session.user.logoUrl = token.logoUrl as string
+        session.user.backgroundUrl = token.backgroundUrl as string
       }
       return session;
     },

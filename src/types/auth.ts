@@ -8,12 +8,16 @@ declare module "next-auth" {
       role: string;
       username: string;
       profileComplete: boolean;
+      logoUrl?: string;
+      backgroundUrl?: string;
     } & DefaultSession["user"];
   }
 
   interface User {
     role?: string;
     username?: string;
+    logoUrl?: string;
+    backgroundUrl?: string;
   }
 }
 
@@ -21,6 +25,8 @@ declare module "next-auth/jwt" {
   interface JWT {
     role?:string
     username?:string
+    logoUrl?:string
+    backgroundUrl?:string
   }
 }
 

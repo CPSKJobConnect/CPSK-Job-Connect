@@ -19,4 +19,40 @@ export interface JobInfo {
     type: string;
     arrangement: string;
   }
-  
+
+
+export interface JobPostFormData {
+  title: string;
+  department: string;
+  location: string;
+  type: string;
+  arrangement: string;
+  minSalary: number;
+  maxSalary: number;
+  deadline: string;
+  skills: string[];
+  description: {
+    overview: string;
+    responsibility: string;
+    requirement: string;
+    qualification: string;
+  }
+}
+
+export const defaultJobPostForm: JobPostFormData = {
+  title: "",
+  department: "",
+  location: "",
+  type: "",
+  arrangement: "",
+  minSalary: 0,
+  maxSalary: 0,
+  deadline: "",
+  skills: [],
+  description: {
+    overview: "",
+    responsibility: "",
+    requirement: "",
+    qualification: "",
+  },
+};
