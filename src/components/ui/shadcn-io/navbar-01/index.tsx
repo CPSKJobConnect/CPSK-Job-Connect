@@ -4,7 +4,7 @@ import './navbar01.css';
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState, useRef } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from "next/link"
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
@@ -143,6 +143,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
 
     const pathname = usePathname();
     const { data: session } = useSession();
+    const router = useRouter();
 
     // const RightSideLinks: Navbar01NavLink2[] = [
     //   { href: '/jobs', label: 'Browse Jobs', active: pathname === '/jobs' },
@@ -345,11 +346,16 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                     className="text-sm font-medium px-4 h-9 rounded-md"
                     onClick={(e) => {
                       e.preventDefault();
-                      const section = document.getElementById("role-selection");
-                      if (section) {
-                        section.scrollIntoView({ behavior: "smooth" });
+                      if (window.location.pathname !== "/") {
+                        // redirect to homepage with a flag in the URL
+                        router.push("/#role-selection");
                       } else {
-                        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+                        const section = document.getElementById("role-selection");
+                        if (section) {
+                          section.scrollIntoView({ behavior: "smooth" });
+                        } else {
+                          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+                        }
                       }
                     }}
                   >
