@@ -14,8 +14,8 @@ export default function StudentNavbar() {
 
   const links: Navbar01NavLink[] = [
     { href: '/jobs', label: 'Browse Jobs', active: pathname === '/jobs' },
-    { href: '/student/my-application', label: 'My Applications', active: pathname === '/student/my-application' },
     { href: '/student/dashboard', label: 'Dashboard', active: pathname === '/student/dashboard' },
+    { href: '/student/my-application', label: 'My Applications', active: pathname === '/student/my-application' },
   ];
 
   // Right side content for Navbar01
