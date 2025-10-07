@@ -52,7 +52,7 @@ export default function Home() {
           </div>
 
           {/* Role Selection Cards */}
-          <div id='role-selection' className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+          <div id='role-selection' className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto mb-5">
 
             {/* Company Card */}
             <Link href="/login/company" className="block">
