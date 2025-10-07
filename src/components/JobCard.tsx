@@ -38,8 +38,8 @@ const JobCard = (job: JobCardProps) => {
     "rounded-xl shadow-md border border-gray-100 bg-white p-4 flex flex-col gap-2 hover:bg-[#F3FEFA] transition mb-5";
 
     const sizeStyle = {
-      sm: "w-full sm:w-[400px] sm:h-[140px]",
-      md: "w-full sm:w-[400px] sm:h-[250px] md:w-[550px] md:h-[250px]"
+      sm: "w-full sm:w-[400px] min-h-[140px]",
+      md: "w-full sm:w-[400px] min-h-[250px] md:w-[550px]"
     }[job.size || "md"];
 
   return (
@@ -110,9 +110,11 @@ const JobCard = (job: JobCardProps) => {
       </div>
 
       <div className="mt-auto mb-2 flex justify-end">
-      <Button className="lg:w-40 md:w-30 sm:w-30 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition">
-        View Detail
-      </Button>
+        {job.size === "md" && (
+          <Button className="lg:w-40 md:w-30 sm:w-30 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition">
+            View Detail
+          </Button>
+        )}
       </div>
     </div>
   );
