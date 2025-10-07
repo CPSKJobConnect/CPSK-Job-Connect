@@ -1,52 +1,24 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { prisma } from "@/lib/db";
+import { createClient } from "@supabase/supabase-js";
 
-export async function POST(req: Request) {
-  try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
-    const userId = formData.get("userId") as string;
-    const docTypeId = Number(formData.get("doc_type_id") || 1); // default 1 if not provided
+export async function uploadDocument(file: File, userId: string, docTypeId: number) {
+  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!);
 
-    if (!file || !userId) {
-      return NextResponse.json({ error: "Missing file or userId" }, { status: 400 });
-    }
+  const filePath = `Document/${userId}/${Date.now()}_${file.name}`;
+  const { data, error } = await supabase.storage
+    .from("documents")
+    .upload(filePath, file);
 
-    // Supabase client
-    const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY!
-    );
+  if (error) throw error;
 
-    // Upload file to Supabase Storage
-    const filePath = `uploads/${userId}_${Date.now()}_${file.name}`;
-    const { data, error: uploadError } = await supabase.storage
-      .from("transcripts")
-      .upload(filePath, file);
+  const document = await prisma.document.create({
+    data: {
+      account_id: Number(userId),
+      doc_type_id: docTypeId,
+      file_name: file.name,
+      file_path: data.path,
+    },
+  });
 
-    if (uploadError) throw uploadError;
-
-    // Save metadata to Prisma
-    const document = await prisma.document.create({
-      data: {
-        account_id: Number(userId),
-        doc_type_id: docTypeId,
-        file_name: file.name,
-        file_path: data.path,
-      },
-    });
-
-    return NextResponse.json({
-      message: "File uploaded successfully",
-      document,
-    });
-
-  } catch (error) {
-    console.error("Upload error:", error);
-    return NextResponse.json(
-      { error: "Upload failed", details: (error as any).message },
-      { status: 500 }
-    );
-  }
+  return document;
 }
