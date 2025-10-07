@@ -35,7 +35,7 @@ const StudentDashboardPage = () => {
         </div>
         <div className="space-y-2">
           <p className="text-gray-700">
-            <span className="font-medium">Welcome back,</span> {session.user.username || session.user.email}
+            <span className="font-medium">Welcome back,</span> {session.user.name || session.user.email}
           </p>
           <p className="text-sm text-gray-600">
             <span className="font-medium">Email:</span> {session.user.email}

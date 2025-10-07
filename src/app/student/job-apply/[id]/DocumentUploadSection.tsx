@@ -1,8 +1,8 @@
 "use client";
+import DocumentSelector from "@/app/student/job-apply/[id]/DocumentSelector";
 import FileUpload from "@/components/FileUpload";
-import DocumentSelector from "@/app/(student)/job-apply/[id]/DocumentSelector";
-import { IoMdClose } from "react-icons/io";
 import { FileMeta } from "@/types/file";
+import { IoMdClose } from "react-icons/io";
 
 interface DocumentUploadSectionProps {
     title: string;
