@@ -113,6 +113,7 @@ export default function Page() {
           <JobPostDescriptionSection 
           formData={formData}
           setFormData={setFormData}
+          jobTags={jobTags}
           />
         </TabsContent>
       </Tabs>

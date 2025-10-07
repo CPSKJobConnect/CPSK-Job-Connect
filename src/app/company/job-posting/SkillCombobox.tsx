@@ -26,18 +26,18 @@ import { IoIosClose } from "react-icons/io";
 interface SkillComboboxProps {
   selectedSkill: string[];
   setSelectedSkill: (skills: string[]) => void;
+  availableSkills: string[];
 }
 
-const SkillCombobox = ({ selectedSkill, setSelectedSkill }: SkillComboboxProps) => {
+const SkillCombobox = ({ selectedSkill, setSelectedSkill, availableSkills }: SkillComboboxProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [value, setValue] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [existingSkills, setExistingSkills] = useState<string[]>([]);
 
   useEffect(() => {
-    // fetch existing skill
-    setExistingSkills(mockSkill);
-  }, [])
+    setExistingSkills(availableSkills);
+  }, [availableSkills]);
 
   useEffect(() => {
     console.log("selected skill: ", selectedSkill)
@@ -120,19 +120,9 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill }: SkillComboboxProps) 
             </div>
             </CommandEmpty>
             <CommandGroup>
-              {existingSkills.map((skill, idx) => (
-                <CommandItem
-                  key={idx}
-                  value={skill}
-                  onSelect={handleSelectSkill}
-                >
+              {availableSkills.map((skill) => (
+                <CommandItem key={skill} onSelect={() => handleSelectSkill(skill)}>
                   {skill}
-                  <Check
-                    className={cn(
-                      "ml-auto",
-                      value === skill ? "opacity-100" : "opacity-0"
-                    )}
-                  />
                 </CommandItem>
               ))}
             </CommandGroup>
