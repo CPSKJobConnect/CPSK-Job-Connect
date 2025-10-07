@@ -63,3 +63,13 @@ export const mockSkill = [
   "Dart",
 ];
 
+export const mockCategory = [
+  "IT", 
+  "Engineering",
+  "Design",
+  "Marketing",
+  "Management",
+  "Finance", 
+  "Accounting",
+  "HR",
+];

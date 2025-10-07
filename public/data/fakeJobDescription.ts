@@ -21,7 +21,8 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "hybrid",
-    deadline: "2025-09-30"
+    deadline: "2025-09-30",
+    status: "active"
   },
   {
     id: "2",
@@ -43,7 +44,8 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "hybrid",
-    deadline: "2025-10-05"
+    deadline: "2025-10-05",
+    status: "active"
   },
   {
     id: "3",
@@ -65,7 +67,8 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "internship",
     arrangement: "onsite",
-    deadline: "2025-09-15"
+    deadline: "2025-09-15",
+    status: "expire"
   },
   {
     id: "4",
@@ -87,7 +90,8 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "onsite",
-    deadline: "2025-09-20"
+    deadline: "2025-09-20",
+    status: "expire"
   },
   {
     id: "5",
@@ -109,7 +113,8 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "internship",
     arrangement: "onsite",
-    deadline: "2025-09-10"
+    deadline: "2025-09-10",
+    status: "expire"
   },
   {
     id: "6",
@@ -131,7 +136,8 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "onsite",
-    deadline: "2025-10-01"
+    deadline: "2025-10-01",
+    status: "draft"
   },
   {
     id: "7",
@@ -153,7 +159,8 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "parttime",
     arrangement: "onsite",
-    deadline: "2025-09-25"
+    deadline: "2025-09-25",
+    status: "active"
   },
   {
     id: "8",
@@ -175,7 +182,8 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "onsite",
-    deadline: "2025-10-05"
+    deadline: "2025-10-05",
+    status: "active"
   },
   {
     id: "9",
@@ -197,7 +205,8 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "contract",
-    deadline: "2025-09-30"
+    deadline: "2025-09-30",
+    status: "expire"
   },
   {
     id: "10",
@@ -219,6 +228,7 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "parttime",
     arrangement: "freelance",
-    deadline: "2025-09-20"
+    deadline: "2025-09-20",
+    status: "expire"
   }
 ];
