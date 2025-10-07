@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useEffect, useState, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from "next/link"
+import Image from "next/image";
+import { useSession, signOut } from "next-auth/react";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -140,10 +142,11 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
     );
 
     const pathname = usePathname();
+    const { data: session } = useSession();
 
-    const RightSideLinks: Navbar01NavLink2[] = [
-      { href: '/jobs', label: 'Browse Jobs', active: pathname === '/jobs' },
-    ];
+    // const RightSideLinks: Navbar01NavLink2[] = [
+    //   { href: '/jobs', label: 'Browse Jobs', active: pathname === '/jobs' },
+    // ];
 
     return (
       <MantineProvider>
@@ -231,7 +234,98 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
 
             {/* Right side */}
             <div className="flex items-center gap-3">
-              {rightContent || (
+              {session ? ( // 👇 When logged in
+                <>
+                  {/* Student role -> show Browse Jobs + Avatar */}
+                  {session.user?.role === "student" ? (
+                    <>
+                      <Link
+                        href="/jobs"
+                        className={cn(
+                          "px-3 py-2 rounded-md font-semibold transition-colors",
+                          pathname === "/jobs"
+                            ? "bg-white/20 text-white"
+                            : "text-gray-200 hover:bg-white/10 hover:text-white"
+                        )}
+                      >
+                        Browse Jobs
+                      </Link>
+
+                      {/* Avatar */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center">
+                            {session?.user?.logoUrl ? (
+                              <Image
+                                src={session.user.logoUrl}
+                                alt="Profile"
+                                width={40}
+                                height={40}
+                                className="object-cover"
+                              />
+                            ) : (
+                              <span className="text-gray-600 font-semibold text-sm">
+                                {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+                              </span>
+                            )}
+                          </div>
+                        </PopoverTrigger>
+
+                        <PopoverContent className="w-40">
+                          <p className="text-sm font-medium mb-2">{session.user?.name}</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-red-500 hover:text-red-600"
+                            onClick={() => signOut({ callbackUrl: "/" })}
+                          >
+                            Sign out
+                          </Button>
+                        </PopoverContent>
+                      </Popover>
+                    </>
+                  ) : (
+                    // Non-student role -> show Avatar and rightContent (if any)
+                    <>
+                      {rightContent && <div className="flex items-center gap-3">{rightContent}</div>}
+
+                      {/* Avatar */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center">
+                            {session?.user?.logoUrl ? (
+                              <Image
+                                src={session.user.logoUrl}
+                                alt="Profile"
+                                width={40}
+                                height={40}
+                                className="object-cover"
+                              />
+                            ) : (
+                              <span className="text-gray-600 font-semibold text-sm">
+                                {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+                              </span>
+                            )}
+                          </div>
+                        </PopoverTrigger>
+
+                        <PopoverContent className="w-40">
+                          <p className="text-sm font-medium mb-2">{session.user?.name}</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-red-500 hover:text-red-600"
+                            onClick={() => signOut({ callbackUrl: "/" })}
+                          >
+                            Sign out
+                          </Button>
+                        </PopoverContent>
+                      </Popover>
+                    </>
+                  )}
+                </>
+              ) : (
+                // 👇 When logged out
                 <>
                   <Link
                     href="/jobs"
@@ -244,6 +338,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                   >
                     Browse Jobs
                   </Link>
+
                   <Button
                     id="signin-btn"
                     size="sm"
@@ -263,6 +358,8 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                 </>
               )}
             </div>
+
+
           </div>
         </header>
       </MantineProvider>
