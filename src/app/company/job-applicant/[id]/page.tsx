@@ -8,13 +8,16 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { mockJobInCompany } from "public/data/mockJobInCompany";
-import { JobInfo } from "@/types/job";
+import { JobInfo, JobPostFormData } from "@/types/job";
 import ApplicationList from "../ApplicationList";
 import { fakeJobData } from "public/data/fakeJobDescription";
+import { mockApplicantList } from "public/data/mockApplicantList";
+import { useRouter } from "next/navigation";
 
 
 export default function Page() {
   const params = useParams();
+  const router = useRouter();
   const [jobPost, setJobPost] = useState<JobInfo[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
 
@@ -30,10 +33,24 @@ export default function Page() {
       .filter((j): j is JobInfo => j !== undefined);
 
     setJobPost(jobs);
+
   }, [params?.id]);
 
+  const selectedJob = selectedCardId !== null ? jobPost[selectedCardId] : null;
+
+
+  const applicants =
+    selectedJob != null
+      ? mockApplicantList.find((a) => a.job_id === selectedJob.id)
+      : null;
+
+
+  const handlePostJob = () => {
+    router.push(`/company/job-posting/${params.id}`);
+  }
+
     return (
-      <div className="p-5 mb-3">
+      <div className="p-5 mb-3 max-h-screen overflow-y-auto">
         <div className="flex flex-col gap-5">
           <div className="flex flex-row justify-between">
             <div className="flex flex-col">
@@ -43,15 +60,15 @@ export default function Page() {
             <div className="flex justify-end p-2">
               <div className="flex flex-row bg-[#FD873E] rounded-md shadow-md gap-1 p-2">
                 <IoMdAdd className="text-white w-5 h-5 mt-1"/>
-                <p className="text-white font-semibold text-md">Post New Job</p>
+                <p className="text-white font-semibold text-md" onClick={handlePostJob}>Post New Job</p>
               </div>
             </div>
           </div>
-          <div className="flex flex-row gap-8">
-            <div className="basis-1/5 max-w-[40%]">
+          <div className="flex md:flex-row sm:flex-col gap-8">
+            <div className="basis-1/5 h-full">
               <AllJobPost info={jobPost} onSelectCard={(id) => setSelectedCardId(id)} />
             </div>
-            <div className="basis-4/5">
+            <div className="basis-4/5 h-full">
               <div className="flex flex-col gap-5 rounded-md shadow-md p-3">
                 <div>
                   {selectedCardId !== null ? (
@@ -59,7 +76,7 @@ export default function Page() {
                       size="md"
                       onApply={false}
                       onEdit={true}
-                      job={jobPost.find((job, idx) => idx === selectedCardId)!}
+                      job={jobPost.find((job) => job.id === selectedCardId.toString())!}                 
                     />
                   ) : (
                   <div className="flex flex-col items-center gap-4 py-44">
@@ -78,12 +95,11 @@ export default function Page() {
                   </div>
                   )}
                 </div>
-                <ApplicationList />
+                <ApplicationList job_id={selectedCardId} applicants={applicants?.applicants || []} />
               </div>
             </div>
           </div>
         </div>
       </div>
     );
-  }
-  
+  };
