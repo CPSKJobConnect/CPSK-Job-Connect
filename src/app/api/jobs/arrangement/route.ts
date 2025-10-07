@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/db";
 
 export async function GET() {
-  const jobTypes = await prisma.jobArrangement.findMany({
+  const jobArrangements = await prisma.jobArrangement.findMany({
     select: { id: true, name: true },
   });
 
-  return new Response(JSON.stringify(jobTypes), { status: 200 });
+  return new Response(JSON.stringify(jobArrangements), { status: 200 });
 }
