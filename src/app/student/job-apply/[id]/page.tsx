@@ -61,22 +61,8 @@ export default function Page() {
                 }
                 const data: Student = await res.json();
                 setStudent(data);
-                setResumeExisting(
-                    data.documents.resume.map(doc => ({
-                        id: doc.id,
-                        name: doc.file_name,
-                        url: doc.file_path,
-                        uploadedAt: doc.created_at
-                    }))
-                );
-                setPortfolioExisting(
-                    data.documents.portfolio.map(doc => ({
-                        id: doc.id,
-                        name: doc.file_name,
-                        url: doc.file_path,
-                        uploadedAt: doc.created_at
-                    }))
-                );
+                setResumeExisting(data.documents.resume);
+                setPortfolioExisting(data.documents.portfolio);
 
             } catch (error) {
                 console.error("Failed to fetch student:", error);
