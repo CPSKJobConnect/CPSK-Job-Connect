@@ -32,17 +32,17 @@ export default function Page() {
       { key: "location", label: "Location" },
       { key: "type", label: "Type" },
       { key: "arrangement", label: "Arrangement" },
-      { key: "minSalary", label: "Min Salary" },
-      { key: "maxSalary", label: "Max Salary" },
+      { key: "salary", label: "Salary" },
       { key: "deadline", label: "Deadline" },
     ];
+    
     requiredFields.forEach(field => {
       if (!formData[field.key]) {
         errors.push(`${field.label} is required`);
       }
     });
   
-    if (formData.minSalary && formData.maxSalary && +formData.minSalary > +formData.maxSalary) {
+    if (formData.salary.min && formData.salary.max && +formData.salary.min > +formData.salary.max) {
       errors.push("Min Salary should be less than Max Salary");
     }
 

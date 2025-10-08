@@ -164,7 +164,7 @@ export default function Page() {
           <div className="flex flex-col p-5 mb-3">
             <p className="px-4 text-md text-gray-700">Apply For</p>
             <div className="mt-1 px-4">
-              <p className="font-bold text-lg">{job.jobName}</p>
+              <p className="font-bold text-lg">{job.title}</p>
               <p className="text-gray-600">{job.companyName}</p>
             </div>
 
@@ -191,7 +191,7 @@ export default function Page() {
             >
               {job.type}
             </span>
-            {job?.tags.map((tag, idx) => (
+            {job?.skills.map((tag, idx) => (
               <span
                 key={idx}
                 className="bg-white text-gray-800 shadow-md px-2 py-1 rounded-md text-sm"
