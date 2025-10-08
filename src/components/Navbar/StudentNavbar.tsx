@@ -26,7 +26,7 @@ export default function StudentNavbar() {
         </Link>
 
         <div className="flex items-center gap-4 px-4">
-            <Link href="/jobs" 
+            <Link href="/jobs"
             className={`px-3 py-2 rounded-md transition-colors font-semibold ${
                 pathname === "/jobs"
                   ? "bg-white/20 text-white"
@@ -34,13 +34,21 @@ export default function StudentNavbar() {
               }`}>
             Find Jobs
             </Link>
-            <Link href="student/my-application" 
+            <Link href="/student/my-application"
             className={`px-3 py-2 rounded-md transition-colors font-semibold ${
-                pathname === "/my-application"
+                pathname === "/student/my-application"
                   ? "bg-white/20 text-white"
                   : "text-gray-200 hover:bg-white/10 hover:text-white"
               }`}>
-            My Applicants
+            My Applications
+            </Link>
+            <Link href="/student/profile"
+            className={`px-3 py-2 rounded-md transition-colors font-semibold ${
+                pathname === "/student/profile"
+                  ? "bg-white/20 text-white"
+                  : "text-gray-200 hover:bg-white/10 hover:text-white"
+              }`}>
+            Profile
             </Link>
 
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center">
