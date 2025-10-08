@@ -73,3 +73,16 @@ export const mockCategory = [
   "Accounting",
   "HR",
 ];
+
+export const mockJobType = [
+  "fulltime",
+  "parttime", 
+  "internship",
+  "freelance"
+]
+
+export const mockJobArrangement = [
+  "hybrid",
+  "onsite",
+  "remote",
+]
