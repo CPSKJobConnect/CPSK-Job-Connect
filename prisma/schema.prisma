@@ -121,6 +121,7 @@ model JobPost {
   deadline           DateTime
   created_at         DateTime       @default(now())
   updated_at         DateTime       @updatedAt
+  is_Published       Boolean        @default(true) 
   job_arrangement_id Int
   job_type_id        Int
   applications       Application[]
