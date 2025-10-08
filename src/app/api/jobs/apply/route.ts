@@ -26,9 +26,14 @@ export async function POST(req: Request) {
     portfolioDoc = { id: Number(portfolioId) };
   }
 
+  const student = await prisma.student.findUnique({
+    where: { account_id: Number(userId) }
+    });
+    if (!student) throw new Error("Student not found");
+
   const application = await prisma.application.create({
     data: {
-      student_id: Number(userId),
+      student_id: student.id,
       job_post_id: jobId,
       status: 1,
       resume_id: resumeDoc?.id,
