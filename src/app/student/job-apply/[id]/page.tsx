@@ -61,8 +61,23 @@ export default function Page() {
                 }
                 const data: Student = await res.json();
                 setStudent(data);
-                setResumeExisting(data.documents.resume)
-                setPortfolioExisting(data.documents.portfolio)
+                setResumeExisting(
+                    data.documents.resume.map(doc => ({
+                        id: doc.id,
+                        name: doc.file_name,
+                        url: doc.file_path,
+                        uploadedAt: doc.created_at
+                    }))
+                );
+                setPortfolioExisting(
+                    data.documents.portfolio.map(doc => ({
+                        id: doc.id,
+                        name: doc.file_name,
+                        url: doc.file_path,
+                        uploadedAt: doc.created_at
+                    }))
+                );
+
             } catch (error) {
                 console.error("Failed to fetch student:", error);
             }
@@ -107,7 +122,7 @@ export default function Page() {
     }
 
     const formData = new FormData();
-    formData.append("userId", String(student.id));
+    formData.append("userId", String(student.account_id));
     formData.append("jobId", String(job.id));
 
     if (uploadedResume) {
