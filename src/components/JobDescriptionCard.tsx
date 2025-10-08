@@ -5,10 +5,10 @@ import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlinePeopleAlt } from "react-icons/md";
-import { IoMdTime } from "react-icons/io";
 import { LiaMoneyCheckAltSolid } from "react-icons/lia";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBinFill } from "react-icons/ri";
+import { HiOutlineOfficeBuilding } from "react-icons/hi";
 import { JobInfo } from "@/types/job";
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
@@ -195,24 +195,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
           )}
         </div>
         <div className="flex gap-1 items-center">
-          <IoMdTime />
-          {isEditing ? (
-            <Select 
-            value={formData.type} 
-            onValueChange={(value) => setFormData({ ...formData, type: value })}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select job type" />
-              </SelectTrigger>
-              <SelectContent>
-                {jobTypeList.map((type) => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <span>{job.type}</span>
-          )}
-
+          <HiOutlineOfficeBuilding />
           {isEditing ? (
             <Select 
             value={formData.arrangement} 
@@ -271,13 +254,28 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
       </div>
 
       <div className="flex flex-wrap gap-2 px-4 mt-2">
-        <span
-          className={`px-2 py-1 rounded-md text-sm shadow-md ${
-            typeColors[job.type] || "bg-white text-gray-800"
-          }`}
-        >
-          {job.type}
-        </span>
+        {isEditing ? (
+            <Select 
+            value={formData.type} 
+            onValueChange={(value) => setFormData({ ...formData, type: value })}>
+              <SelectTrigger className="max-w-[100px] mt-8">
+                <SelectValue placeholder="Select job type" />
+              </SelectTrigger>
+              <SelectContent>
+                {jobTypeList.map((type) => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <span
+              className={`px-2 py-1 rounded-md text-sm shadow-md ${
+                typeColors[job.type] || "bg-white text-gray-800"
+              }`}
+            >
+              {job.type}
+            </span>
+          )}
 
         {isEditing ? (
             <SkillCombobox
@@ -297,7 +295,8 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
       </div>
 
       {isEditing && 
-      <div className="flex flex-wrap gap-2 px-4 mt-5">
+      <div className="flex flex-col gap-2 px-4 mt-5">
+          <p className="text-sm text-gray-800">Job Category</p>
           <CategoryCombobox
           selectedCategory={formData.category}
           setSelectedCategory={(category) => setFormData({ ...formData, category })}

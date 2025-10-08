@@ -95,7 +95,9 @@ export default function Page() {
                   </div>
                   )}
                 </div>
-                <ApplicationList job_id={selectedCardId} applicants={applicants?.applicants || []} />
+                {selectedCardId &&
+                  <ApplicationList job_id={selectedCardId} applicants={applicants?.applicants || []} />
+                }
               </div>
             </div>
           </div>

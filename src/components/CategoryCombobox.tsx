@@ -59,7 +59,15 @@ const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder }
             aria-expanded={open}
             className="md:w-[500px] justify-between text-gray-700"
           >
-            {selectedCategory || placeholder}
+            <span
+              className={
+                selectedCategory
+                  ? "text-gray-700"
+                  : "text-gray-400"
+              }
+            >
+              {selectedCategory || placeholder}
+            </span>
             <ChevronsUpDown className="opacity-50" />
           </Button>
         </PopoverTrigger>
