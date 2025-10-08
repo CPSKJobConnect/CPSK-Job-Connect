@@ -52,7 +52,11 @@ export default function Page() {
     if (!formData.skills || formData.skills.length === 0) {
       errors.push("At least one skill is required");
     }
-  
+    
+    if (!formData.category) {
+      errors.push("Category is required");
+    }
+
     const descFields: { key: keyof JobPostFormData["description"]; label: string }[] = [
       { key: "overview", label: "Overview" },
       { key: "responsibility", label: "Responsibility" },
