@@ -15,6 +15,7 @@ import { Input } from "./ui/input";
 import { JobPostFormData } from "@/types/job";
 import SkillCombobox from "./SkillCombobox";
 import CategoryCombobox from "./CategoryCombobox";
+import { mockCategory, mockJobType, mockJobArrangement } from "public/data/fakeFilterInfo";
 import { mockCompanies } from "public/data/mockCompany";
 import {
   Select,
@@ -23,7 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
 
 
 interface JobDescriptionProps {
@@ -36,7 +36,7 @@ interface JobDescriptionProps {
 const typeColors: Record<string, string> = {
   fulltime: "bg-pink-200 text-gray-800",
   parttime: "bg-blue-200 text-gray-800",
-  internship: "bg-green-100 text-gray-800",
+  internship: "bg-orange-100 text-gray-800",
   contract: "bg-yellow-200 text-gray-800",
   hybrid: "bg-purple-200 text-gray-800"
 };
@@ -63,10 +63,16 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
       qualification: job.description.qualification,
     },
   });
-  const [locationList, setLocationList] = useState<string[]>([])
+  const [locationList, setLocationmentList] = useState<string[]>([]);
+  const [categoryList, setCategoryList] = useState<string[]>([]);
+  const [jobTypeList, setJobTypeList] = useState<string[]>([]);
+  const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
     
   useEffect(() => {
-    setLocationList(mockCompanies[0].address);
+    setLocationmentList(mockCompanies[0].address);
+    setCategoryList(mockCategory);
+    setJobTypeList(mockJobType);
+    setJobArrangementList(mockJobArrangement);
   }, [])
 
   const baseStyle =
@@ -78,7 +84,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
   }[size];
 
   const handleApply = () => {
-    router.push(`student/job-apply/${job.id}`);
+    router.push(`/job-apply/${job.id}`);
   };
 
   const handleSave = () => {
@@ -172,7 +178,9 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
         <div className="flex gap-1 items-center">
           <IoLocationOutline />
           {isEditing ? (
-            <Select value={formData.location} onValueChange={(value) => setFormData({ ...formData, location: value })}>
+            <Select 
+            value={formData.location} 
+            onValueChange={(value) => setFormData({ ...formData, location: value })}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select location" />
               </SelectTrigger>
@@ -189,15 +197,16 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
         <div className="flex gap-1 items-center">
           <IoMdTime />
           {isEditing ? (
-            <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-              <SelectTrigger className="w-auto max-w-[100px] px-2 py-1 text-sm">
-                <SelectValue placeholder="Select Type" />
+            <Select 
+            value={formData.type} 
+            onValueChange={(value) => setFormData({ ...formData, type: value })}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select job type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='fulltime'>Full Time</SelectItem>
-                <SelectItem value='parttime'>Part Time</SelectItem>
-                <SelectItem value='internship'>Internship</SelectItem>
-                <SelectItem value='freerance'>Freelance</SelectItem>
+                {jobTypeList.map((type) => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           ) : (
@@ -205,18 +214,20 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
           )}
 
           {isEditing ? (
-            <Select value={formData.arrangement} onValueChange={(value) => setFormData({ ...formData, arrangement: value })}>
-              <SelectTrigger className="w-auto max-w-[100px] px-2 py-1 text-sm">
-                <SelectValue placeholder="Select Arrangement" />
+            <Select 
+            value={formData.arrangement} 
+            onValueChange={(value) => setFormData({ ...formData, arrangement: value })}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select job arrangement" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='onsite'>Onsite</SelectItem>
-                <SelectItem value='hybrid'>Hybrid</SelectItem>
-                <SelectItem value='remote'>Remote</SelectItem>
+                {jobArrangementList.map((arr) => (
+                  <SelectItem key={arr} value={arr}>{arr}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           ) : (
-            <span>({job.arrangement})</span>
+            <span>{job.arrangement}</span>
           )}
         </div>
         <div className="flex gap-1 items-center">
@@ -277,7 +288,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
           job.skills.map((tag, idx) => (
             <span
               key={idx}
-              className="bg-green-100 text-green-800 px-2 py-1 rounded-md text-sm"
+              className="bg-white text-grey-800 shadow-md px-2 py-1 rounded-md text-sm"
             >
               {tag}
             </span>
@@ -290,6 +301,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
           <CategoryCombobox
           selectedCategory={formData.category}
           setSelectedCategory={(category) => setFormData({ ...formData, category })}
+          placeholder={formData.category}
           />
       </div>
       }
