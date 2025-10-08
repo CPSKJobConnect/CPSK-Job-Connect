@@ -16,7 +16,7 @@ export interface JobInfo {
   companyBg: string;
   title: string;
   companyName: string;
-  category: string[];
+  category: string;
   location: string;
   posted: string;
   applied: number;
@@ -31,7 +31,7 @@ export interface JobInfo {
 
 export interface JobPostFormData {
   title: string;
-  category: string[];
+  category: string;
   location: string;
   type: string;
   arrangement: string;
@@ -44,7 +44,7 @@ export interface JobPostFormData {
 
 export const defaultJobPostForm: JobPostFormData = {
   title: "",
-  category: [],
+  category: "",
   location: "",
   type: "",
   arrangement: "",
