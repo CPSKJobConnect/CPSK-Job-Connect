@@ -97,15 +97,14 @@ const JobCard = (job: JobCardProps) => {
 
       <div className="flex flex-wrap gap-2 mt-3">
       <span
-          className={`px-2 py-1 rounded-md text-sm shadow-md ${
-            isClosed ? "bg-gray-100 text-gray-800"
-              : typeColors[job.info.type] || "bg-white text-gray-800"
-          }`}
-        >
-          {job.info.type}
-        </span>
+        className={`px-2 py-1 rounded-md text-sm shadow-md ${
+          typeColors[job.info.type] || "bg-white text-gray-800"
+        }`}
+      >
+        {job.info.type}
+      </span>
         {job.info.skills.map((tag, idx) => (
-          <span key={idx} className={`${isClosed ? "bg-gray-100" : "bg-white"} text-grey-800 shadow-md px-2 py-1 rounded-md text-sm`}>
+          <span key={idx} className="bg-white text-grey-800 shadow-md px-2 py-1 rounded-md text-sm">
             {tag}
           </span>
         ))}

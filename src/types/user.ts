@@ -24,7 +24,6 @@ export interface BaseUser {
       resume: FileMeta[];
       cv: FileMeta[];
       portfolio: FileMeta[];
-      transcript?: FileMeta[];
     }
   }
   
