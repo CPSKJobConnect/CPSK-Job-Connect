@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -11,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MdOutlinePersonOutline } from "react-icons/md";
+import StudentInfoModal from "./StudentInfoModal";
 
 interface Applicant {
   applicant_id: string;
@@ -112,10 +111,7 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
                   </div>
 
                   <div>
-                    <Button className="flex flex-row gap-1 bg-[#FD873E] text-white rounded-xl shadow-md">
-                      <MdOutlinePersonOutline />
-                      <p>Profile</p>
-                    </Button>
+                    <StudentInfoModal applicant_id={student.applicant_id} />
                   </div>
                 </div>
               </div>
