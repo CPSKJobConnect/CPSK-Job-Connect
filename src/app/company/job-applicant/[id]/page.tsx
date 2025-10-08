@@ -89,7 +89,7 @@ export default function Page() {
                     <div className="bg-[#F3FEFA] flex flex-row gap-2 rounded-xl p-3">
                       <MdTipsAndUpdates className="text-[#2BA17C]" />
                       <p className="text-sm">
-                        Tip: You quickly manage your job post here!
+                        Tip: You can quickly manage your job post here!
                       </p>
                     </div>
                   </div>
