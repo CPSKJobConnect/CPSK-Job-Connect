@@ -7,8 +7,6 @@ import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineTimer, MdOutlinePeopleAlt } from "react-icons/md";
 import { IoDocumentTextOutline } from "react-icons/io5";
 import { FileMeta } from "@/types/file";
-import mockStudents from "public/data/fakeStudent";
-import { fakeJobData } from "public/data/fakeJobDescription";
 import DocumentUploadSection from "./DocumentUploadSection";
 import StudentInfoCard from "./StudentInfoCard";
 import { Button } from "@/components/ui/button";
@@ -34,34 +32,122 @@ export default function Page() {
     const [selectedResume, setSelectedResume] = useState<FileMeta | null>(null);
     const [uploadedPortfolio, setUploadedPortfolio] = useState<File | null>(null);
     const [selectedPortfolio, setSelectedPortfolio] = useState<FileMeta | null>(null);
-
+    const [alreadyApplied, setAlreadyApplied] = useState(false);
 
     useEffect(() => {
-      // fetch job data
-      if (!params?.id) return;
-      const foundJob = fakeJobData.find(j => j.id.toString() === params.id);
-      if (!foundJob) {
-        router.push("/jobs");
+        if (!params?.id) return;
+
+        const fetchJob = async () => {
+            try {
+                const res = await fetch(`/api/jobs/${params.id}`);
+                if (!res.ok) {
+                    router.push("/jobs");
+                    return;
+                }
+                const data: JobInfo = await res.json();
+                setJob(data);
+            }   catch (error) {
+                console.error("Failed to fetch job:", error);
+                router.push("/jobs");
+            }
+        };
+
+        const fetchStudent = async () => {
+            try {
+                const res = await fetch(`/api/students/[id]`);
+                if (!res.ok) {
+                    console.error("Failed to fetch student");
+                    return;
+                }
+                const data: Student = await res.json();
+                setStudent(data);
+                setResumeExisting(data.documents.resume);
+                setPortfolioExisting(data.documents.portfolio);
+
+            } catch (error) {
+                console.error("Failed to fetch student:", error);
+            }
+        };
+
+        fetchJob();
+        fetchStudent();
+    },  [params.id, router]);
+
+    useEffect(() => {
+    if (!student || !job) return;
+
+    const checkApplication = async () => {
+      try {
+        const res = await fetch("/api/jobs/check-application", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ studentId: student.id, jobId: job.id }),
+        });
+        const data = await res.json();
+        setAlreadyApplied(data.applied);
+      } catch (err) {
+        console.error("Failed to check application:", err);
+      }
+    };
+
+    checkApplication();
+  }, [student, job]);
+    const handleSubmit = async () => {
+    if (!uploadedResume && !selectedResume) {
+      alert("Please select or upload your Resume before submitting.");
+      return;
+    }
+    if (!uploadedPortfolio && !selectedPortfolio) {
+      alert("Please select or upload your Portfolio before submitting.");
+      return;
+    }
+
+    if (!student || !job) {
+      alert("Student or Job data is missing.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("userId", String(student.account_id));
+    formData.append("jobId", String(job.id));
+
+    if (uploadedResume) {
+      formData.append("resume", uploadedResume);
+    } else if (selectedResume) {
+      formData.append("resumeId", String(selectedResume.id));
+    }
+
+    if (uploadedPortfolio) {
+      formData.append("portfolio", uploadedPortfolio);
+    } else if (selectedPortfolio) {
+      formData.append("portfolioId", String(selectedPortfolio.id));
+    }
+
+    try {
+      const res = await fetch("/api/jobs/apply", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error(data);
+        alert("Failed to submit application.");
         return;
       }
 
-      setJob(foundJob);
-
-      // fetch student's documents
-      setResumeExisting(mockStudents[0].documents.resume)
-      setPortfolioExisting(mockStudents[0].documents.portfolio)
-
-      // fetch student data
-      setStudent(mockStudents[0])
-    }, [params.id])
-    
-    if (!job) {
-      return <div>Loading...</div>;
+      alert("Application submitted successfully!");
+      console.log("Application response:", data);
+    } catch (err) {
+      console.error(err);
+      alert("Error submitting application.");
     }
+  };
 
-    if (!student) {
-      return <div>Loading...</div>;
-    }
+  if (!job || !student) {
+    return <div>Loading...</div>;
+  }
 
     return (
       <>
@@ -118,12 +204,12 @@ export default function Page() {
         </div>
         <div className="flex flex-row gap-5 px-10 items-stretch">
           <div className="basis-1/4">
-            <StudentInfoCard 
-              firstname={student.firstname} 
-              lastname={student.lastname} 
-              email={student.email} 
-              phone={student.phone} 
-              faculty={student.faculty} 
+            <StudentInfoCard
+              firstname={student.firstname}
+              lastname={student.lastname}
+              email={student.email}
+              phone={student.phone}
+              faculty={student.faculty}
             />
           </div>
 
@@ -160,8 +246,8 @@ export default function Page() {
           </div>
         </div>
         <div className="px-10 py-5">
-        <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white font-md px-10">
-          Submit
+        <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white font-md px-10" onClick={handleSubmit} disabled={alreadyApplied}>
+          {alreadyApplied ? "Already Applied" : "Submit"}
         </Button>
         </div>
       </>

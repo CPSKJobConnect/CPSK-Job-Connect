@@ -96,10 +96,12 @@ const JobCard = (job: JobCardProps) => {
       </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
+
         <span
           className={`px-2 py-1 rounded-md text-sm shadow-md ${
             isClosed ? "bg-gray-100 text-gray-800"
             : typeColors[job.info.type] || "bg-white text-gray-800"
+
           }`}
         >
           {job.info.type}
