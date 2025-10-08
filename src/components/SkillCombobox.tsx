@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
-import { mockSkill } from "@public/data/fakeFilterInfo"
+import { mockSkill } from "public/data/fakeFilterInfo"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -62,7 +62,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill }: SkillComboboxProps) 
 
   return (
     <>
-    <div>
+    <div className="flex flex-col gap-2">
         {selectedSkill.length > 0 && (
             <div className="flex flex-wrap gap-2">
             {selectedSkill.map((skill, idx) => (
@@ -81,7 +81,6 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill }: SkillComboboxProps) 
             ))}
             </div>
         )}
-    </div>
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
@@ -140,6 +139,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill }: SkillComboboxProps) 
         </Command>
       </PopoverContent>
     </Popover>
+    </div>
     </>
   )
 }

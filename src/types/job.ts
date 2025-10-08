@@ -16,7 +16,7 @@ export interface JobInfo {
   companyBg: string;
   title: string;
   companyName: string;
-  category: string[];
+  category: string;
   location: string;
   posted: string;
   applied: number;
@@ -25,16 +25,18 @@ export interface JobInfo {
   description: JobDescription;
   type: string;
   arrangement: string;
-  deadline?: string;
+  deadline: string;
+  status: string;
 }
 
 export interface JobPostFormData {
   title: string;
-  department: string;
+  category: string;
   location: string;
   type: string;
   arrangement: string;
   salary: SalaryRange;
+  posted: string;
   deadline: string;
   skills: string[];
   description: JobDescription;
@@ -42,11 +44,12 @@ export interface JobPostFormData {
 
 export const defaultJobPostForm: JobPostFormData = {
   title: "",
-  department: "",
+  category: "",
   location: "",
   type: "",
   arrangement: "",
   salary: { min: 0, max: 0 },
+  posted: "",
   deadline: "",
   skills: [],
   description: {

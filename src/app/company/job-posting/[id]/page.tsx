@@ -28,7 +28,6 @@ export default function Page() {
 
     const requiredFields: { key: keyof JobPostFormData; label: string }[] = [
       { key: "title", label: "Title" },
-      { key: "department", label: "Department" },
       { key: "location", label: "Location" },
       { key: "type", label: "Type" },
       { key: "arrangement", label: "Arrangement" },
@@ -53,7 +52,11 @@ export default function Page() {
     if (!formData.skills || formData.skills.length === 0) {
       errors.push("At least one skill is required");
     }
-  
+    
+    if (!formData.category) {
+      errors.push("Category is required");
+    }
+
     const descFields: { key: keyof JobPostFormData["description"]; label: string }[] = [
       { key: "overview", label: "Overview" },
       { key: "responsibility", label: "Responsibility" },

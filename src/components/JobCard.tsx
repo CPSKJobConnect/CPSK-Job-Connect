@@ -27,19 +27,20 @@ interface JobCardProps {
 const typeColors: Record<string, string> = {
   fulltime: "bg-pink-200 text-gray-800",
   parttime: "bg-blue-200 text-gray-800",
-  internship: "bg-green-100 text-gray-800",
+  internship: "bg-orange-100 text-gray-800",
   contract: "bg-yellow-200 text-gray-800",
   hybrid: "bg-purple-200 text-gray-800"
 };
 
 
 const JobCard = (job: JobCardProps) => {
+  const isClosed = job.info.status === "expire"; 
   const baseStyle =
-    "rounded-xl shadow-md border border-gray-100 bg-white p-4 flex flex-col gap-2 hover:bg-[#F3FEFA] transition mb-5";
+    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-100/60" : "bg-white"} p-4 flex flex-col gap-2 hover:bg-[#F3FEFA] transition mb-5`;
 
     const sizeStyle = {
-      sm: "w-full sm:w-[400px] sm:h-[140px]",
-      md: "w-full sm:w-[400px] sm:h-[250px] md:w-[550px] md:h-[250px]"
+      sm: "w-full sm:w-[400px] min-h-[140px]",
+      md: "w-full sm:w-[400px] min-h-[250px] md:w-[550px]"
     }[job.size || "md"];
 
   return (
@@ -95,24 +96,28 @@ const JobCard = (job: JobCardProps) => {
       </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
-      <span
-        className={`px-2 py-1 rounded-md text-sm shadow-md ${
-          typeColors[job.info.type] || "bg-white text-gray-800"
-        }`}
-      >
-        {job.info.type}
-      </span>
+        <span
+          className={`px-2 py-1 rounded-md text-sm shadow-md ${
+            isClosed ? "bg-gray-100 text-gray-800"
+            : typeColors[job.info.type] || "bg-white text-gray-800"
+          }`}
+        >
+          {job.info.type}
+        </span>
+
         {job.info.skills.map((tag, idx) => (
-          <span key={idx} className="bg-white text-grey-800 shadow-md px-2 py-1 rounded-md text-sm">
+          <span key={idx} className={`${isClosed ? "bg-gray-100" : "bg-white"} text-grey-800 shadow-md px-2 py-1 rounded-md text-sm`}>
             {tag}
           </span>
         ))}
       </div>
 
       <div className="mt-auto mb-2 flex justify-end">
-      <Button className="lg:w-40 md:w-30 sm:w-30 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition">
-        View Detail
-      </Button>
+        {job.size === "md" && (
+          <Button className="lg:w-40 md:w-30 sm:w-30 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition">
+            View Detail
+          </Button>
+        )}
       </div>
     </div>
   );

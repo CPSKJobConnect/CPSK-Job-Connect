@@ -3,11 +3,11 @@ import { JobInfo } from "@/types/job";
 export const fakeJobData: JobInfo[] = [
   {
     id: "1",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
+    companyLogo: "/assets/images/companyLogo.png",
+    companyBg: "/assets/images/companyBg.jpg",
     title: "Frontend Developer",
     companyName: "Techify Co.",
-    category: ["IT", "Engineering"],
+    category: "Engineering",
     location: "Bangkok",
     posted: "2025-09-02",
     applied: 14,
@@ -21,15 +21,16 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "hybrid",
-    deadline: "2025-09-30"
+    deadline: "2025-09-30",
+    status: "active"
   },
   {
     id: "2",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
+    companyLogo: "/assets/images/companyLogo.png",
+    companyBg: "/assets/images/companyBg.jpg",
     title: "Backend Developer",
     companyName: "SoftWorks Ltd.",
-    category: ["IT", "Engineering"],
+    category: "Engineering",
     location: "Remote",
     posted: "2025-09-01",
     applied: 32,
@@ -43,15 +44,16 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "hybrid",
-    deadline: "2025-10-05"
+    deadline: "2025-10-05",
+    status: "active"
   },
   {
     id: "3",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
+    companyLogo: "/assets/images/companyLogo.png",
+    companyBg: "/assets/images/companyBg.jpg",
     title: "UI/UX Designer",
     companyName: "Creative Labs",
-    category: ["Design"],
+    category: "Design",
     location: "Bangkok",
     posted: "2025-08-28",
     applied: 20,
@@ -65,15 +67,16 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "internship",
     arrangement: "onsite",
-    deadline: "2025-09-15"
+    deadline: "2025-09-15",
+    status: "expire"
   },
   {
     id: "4",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
+    companyLogo: "/assets/images/companyLogo.png",
+    companyBg: "/assets/images/companyBg.jpg",
     title: "Data Analyst",
     companyName: "Insight Analytics",
-    category: ["IT", "Engineering"],
+    category: "IT",
     location: "Chiang Mai",
     posted: "2025-08-28",
     applied: 17,
@@ -87,15 +90,16 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "onsite",
-    deadline: "2025-09-20"
+    deadline: "2025-09-20",
+    status: "expire"
   },
   {
     id: "5",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
+    companyLogo: "/assets/images/companyLogo.png",
+    companyBg: "/assets/images/companyBg.jpg",
     title: "Marketing Intern",
     companyName: "Bright Media",
-    category: ["Marketing"],
+    category: "Marketing",
     location: "Bangkok",
     posted: "2025-08-28",
     applied: 42,
@@ -109,15 +113,16 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "internship",
     arrangement: "onsite",
-    deadline: "2025-09-10"
+    deadline: "2025-09-10",
+    status: "expire"
   },
   {
     id: "6",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
+    companyLogo: "/assets/images/companyLogo.png",
+    companyBg: "/assets/images/companyBg.jpg",
     title: "Project Manager",
     companyName: "BuildTech Solutions",
-    category: ["Management"],
+    category: "Management",
     location: "Remote",
     posted: "2025-09-04",
     applied: 9,
@@ -131,15 +136,16 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "onsite",
-    deadline: "2025-10-01"
+    deadline: "2025-10-01",
+    status: "draft"
   },
   {
     id: "7",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
+    companyLogo: "/assets/images/companyLogo.png",
+    companyBg: "/assets/images/companyBg.jpg",
     title: "QA Tester",
     companyName: "QualityFirst",
-    category: ["IT", "Engineering"],
+    category: "IT",
     location: "Bangkok",
     posted: "2025-09-04",
     applied: 12,
@@ -153,15 +159,16 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "parttime",
     arrangement: "onsite",
-    deadline: "2025-09-25"
+    deadline: "2025-09-25",
+    status: "active"
   },
   {
     id: "8",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
+    companyLogo: "/assets/images/companyLogo.png",
+    companyBg: "/assets/images/companyBg.jpg",
     title: "Accountant",
     companyName: "FinCorp",
-    category: ["Finance", "Accounting"],
+    category: "Accounting",
     location: "Bangkok",
     posted: "2025-09-01",
     applied: 18,
@@ -175,15 +182,16 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "onsite",
-    deadline: "2025-10-05"
+    deadline: "2025-10-05",
+    status: "active"
   },
   {
     id: "9",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
+    companyLogo: "/assets/images/companyLogo.png",
+    companyBg: "/assets/images/companyBg.jpg",
     title: "HR Specialist",
     companyName: "PeopleConnect",
-    category: ["HR"],
+    category: "HR",
     location: "Remote",
     posted: "2025-08-27",
     applied: 10,
@@ -197,15 +205,16 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "contract",
-    deadline: "2025-09-30"
+    deadline: "2025-09-30",
+    status: "expire"
   },
   {
     id: "10",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
+    companyLogo: "/assets/images/companyLogo.png",
+    companyBg: "/assets/images/companyBg.jpg",
     title: "Customer Support",
     companyName: "HelpDesk Pro",
-    category: ["Customer Service"],
+    category: "Customer Service",
     location: "Chiang Mai",
     posted: "2025-08-27",
     applied: 26,
@@ -219,6 +228,7 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "parttime",
     arrangement: "freelance",
-    deadline: "2025-09-20"
+    deadline: "2025-09-20",
+    status: "expire"
   }
 ];

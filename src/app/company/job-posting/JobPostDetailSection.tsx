@@ -8,8 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockCompanies } from "@/mockCompany";
+import { mockCompanies } from "public/data/mockCompany";
+import CategoryCombobox from "@/components/CategoryCombobox";
 import { JobPostFormData} from "@/types/job";
+import { mockJobType, mockJobArrangement } from "public/data/fakeFilterInfo";
 
 
 interface JobPostDetailProps {
@@ -19,12 +21,14 @@ interface JobPostDetailProps {
 
 
 const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => {
-      const [departmentList, setDepartmentList] = useState<string[]>([])
       const [locationList, setLocationmentList] = useState<string[]>([])
-    
+      const [jobTypeList, setJobTypeList] = useState<string[]>([]);
+      const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
+
       useEffect(() => {
-        setDepartmentList(mockCompanies[0].department);
         setLocationmentList(mockCompanies[0].address);
+        setJobTypeList(mockJobType);
+        setJobArrangementList(mockJobArrangement);
       }, [])
     
       const handleSelect = (name: string, value: string) => {
@@ -48,17 +52,12 @@ const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => 
               </div>
 
               <div className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-semibold text-gray-800">Department</p>
-                <Select onValueChange={(value) => handleSelect("department", value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departmentList.map((d) => (
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <p className="text-sm font-semibold text-gray-800">Job Category</p>
+                <CategoryCombobox
+                  selectedCategory={formData.category}
+                  setSelectedCategory={(category) => setFormData({ ...formData, category })}
+                  placeholder="e.g. Engineer, Finance"
+                />
               </div>
             </div>
 
@@ -86,10 +85,9 @@ const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => 
                     <SelectValue placeholder="Select Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='fulltime'>Full Time</SelectItem>
-                    <SelectItem value='parttime'>Part Time</SelectItem>
-                    <SelectItem value='internship'>Internship</SelectItem>
-                    <SelectItem value='freerance'>Freelance</SelectItem>
+                    {jobTypeList.map((type) => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -101,9 +99,9 @@ const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => 
                     <SelectValue placeholder="Select Arrangement" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='onsite'>Onsite</SelectItem>
-                    <SelectItem value='hybrid'>Hybrid</SelectItem>
-                    <SelectItem value='remote'>Remote</SelectItem>
+                    {jobArrangementList.map((arr) => (
+                      <SelectItem key={arr} value={arr}>{arr}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
