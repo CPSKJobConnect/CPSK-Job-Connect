@@ -56,7 +56,11 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
   return (
     <div className="flex flex-col rounded-md shadow-md w-full gap-4 p-4 overflow-y-auto">
       <p className="text-lg font-semibold text-gray-700">Student Applications</p>
-
+      {applicants.length === 0 ? (
+      <div className="flex flex-col items-center justify-center py-10 text-gray-500">
+        <p className="text-center text-sm">No applicants yet</p>
+      </div>
+    ) : (
       <div className="flex flex-col gap-4">
         {applicants.map((student) => {
           const currentStatus = statusMap[student.applicant_id] || (student.status as StatusType);
@@ -119,6 +123,7 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
           );
         })}
       </div>
+    )}
     </div>
   );
 };
