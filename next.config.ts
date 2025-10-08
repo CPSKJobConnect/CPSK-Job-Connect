@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  images: {
+    domains: ['randomuser.me'],
+  },
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
       config.watchOptions = {
