@@ -34,8 +34,9 @@ const typeColors: Record<string, string> = {
 
 
 const JobCard = (job: JobCardProps) => {
+  const isClosed = job.info.status === "expire"; 
   const baseStyle =
-    "rounded-xl shadow-md border border-gray-100 bg-white p-4 flex flex-col gap-2 hover:bg-[#F3FEFA] transition mb-5";
+    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-100/60" : "bg-white"} p-4 flex flex-col gap-2 hover:bg-[#F3FEFA] transition mb-5`;
 
     const sizeStyle = {
       sm: "w-full sm:w-[400px] min-h-[140px]",
