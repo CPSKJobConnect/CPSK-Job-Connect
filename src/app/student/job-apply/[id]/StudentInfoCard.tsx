@@ -89,7 +89,7 @@ const StudentInfoCard = (props: StudentInfoProps) => {
                       value={formData.email}
                       onChange={(e) => handleChange("email", e.target.value)}
                       disabled={true}
-                      className="border border-gray-100 pl-10 pr-3 py-2 border-gray-100"
+                      className="border border-gray-100 pl-10 pr-3 py-2"
                     ></Input>
                 </div>
             </div>
@@ -102,7 +102,7 @@ const StudentInfoCard = (props: StudentInfoProps) => {
                       value={formData.phone}
                       onChange={(e) => handleChange("phone", e.target.value)}
                       disabled={!isEditing}
-                      className="border border-gray-100 pl-10 pr-3 py-2 border-gray-100"
+                      className="border border-gray-100 pl-10 pr-3 py-2"
                     ></Input>
                 </div>
             </div>
@@ -114,7 +114,7 @@ const StudentInfoCard = (props: StudentInfoProps) => {
                         type="text"
                         placeholder={props.faculty}
                         disabled={true}
-                        className="border border-gray-100 pl-10 pr-3 py-2 border-gray-100"
+                        className="border border-gray-100 pl-10 pr-3 py-2 "
                     ></Input>
                 </div>
             </div>

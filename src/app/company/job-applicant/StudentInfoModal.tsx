@@ -43,12 +43,12 @@ const StudentInfoModal = ({ applicant_id }: { applicant_id: string }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="flex flex-row gap-1 bg-[#FD873E] text-white rounded-xl shadow-md">
-          <MdOutlinePersonOutline />
+        <Button className="flex flex-row gap-1 bg-[#FD873E] text-white rounded-xl shadow-md 
+                          hover:bg-[#FF9A50] hover:shadow-lg">
+          <MdOutlinePersonOutline size={20} />
           <p>Profile</p>
         </Button>
       </DialogTrigger>
-
       <DialogContent className="md:min-w-[700px] sm:min-w-[400px] h-[500px] overflow-hidden overflow-y-auto">
         <DialogHeader>
           <DialogTitle>

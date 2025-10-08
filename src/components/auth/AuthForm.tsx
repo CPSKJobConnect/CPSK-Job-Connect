@@ -13,7 +13,7 @@ import { AuthFormData, Role } from "@/types/auth"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Upload } from "lucide-react"
 import { signIn, useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 
@@ -28,7 +28,10 @@ export function AuthForm({ role, mode }: AuthFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [awaitingSession, setAwaitingSession] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { data: session } = useSession()
+
+  const callbackUrl = searchParams.get("callbackUrl")
 
   const schema = mode === "login" 
     ? loginSchema 
@@ -51,16 +54,22 @@ export function AuthForm({ role, mode }: AuthFormProps) {
     if (awaitingSession && session?.user?.role) {
       setAwaitingSession(false)
       setIsLoading(false)
-      const userRoleConfig = ROLE_CONFIGS[session.user.role as Role]
-      router.push(userRoleConfig?.redirectPath || `/${session.user.role}/dashboard`)
+
+      // Redirect to callbackUrl if provided, otherwise to dashboard
+      if (callbackUrl) {
+        router.push(callbackUrl)
+      } else {
+        const userRoleConfig = ROLE_CONFIGS[session.user.role as Role]
+        router.push(userRoleConfig?.redirectPath || `/${session.user.role}/dashboard`)
+      }
     }
-  }, [session, awaitingSession, router])
+  }, [session, awaitingSession, router, callbackUrl])
 
   const roleConfig = useMemo(() => ROLE_CONFIGS[role], [role])
   const Icon = roleConfig.icon
 
   const onSubmit = async (data: AuthFormData) => {
-    console.log("Form submitted with data:", data)
+    // console.log("Form submitted with data:", data)
     setIsLoading(true)
     setError("")
 
@@ -103,7 +112,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           formData.append("website", data.website || "")
           formData.append("description", data.description!)
           formData.append("phone", data.phone!)
-          formData.append("year", data.year!.toString())
+          // formData.append("year", data.year!.toString())
         }
 
 
@@ -177,7 +186,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           <Icon className={`w-8 h-8 ${roleConfig.secondaryColor.split(' ').slice(1, 3).join(' ')}`} />
         </div>
         <CardTitle className="text-2xl">
-          {mode === "login" ? "Login" : "Create Account"} as {roleConfig.title}
+          {mode === "login" ? "Sign in" : "Create Account"} as {roleConfig.title}
         </CardTitle>
       </CardHeader>
       
@@ -399,7 +408,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     )}
                   </div>
 
-                  <div>
+                  {/* <div>
                     <Label htmlFor="year">Founded Year</Label>
                     <Input
                       id="year"
@@ -412,7 +421,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     {errors.year && (
                       <p className="text-sm text-red-600 mt-1">{errors.year.message}</p>
                     )}
-                  </div>
+                  </div> */}
                 </>
               )}
             </>
@@ -420,7 +429,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
 
           <Button
             type="submit"
-            className={`w-full ${roleConfig.primaryColor}`}
+            className={`w-full ${roleConfig.primaryColor} cursor-pointer`}
             disabled={isLoading}
           >
             {isLoading 
@@ -444,7 +453,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="w-full cursor-pointer"
             onClick={handleGoogleSignIn}
             disabled={isLoading}
           >

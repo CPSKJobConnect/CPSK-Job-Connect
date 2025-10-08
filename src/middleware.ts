@@ -9,18 +9,22 @@ export default withAuth(
     const role = token?.role
 
     // Public routes
-    const publicRoutes = ["/", "/login", "/register"]
-    const isPublicRoute = publicRoutes.some(route => 
+    const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/jobs"]
+    const isPublicRoute = publicRoutes.some(route =>
       pathname === route || pathname.startsWith(`${route}/`)
     )
 
     // If accessing protected routes without authentication
     if (!isPublicRoute && !token) {
       if (pathname.startsWith("/student")) {
-        return NextResponse.redirect(new URL("/login/student", req.url))
+        const loginUrl = new URL("/login/student", req.url)
+        loginUrl.searchParams.set("callbackUrl", pathname)
+        return NextResponse.redirect(loginUrl)
       }
       if (pathname.startsWith("/company")) {
-        return NextResponse.redirect(new URL("/login/company", req.url))
+        const loginUrl = new URL("/login/company", req.url)
+        loginUrl.searchParams.set("callbackUrl", pathname)
+        return NextResponse.redirect(loginUrl)
       }
       return NextResponse.redirect(new URL("/", req.url))
     }
@@ -42,8 +46,11 @@ export default withAuth(
         return NextResponse.redirect(new URL("/company/dashboard", req.url))
       }
 
-      // Redirect authenticated users from auth pages to their dashboard
-      if (isPublicRoute && pathname !== "/" && role) {
+      // Redirect authenticated users from auth pages and homepage to their dashboard
+      if (isPublicRoute && role && !pathname.startsWith("/api")) {
+        if (pathname === "/jobs") {
+          return NextResponse.next() // allow access to public jobs page for authenticated users
+        }
         return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
       }
     }
@@ -52,19 +59,9 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token, req }) => {
-        const { pathname } = req.nextUrl
-        
-        // Allow access to public routes
-        const publicRoutes = ["/", "/login", "/register", "/api/auth", "/api/register"]
-        const isPublicRoute = publicRoutes.some(route => 
-          pathname === route || pathname.startsWith(`${route}/`)
-        )
-
-        if (isPublicRoute) return true
-
-        // Require authentication for protected routes
-        return !!token
+      authorized: () => {
+        // Always return true to let the middleware function handle all redirects
+        return true
       },
     },
   }

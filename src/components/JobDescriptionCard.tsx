@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select"
 
 
+
 interface JobDescriptionProps {
   job: JobInfo;
   size: "sm" | "md";
@@ -62,10 +63,10 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
       qualification: job.description.qualification,
     },
   });
-  const [locationList, setLocationmentList] = useState<string[]>([])
+  const [locationList, setLocationList] = useState<string[]>([])
     
   useEffect(() => {
-    setLocationmentList(mockCompanies[0].address);
+    setLocationList(mockCompanies[0].address);
   }, [])
 
   const baseStyle =
@@ -77,7 +78,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
   }[size];
 
   const handleApply = () => {
-    router.push(`/job-apply/${job.id}`);
+    router.push(`student/job-apply/${job.id}`);
   };
 
   const handleSave = () => {
