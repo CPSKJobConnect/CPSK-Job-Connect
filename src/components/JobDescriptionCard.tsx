@@ -84,7 +84,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
   }[size];
 
   const handleApply = () => {
-    router.push(`/job-apply/${job.id}`);
+    router.push(`/student/job-apply/${job.id}`);
   };
 
   const handleSave = () => {
