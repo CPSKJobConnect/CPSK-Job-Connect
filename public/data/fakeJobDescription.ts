@@ -3,13 +3,8 @@ import { JobInfo } from "@/types/job";
 export const fakeJobData: JobInfo[] = [
   {
     id: "1",
-<<<<<<< HEAD
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
-=======
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
->>>>>>> 468b6b4 (Merge pull request #118 from CPSKJobConnect/refactor/job-interfaces)
     title: "Frontend Developer",
     companyName: "Techify Co.",
     category: "Engineering",
@@ -26,7 +21,6 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "hybrid",
-<<<<<<< HEAD
     deadline: "2025-09-30",
     status: "active"
   },
@@ -34,14 +28,6 @@ export const fakeJobData: JobInfo[] = [
     id: "2",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
-=======
-    deadline: "2025-09-30"
-  },
-  {
-    id: "2",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
->>>>>>> 468b6b4 (Merge pull request #118 from CPSKJobConnect/refactor/job-interfaces)
     title: "Backend Developer",
     companyName: "SoftWorks Ltd.",
     category: "Engineering",
@@ -58,7 +44,6 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "hybrid",
-<<<<<<< HEAD
     deadline: "2025-10-05",
     status: "active"
   },
@@ -66,14 +51,6 @@ export const fakeJobData: JobInfo[] = [
     id: "3",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
-=======
-    deadline: "2025-10-05"
-  },
-  {
-    id: "3",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
->>>>>>> 468b6b4 (Merge pull request #118 from CPSKJobConnect/refactor/job-interfaces)
     title: "UI/UX Designer",
     companyName: "Creative Labs",
     category: "Design",
@@ -90,7 +67,6 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "internship",
     arrangement: "onsite",
-<<<<<<< HEAD
     deadline: "2025-09-15",
     status: "expire"
   },
@@ -98,14 +74,6 @@ export const fakeJobData: JobInfo[] = [
     id: "4",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
-=======
-    deadline: "2025-09-15"
-  },
-  {
-    id: "4",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
->>>>>>> 468b6b4 (Merge pull request #118 from CPSKJobConnect/refactor/job-interfaces)
     title: "Data Analyst",
     companyName: "Insight Analytics",
     category: "IT",
@@ -122,7 +90,6 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "onsite",
-<<<<<<< HEAD
     deadline: "2025-09-20",
     status: "expire"
   },
@@ -130,14 +97,6 @@ export const fakeJobData: JobInfo[] = [
     id: "5",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
-=======
-    deadline: "2025-09-20"
-  },
-  {
-    id: "5",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
->>>>>>> 468b6b4 (Merge pull request #118 from CPSKJobConnect/refactor/job-interfaces)
     title: "Marketing Intern",
     companyName: "Bright Media",
     category: "Marketing",
@@ -154,7 +113,6 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "internship",
     arrangement: "onsite",
-<<<<<<< HEAD
     deadline: "2025-09-10",
     status: "expire"
   },
@@ -162,14 +120,6 @@ export const fakeJobData: JobInfo[] = [
     id: "6",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
-=======
-    deadline: "2025-09-10"
-  },
-  {
-    id: "6",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
->>>>>>> 468b6b4 (Merge pull request #118 from CPSKJobConnect/refactor/job-interfaces)
     title: "Project Manager",
     companyName: "BuildTech Solutions",
     category: "Management",
@@ -186,7 +136,6 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "onsite",
-<<<<<<< HEAD
     deadline: "2025-10-01",
     status: "draft"
   },
@@ -197,17 +146,6 @@ export const fakeJobData: JobInfo[] = [
     title: "QA Tester",
     companyName: "QualityFirst",
     category: "IT",
-=======
-    deadline: "2025-10-01"
-  },
-  {
-    id: "7",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
-    title: "QA Tester",
-    companyName: "QualityFirst",
-    category: ["IT", "Engineering"],
->>>>>>> 468b6b4 (Merge pull request #118 from CPSKJobConnect/refactor/job-interfaces)
     location: "Bangkok",
     posted: "2025-09-04",
     applied: 12,
@@ -221,7 +159,6 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "parttime",
     arrangement: "onsite",
-<<<<<<< HEAD
     deadline: "2025-09-25",
     status: "active"
   },
@@ -229,14 +166,6 @@ export const fakeJobData: JobInfo[] = [
     id: "8",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
-=======
-    deadline: "2025-09-25"
-  },
-  {
-    id: "8",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
->>>>>>> 468b6b4 (Merge pull request #118 from CPSKJobConnect/refactor/job-interfaces)
     title: "Accountant",
     companyName: "FinCorp",
     category: "Accounting",
@@ -253,7 +182,6 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "onsite",
-<<<<<<< HEAD
     deadline: "2025-10-05",
     status: "active"
   },
@@ -261,14 +189,6 @@ export const fakeJobData: JobInfo[] = [
     id: "9",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
-=======
-    deadline: "2025-10-05"
-  },
-  {
-    id: "9",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
->>>>>>> 468b6b4 (Merge pull request #118 from CPSKJobConnect/refactor/job-interfaces)
     title: "HR Specialist",
     companyName: "PeopleConnect",
     category: "HR",
@@ -285,7 +205,6 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "fulltime",
     arrangement: "contract",
-<<<<<<< HEAD
     deadline: "2025-09-30",
     status: "expire"
   },
@@ -293,14 +212,6 @@ export const fakeJobData: JobInfo[] = [
     id: "10",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
-=======
-    deadline: "2025-09-30"
-  },
-  {
-    id: "10",
-    companyLogo: "/companyLogo.png",
-    companyBg: "/companyBg.jpg",
->>>>>>> 468b6b4 (Merge pull request #118 from CPSKJobConnect/refactor/job-interfaces)
     title: "Customer Support",
     companyName: "HelpDesk Pro",
     category: "Customer Service",
@@ -317,11 +228,7 @@ export const fakeJobData: JobInfo[] = [
     },
     type: "parttime",
     arrangement: "freelance",
-<<<<<<< HEAD
     deadline: "2025-09-20",
     status: "expire"
-=======
-    deadline: "2025-09-20"
->>>>>>> 468b6b4 (Merge pull request #118 from CPSKJobConnect/refactor/job-interfaces)
   }
 ];
