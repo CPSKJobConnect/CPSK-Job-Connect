@@ -1,12 +1,12 @@
-import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 import { createClient } from "@supabase/supabase-js";
+import { getServerSession } from "next-auth/next";
+import { NextResponse } from "next/server";
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +14,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const documentId = parseInt(params.id);
+    const documentId = parseInt((await params).id);
 
     if (!documentId || isNaN(documentId)) {
       return NextResponse.json({ error: "Invalid document ID" }, { status: 400 });
