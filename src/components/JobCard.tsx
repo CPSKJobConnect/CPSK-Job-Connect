@@ -105,7 +105,7 @@ const JobCard = (job: JobCardProps) => {
           {job.info.type}
         </span>
 
-        {job.info.skills.map((tag, idx) => (
+        {job.info.skills?.map((tag, idx) => (
           <span key={idx} className={`${isClosed ? "bg-gray-100" : "bg-white"} text-grey-800 shadow-md px-2 py-1 rounded-md text-sm`}>
             {tag}
           </span>

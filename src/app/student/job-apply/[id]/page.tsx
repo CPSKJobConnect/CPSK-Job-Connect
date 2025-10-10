@@ -191,7 +191,7 @@ export default function Page() {
             >
               {job.type}
             </span>
-            {job?.skills.map((tag, idx) => (
+            {job?.skills?.map((tag, idx) => (
               <span
                 key={idx}
                 className="bg-white text-gray-800 shadow-md px-2 py-1 rounded-md text-sm"
