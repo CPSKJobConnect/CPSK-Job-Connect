@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { IoCallOutline, IoCameraOutline, IoIdCardOutline, IoMailOutline, IoPersonCircleOutline, IoSchoolOutline } from "react-icons/io5";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 import ApplicationsTab from "./ApplicationsTab";
 import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
@@ -15,6 +16,7 @@ export default function StudentProfilePage() {
   const [loading, setLoading] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: session, update: updateSession } = useSession();
 
   const fetchStudentProfile = async () => {
     try {
@@ -66,7 +68,19 @@ export default function StudentProfilePage() {
         return;
       }
 
+      const data = await res.json();
+
       toast.success("Profile image updated successfully");
+
+      // Update the session with new logoUrl to refresh navbar
+      await updateSession({
+        ...session,
+        user: {
+          ...session?.user,
+          logoUrl: data.profile_url,
+        },
+      });
+
       await fetchStudentProfile();
     } catch (error) {
       console.error("Error uploading profile image:", error);
