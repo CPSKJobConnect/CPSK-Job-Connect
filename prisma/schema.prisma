@@ -75,13 +75,13 @@ model Document {
   id                    Int           @id @default(autoincrement())
   account_id            Int
   doc_type_id           Int
-  file_name             String
   file_path             String
   created_at            DateTime      @default(now())
+  file_name             String
+  portfolioApplications Application[] @relation("PortfolioDocument")
+  resumeApplications    Application[] @relation("ResumeDocument")
   account               Account       @relation(fields: [account_id], references: [id])
   documentType          DocumentType  @relation(fields: [doc_type_id], references: [id])
-  resumeApplications    Application[] @relation("ResumeDocument")
-  portfolioApplications Application[] @relation("PortfolioDocument")
 }
 
 model DocumentType {
@@ -121,9 +121,9 @@ model JobPost {
   deadline           DateTime
   created_at         DateTime       @default(now())
   updated_at         DateTime       @updatedAt
-  is_Published       Boolean        @default(true) 
   job_arrangement_id Int
   job_type_id        Int
+  is_Published       Boolean        @default(true)
   applications       Application[]
   company            Company        @relation(fields: [company_id], references: [id])
   jobArrangement     JobArrangement @relation(fields: [job_arrangement_id], references: [id])
@@ -157,20 +157,19 @@ model JobTag {
 }
 
 model Application {
-  id           Int      @id @default(autoincrement())
-  job_post_id  Int
-  student_id   Int
-  status       Int
-  applied_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
-  resume_id    Int?
-  portfolio_id Int?
-
+  id                Int               @id @default(autoincrement())
+  job_post_id       Int
+  student_id        Int
+  status            Int
+  applied_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  portfolio_id      Int?
+  resume_id         Int?
   jobPost           JobPost           @relation(fields: [job_post_id], references: [id])
+  portfolioDocument Document?         @relation("PortfolioDocument", fields: [portfolio_id], references: [id])
+  resumeDocument    Document?         @relation("ResumeDocument", fields: [resume_id], references: [id])
   applicationStatus ApplicationStatus @relation(fields: [status], references: [id])
   student           Student           @relation(fields: [student_id], references: [id])
-  resumeDocument    Document?         @relation("ResumeDocument", fields: [resume_id], references: [id])
-  portfolioDocument Document?         @relation("PortfolioDocument", fields: [portfolio_id], references: [id])
 }
 
 model ApplicationStatus {
