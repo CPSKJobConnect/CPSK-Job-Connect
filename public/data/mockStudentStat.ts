@@ -5,15 +5,16 @@ export const mockStudentStat = {
     savedJobs: 5,
   };
 
-export const mockApplicantBar = [
-  // weekly
-    { date: "10/10/2025", apply_num: 3 },
-    { date: "17/10/2025", apply_num: 5 },
-    { date: "24/10/2025", apply_num: 2 },
-    { date: "31/10/2025", apply_num: 6 },
-    { date: "07/11/2025", apply_num: 4 },
+  export const mockApplicantLine = [
+    { date: "01/10/2025", applicants: 2 },
+    { date: "02/10/2025", applicants: 3 },
+    { date: "03/10/2025", applicants: 5 },
+    { date: "04/10/2025", applicants: 4 },
+    { date: "05/10/2025", applicants: 6 },
+    { date: "06/10/2025", applicants: 7 },
+    { date: "07/10/2025", applicants: 8 },
   ];
-  
+
 
 export const mockStatusPie = [
     { name: "Pending", value: 3 },
@@ -28,8 +29,10 @@ export const mockCategoryBar = [
     { name: "Engineering", value: 5 },
   ];
 
-export const mockInterviewConversion = {
-  // percentage of interview conversion
-    conversionRate: 25
-  };
+export const mockInterviewConversion = [
+  // interview conversion rates by category
+    { category: "IT", conversionRate: 50 },
+    { category: "Design", conversionRate: 30 },
+    { category: "Engineering", conversionRate: 70 }, 
+]
   
