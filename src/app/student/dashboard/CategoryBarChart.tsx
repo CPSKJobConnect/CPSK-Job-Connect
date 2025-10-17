@@ -29,7 +29,18 @@ export default function CategoryBarChart() {
         dataKey="name"
         orientation="vertical"
         yAxisProps={{ width: 80 }}
+        barChartProps={{
+          maxBarSize: 28,
+          barGap: 4,
+          barCategoryGap: '20%'
+        }}
         barProps={{ radius: 10 }}
+        tooltipProps={{
+          shared: false,
+          allowEscapeViewBox: { x: true, y: true },
+          wrapperStyle: { zIndex: 9999 },
+          cursor: { fill: 'transparent' }
+        }}
         series={[{ name: 'value', color: '#D7C3F1' }]}
         />
     </Card>
