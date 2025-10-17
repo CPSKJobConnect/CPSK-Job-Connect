@@ -46,3 +46,6 @@ next-env.d.ts
 .vscode/
 
 .claude/
+
+# database backups
+/backup/
