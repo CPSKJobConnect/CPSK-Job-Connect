@@ -2,6 +2,8 @@
 
 This guide will help you backup, reset, and restore your Supabase database.
 
+> 💡 **Looking for general Prisma workflow?** See [PRISMA_WORKFLOW.md](./docs/PRISMA_WORKFLOW.md) for day-to-day migration and schema management.
+
 ## Prerequisites
 
 - Ensure you have `ts-node` installed globally or use `npx ts-node`
