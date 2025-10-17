@@ -19,7 +19,7 @@ export default function CategoryBarChart() {
   }, [])
 
   return (
-    <Card shadow="md" radius="lg" p="lg" className="w-full">
+    <Card shadow="md" radius="lg" p="lg" className="w-full h-[300px]">
       <Title order={4} mb="md" className="text-gray-800 text-center">
         Applications by Job Category
       </Title>
