@@ -51,10 +51,10 @@ export async function POST(req: Request) {
     location: body.location,
     aboutRole: body.description?.overview || "",
     requirements: body.description?.requirement
-      ? body.description.requirement.split(",").map(s => s.trim())
+      ? body.description.requirement.split(",").map((s: string) => s.trim())
       : [],
     qualifications: body.description?.qualification
-      ? body.description.qualification.split(",").map(s => s.trim())
+      ? body.description.qualification.split(",").map((s: string) => s.trim())
       : [],
     min_salary: Number(body.minSalary) || 0,
     max_salary: Number(body.maxSalary) || 0,
