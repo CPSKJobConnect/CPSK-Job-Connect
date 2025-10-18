@@ -41,7 +41,7 @@ const JobCard = (job: JobCardProps) => {
     const sizeStyle = {
       sm: "w-full sm:w-[400px] min-h-[140px]",
       md: "w-full sm:w-[400px] min-h-[250px] md:w-[550px]",
-      lg: "w-full md:w-[1000px] min-h-[250px]",
+      lg: "w-full md:w-full min-h-[250px]",
     }[job.size || "md"];
 
   return (
