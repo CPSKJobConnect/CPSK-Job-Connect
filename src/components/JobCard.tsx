@@ -1,23 +1,20 @@
 "use client";
-import React from "react";
-import Image from "next/image";
-import { JobInfo } from "@/types/job";
-import { formatPostedDate } from "@/lib/dateHelper";
-import { IoLocationOutline } from "react-icons/io5";
-import { MdOutlineTimer } from "react-icons/md";
-import { MdOutlinePeopleAlt } from "react-icons/md";
-import { FaRegStar } from "react-icons/fa";
-import { MdOutlineShare } from "react-icons/md";
-import { MdOutlineLink } from "react-icons/md";
-import { MdOutlineReportProblem } from "react-icons/md";
-import { Button } from "./ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import { formatPostedDate } from "@/lib/dateHelper";
+import { JobInfo } from "@/types/job";
+import Image from "next/image";
+import { FaRegStar, FaStar } from "react-icons/fa";
+import { IoLocationOutline } from "react-icons/io5";
+import { MdOutlineLink, MdOutlinePeopleAlt, MdOutlineReportProblem, MdOutlineShare, MdOutlineTimer } from "react-icons/md";
+import { Button } from "./ui/button";
+import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 interface JobCardProps {
   info: JobInfo;
@@ -34,7 +31,11 @@ const typeColors: Record<string, string> = {
 
 
 const JobCard = (job: JobCardProps) => {
-  const isClosed = job.info.status === "expire"; 
+  const { data: session } = useSession();
+  const [isSaved, setIsSaved] = useState(job.info.isSaved || false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const isClosed = job.info.status === "expire";
   const baseStyle =
     `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-100/60" : "bg-white"} p-4 flex flex-col gap-2 hover:bg-[#F3FEFA] transition mb-5`;
 
@@ -43,6 +44,41 @@ const JobCard = (job: JobCardProps) => {
       md: "w-full sm:w-[400px] min-h-[250px] md:w-[550px]",
       lg: "w-full md:w-full min-h-[250px]",
     }[job.size || "md"];
+
+  const handleSaveToggle = async () => {
+    if (!session?.user?.id) {
+      alert("Please login to save jobs");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const method = isSaved ? "DELETE" : "POST";
+      const response = await fetch("/api/jobs/saved", {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: session.user.id,
+          jobId: job.info.id,
+        }),
+      });
+
+      if (response.ok) {
+        setIsSaved(!isSaved);
+      } else {
+        const error = await response.json();
+        console.error("Failed to toggle save:", error);
+        alert("Failed to save job. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error toggling save:", error);
+      alert("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className={`${baseStyle} ${sizeStyle}`}>
@@ -61,7 +97,19 @@ const JobCard = (job: JobCardProps) => {
           </div>
         </div>
         <div className="flex gap-3 p-2">
-          <FaRegStar className="w-5 h-5" />
+          {/* bookmark star */}
+          <button
+            onClick={handleSaveToggle}
+            disabled={isLoading}
+            className="transition-colors disabled:opacity-50"
+            aria-label={isSaved ? "Unsave job" : "Save job"}
+          >
+            {isSaved ? (
+              <FaStar className="w-5 h-5 text-yellow-500 hover:text-yellow-600" />
+            ) : (
+              <FaRegStar className="w-5 h-5 hover:text-yellow-500" />
+            )}
+          </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <MdOutlineShare className="w-5 h-5" />

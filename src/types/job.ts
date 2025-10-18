@@ -27,6 +27,7 @@ export interface JobInfo {
   arrangement: string;
   deadline: string;
   status: string;
+  isSaved?: boolean;
 }
 
 export interface JobPostFormData {
