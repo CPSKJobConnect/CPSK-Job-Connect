@@ -26,7 +26,7 @@ const DocumentSelector = (props: DocumentSelectorProps) => {
       }, [props.selectedFile]);
       
 
-  const handleSelect = (file: FileMeta) => {
+  const handleSelect = (file: any) => {
     props.onFileSelect(file);
   };
 

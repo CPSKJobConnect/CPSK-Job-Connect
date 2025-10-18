@@ -1,6 +1,6 @@
 "use client";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -8,33 +8,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockCompanies } from "public/data/mockCompany";
-import CategoryCombobox from "@/components/CategoryCombobox";
 import { JobPostFormData} from "@/types/job";
-import { mockJobType, mockJobArrangement } from "public/data/fakeFilterInfo";
 
 
 interface JobPostDetailProps {
   formData: JobPostFormData;
   setFormData: React.Dispatch<React.SetStateAction<JobPostFormData>>;
+  jobTypes: { id: number; name: string }[];
+  jobArrangements: { id: number; name: string }[];
+  jobCategories: { id: number; name: string }[];
 }
 
 
-const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => {
-      const [locationList, setLocationmentList] = useState<string[]>([])
-      const [jobTypeList, setJobTypeList] = useState<string[]>([]);
-      const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
+const JobPostDetailSection = ({
+  formData,
+  setFormData,
+  jobTypes,
+  jobArrangements,
+  jobCategories,
+}: JobPostDetailProps) => {
 
-      useEffect(() => {
-        setLocationmentList(mockCompanies[0].address);
-        setJobTypeList(mockJobType);
-        setJobArrangementList(mockJobArrangement);
-      }, [])
-    
-      const handleSelect = (name: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [name]: value }));
-      };
+  useEffect(() => {
+    if (!formData.department && jobCategories.length > 0) {
+      setFormData((prev) => ({ ...prev, department: jobCategories[0].name }));
+    }
+    if (!formData.type && jobTypes.length > 0) {
+      setFormData((prev) => ({ ...prev, type: jobTypes[0].name }));
+    }
+    if (!formData.arrangement && jobArrangements.length > 0) {
+      setFormData((prev) => ({ ...prev, arrangement: jobArrangements[0].name }));
+    }
+  }, [jobCategories, jobTypes, jobArrangements, formData, setFormData]);
 
+  const handleSelect = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
     return (
         <div className="flex flex-col gap-6 bg-white p-6 rounded-md shadow-md h-full">
           <div className="bg-gradient-to-r from-[#ABE9D6] to-[#67C3A6] h-[10px] -mx-6 -mt-6 rounded-t-md"></div>
@@ -52,88 +60,98 @@ const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => 
               </div>
 
               <div className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-semibold text-gray-800">Job Category</p>
-                <CategoryCombobox
-                  selectedCategory={formData.category}
-                  setSelectedCategory={(category) => setFormData({ ...formData, category })}
-                  placeholder="e.g. Engineer, Finance"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-row gap-6">
-              <div className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-semibold text-gray-800">Location</p>
-                <Select onValueChange={(value) => handleSelect("location", value)}>
+                <p className="text-sm font-semibold text-gray-800">Department</p>
+                <Select
+                    value={formData.department}
+                    onValueChange={(value) => handleSelect("department", value)}
+                >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select location" />
+                    <SelectValue placeholder="Select department"/>
                   </SelectTrigger>
                   <SelectContent>
-                    {locationList.map((loc) => (
-                      <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                    {jobCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          {cat.name}
+                        </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            <div className="flex flex-row gap-6">
-              <div className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-semibold text-gray-800">Type</p>
-                <Select onValueChange={(value) => handleSelect("type", value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {jobTypeList.map((type) => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="flex flex-row gap-6">
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm font-semibold text-gray-800">Location</p>
+              <Input
+                type="text"
+                name="location"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                required={true}
+                placeholder="e.g. Bangkok, Thailand"
+              />
+            </div>
+          </div>
 
-              <div className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-semibold text-gray-800">Arrangement</p>
-                <Select onValueChange={(value) => handleSelect("arrangement", value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Arrangement" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {jobArrangementList.map((arr) => (
-                      <SelectItem key={arr} value={arr}>{arr}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="flex flex-row gap-6">
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm font-semibold text-gray-800">Type</p>
+              <Select
+                  value={formData.type}
+                  onValueChange={(value) => handleSelect("type", value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Type"/>
+                </SelectTrigger>
+                <SelectContent>
+                  {jobTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.name}>
+                        {type.name}
+                      </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="flex flex-row gap-6">
-              <div className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-semibold text-gray-800">Min Salary</p>
-                <Input
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm font-semibold text-gray-800">Arrangement</p>
+              <Select
+                  value={formData.arrangement}
+                  onValueChange={(value) => handleSelect("arrangement", value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Arrangement"/>
+                </SelectTrigger>
+                <SelectContent>
+                  {jobArrangements.map((arr) => (
+                      <SelectItem key={arr.id} value={arr.name}>
+                        {arr.name}
+                      </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex flex-row gap-6">
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm font-semibold text-gray-800">Min Salary</p>
+              <Input
                   type="text"
                   name="minSalary"
-                  value={formData.salary.min}
-                  onChange={(e) => setFormData({ ...formData, 
-                    salary: {
-                      ...formData.salary,
-                      min: Number(e.target.value)
-                  }})}
+                  value={formData.minSalary}
+                  onChange={(e) => setFormData({...formData, minSalary: Number(e.target.value)})}
                   required={true}
                   placeholder="30000"
-                />
-              </div>
-              <div className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-semibold text-gray-800">Max Salary</p>
-                <Input
+              />
+            </div>
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm font-semibold text-gray-800">Max Salary</p>
+              <Input
                   type="text"
                   name="maxSalary"
-                  value={formData.salary.max}
-                  onChange={(e) => setFormData({ ...formData, 
-                    salary: {
-                      ...formData.salary,
-                      max: Number(e.target.value)
-                  }})}
+                  value={formData.maxSalary}
+                  onChange={(e) => setFormData({ ...formData, maxSalary: Number(e.target.value) })}
                   required={true}
                   placeholder="60000"
                 />

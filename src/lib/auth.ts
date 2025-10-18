@@ -74,17 +74,12 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({token, user, account, trigger, session}) {
+    async jwt({token, user, account}) {
       if (user) {
         token.role = user.role;
         token.username = user.username;
         token.logoUrl = user.logoUrl;
         token.backgroundUrl = user.backgroundUrl;
-      }
-
-      // Handle session update (when profile image is changed)
-      if (trigger === "update" && session?.user?.logoUrl) {
-        token.logoUrl = session.user.logoUrl;
       }
 
       // for OAuth users

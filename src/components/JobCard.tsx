@@ -1,20 +1,23 @@
 "use client";
+import React from "react";
+import Image from "next/image";
+import { JobInfo } from "@/types/job";
+import { formatPostedDate } from "@/lib/dateHelper";
+import { IoLocationOutline } from "react-icons/io5";
+import { MdOutlineTimer } from "react-icons/md";
+import { MdOutlinePeopleAlt } from "react-icons/md";
+import { FaRegStar } from "react-icons/fa";
+import { MdOutlineShare } from "react-icons/md";
+import { MdOutlineLink } from "react-icons/md";
+import { MdOutlineReportProblem } from "react-icons/md";
+import { Button } from "./ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { formatPostedDate } from "@/lib/dateHelper";
-import { JobInfo } from "@/types/job";
-import Image from "next/image";
-import { FaRegStar, FaStar } from "react-icons/fa";
-import { IoLocationOutline } from "react-icons/io5";
-import { MdOutlineLink, MdOutlinePeopleAlt, MdOutlineReportProblem, MdOutlineShare, MdOutlineTimer } from "react-icons/md";
-import { Button } from "./ui/button";
-import { useState } from "react";
-import { useSession } from "next-auth/react";
+} from "@/components/ui/dropdown-menu"
 
 interface JobCardProps {
   info: JobInfo;
@@ -24,60 +27,20 @@ interface JobCardProps {
 const typeColors: Record<string, string> = {
   fulltime: "bg-pink-200 text-gray-800",
   parttime: "bg-blue-200 text-gray-800",
-  internship: "bg-orange-100 text-gray-800",
+  internship: "bg-green-100 text-gray-800",
   contract: "bg-yellow-200 text-gray-800",
   hybrid: "bg-purple-200 text-gray-800"
 };
 
 
 const JobCard = (job: JobCardProps) => {
-  const { data: session } = useSession();
-  const [isSaved, setIsSaved] = useState(job.info.isSaved || false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const isClosed = job.info.status === "expire";
   const baseStyle =
-    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-100/60" : "bg-white"} p-4 flex flex-col gap-2 hover:bg-[#F3FEFA] transition mb-5`;
+    "rounded-xl shadow-md border border-gray-100 bg-white p-4 flex flex-col gap-2 hover:bg-[#F3FEFA] transition mb-5";
 
     const sizeStyle = {
-      sm: "w-full sm:w-[400px] min-h-[140px]",
-      md: "w-full sm:w-[400px] min-h-[250px] md:w-[550px]"
+      sm: "w-full sm:w-[400px] sm:h-[140px]",
+      md: "w-full sm:w-[400px] sm:h-[250px] md:w-[550px] md:h-[250px]"
     }[job.size || "md"];
-
-  const handleSaveToggle = async () => {
-    if (!session?.user?.id) {
-      alert("Please login to save jobs");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const method = isSaved ? "DELETE" : "POST";
-      const response = await fetch("/api/jobs/saved", {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: session.user.id,
-          jobId: job.info.id,
-        }),
-      });
-
-      if (response.ok) {
-        setIsSaved(!isSaved);
-      } else {
-        const error = await response.json();
-        console.error("Failed to toggle save:", error);
-        alert("Failed to save job. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error toggling save:", error);
-      alert("An error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className={`${baseStyle} ${sizeStyle}`}>
@@ -91,24 +54,12 @@ const JobCard = (job: JobCardProps) => {
             className="h-auto bg-white translate-y-1 shadow-md rounded-md"
           />
           <div className="p-2">
-            <p className="font-bold text-md">{job.info.title}</p>
+            <p className="font-bold text-md">{job.info.jobName}</p>
             <p className="text-gray-600">{job.info.companyName}</p>
           </div>
         </div>
         <div className="flex gap-3 p-2">
-          {/* bookmark star */}
-          <button
-            onClick={handleSaveToggle}
-            disabled={isLoading}
-            className="transition-colors disabled:opacity-50"
-            aria-label={isSaved ? "Unsave job" : "Save job"}
-          >
-            {isSaved ? (
-              <FaStar className="w-5 h-5 text-yellow-500 hover:text-yellow-600" />
-            ) : (
-              <FaRegStar className="w-5 h-5 hover:text-yellow-500" />
-            )}
-          </button>
+          <FaRegStar className="w-5 h-5" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <MdOutlineShare className="w-5 h-5" />
@@ -144,28 +95,24 @@ const JobCard = (job: JobCardProps) => {
       </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
-        <span
-          className={`px-2 py-1 rounded-md text-sm shadow-md ${
-            isClosed ? "bg-gray-100 text-gray-800"
-            : typeColors[job.info.type] || "bg-white text-gray-800"
-          }`}
-        >
-          {job.info.type}
-        </span>
-
-        {job.info.skills?.map((tag, idx) => (
-          <span key={idx} className={`${isClosed ? "bg-gray-100" : "bg-white"} text-grey-800 shadow-md px-2 py-1 rounded-md text-sm`}>
+      <span
+        className={`px-2 py-1 rounded-md text-sm shadow-md ${
+          typeColors[job.info.type] || "bg-white text-gray-800"
+        }`}
+      >
+        {job.info.type}
+      </span>
+        {job.info.tags.map((tag, idx) => (
+          <span key={idx} className="bg-white text-grey-800 shadow-md px-2 py-1 rounded-md text-sm">
             {tag}
           </span>
         ))}
       </div>
 
       <div className="mt-auto mb-2 flex justify-end">
-        {job.size === "md" && (
-          <Button className="lg:w-40 md:w-30 sm:w-30 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition">
-            View Detail
-          </Button>
-        )}
+      <Button className="lg:w-40 md:w-30 sm:w-30 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition">
+        View Detail
+      </Button>
       </div>
     </div>
   );
