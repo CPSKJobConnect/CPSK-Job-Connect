@@ -1,6 +1,6 @@
 "use client";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockCompanies } from "@/mockCompany";
 import { JobPostFormData} from "@/types/job";
 
 
@@ -28,11 +27,6 @@ const JobPostDetailSection = ({
   jobArrangements,
   jobCategories,
 }: JobPostDetailProps) => {
-  const [locationList, setLocationmentList] = useState<string[]>([])
-
-  useEffect(() => {
-        setLocationmentList(mockCompanies[0].address);
-      }, [])
 
   useEffect(() => {
     if (!formData.department && jobCategories.length > 0) {
@@ -88,16 +82,14 @@ const JobPostDetailSection = ({
           <div className="flex flex-row gap-6">
             <div className="flex flex-col gap-2 w-full">
               <p className="text-sm font-semibold text-gray-800">Location</p>
-              <Select onValueChange={(value) => handleSelect("location", value)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select location"/>
-                </SelectTrigger>
-                <SelectContent>
-                  {locationList.map((loc) => (
-                      <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                type="text"
+                name="location"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                required={true}
+                placeholder="e.g. Bangkok, Thailand"
+              />
             </div>
           </div>
 
