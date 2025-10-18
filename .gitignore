@@ -9,6 +9,7 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+package-lock.json
 
 # testing
 /coverage
@@ -47,5 +48,10 @@ next-env.d.ts
 
 .claude/
 
-.idea/
-*.iml
+# database backups
+/backup/
+
+# supabase
+/supabase/.temp/
+/supabase/.branches/
+/.supabase/
