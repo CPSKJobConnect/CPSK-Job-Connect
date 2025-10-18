@@ -59,3 +59,9 @@ export const defaultJobPostForm: JobPostFormData = {
     qualification: "",
   },
 };
+
+export interface BookmarkJobInfo {
+  job: JobInfo;
+  isBookmarked: boolean;
+  isApplied: boolean;
+}
