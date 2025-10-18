@@ -31,6 +31,7 @@ interface JobDescriptionProps {
   size: "sm" | "md";
   onApply: boolean;
   onEdit: boolean;
+  inDialog?: boolean;
 }
 
 const typeColors: Record<string, string> = {
@@ -43,7 +44,7 @@ const typeColors: Record<string, string> = {
 
 
 
-const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) => {
+const JobDescriptionCard = ({job, size, onApply, onEdit, inDialog}: JobDescriptionProps) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [formData, setFormData] = useState<JobPostFormData>({
@@ -304,8 +305,8 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
           />
       </div>
       }
-      <div className="flex-1 overflow-y-auto px-4">
-      <div className="flex flex-col gap-6 px-5 mt-5">
+      <div className={`${inDialog ? 'max-h-[60vh] overflow-y-auto' : 'flex-1 overflow-y-auto'} px-4`}> 
+        <div className="flex flex-col gap-6 px-5 mt-5">
         <div>
           <p className="font-bold">About Role</p>
           {isEditing ? (
