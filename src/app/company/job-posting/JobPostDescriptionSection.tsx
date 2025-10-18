@@ -1,7 +1,7 @@
 "use client";
 import { Textarea } from "@/components/ui/textarea";
 import { JobPostFormData } from "@/types/job";
-import SkillCombobox from "../../../components/SkillCombobox";
+import SkillCombobox from "./SkillCombobox";;
 
 
 interface JobPostDescriptionProps {
