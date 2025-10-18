@@ -1,18 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Student } from "@/types/user";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProfileTab from "./ProfileTab";
-import DocumentsTab from "./DocumentsTab";
-import ApplicationsTab from "./ApplicationsTab";
-import { toast } from "sonner";
+import { Student } from "@/types/user";
 import Image from "next/image";
-import { IoPersonCircleOutline, IoMailOutline, IoCallOutline, IoSchoolOutline, IoIdCardOutline } from "react-icons/io5";
+import { useEffect, useRef, useState } from "react";
+import { IoCallOutline, IoCameraOutline, IoIdCardOutline, IoMailOutline, IoPersonCircleOutline, IoSchoolOutline } from "react-icons/io5";
+import { toast } from "sonner";
+import { useSession } from "next-auth/react";
+import ApplicationsTab from "./ApplicationsTab";
+import DocumentsTab from "./DocumentsTab";
+import ProfileTab from "./ProfileTab";
 
 export default function StudentProfilePage() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: session, update: updateSession } = useSession();
 
   const fetchStudentProfile = async () => {
     try {
@@ -28,6 +32,64 @@ export default function StudentProfilePage() {
       toast.error("Error loading profile");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be less than 5MB");
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/students/profile-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        toast.error(error.error || "Failed to upload profile image");
+        return;
+      }
+
+      const data = await res.json();
+
+      toast.success("Profile image updated successfully");
+
+      // Update the session with new logoUrl to refresh navbar
+      await updateSession({
+        ...session,
+        user: {
+          ...session?.user,
+          logoUrl: data.profile_url,
+        },
+      });
+
+      await fetchStudentProfile();
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+      toast.error("Error uploading profile image");
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -57,20 +119,45 @@ export default function StudentProfilePage() {
       <div className="bg-gradient-to-r from-[#006C67] to-[#00968F] rounded-lg shadow-lg p-8 mb-8 text-white">
         <div className="flex items-center gap-6">
           {/* Profile Picture */}
-          <div className="relative">
+          <div className="relative group">
             {student.profile_url ? (
-              <Image
-                src={student.profile_url}
-                alt={`${student.firstname} ${student.lastname}`}
-                width={120}
-                height={120}
-                className="rounded-full border-4 border-white shadow-lg object-cover"
-              />
+              <div className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-lg overflow-hidden">
+                <Image
+                  src={student.profile_url}
+                  alt={`${student.firstname} ${student.lastname}`}
+                  width={120}
+                  height={120}
+                  className="w-full h-full object-cover object-[center_20%]"
+                />
+              </div>
             ) : (
               <div className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-lg bg-white/20 flex items-center justify-center">
                 <IoPersonCircleOutline className="w-20 h-20 text-white" />
               </div>
             )}
+
+            {/* Upload Button Overlay */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImage}
+              className="absolute inset-0 w-[120px] h-[120px] rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+              title="Change profile picture"
+            >
+              {uploadingImage ? (
+                <div className="text-white text-sm">Uploading...</div>
+              ) : (
+                <IoCameraOutline className="w-10 h-10 text-white" />
+              )}
+            </button>
+
+            {/* Hidden File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleProfileImageUpload}
+              className="hidden"
+            />
           </div>
 
           {/* Student Info */}

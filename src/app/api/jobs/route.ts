@@ -1,8 +1,20 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+
+    let studentId: number | null = null;
+
+    // If userId is provided, find the corresponding student
+    if (userId) {
+      const student = await prisma.student.findUnique({
+        where: { account_id: Number(userId) },
+      });
+      studentId = student?.id ?? null;
+    }
 
     const jobs = await prisma.jobPost.findMany({
       include: {
@@ -16,6 +28,13 @@ export async function GET() {
         },
         jobType: true,
         jobArrangement: true,
+        savedBy: studentId
+          ? {
+              where: {
+                student_id: studentId,
+              },
+            }
+          : false,
       },
     });
 
@@ -28,6 +47,9 @@ export async function GET() {
       } else if (job.deadline && new Date(job.deadline) < new Date()) {
         status = "expire";
       }
+
+      // Check if the job is saved by the current user
+      const isSaved = Array.isArray(job.savedBy) && job.savedBy.length > 0;
 
       return {
         id: job.id,
@@ -54,6 +76,7 @@ export async function GET() {
         arrangement: job.jobArrangement.name,
         deadline: job.deadline.toISOString(),
         status,
+        isSaved,
       };
     });
     // console.log("Mapped jobs to JSON:", mappedData);

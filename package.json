@@ -9,7 +9,13 @@
     "lint": "eslint . --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
     "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "db:backup": "ts-node --project tsconfig.node.json scripts/backup-database.ts",
+    "db:restore": "ts-node --project tsconfig.node.json scripts/restore-database.ts",
+    "db:seed": "ts-node --project tsconfig.node.json prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "ts-node --project tsconfig.node.json prisma/seed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -40,6 +46,7 @@
     "react-icons": "^5.5.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
+    "ts-node": "^10.9.2",
     "zod": "^4.1.5"
   },
   "devDependencies": {
