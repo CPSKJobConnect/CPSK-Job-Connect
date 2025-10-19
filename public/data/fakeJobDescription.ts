@@ -1,302 +1,234 @@
-export const fakeJobData = [
+import { JobInfo } from "@/types/job";
+
+export const fakeJobData: JobInfo[] = [
   {
     id: "1",
     companyLogo: "/assets/images/companyLogo.png",
-    companyBg: "/assets/images/CompanyBg.jpg",
-    jobName: "Frontend Developer",
+    companyBg: "/assets/images/companyBg.jpg",
+    title: "Frontend Developer",
     companyName: "Techify Co.",
-    category: ["IT", "Engineering"],
+    category: "Engineering",
     location: "Bangkok",
     posted: "2025-09-02",
     applied: 14,
-    minSalary: "35,000",
-    maxSalary: "55,000",
-    tags: ["React", "TypeScript", "CSS"],
+    salary: { min: 35000, max: 55000 },
+    skills: ["React", "TypeScript", "CSS"],
     description: {
-      aboutRole: "Build and maintain user interfaces with React and ensure cross-platform compatibility.",
-      requirements: [
-        "Proficient in React and TypeScript",
-        "Experience with responsive CSS frameworks",
-        "Good problem-solving skills"
-      ],
-      qualifications: [
-        "Bachelor’s degree in Computer Science or related field",
-        "1+ years frontend development experience",
-        "Knowledge of REST APIs",
-        "Teamwork and communication skills"
-      ]
+      overview: "Build and maintain user interfaces with React and ensure cross-platform compatibility.",
+      responsibility: "Develop reusable components and implement responsive UI designs.",
+      requirement: "Proficient in React and TypeScript, CSS frameworks.",
+      qualification: "Bachelor’s degree in Computer Science or related field, 1+ years experience."
     },
     type: "fulltime",
-    arrangement: "hybrid"
+    arrangement: "hybrid",
+    deadline: "2025-09-30",
+    status: "active"
   },
   {
     id: "2",
     companyLogo: "/assets/images/companyLogo.png",
-    companyBg: "/assets/images/CompanyBg.jpg",
-    jobName: "Backend Developer",
+    companyBg: "/assets/images/companyBg.jpg",
+    title: "Backend Developer",
     companyName: "SoftWorks Ltd.",
-    category: ["IT", "Engineering"],
+    category: "Engineering",
     location: "Remote",
     posted: "2025-09-01",
     applied: 32,
-    minSalary: "40,000",
-    maxSalary: "70,000",
-    tags: ["Node.js", "Express", "MongoDB"],
+    salary: { min: 40000, max: 70000 },
+    skills: ["Node.js", "Express", "MongoDB"],
     description: {
-      aboutRole: "Develop scalable backend services and manage APIs for client-facing applications.",
-      requirements: [
-        "Strong knowledge of Node.js and Express",
-        "Database experience (MongoDB, PostgreSQL)",
-        "Understanding of authentication & security practices"
-      ],
-      qualifications: [
-        "Bachelor’s degree in Software Engineering or related",
-        "2+ years backend experience",
-        "Knowledge of Docker, AWS/GCP",
-        "Problem-solving and debugging skills"
-      ]
+      overview: "Develop scalable backend services and manage APIs for client-facing applications.",
+      responsibility: "Build RESTful APIs, integrate databases, and optimize performance.",
+      requirement: "Strong knowledge of Node.js, Express, and MongoDB.",
+      qualification: "Bachelor’s degree in Software Engineering, 2+ years experience."
     },
     type: "fulltime",
-    arrangement: "hybrid"
+    arrangement: "hybrid",
+    deadline: "2025-10-05",
+    status: "active"
   },
   {
     id: "3",
     companyLogo: "/assets/images/companyLogo.png",
-    companyBg: "/assets/images/CompanyBg.jpg",
-    jobName: "UI/UX Designer",
+    companyBg: "/assets/images/companyBg.jpg",
+    title: "UI/UX Designer",
     companyName: "Creative Labs",
-    category: ["Design"],
+    category: "Design",
     location: "Bangkok",
     posted: "2025-08-28",
     applied: 20,
-    minSalary: "20,000",
-    maxSalary: "35,000",
-    tags: ["Figma", "Adobe XD", "Wireframing"],
+    salary: { min: 20000, max: 35000 },
+    skills: ["Figma", "Adobe XD", "Wireframing"],
     description: {
-      aboutRole: "Design user-friendly interfaces and ensure smooth user experiences across platforms.",
-      requirements: [
-        "Experience with Figma or Adobe XD",
-        "Portfolio with UI/UX projects",
-        "Knowledge of usability testing"
-      ],
-      qualifications: [
-        "Bachelor’s degree in Design or HCI",
-        "1+ years design experience",
-        "Knowledge of accessibility standards",
-        "Creative and collaborative mindset"
-      ]
+      overview: "Design user-friendly interfaces and ensure smooth user experiences.",
+      responsibility: "Create wireframes, mockups, and prototypes.",
+      requirement: "Experience with Figma or Adobe XD, portfolio of UI/UX projects.",
+      qualification: "Bachelor’s degree in Design or HCI, 1+ years experience."
     },
     type: "internship",
-    arrangement: "onsite"
+    arrangement: "onsite",
+    deadline: "2025-09-15",
+    status: "expire"
   },
   {
     id: "4",
     companyLogo: "/assets/images/companyLogo.png",
-    companyBg: "/assets/images/CompanyBg.jpg",
-    jobName: "Data Analyst",
+    companyBg: "/assets/images/companyBg.jpg",
+    title: "Data Analyst",
     companyName: "Insight Analytics",
-    category: ["IT", "Engineering"],
+    category: "IT",
     location: "Chiang Mai",
     posted: "2025-08-28",
     applied: 17,
-    minSalary: "30,000",
-    maxSalary: "50,000",
-    tags: ["SQL", "Python", "Tableau"],
+    salary: { min: 30000, max: 50000 },
+    skills: ["SQL", "Python", "Tableau"],
     description: {
-      aboutRole: "Analyze data, build dashboards, and generate insights for business decision-making.",
-      requirements: [
-        "Proficiency in SQL and Python",
-        "Experience with Tableau/Power BI",
-        "Strong analytical skills"
-      ],
-      qualifications: [
-        "Bachelor’s degree in Statistics or Economics",
-        "1+ years data analysis experience",
-        "Knowledge of statistical methods",
-        "Attention to detail and accuracy"
-      ]
+      overview: "Analyze data and build dashboards to generate business insights.",
+      responsibility: "Prepare reports, analyze trends, and visualize data.",
+      requirement: "Proficiency in SQL and Python, experience with Tableau/Power BI.",
+      qualification: "Bachelor’s in Statistics or Economics, 1+ years experience."
     },
     type: "fulltime",
-    arrangement: "onsite"
+    arrangement: "onsite",
+    deadline: "2025-09-20",
+    status: "expire"
   },
   {
     id: "5",
     companyLogo: "/assets/images/companyLogo.png",
-    companyBg: "/assets/images/CompanyBg.jpg",
-    jobName: "Marketing Intern",
+    companyBg: "/assets/images/companyBg.jpg",
+    title: "Marketing Intern",
     companyName: "Bright Media",
-    category: ["Marketing"],
+    category: "Marketing",
     location: "Bangkok",
     posted: "2025-08-28",
     applied: 42,
-    minSalary: "10,000",
-    maxSalary: "15,000",
-    tags: ["Social Media", "SEO", "Content Writing"],
+    salary: { min: 10000, max: 15000 },
+    skills: ["Social Media", "SEO", "Content Writing"],
     description: {
-      aboutRole: "Assist in creating and managing marketing campaigns and digital content.",
-      requirements: [
-        "Familiar with social media platforms",
-        "Basic SEO knowledge",
-        "Creative writing skills"
-      ],
-      qualifications: [
-        "Currently pursuing degree in Marketing or related",
-        "Good communication skills",
-        "Proactive and eager to learn",
-        "Able to work 3 days/week in office"
-      ]
+      overview: "Assist in creating and managing marketing campaigns.",
+      responsibility: "Help with social media posts and SEO optimization.",
+      requirement: "Basic knowledge of marketing and social media platforms.",
+      qualification: "Currently pursuing marketing degree, proactive and creative."
     },
     type: "internship",
-    arrangement: "onsite"
+    arrangement: "onsite",
+    deadline: "2025-09-10",
+    status: "expire"
   },
   {
     id: "6",
     companyLogo: "/assets/images/companyLogo.png",
-    companyBg: "/assets/images/CompanyBg.jpg",
-    jobName: "Project Manager",
+    companyBg: "/assets/images/companyBg.jpg",
+    title: "Project Manager",
     companyName: "BuildTech Solutions",
-    category: ["Management"],
+    category: "Management",
     location: "Remote",
     posted: "2025-09-04",
     applied: 9,
-    minSalary: "50,000",
-    maxSalary: "80,000",
-    tags: ["Agile", "Scrum", "Leadership"],
+    salary: { min: 50000, max: 80000 },
+    skills: ["Agile", "Scrum", "Leadership"],
     description: {
-      aboutRole: "Lead cross-functional teams and ensure projects are delivered on time.",
-      requirements: [
-        "Experience managing software projects",
-        "Familiarity with Agile/Scrum methodology",
-        "Strong organizational skills"
-      ],
-      qualifications: [
-        "Bachelor’s degree in Business, Engineering, or related field",
-        "3+ years of project management experience",
-        "PMP/Agile certification is a plus",
-        "Excellent communication skills"
-      ]
+      overview: "Lead cross-functional teams and ensure timely delivery of projects.",
+      responsibility: "Manage schedules, resources, and team performance.",
+      requirement: "Experience in software project management and Agile/Scrum.",
+      qualification: "Bachelor’s degree in Business/Engineering, 3+ years experience."
     },
     type: "fulltime",
-    arrangement: "onsite"
+    arrangement: "onsite",
+    deadline: "2025-10-01",
+    status: "draft"
   },
   {
     id: "7",
     companyLogo: "/assets/images/companyLogo.png",
-    companyBg: "/assets/images/CompanyBg.jpg",
-    jobName: "QA Tester",
+    companyBg: "/assets/images/companyBg.jpg",
+    title: "QA Tester",
     companyName: "QualityFirst",
-    category: ["IT", "Engineeing"],
+    category: "IT",
     location: "Bangkok",
     posted: "2025-09-04",
     applied: 12,
-    minSalary: "25,000",
-    maxSalary: "40,000",
-    tags: ["Testing", "Automation", "Selenium"],
+    salary: { min: 25000, max: 40000 },
+    skills: ["Testing", "Automation", "Selenium"],
     description: {
-      aboutRole: "Perform manual and automated testing to ensure product quality.",
-      requirements: [
-        "Knowledge of test case design and execution",
-        "Experience with automation tools",
-        "Bug tracking and reporting skills"
-      ],
-      qualifications: [
-        "Bachelor’s degree in Computer Science or related field",
-        "1+ years of software testing experience",
-        "Detail-oriented mindset",
-        "Good analytical skills"
-      ]
+      overview: "Perform manual and automated testing to ensure product quality.",
+      responsibility: "Write test cases and perform QA testing.",
+      requirement: "Knowledge of testing tools and bug tracking.",
+      qualification: "Bachelor’s in CS or related, 1+ years experience."
     },
     type: "parttime",
-    arrangement: "onsite"
+    arrangement: "onsite",
+    deadline: "2025-09-25",
+    status: "active"
   },
   {
     id: "8",
     companyLogo: "/assets/images/companyLogo.png",
-    companyBg: "/assets/images/CompanyBg.jpg",
-    jobName: "Accountant",
+    companyBg: "/assets/images/companyBg.jpg",
+    title: "Accountant",
     companyName: "FinCorp",
-    category: ["Finance", "Accounting"],
+    category: "Accounting",
     location: "Bangkok",
     posted: "2025-09-01",
     applied: 18,
-    minSalary: "28,000",
-    maxSalary: "45,000",
-    tags: ["Accounting", "Tax", "Finance"],
+    salary: { min: 28000, max: 45000 },
+    skills: ["Accounting", "Tax", "Finance"],
     description: {
-      aboutRole: "Handle financial records, tax filings, and ensure compliance with Thai accounting standards.",
-      requirements: [
-        "Experience in accounting and finance",
-        "Knowledge of Thai tax regulations",
-        "Proficiency with accounting software"
-      ],
-      qualifications: [
-        "Bachelor’s degree in Accounting",
-        "1+ years accounting experience",
-        "Knowledge of Thai regulations",
-        "Time management and accuracy"
-      ]
+      overview: "Handle financial records and tax compliance.",
+      responsibility: "Prepare financial statements and reports.",
+      requirement: "Knowledge of accounting software and Thai tax regulations.",
+      qualification: "Bachelor’s degree in Accounting, 1+ years experience."
     },
     type: "fulltime",
-    arrangement: "onsite"
+    arrangement: "onsite",
+    deadline: "2025-10-05",
+    status: "active"
   },
   {
     id: "9",
     companyLogo: "/assets/images/companyLogo.png",
-    companyBg: "/assets/images/CompanyBg.jpg",
-    jobName: "HR Specialist",
+    companyBg: "/assets/images/companyBg.jpg",
+    title: "HR Specialist",
     companyName: "PeopleConnect",
-    category: ["HR"],
+    category: "HR",
     location: "Remote",
     posted: "2025-08-27",
     applied: 10,
-    minSalary: "30,000",
-    maxSalary: "50,000",
-    tags: ["Recruitment", "Employee Relations", "HRIS"],
+    salary: { min: 30000, max: 50000 },
+    skills: ["Recruitment", "Employee Relations", "HRIS"],
     description: {
-      aboutRole: "Manage recruitment, onboarding, and employee engagement programs.",
-      requirements: [
-        "Experience in recruitment and HR operations",
-        "Knowledge of labor laws",
-        "Strong interpersonal skills"
-      ],
-      qualifications: [
-        "Bachelor’s degree in Human Resources or related",
-        "2+ years HR experience",
-        "Strong organizational and communication skills",
-        "Ability to work independently"
-      ]
+      overview: "Manage recruitment and employee engagement programs.",
+      responsibility: "Onboard new hires and support HR operations.",
+      requirement: "Knowledge of labor laws and HR systems.",
+      qualification: "Bachelor’s in HR or related, 2+ years experience."
     },
     type: "fulltime",
-    arrangement: "contract"
+    arrangement: "contract",
+    deadline: "2025-09-30",
+    status: "expire"
   },
   {
     id: "10",
     companyLogo: "/assets/images/companyLogo.png",
-    companyBg: "/assets/images/CompanyBg.jpg",
-    jobName: "Customer Support",
+    companyBg: "/assets/images/companyBg.jpg",
+    title: "Customer Support",
     companyName: "HelpDesk Pro",
-    category: ["Customer Service"],
+    category: "Customer Service",
     location: "Chiang Mai",
     posted: "2025-08-27",
     applied: 26,
-    minSalary: "18,000",
-    maxSalary: "25,000",
-    tags: ["Support", "Communication", "Problem-solving"],
+    salary: { min: 18000, max: 25000 },
+    skills: ["Support", "Communication", "Problem-solving"],
     description: {
-      aboutRole: "Provide customer support via chat, email, and phone, ensuring high satisfaction.",
-      requirements: [
-        "Strong communication and problem-solving skills",
-        "Ability to handle multiple inquiries",
-        "Patience and empathy"
-      ],
-      qualifications: [
-        "Bachelor’s degree in any field",
-        "Customer service experience preferred",
-        "Fluent in Thai and English",
-        "Able to work flexible shifts"
-      ]
+      overview: "Provide customer support via chat, email, and phone.",
+      responsibility: "Handle inquiries and resolve customer issues promptly.",
+      requirement: "Good communication and multitasking skills.",
+      qualification: "Bachelor’s degree in any field, customer service experience preferred."
     },
     type: "parttime",
-    arrangement: "freelance"
+    arrangement: "freelance",
+    deadline: "2025-09-20",
+    status: "expire"
   }
 ];
