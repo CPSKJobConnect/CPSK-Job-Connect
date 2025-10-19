@@ -1,41 +1,24 @@
-import { writeFile } from "fs/promises";
-import { NextResponse } from "next/server";
-import path from "path";
+import { prisma } from "@/lib/db";
+import { createClient } from "@supabase/supabase-js";
 
-export async function POST(req: Request) {
-  try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
-    const userId = formData.get("userId") as string;
+export async function uploadDocument(file: File, userId: string, docTypeId: number) {
+  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!);
 
-    if (!file) {
-      return NextResponse.json(
-        {error: "No file uploaded"},
-        {status: 400}
-      )
-    }
-    
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+  const filePath = `Document/${userId}/${Date.now()}_${file.name}`;
+  const { data, error } = await supabase.storage
+    .from("documents")
+    .upload(filePath, file);
 
-    // Create upload directory if it doesn't exist
-    const uploadDir = path.join(process.cwd(), "public/uploads/transcripts")
-    const filename = `${userId}_${Date.now()}_${file.name}`
-    const filepath = path.join(uploadDir, filename)
+  if (error) throw error;
 
-    await writeFile(filepath, buffer)
+  const document = await prisma.document.create({
+    data: {
+      account_id: Number(userId),
+      doc_type_id: docTypeId,
+      file_name: file.name,
+      file_path: data.path,
+    },
+  });
 
-    return NextResponse.json({
-      message: "File uploaded successfully",
-      filename,
-      path: `/uploads/transcripts/${filename}`,
-    })
-
-  } catch (error) {
-    console.error("Upload error:", error)
-    return NextResponse.json(
-      { error: "Upload failed" },
-      { status: 500 }
-    )
-  }
+  return document;
 }

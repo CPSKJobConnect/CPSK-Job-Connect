@@ -63,3 +63,26 @@ export const mockSkill = [
   "Dart",
 ];
 
+export const mockCategory = [
+  "IT", 
+  "Engineering",
+  "Design",
+  "Marketing",
+  "Management",
+  "Finance", 
+  "Accounting",
+  "HR",
+];
+
+export const mockJobType = [
+  "fulltime",
+  "parttime", 
+  "internship",
+  "freelance"
+]
+
+export const mockJobArrangement = [
+  "hybrid",
+  "onsite",
+  "remote",
+]

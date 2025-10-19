@@ -3,6 +3,9 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/providers/SessionProvider";
 import { Toaster } from "@/components/ui/sonner"
+import { MantineProvider } from '@mantine/core';
+import '@mantine/core/styles.css';
+import '@mantine/charts/styles.css';
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -27,10 +30,12 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} font-poppins antialiased`}
       >
+        <MantineProvider>
         <AuthProvider>
           {children}
         </AuthProvider>
         <Toaster richColors closeButton />
+        </MantineProvider>
       </body>
     </html>
   );
