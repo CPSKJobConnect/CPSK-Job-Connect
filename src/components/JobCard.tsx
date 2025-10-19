@@ -37,7 +37,7 @@ const JobCard = (job: JobCardProps) => {
 
   const isClosed = job.info.status === "expire";
   const baseStyle =
-    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-100/60" : "bg-white"} p-4 flex flex-col gap-2 hover:bg-[#F3FEFA] transition mb-5`;
+    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-200/70 cursor-not-allowed" : "bg-white hover:bg-[#F3FEFA]"} p-4 flex flex-col gap-2 transition mb-5`;
 
     const sizeStyle = {
       sm: "w-full sm:w-[400px] min-h-[140px]",
@@ -81,7 +81,13 @@ const JobCard = (job: JobCardProps) => {
   };
 
   return (
-    <div className={`${baseStyle} ${sizeStyle}`}>
+    <div
+      className={`${baseStyle} ${sizeStyle}`}
+      onClick={(e) => {
+        if (isClosed) e.stopPropagation();
+      }}
+      aria-disabled={isClosed}
+    >
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
           <Image
@@ -97,12 +103,15 @@ const JobCard = (job: JobCardProps) => {
           </div>
         </div>
         <div className="flex gap-3 p-2">
-          {/* bookmark star */}
           <button
-            onClick={handleSaveToggle}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSaveToggle();
+            }}
             disabled={isLoading}
             className="transition-colors disabled:opacity-50"
             aria-label={isSaved ? "Unsave job" : "Save job"}
+            type="button"
           >
             {isSaved ? (
               <FaStar className="w-5 h-5 text-yellow-500 hover:text-yellow-600" />
@@ -112,7 +121,14 @@ const JobCard = (job: JobCardProps) => {
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <MdOutlineShare className="w-5 h-5" />
+              <button
+                onClick={(e) => e.stopPropagation()}
+                aria-label="Share job"
+                type="button"
+                className="p-0"
+              >
+                <MdOutlineShare className="w-5 h-5" />
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="start">
                 <DropdownMenuItem>

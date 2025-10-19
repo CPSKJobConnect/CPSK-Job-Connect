@@ -1,36 +1,41 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import JobCard from "@/components/JobCard";
 import JobDescriptionCard from "@/components/JobDescriptionCard";
-import { BiSortAlt2 } from "react-icons/bi";
+import JobSortDropdown from "./JobSortDropdown";
 import { BookmarkJobInfo } from "@/types/job";
 import { fakeJobData } from "@public/data/fakeJobDescription";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { IoMdSearch } from "react-icons/io";
 
+
 export const mockBookmarkJobs: BookmarkJobInfo[] = fakeJobData.map((job, index) => ({
   job,
+  added_at: new Date(Date.now() - index * 24 * 60 * 60 * 1000).toISOString(),
   isBookmarked: index % 2 === 0,
   isApplied: Number(job.id) <= 4,
 }));
 
 export default function Page() {
   const [bookmarkedJobs, setBookmarkedJobs] = useState<BookmarkJobInfo[]>([]);
+  const [sortedBookmarkedJobs, setSortedBookmarkedJobs] = useState<BookmarkJobInfo[]>([]);
   const [appliedJobs, setAppliedJobs] = useState<BookmarkJobInfo[]>([]);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
     setBookmarkedJobs(mockBookmarkJobs);
-  }, []);
+    if (!sortedBookmarkedJobs.length) {
+      setSortedBookmarkedJobs(bookmarkedJobs);
+    }
+  }, [bookmarkedJobs, sortedBookmarkedJobs]);
 
   useEffect(() => {
-    setAppliedJobs(bookmarkedJobs.filter((j) => j.isApplied));
-  }, [bookmarkedJobs]);
+    setAppliedJobs(sortedBookmarkedJobs.filter((j) => j.isApplied));
+  }, [sortedBookmarkedJobs]);
 
-  const filteredBookmarks = bookmarkedJobs.filter((b) => {
+  const filteredBookmarks = sortedBookmarkedJobs.filter((b) => {
     if (!query) return true;
     return (
       b.job.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -47,29 +52,35 @@ export default function Page() {
         </div>
       </div>
 
-      <div className="flex flex-row items-center gap-6 border border-gray-100 rounded-lg px-7 py-3 mb-6 w-full shadow-md">
-        <div className="relative basis-4/5">
-          <IoMdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search jobs or companies"
-              className="pl-10 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full"
-            />
-        </div>
-        <div className="basis-1/5">
-          <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] md:w-[150px] text-white font-semibold rounded-full px-4 flex items-center gap-2">
-            <BiSortAlt2 size={20} />
-            <span className="hidden sm:inline">Sort</span>
-          </Button>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-6 border border-gray-100 rounded-lg px-7 py-4 mb-6 w-full shadow-md relative">
+          <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-[#34BFA3] rounded-l-md" />
+          <div className="pl-4 w-full">
+            <div className="flex items-center gap-4 w-full">
+              <div className="relative flex-1">
+                <IoMdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search jobs or companies"
+                  className="pl-10 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full h-10"
+                />
+              </div>
+              <div className="flex-shrink-0">
+                <JobSortDropdown
+                  job={bookmarkedJobs}
+                  setSortedBookmarkedJobs={setSortedBookmarkedJobs}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
       <Tabs defaultValue="bookmark">
         <div className="flex items-center justify-between mb-4">
           <TabsList className="rounded-full px-2 py-1 bg-gray-100">
             <TabsTrigger value="bookmark" className="rounded-full px-4 py-2">
-              All Bookmarks <span className="ml-2 text-sm text-gray-600">({bookmarkedJobs.length})</span>
+              All Bookmarks <span className="ml-2 text-sm text-gray-600">({sortedBookmarkedJobs.length})</span>
             </TabsTrigger>
             <TabsTrigger value="applied" className="rounded-full px-4 py-2">
               Applied <span className="ml-2 text-sm text-gray-600">({appliedJobs.length})</span>
