@@ -1,5 +1,6 @@
 "use client";
-import React, { useRef } from "react";
+
+import React, { useRef, useState } from "react";
 import { PiUploadSimpleBold } from "react-icons/pi";
 import { IoDocumentTextOutline } from "react-icons/io5";
 
@@ -12,6 +13,7 @@ interface FileUploadProps {
 
 const FileUpload = (props: FileUploadProps) => {
   const fileInput = useRef<HTMLInputElement | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleClick = () => {
     fileInput.current?.click();
@@ -24,10 +26,46 @@ const FileUpload = (props: FileUploadProps) => {
     }
   };
 
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      props.onFileSelect(files[0]);
+    }
+  };
+
   return (
     <div
       onClick={handleClick}
-      className="flex flex-col gap-2 shadow-md justify-center items-center w-full rounded-md p-6 border border-gray-100/50 cursor-pointer hover:bg-gray-50 transition"
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={`flex flex-col gap-2 shadow-md justify-center items-center w-full rounded-md p-6 border-2 border-dashed cursor-pointer transition ${
+        isDragging
+          ? "border-[#10B981] bg-[#10B981]/10"
+          : "border-gray-300 hover:bg-gray-50"
+      }`}
     >
       <PiUploadSimpleBold className="w-7 h-7 text-[#1FD29A]" />
       <p className="font-semibold text-sm">{props.title}</p>

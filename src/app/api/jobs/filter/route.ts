@@ -5,10 +5,6 @@ const salaryRanges = Array.from({ length: 9 }, (_, i) => (10000 + i * 5000).toSt
 
 export async function GET(req: Request) {
   try {
-    // const session = await getServerSession(authOptions);
-    // if (!session) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
 
     const categories = await prisma.jobCategory.findMany({
       select: { name: true }

@@ -52,7 +52,8 @@ model Student {
   updated_at   DateTime      @updatedAt
   transcript   String?
   applications Application[]
-  account      Account       @relation(fields: [account_id], references: [id])
+  savedJobs    SavedJob[]
+  account      Account       @relation(fields: [account_id], references: [id], onDelete: Cascade)
 }
 
 model Company {
@@ -67,18 +68,21 @@ model Company {
   created_at          DateTime  @default(now())
   updated_at          DateTime  @updatedAt
   website             String?
-  account             Account   @relation(fields: [account_id], references: [id])
+  account             Account   @relation(fields: [account_id], references: [id], onDelete: Cascade)
   jobPosts            JobPost[]
 }
 
 model Document {
-  id           Int          @id @default(autoincrement())
-  account_id   Int
-  doc_type_id  Int
-  file_path    String
-  created_at   DateTime     @default(now())
-  account      Account      @relation(fields: [account_id], references: [id])
-  documentType DocumentType @relation(fields: [doc_type_id], references: [id])
+  id                    Int           @id @default(autoincrement())
+  account_id            Int
+  doc_type_id           Int
+  file_path             String
+  created_at            DateTime      @default(now())
+  file_name             String
+  portfolioApplications Application[] @relation("PortfolioDocument")
+  resumeApplications    Application[] @relation("ResumeDocument")
+  account               Account       @relation(fields: [account_id], references: [id])
+  documentType          DocumentType  @relation(fields: [doc_type_id], references: [id])
 }
 
 model DocumentType {
@@ -92,7 +96,7 @@ model Notification {
   account_id Int
   message    String
   created_at DateTime @default(now())
-  account    Account  @relation(fields: [account_id], references: [id])
+  account    Account  @relation(fields: [account_id], references: [id], onDelete: Cascade)
 }
 
 model Report {
@@ -118,10 +122,12 @@ model JobPost {
   deadline           DateTime
   created_at         DateTime       @default(now())
   updated_at         DateTime       @updatedAt
+  is_Published       Boolean        @default(true)
   job_arrangement_id Int
   job_type_id        Int
   applications       Application[]
-  company            Company        @relation(fields: [company_id], references: [id])
+  savedBy            SavedJob[]
+  company            Company        @relation(fields: [company_id], references: [id], onDelete: Cascade)
   jobArrangement     JobArrangement @relation(fields: [job_arrangement_id], references: [id])
   jobType            JobType        @relation(fields: [job_type_id], references: [id])
   categories         JobCategory[]  @relation("JobCategoriesOnPosts")
@@ -159,7 +165,11 @@ model Application {
   status            Int
   applied_at        DateTime          @default(now())
   updated_at        DateTime          @updatedAt
+  portfolio_id      Int?
+  resume_id         Int?
   jobPost           JobPost           @relation(fields: [job_post_id], references: [id])
+  portfolioDocument Document?         @relation("PortfolioDocument", fields: [portfolio_id], references: [id])
+  resumeDocument    Document?         @relation("ResumeDocument", fields: [resume_id], references: [id])
   applicationStatus ApplicationStatus @relation(fields: [status], references: [id])
   student           Student           @relation(fields: [student_id], references: [id])
 }
@@ -168,6 +178,20 @@ model ApplicationStatus {
   id           Int           @id @default(autoincrement())
   name         String
   applications Application[]
+}
+
+model SavedJob {
+  id          Int      @id @default(autoincrement())
+  student_id  Int
+  job_post_id Int
+  created_at  DateTime @default(now())
+
+  student Student @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  jobPost JobPost @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
+
+  @@unique([student_id, job_post_id])
+  @@index([student_id])
+  @@index([job_post_id])
 }
 
 model Session {

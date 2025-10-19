@@ -24,6 +24,7 @@ export interface BaseUser {
       resume: FileMeta[];
       cv: FileMeta[];
       portfolio: FileMeta[];
+      transcript?: FileMeta[];
     }
   }
   
@@ -31,8 +32,9 @@ export interface BaseUser {
   export interface Company extends BaseUser {
     role: "company";
     name: string;
-    address: string;
+    address: string[];
     description: string;
+    department: string[];
     year: number;
     phone: string;
   }
