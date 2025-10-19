@@ -20,39 +20,26 @@ export async function GET(request: Request, context: { params: { id: string } })
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    // Derive status from is_Published and deadline
-    let status = "active";
-    if (!job.is_Published) {
-      status = "draft";
-    } else if (job.deadline && new Date(job.deadline) < new Date()) {
-      status = "expire";
-    }
-
     const mappedJob = {
       id: job.id,
       companyLogo: job.company.account?.logoUrl ?? "",
       companyBg: job.company.account?.backgroundUrl ?? "",
-      title: job.jobName,
+      jobName: job.jobName,
       companyName: job.company.name,
-      category: job.categories.map((c) => c.name).join(", "),
+      category: job.categories.map((c) => c.name),
       location: job.location,
       posted: job.created_at.toISOString(),
       applied: job.applications.length,
-      salary: {
-        min: Number(job.min_salary),
-        max: Number(job.max_salary),
-      },
+      minSalary: job.min_salary.toString(),
+      maxSalary: job.max_salary.toString(),
       type: job.jobType.name,
       description: {
-        overview: job.aboutRole ?? "",
-        responsibility: job.aboutRole ?? "",
-        requirement: job.requirements.join("\n"),
-        qualification: job.qualifications.join("\n"),
+        aboutRole: job.aboutRole,
+        requirements: job.requirements,
+        qualifications: job.qualifications,
       },
-      skills: job.tags.map((tag) => tag.name),
+      tags: job.tags.map((tag) => tag.name),
       arrangement: job.jobArrangement.name,
-      deadline: job.deadline.toISOString(),
-      status,
     };
 
     return NextResponse.json(mappedJob);
