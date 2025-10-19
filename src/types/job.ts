@@ -63,6 +63,7 @@ export const defaultJobPostForm: JobPostFormData = {
 
 export interface BookmarkJobInfo {
   job: JobInfo;
+  added_at: string;
   isBookmarked: boolean;
   isApplied: boolean;
 }
