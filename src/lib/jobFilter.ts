@@ -1,4 +1,4 @@
-import { JobInfo } from "@/types/job";
+import { JobInfo, BookmarkJobInfo } from "@/types/job";
 import { getDiffDays } from "./dateHelper";
 
 export type JobFilters = {
@@ -82,4 +82,22 @@ export function filterJobs(jobs: JobInfo[], filters: JobFilters): JobInfo[] {
   result = filterByDatePost(result, filters.datePost);
 
   return result;
+}
+
+export function sortbyDate(jobs: BookmarkJobInfo[] | undefined, order: "asc" | "desc" = "desc"): BookmarkJobInfo[] {
+  if (!Array.isArray(jobs)) return [];
+
+  const arr = [...jobs];
+  arr.sort((a, b) => {
+    const da = Date.parse(a.job.posted);
+    const db = Date.parse(b.job.posted);
+
+    if (isNaN(da) && isNaN(db)) return 0;
+    if (isNaN(da)) return 1;
+    if (isNaN(db)) return -1;
+
+    return order === "asc" ? da - db : db - da;
+  });
+
+  return arr;
 }
