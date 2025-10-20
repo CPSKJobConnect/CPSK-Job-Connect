@@ -1,3 +1,16 @@
+// Bypass auth and use mock data ----------------------------------------------------------
+import { NextResponse } from "next/server";
+import { mockStats } from "./mockStats";
+
+export async function GET() {
+  console.warn("⚠️ AUTH CHECK BYPASSED — returning mock stats.");
+  return NextResponse.json(mockStats, { status: 200 });
+}
+
+
+
+// Use auth and live db ----------------------------------------------------------
+
 // import { prisma } from "@/lib/db";
 // import { getServerSession } from "next-auth/next";
 // import { authOptions } from "@/lib/auth";
@@ -177,127 +190,131 @@
 //   }
 // }
 
-import { prisma } from "@/lib/db";
-import { NextResponse } from "next/server";
 
-export async function GET() {
-  try {
-    // 🚧 TEMPORARY AUTH DISABLED — FRONTEND DEVELOPMENT MODE
-    console.warn("⚠️ AUTH CHECK BYPASSED — all requests are allowed temporarily.");
 
-    // === Dashboard statistics ===
-    const [
-      pendingCompanies,
-      totalJobPosts,
-      totalStudents,
-      totalCompanies,
-      reportedPosts,
-      averageSalary,
-      topHiringCompanies,
-      successRateByDepartment,
-      topSkills,
-      recentReports
-    ] = await Promise.all([
-      prisma.company.count({
-        where: { registration_status: "pending" }
-      }),
-      prisma.jobPost.count(),
-      prisma.student.count(),
-      prisma.company.count({
-        where: { registration_status: "approved" }
-      }),
-      prisma.report.count(),
-      prisma.jobPost.aggregate({
-        _avg: {
-          min_salary: true,
-          max_salary: true
-        }
-      }),
-      prisma.company.findMany({
-        where: { registration_status: "approved" },
-        include: {
-          jobPosts: {
-            include: { applications: true }
-          }
-        },
-        orderBy: {
-          jobPosts: { _count: "desc" }
-        },
-        take: 10
-      }),
-      Promise.resolve([]),
-      prisma.jobTag.groupBy({
-        by: ["name"],
-        _count: { id: true },
-        orderBy: { _count: { id: "desc" } },
-        take: 10
-      }),
-      prisma.report.findMany({
-        include: { account: true },
-        orderBy: { created_at: "desc" },
-        take: 10
-      })
-    ]);
+// Bypass auth but use live db ----------------------------------------------------------
 
-    // === Success rate by department (mocked for now) ===
-    const departmentSuccessRate = await Promise.all(
-      ["Software and Knowledge Engineering (SKE)", "Computer Engineering (CPE)"].map(async (faculty) => {
-        const totalStudents = await prisma.student.count({ where: { faculty } });
-        const acceptedApplications = await prisma.application.count({
-          where: { student: { faculty }, status: 3 }
-        });
+// import { prisma } from "@/lib/db";
+// import { NextResponse } from "next/server";
 
-        return {
-          faculty,
-          totalStudents,
-          acceptedApplications,
-          successRate: totalStudents > 0 ? (acceptedApplications / totalStudents) * 100 : 0
-        };
-      })
-    );
+// export async function GET() {
+//   try {
+//     // 🚧 TEMPORARY AUTH DISABLED — FRONTEND DEVELOPMENT MODE
+//     console.warn("⚠️ AUTH CHECK BYPASSED — all requests are allowed temporarily.");
 
-    // === Process data ===
-    const processedTopCompanies = topHiringCompanies.map(company => ({
-      id: company.id,
-      name: company.name,
-      jobPostsCount: company.jobPosts.length,
-      totalApplications: company.jobPosts.reduce((sum, post) => sum + post.applications.length, 0)
-    }));
+//     // === Dashboard statistics ===
+//     const [
+//       pendingCompanies,
+//       totalJobPosts,
+//       totalStudents,
+//       totalCompanies,
+//       reportedPosts,
+//       averageSalary,
+//       topHiringCompanies,
+//       successRateByDepartment,
+//       topSkills,
+//       recentReports
+//     ] = await Promise.all([
+//       prisma.company.count({
+//         where: { registration_status: "pending" }
+//       }),
+//       prisma.jobPost.count(),
+//       prisma.student.count(),
+//       prisma.company.count({
+//         where: { registration_status: "approved" }
+//       }),
+//       prisma.report.count(),
+//       prisma.jobPost.aggregate({
+//         _avg: {
+//           min_salary: true,
+//           max_salary: true
+//         }
+//       }),
+//       prisma.company.findMany({
+//         where: { registration_status: "approved" },
+//         include: {
+//           jobPosts: {
+//             include: { applications: true }
+//           }
+//         },
+//         orderBy: {
+//           jobPosts: { _count: "desc" }
+//         },
+//         take: 10
+//       }),
+//       Promise.resolve([]),
+//       prisma.jobTag.groupBy({
+//         by: ["name"],
+//         _count: { id: true },
+//         orderBy: { _count: { id: "desc" } },
+//         take: 10
+//       }),
+//       prisma.report.findMany({
+//         include: { account: true },
+//         orderBy: { created_at: "desc" },
+//         take: 10
+//       })
+//     ]);
 
-    const processedRecentReports = recentReports.map(report => ({
-      id: report.id,
-      type: report.type,
-      createdAt: report.created_at,
-      reporterEmail: report.account.email
-    }));
+//     // === Success rate by department (mocked for now) ===
+//     const departmentSuccessRate = await Promise.all(
+//       ["Software and Knowledge Engineering (SKE)", "Computer Engineering (CPE)"].map(async (faculty) => {
+//         const totalStudents = await prisma.student.count({ where: { faculty } });
+//         const acceptedApplications = await prisma.application.count({
+//           where: { student: { faculty }, status: 3 }
+//         });
 
-    const stats = {
-      pendingCompanies,
-      totalJobPosts,
-      totalStudents,
-      totalCompanies,
-      reportedPosts,
-      averageSalary: {
-        min: averageSalary._avg.min_salary || 0,
-        max: averageSalary._avg.max_salary || 0,
-        overall:
-          ((averageSalary._avg.min_salary || 0) + (averageSalary._avg.max_salary || 0)) / 2
-      },
-      topHiringCompanies: processedTopCompanies,
-      successRateByDepartment: departmentSuccessRate,
-      topSkills: topSkills.map(skill => ({
-        name: skill.name,
-        count: skill._count.id
-      })),
-      recentReports: processedRecentReports
-    };
+//         return {
+//           faculty,
+//           totalStudents,
+//           acceptedApplications,
+//           successRate: totalStudents > 0 ? (acceptedApplications / totalStudents) * 100 : 0
+//         };
+//       })
+//     );
 
-    return NextResponse.json(stats, { status: 200 });
-  } catch (error) {
-    console.error("API error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch dashboard statistics" },
-      { status: 500 }
-    );
-  }
-}
+//     // === Process data ===
+//     const processedTopCompanies = topHiringCompanies.map(company => ({
+//       id: company.id,
+//       name: company.name,
+//       jobPostsCount: company.jobPosts.length,
+//       totalApplications: company.jobPosts.reduce((sum, post) => sum + post.applications.length, 0)
+//     }));
+
+//     const processedRecentReports = recentReports.map(report => ({
+//       id: report.id,
+//       type: report.type,
+//       createdAt: report.created_at,
+//       reporterEmail: report.account.email
+//     }));
+
+//     const stats = {
+//       pendingCompanies,
+//       totalJobPosts,
+//       totalStudents,
+//       totalCompanies,
+//       reportedPosts,
+//       averageSalary: {
+//         min: averageSalary._avg.min_salary || 0,
+//         max: averageSalary._avg.max_salary || 0,
+//         overall:
+//           ((averageSalary._avg.min_salary || 0) + (averageSalary._avg.max_salary || 0)) / 2
+//       },
+//       topHiringCompanies: processedTopCompanies,
+//       successRateByDepartment: departmentSuccessRate,
+//       topSkills: topSkills.map(skill => ({
+//         name: skill.name,
+//         count: skill._count.id
+//       })),
+//       recentReports: processedRecentReports
+//     };
+
+//     return NextResponse.json(stats, { status: 200 });
+//   } catch (error) {
+//     console.error("API error:", error);
+//     return NextResponse.json(
+//       { error: "Failed to fetch dashboard statistics" },
+//       { status: 500 }
+//     );
+//   }
+// }
