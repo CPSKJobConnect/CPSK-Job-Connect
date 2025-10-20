@@ -13,7 +13,7 @@ import { FaRegStar, FaStar } from "react-icons/fa";
 import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineLink, MdOutlinePeopleAlt, MdOutlineReportProblem, MdOutlineShare, MdOutlineTimer } from "react-icons/md";
 import { Button } from "./ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 
 interface JobCardProps {
@@ -34,8 +34,55 @@ const JobCard = (job: JobCardProps) => {
   const { data: session } = useSession();
   const [isSaved, setIsSaved] = useState(job.info.isSaved || false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
   const isClosed = job.info.status === "expire";
+
+  // Check if job is bookmarked when component mounts
+  // This ensures the star icon reflects the current saved status
+  useEffect(() => {
+    const checkIfSaved = async () => {
+      // Only check if user is logged in
+      if (!session?.user?.id) {
+        setIsSaved(false);
+        return;
+      }
+
+      // If isSaved prop is already provided, use it
+      // This avoids unnecessary API calls when data comes from server
+      if (job.info.isSaved !== undefined) {
+        setIsSaved(job.info.isSaved);
+        return;
+      }
+
+      // Fetch the saved status from API
+      setIsCheckingStatus(true);
+      try {
+        const response = await fetch(
+          `/api/students/saved-jobs?jobId=${job.info.id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setIsSaved(data.isSaved);
+        }
+      } catch (error) {
+        console.error("Error checking saved status:", error);
+        // On error, assume not saved
+        setIsSaved(false);
+      } finally {
+        setIsCheckingStatus(false);
+      }
+    };
+
+    checkIfSaved();
+  }, [session?.user?.id, job.info.id, job.info.isSaved]);
   const baseStyle =
     `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-100/60" : "bg-white"} p-4 flex flex-col gap-2 hover:bg-[#F3FEFA] transition mb-5`;
 
@@ -45,6 +92,8 @@ const JobCard = (job: JobCardProps) => {
     }[job.size || "md"];
 
   const handleSaveToggle = async () => {
+    // Check if user is logged in
+    // Session is managed by NextAuth - if no session, user needs to login
     if (!session?.user?.id) {
       alert("Please login to save jobs");
       return;
@@ -52,19 +101,26 @@ const JobCard = (job: JobCardProps) => {
 
     setIsLoading(true);
     try {
+      // Use DELETE to unsave, POST to save
       const method = isSaved ? "DELETE" : "POST";
-      const response = await fetch("/api/jobs/saved", {
+
+      // NEW ENDPOINT: /api/students/saved-jobs (secure, middleware-protected)
+      // OLD ENDPOINT was: /api/jobs/saved (insecure, public)
+      const response = await fetch("/api/students/saved-jobs", {
         method,
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: session.user.id,
+          // SECURITY IMPROVEMENT: We only send jobId now
+          // The userId is extracted from the session on the server
+          // This prevents users from impersonating others
           jobId: job.info.id,
         }),
       });
 
       if (response.ok) {
+        // Toggle the local state for immediate UI feedback
         setIsSaved(!isSaved);
       } else {
         const error = await response.json();
@@ -99,13 +155,18 @@ const JobCard = (job: JobCardProps) => {
           {/* bookmark star */}
           <button
             onClick={handleSaveToggle}
-            disabled={isLoading}
+            disabled={isLoading || isCheckingStatus}
             className="transition-colors disabled:opacity-50"
             aria-label={isSaved ? "Unsave job" : "Save job"}
           >
-            {isSaved ? (
+            {isCheckingStatus ? (
+              // Show outline star while checking status
+              <FaRegStar className="w-5 h-5 text-gray-400 animate-pulse" />
+            ) : isSaved ? (
+              // Show filled yellow star if saved
               <FaStar className="w-5 h-5 text-yellow-500 hover:text-yellow-600" />
             ) : (
+              // Show outline star if not saved
               <FaRegStar className="w-5 h-5 hover:text-yellow-500" />
             )}
           </button>
