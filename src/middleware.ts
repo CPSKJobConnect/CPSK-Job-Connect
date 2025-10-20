@@ -8,6 +8,8 @@ export default withAuth(
     const token = req.nextauth.token
     const role = token?.role
 
+    console.log("🔍 Middleware hit:", pathname, "Role:", role)
+
     // Public routes
     const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/jobs"]
     const isPublicRoute = publicRoutes.some(route =>
@@ -44,6 +46,11 @@ export default withAuth(
       // Company trying to access student routes
       if (role === "company" && pathname.startsWith("/student")) {
         return NextResponse.redirect(new URL("/company/dashboard", req.url))
+      }
+
+        // Admin trying to access non-admin routes
+      if (role === "admin" && !pathname.startsWith("/admin")) {
+        return NextResponse.redirect(new URL("/admin/dashboard", req.url))
       }
 
       // Redirect authenticated users from auth pages and homepage to their dashboard
