@@ -10,7 +10,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt"
   },
-  providers : [
+  providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!
@@ -74,10 +74,12 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({token, user, account, trigger, session}) {
+    async jwt({ token, user, account, trigger, session }) {
       if (user) {
-        token.role = user.role;
-        token.username = user.username;
+        // `authorize` returns `name` (username) and `role` on first sign-in.
+        // Map those to token fields so subsequent requests have them available.
+        token.role = (user as any).role;
+        token.username = (user as any).name || (user as any).username;
         token.logoUrl = user.logoUrl;
         token.backgroundUrl = user.backgroundUrl;
       }
@@ -111,9 +113,31 @@ export const authOptions: NextAuthOptions = {
           token.backgroundUrl = existingUser.backgroundUrl || undefined
         }
       }
+
+      // If token exists but role wasn't set (e.g. older session or created without role),
+      // try to populate it from the database using the subject (user id).
+      if (!token.role && token.sub) {
+        try {
+          const userId = parseInt(token.sub as string, 10)
+          if (!Number.isNaN(userId)) {
+            const existing = await prisma.account.findUnique({
+              where: { id: userId },
+              select: { accountRole: { select: { name: true } }, username: true, logoUrl: true, backgroundUrl: true }
+            })
+            if (existing) {
+              token.role = existing.accountRole?.name || token.role
+              token.username = existing.username || token.username
+              token.logoUrl = existing.logoUrl || token.logoUrl
+              token.backgroundUrl = existing.backgroundUrl || token.backgroundUrl
+            }
+          }
+        } catch (err) {
+          console.log('Error populating token from DB:', err)
+        }
+      }
       return token;
     },
-    async session({session, token}) {
+    async session({ session, token }) {
       if (token) {
         session.user.id = token.sub!
         session.user.role = token.role as string
@@ -123,7 +147,7 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async signIn({user, account, profile}) {
+    async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
         try {
           const existingUser = await prisma.account.findUnique({
