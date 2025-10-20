@@ -16,15 +16,15 @@ export async function POST(req: NextRequest) {
     // console.log("Role:", role);
     if (!["student", "company"].includes(role)) {
       return NextResponse.json(
-        {error: "Invalid role"},
-        {status:400}
+        { error: "Invalid role" },
+        { status: 400 }
       )
     }
 
     // Convert FormData to object
     const data: Record<string, unknown> = {}
     for (const [key, value] of formData.entries()) {
-      if (key !== "transcript" && key !== "role") {
+      if (key !== "transcript" && key !== "evidence" && key !== "role") {
         if (key === "year") {
           // Handle both numeric years and "Alumni"
           const yearValue = value as string;
@@ -99,8 +99,10 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // Handle file upload for transcript
+    // Handle file upload for transcript and evidence
     let transcriptPath: string | null = null
+    let evidencePath: string | null = null
+
     if (role === "student") {
       const transcriptFile = formData.get("transcript") as File;
       if (transcriptFile && transcriptFile.size > 0) {
@@ -108,8 +110,21 @@ export async function POST(req: NextRequest) {
         transcriptPath = `transcripts/${account.id}_${transcriptFile.name}`;
         // TODO: file upload logic
       }
+    } else if (role === "company") {
+      const evidenceFile = formData.get("evidence") as File;
+      if (evidenceFile && evidenceFile.size > 0) {
+        // Upload evidence file using the uploadDocument utility
+        try {
+          const { uploadDocument } = await import("@/lib/uploadDocument");
+          const document = await uploadDocument(evidenceFile, String(account.id), 5); // 5 = Company Evidence
+          evidencePath = document.file_path;
+        } catch (error) {
+          console.error("Error uploading evidence file:", error);
+          // Continue with registration even if file upload fails
+        }
+      }
     }
-  
+
     // Create role-specific record
     if (role === "student") {
       await prisma.student.create({
