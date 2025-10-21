@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Check, ChevronsUpDown, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -37,8 +36,8 @@ export default function LocationCombobox({ value, onChange }: LocationComboboxPr
   const [districts, setDistricts] = useState<District[]>([]);
   const [subdistricts, setSubdistricts] = useState<Subdistrict[]>([]);
 
-  const [hoveredProvince, setHoveredProvince] = useState<number | null>(null);
-  const [hoveredDistrict, setHoveredDistrict] = useState<number | null>(null);
+  const [selectedProvince, setSelectedProvince] = useState<Province | null>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<District | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,7 +53,6 @@ export default function LocationCombobox({ value, onChange }: LocationComboboxPr
     fetchData();
   }, []);
 
-  // Mapping districts & subdistricts
   const districtsMap = districts.reduce<Record<number, District[]>>((acc, d) => {
     if (!acc[d.provinceCode]) acc[d.provinceCode] = [];
     acc[d.provinceCode].push(d);
@@ -67,12 +65,40 @@ export default function LocationCombobox({ value, onChange }: LocationComboboxPr
     return acc;
   }, {});
 
-  const handleSelect = (province: string, district?: string, subdistrict?: string) => {
-    const val = [province, district, subdistrict].filter(Boolean).join(", ");
+  const handleSelectProvince = (province: Province) => {
+    setSelectedProvince(province);
+    setSelectedDistrict(null);
+    setSearchTerm("");
+  };
+
+  const handleSelectDistrict = (district: District) => {
+    setSelectedDistrict(district);
+    setSearchTerm("");
+  };
+
+  const handleSelectSubdistrict = (sub: Subdistrict) => {
+    const val = `${selectedProvince?.provinceNameEn}, ${selectedDistrict?.districtNameEn}, ${sub.subdistrictNameEn}`;
     onChange(val);
+    resetAll();
+  };
+
+  const handleBack = () => {
+    if (selectedDistrict) setSelectedDistrict(null);
+    else if (selectedProvince) setSelectedProvince(null);
+    setSearchTerm("");
+  };
+
+  const handleSelectCurrentLayer = () => {
+    let val = selectedProvince?.provinceNameEn || "";
+    if (selectedDistrict) val = `${val}, ${selectedDistrict.districtNameEn}`;
+    onChange(val);
+    resetAll();
+  };
+
+  const resetAll = () => {
     setOpen(false);
-    setHoveredProvince(null);
-    setHoveredDistrict(null);
+    setSelectedProvince(null);
+    setSelectedDistrict(null);
     setSearchTerm("");
   };
 
@@ -102,77 +128,66 @@ export default function LocationCombobox({ value, onChange }: LocationComboboxPr
             className="w-full border-b px-2 py-1 outline-none"
           />
 
+          {(selectedProvince || selectedDistrict) && (
+            <div className="flex gap-2 px-2 py-1">
+              <button
+                className="flex items-center gap-1 text-sm text-gray-600 hover:bg-gray-100 px-2 py-1 rounded"
+                onClick={handleBack}
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
+              <button
+                className="flex items-center gap-1 text-sm text-gray-600 hover:bg-gray-100 px-2 py-1 rounded"
+                onClick={handleSelectCurrentLayer}
+              >
+                Select Here
+              </button>
+            </div>
+          )}
+
           <ul className="max-h-[400px] overflow-auto mt-1 border bg-white">
-            {provinces
-              .filter((p) => p.provinceNameEn.toLowerCase().includes(searchTerm.toLowerCase()))
-              .map((province) => (
-                <li
-                  key={province.provinceCode}
-                  className="relative group hover:bg-gray-100 cursor-pointer overflow-visible"
-                  onMouseEnter={() => setHoveredProvince(province.provinceCode)}
-                  onMouseLeave={() => setHoveredProvince(null)}
-                >
-                  <div
-                    className="px-2 py-1 flex justify-between items-center"
-                    onClick={() => handleSelect(province.provinceNameEn)}
+            {!selectedProvince &&
+              provinces
+                .filter((p) => p.provinceNameEn.toLowerCase().includes(searchTerm.toLowerCase()))
+                .map((province) => (
+                  <li
+                    key={province.provinceCode}
+                    className="px-2 py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                    onClick={() => handleSelectProvince(province)}
                   >
                     {province.provinceNameEn}
                     {value === province.provinceNameEn && <Check className="ml-2" />}
-                  </div>
+                  </li>
+                ))}
 
-                  {/* Fly-out districts */}
-                  {hoveredProvince === province.provinceCode && districtsMap[province.provinceCode] && (
-                    <ul className="absolute top-0 left-full w-auto min-w-[300px] border bg-white shadow-lg z-50 overflow-visible">
-                      {districtsMap[province.provinceCode]
-                        .filter((d) => d.districtNameEn.toLowerCase().includes(searchTerm.toLowerCase()))
-                        .map((district) => (
-                          <li
-                            key={district.districtCode}
-                            className="relative group hover:bg-gray-100 cursor-pointer overflow-visible"
-                            onMouseEnter={() => setHoveredDistrict(district.districtCode)}
-                            onMouseLeave={() => setHoveredDistrict(null)}
-                            onClick={() => handleSelect(province.provinceNameEn, district.districtNameEn)}
-                          >
-                            <div className="px-2 py-1 flex justify-between items-center">
-                              {district.districtNameEn}
-                              {value === `${province.provinceNameEn}, ${district.districtNameEn}` && (
-                                <Check className="ml-2" />
-                              )}
-                            </div>
+            {selectedProvince && !selectedDistrict &&
+              districtsMap[selectedProvince.provinceCode]
+                .filter((d) => d.districtNameEn.toLowerCase().includes(searchTerm.toLowerCase()))
+                .map((district) => (
+                  <li
+                    key={district.districtCode}
+                    className="px-2 py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                    onClick={() => handleSelectDistrict(district)}
+                  >
+                    {district.districtNameEn}
+                    {value === `${selectedProvince.provinceNameEn}, ${district.districtNameEn}` && (
+                      <Check className="ml-2" />
+                    )}
+                  </li>
+                ))}
 
-                            {/* Fly-out subdistricts */}
-                            {hoveredDistrict === district.districtCode &&
-                              subdistrictsMap[district.districtCode] && (
-                                <ul className="absolute top-0 left-full w-auto min-w-[300px] border bg-white shadow-lg z-50 overflow-visible">
-                                  {subdistrictsMap[district.districtCode]
-                                    .filter((s) =>
-                                      s.subdistrictNameEn
-                                        .toLowerCase()
-                                        .includes(searchTerm.toLowerCase())
-                                    )
-                                    .map((sub) => (
-                                      <li
-                                        key={sub.subdistrictCode}
-                                        className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
-                                        onClick={() =>
-                                          handleSelect(
-                                            province.provinceNameEn,
-                                            district.districtNameEn,
-                                            sub.subdistrictNameEn
-                                          )
-                                        }
-                                      >
-                                        {sub.subdistrictNameEn}
-                                      </li>
-                                    ))}
-                                </ul>
-                              )}
-                          </li>
-                        ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
+            {selectedProvince && selectedDistrict &&
+              subdistrictsMap[selectedDistrict.districtCode]
+                .filter((s) => s.subdistrictNameEn.toLowerCase().includes(searchTerm.toLowerCase()))
+                .map((sub) => (
+                  <li
+                    key={sub.subdistrictCode}
+                    className="px-2 py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                    onClick={() => handleSelectSubdistrict(sub)}
+                  >
+                    {sub.subdistrictNameEn}
+                  </li>
+                ))}
           </ul>
         </div>
       </PopoverContent>
