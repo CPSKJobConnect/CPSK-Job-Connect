@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import CategoryCombobox from "@/components/CategoryCombobox";
+import LocationCombobox from "@/components/LocationCombobox";
 import { JobPostFormData} from "@/types/job";
 
 
@@ -62,16 +63,10 @@ const JobPostDetailSection = ({ formData, setFormData, categories, locations, ty
             <div className="flex flex-row gap-6">
               <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Location</p>
-                <Select onValueChange={(value) => handleSelect("location", value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.map((loc) => (
-                      <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <LocationCombobox
+                    value={formData.location}
+                    onChange={(value) => setFormData({ ...formData, location: value })}
+                />
               </div>
             </div>
 
