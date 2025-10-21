@@ -35,7 +35,12 @@ export default function CompanyNavbar() {
       {session && (
         <Popover>
           <PopoverTrigger asChild>
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center">
+            <div 
+              role="button"
+              tabIndex={0}
+              aria-haspopup="menu"
+              className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center"
+            >
               {session.user?.logoUrl ? (
                 <Image
                   src={session.user.logoUrl}
@@ -46,13 +51,21 @@ export default function CompanyNavbar() {
                 />
               ) : (
                 <span className="text-gray-600 font-semibold text-sm">
-                  {session.user?.name?.charAt(0)?.toUpperCase() || "C"}
+                  {session.user?.name?.charAt(0)?.toUpperCase() || "U"}
                 </span>
               )}
             </div>
           </PopoverTrigger>
+
           <PopoverContent className="w-50 text-center">
-            <p className="text-sm font-medium mb-2">{session.user?.name}</p>
+            <Button
+              variant="link"
+              size="sm"
+              className="w-full"
+              onClick={() => {'/company/profile'}}
+            >
+              <p className="text-sm font-medium">{session.user?.name}</p>
+            </Button>
             <Button
               variant="ghost"
               size="sm"
