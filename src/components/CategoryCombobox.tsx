@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
-import { mockCategory } from "public/data/fakeFilterInfo"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -25,16 +24,12 @@ interface CategoryComboboxProps {
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   placeholder: string;
+  categoryList: string[]
 }
 
-const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder }: CategoryComboboxProps) => {
+const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder, categoryList, }: CategoryComboboxProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [existingCategories, setExistingCategories] = useState<string[]>([]);
-
-  useEffect(() => {
-    setExistingCategories(mockCategory);
-  }, []);
 
   const handleAddCategory = () => {
     if (searchTerm && !existingCategories.includes(searchTerm)) {
@@ -98,7 +93,7 @@ const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder }
               </CommandEmpty>
 
               <CommandGroup>
-                {existingCategories.map((cat, idx) => (
+                {categoryList.map((cat, idx) => (
                   <CommandItem
                     key={idx}
                     value={cat}

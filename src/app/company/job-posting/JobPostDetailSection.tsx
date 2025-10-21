@@ -8,10 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockCompanies } from "public/data/mockCompany";
 import CategoryCombobox from "@/components/CategoryCombobox";
 import { JobPostFormData} from "@/types/job";
-import { mockJobType, mockJobArrangement } from "public/data/fakeFilterInfo";
 
 
 interface JobPostDetailProps {
@@ -21,19 +19,34 @@ interface JobPostDetailProps {
 
 
 const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => {
-      const [locationList, setLocationmentList] = useState<string[]>([])
-      const [jobTypeList, setJobTypeList] = useState<string[]>([]);
-      const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
+  const [locationList, setLocationList] = useState<string[]>([]);
+  const [jobTypeList, setJobTypeList] = useState<string[]>([]);
+  const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
+  const [categoryList, setCategoryList] = useState<string[]>([]);
 
-      useEffect(() => {
-        setLocationmentList(mockCompanies[0].address);
-        setJobTypeList(mockJobType);
-        setJobArrangementList(mockJobArrangement);
-      }, [])
-    
-      const handleSelect = (name: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [name]: value }));
-      };
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const res = await fetch("/api/jobs/filter");
+        if (!res.ok) throw new Error("Failed to fetch filters");
+
+        const data = await res.json();
+
+        setCategoryList(data.categories || []);
+        setLocationList(data.locations || []);
+        setJobTypeList(data.types || []);
+        setJobArrangementList(data.arrangements || []);
+      } catch (error) {
+        console.error("Error fetching job filter data:", error);
+      }
+    };
+
+    fetchFilters();
+  }, []);
+
+    const handleSelect = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
     return (
         <div className="flex flex-col gap-6 bg-white p-6 rounded-md shadow-md h-full">
@@ -57,6 +70,7 @@ const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => 
                   selectedCategory={formData.category}
                   setSelectedCategory={(category) => setFormData({ ...formData, category })}
                   placeholder="e.g. Engineer, Finance"
+                  categoryList={categoryList}
                 />
               </div>
             </div>
@@ -78,19 +92,21 @@ const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => 
             </div>
 
             <div className="flex flex-row gap-6">
-              <div className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-semibold text-gray-800">Type</p>
-                <Select onValueChange={(value) => handleSelect("type", value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {jobTypeList.map((type) => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="flex flex-col gap-2 w-full">
+                    <p className="text-sm font-semibold text-gray-800">Type</p>
+                    <Select onValueChange={(value) => handleSelect("type", value)}>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {jobTypeList.map((type) => (
+                            <SelectItem key={type} value={type}>
+                            {type}
+                        </SelectItem>
+                       ))}
+                        </SelectContent>
+                    </Select>
+                </div>
 
               <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Arrangement</p>
