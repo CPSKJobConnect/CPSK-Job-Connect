@@ -25,7 +25,7 @@ import { IoIosClose } from "react-icons/io";
 interface SkillComboboxProps {
   selectedSkill: string[];
   setSelectedSkill: (skills: string[]) => void;
-  existingSkills: string[];
+  existingSkills: { name: string }[];
 }
 
 const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills }: SkillComboboxProps) => {
@@ -39,19 +39,25 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills }: Skil
   }, [selectedSkill])
 
   const handleSkillAdded = () => {
-    if (searchTerm && !existingSkills.includes(searchTerm)) {
-        setSkillList((prev) => [...prev, searchTerm]);
-    }
+    if (searchTerm) {
+        if (!skillList.find((s) => s.name === searchTerm)) {
+            setSkillList((prev) => [...prev, searchTerm]);
+        }
 
-    if (searchTerm && !selectedSkill.includes(searchTerm)) {
-        setSkillList([...selectedSkill, searchTerm]);
+        if (!selectedSkill.includes(searchTerm)) {
+            setSelectedSkill([...selectedSkill, searchTerm]);
+        }
+
+        setValue(searchTerm);
+        setSearchTerm("");
     }
   };
 
-  const handleSelectSkill = (skill: string) => {
-    if (!selectedSkill.includes(skill)) {
-      setSelectedSkill([...selectedSkill, skill]);
+  const handleSelectSkill = (skillName: string) => {
+    if (!selectedSkill.includes(skillName)) {
+      setSelectedSkill([...selectedSkill, skillName]);
     }
+    setValue(skillName);
     setOpen(false);
   };
 

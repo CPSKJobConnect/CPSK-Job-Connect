@@ -30,6 +30,7 @@ interface CategoryComboboxProps {
 const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder, categoryList, }: CategoryComboboxProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [existingCategories, setExistingCategories] = useState<string[]>(categoryList);
 
   const handleAddCategory = () => {
     if (searchTerm && !existingCategories.includes(searchTerm)) {
