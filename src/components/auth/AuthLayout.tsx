@@ -5,6 +5,7 @@ import { UserRole } from "@/types/auth"
 import { ArrowLeft } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useMemo } from "react"
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -14,15 +15,30 @@ interface AuthLayoutProps {
 export function AuthLayout({ children, role }: AuthLayoutProps) {
   const router = useRouter()
 
-  const config = role === "student"
-    ? {
-        bgGradient: "from-green-50 to-blue-50",
-        illustrationSrc: "/assets/images/student_auth_illustration.svg"
-      }
-    : {
-        bgGradient: "from-orange-50 to-red-50",
-        illustrationSrc: "/assets/images/company_auth_illustration.svg"
-      }
+  const config = useMemo(() => {
+    switch (role) {
+      case "student":
+        return {
+          bgGradient: "from-green-50 to-blue-50",
+          illustrationSrc: "/assets/images/student_auth_illustration.svg"
+        }
+      case "company":
+        return {
+          bgGradient: "from-orange-50 to-red-50",
+          illustrationSrc: "/assets/images/company_auth_illustration.svg"
+        }
+      case "admin":
+        return {
+          bgGradient: "from-blue-50 to-indigo-50",
+          illustrationSrc: "/assets/images/admin_auth_illustration.svg"
+        }
+      default:
+        return {
+          bgGradient: "from-blue-50 to-indigo-50",
+          illustrationSrc: "/assets/images/admin_auth_illustration.svg"
+        }
+    }
+  }, [role])
 
   return (
     <div className={`min-h-screen bg-gradient-to-br ${config.bgGradient} flex items-center justify-center p-4`}>
