@@ -13,8 +13,8 @@ import LocationCombobox from "@/components/LocationCombobox";
 import { JobFilterInfo } from "@/types/filter";
 import { useEffect, useState } from "react";
 import { BiCategory } from "react-icons/bi";
-import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
 import { IoLocationOutline } from "react-icons/io5";
+import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
 import { LuFilter, LuTags } from "react-icons/lu";
 import { MdOutlineDateRange } from "react-icons/md";
 import { TbCurrencyBaht } from "react-icons/tb";
@@ -122,8 +122,8 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                 <IoLocationOutline className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"/>
                 <LocationCombobox
                     value={filters.location}
+                    showIcon={true}
                     onChange={(val) => updateFilter("location", val)}
-                    className="pl-10 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full"
                 />
             </div>
 

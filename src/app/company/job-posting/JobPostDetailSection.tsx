@@ -65,6 +65,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, locations, ty
                 <p className="text-sm font-semibold text-gray-800">Location</p>
                 <LocationCombobox
                     value={formData.location}
+                    showIcon={false}
                     onChange={(value) => setFormData({ ...formData, location: value })}
                 />
               </div>
