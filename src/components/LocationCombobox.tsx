@@ -92,8 +92,8 @@ export default function LocationCombobox({ value, onChange }: LocationComboboxPr
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="p-0 w-[500px]">
-        <div className="relative">
+      <PopoverContent className="p-0 w-[500px] overflow-visible">
+        <div className="relative overflow-visible">
           <input
             type="text"
             placeholder="Search location..."
@@ -108,7 +108,7 @@ export default function LocationCombobox({ value, onChange }: LocationComboboxPr
               .map((province) => (
                 <li
                   key={province.provinceCode}
-                  className="relative group hover:bg-gray-100 cursor-pointer"
+                  className="relative group hover:bg-gray-100 cursor-pointer overflow-visible"
                   onMouseEnter={() => setHoveredProvince(province.provinceCode)}
                   onMouseLeave={() => setHoveredProvince(null)}
                 >
@@ -122,13 +122,13 @@ export default function LocationCombobox({ value, onChange }: LocationComboboxPr
 
                   {/* Fly-out districts */}
                   {hoveredProvince === province.provinceCode && districtsMap[province.provinceCode] && (
-                    <ul className="absolute top-0 left-full w-[300px] border bg-white shadow-lg z-50">
+                    <ul className="absolute top-0 left-full w-auto min-w-[300px] border bg-white shadow-lg z-50 overflow-visible">
                       {districtsMap[province.provinceCode]
                         .filter((d) => d.districtNameEn.toLowerCase().includes(searchTerm.toLowerCase()))
                         .map((district) => (
                           <li
                             key={district.districtCode}
-                            className="relative group hover:bg-gray-100 cursor-pointer"
+                            className="relative group hover:bg-gray-100 cursor-pointer overflow-visible"
                             onMouseEnter={() => setHoveredDistrict(district.districtCode)}
                             onMouseLeave={() => setHoveredDistrict(null)}
                             onClick={() => handleSelect(province.provinceNameEn, district.districtNameEn)}
@@ -143,7 +143,7 @@ export default function LocationCombobox({ value, onChange }: LocationComboboxPr
                             {/* Fly-out subdistricts */}
                             {hoveredDistrict === district.districtCode &&
                               subdistrictsMap[district.districtCode] && (
-                                <ul className="absolute top-0 left-full w-[300px] border bg-white shadow-lg z-50">
+                                <ul className="absolute top-0 left-full w-auto min-w-[300px] border bg-white shadow-lg z-50 overflow-visible">
                                   {subdistrictsMap[district.districtCode]
                                     .filter((s) =>
                                       s.subdistrictNameEn
