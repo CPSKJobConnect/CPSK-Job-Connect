@@ -7,10 +7,12 @@ import { usePathname } from 'next/navigation';
 import Link from "next/link";
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { useRouter } from "next/navigation";
 
 export default function StudentNavbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const router = useRouter();
 
   const links: Navbar01NavLink[] = [
     { href: '/jobs', label: 'Browse Jobs', active: pathname === '/jobs' },
@@ -61,6 +63,7 @@ export default function StudentNavbar() {
           </PopoverTrigger>
 
           <PopoverContent className="w-50 text-center">
+            {/* Profile Button */}
             <Button
               variant="link"
               size="sm"
@@ -69,6 +72,20 @@ export default function StudentNavbar() {
             >
               <p className="text-sm font-medium">{session.user?.name}</p>
             </Button>
+
+            {/* Bookmark for Student Button */}
+            {session.user?.role === 'student' && (
+              <Button
+                variant="link"
+                size="sm"
+                className="w-full"
+                onClick={() => router.push('/student/bookmarks')}
+              >
+                Bookmarks
+              </Button>
+            )}
+
+            {/* Sign Out Button */}
             <Button
               variant="ghost"
               size="sm"

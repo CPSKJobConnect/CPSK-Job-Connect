@@ -75,6 +75,7 @@ export default function JobsLayout({ children }: Props) {
         </PopoverTrigger>
         <PopoverContent className="w-50 text-center">
           <div className="flex flex-col gap-2">
+            {/* Student/Company Profile Button */}
             <Button
               variant="link"
               size="sm"
@@ -90,6 +91,20 @@ export default function JobsLayout({ children }: Props) {
             >
               <p className="text-sm font-medium">{session.user?.name}</p>
             </Button>
+
+            {/* Bookmark for Student Button (show when logged in as student) */}
+            {session.user?.role === 'student' && (
+              <Button
+                variant="link"
+                size="sm"
+                className="w-full"
+                onClick={() => router.push('/student/bookmarks')}
+              >
+                Bookmarks
+              </Button>
+            )}
+
+            {/* Sign Out Button */}
             <Button
               variant="ghost"
               size="sm"

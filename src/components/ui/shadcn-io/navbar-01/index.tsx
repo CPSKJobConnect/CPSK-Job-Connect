@@ -242,7 +242,12 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                 // Logged in (default template)
                 <Popover>
                   <PopoverTrigger asChild>
-                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center">
+                    <div
+                     role="button"
+                     tabIndex={0}
+                     aria-haspopup="menu"
+                     className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center"
+                    >
                       {session.user?.logoUrl ? (
                         <Image
                           src={session.user.logoUrl}
@@ -258,8 +263,8 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                       )}
                     </div>
                   </PopoverTrigger>
-                  <PopoverContent className="w-40">
-                    <p className="text-sm font-medium mb-2">{session.user?.name}</p>
+                  <PopoverContent className="w-50 text-center">
+                    <p className="text-sm font-medium">{session.user?.name}</p>
                     <Button
                       variant="ghost"
                       size="sm"
