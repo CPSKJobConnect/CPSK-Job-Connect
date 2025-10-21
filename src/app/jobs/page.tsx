@@ -87,6 +87,7 @@ export default function Page() {
                 onApply={true}
                 onEdit={false}
                 job={jobToShow.find((job, idx) => idx === selectedCardId)!}
+                tags={jobToShow.find((job, idx) => idx === selectedCardId)!.skills}
               />
             ) : (
               <div className="flex flex-col items-center gap-4 py-44">
