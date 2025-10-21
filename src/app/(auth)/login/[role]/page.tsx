@@ -1,7 +1,7 @@
 "use client"
 import { AuthForm } from "@/components/auth/AuthForm"
 import { AuthLayout } from "@/components/auth/AuthLayout"
-import { UserRole } from "@/types/auth"
+import { Role } from "@/types/auth"
 import { notFound } from "next/navigation"
 import { use } from "react"
 
@@ -18,8 +18,8 @@ const LoginPage =  ({params}: LoginPageProps) => {
     notFound();
   }
   return (
-    <AuthLayout role={role as UserRole}>
-      <AuthForm mode="login" role={role as UserRole} />
+    <AuthLayout role={role as Role}>
+      <AuthForm mode="login" role={role as Role} />
     </AuthLayout>
   )
 }
