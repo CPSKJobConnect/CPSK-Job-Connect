@@ -30,7 +30,6 @@ declare module "next-auth/jwt" {
   }
 }
 
-export type UserRole = "student" | "company" | "admin";
 export type Role = "student" | "company" | "admin";
 
 export interface FormField {

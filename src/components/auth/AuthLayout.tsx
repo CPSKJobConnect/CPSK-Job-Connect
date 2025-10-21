@@ -1,7 +1,7 @@
 // components/layout/AuthLayout.tsx
 "use client"
 
-import { UserRole } from "@/types/auth"
+import { Role } from "@/types/auth"
 import { ArrowLeft } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -9,7 +9,7 @@ import { useMemo } from "react"
 
 interface AuthLayoutProps {
   children: React.ReactNode
-  role: UserRole
+  role: Role
 }
 
 export function AuthLayout({ children, role }: AuthLayoutProps) {
