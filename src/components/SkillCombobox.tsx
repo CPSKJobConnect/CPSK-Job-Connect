@@ -25,7 +25,7 @@ import { IoIosClose } from "react-icons/io";
 interface SkillComboboxProps {
   selectedSkill: string[];
   setSelectedSkill: (skills: string[]) => void;
-  existingSkills: { name: string }[];
+  existingSkills: string[];
 }
 
 const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills }: SkillComboboxProps) => {
@@ -40,7 +40,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills }: Skil
 
   const handleSkillAdded = () => {
     if (searchTerm) {
-        if (!skillList.find((s) => s.name === searchTerm)) {
+        if (!skillList.includes(searchTerm)) {
             setSkillList((prev) => [...prev, searchTerm]);
         }
 
@@ -126,7 +126,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills }: Skil
                   value={skill}
                   onSelect={handleSelectSkill}
                 >
-                  {skill.name}
+                  {skill}
                   <Check
                     className={cn(
                       "ml-auto",
