@@ -6,7 +6,7 @@ export default withAuth(
   function middleware(req) {
     const { pathname } = req.nextUrl
     const token = req.nextauth.token
-    const role = token?.role
+    const role = token?.role?.toLowerCase()
 
     // Public routes
     const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/jobs"]
