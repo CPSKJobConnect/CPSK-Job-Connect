@@ -110,7 +110,7 @@ export default function Page() {
     }
   };
 
-  const handleDraft = () => {
+  const handleDraft = async () => {
     try {
       const res = await fetch("/api/company/jobs/create", {
         method: "POST",
