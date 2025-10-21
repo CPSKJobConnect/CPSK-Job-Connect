@@ -111,7 +111,27 @@ export default function Page() {
   };
 
   const handleDraft = () => {
-    // draft job
+    try {
+      const res = await fetch("/api/company/jobs/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          is_published: false,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert("✅ Job drafted successfully!");
+      } else {
+        const err = await res.json();
+        alert(`❌ Failed to draft job: ${err.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error posting job:", error);
+      alert("⚠️ Something went wrong while draft the job.");
+    }
   };
 
   return (
