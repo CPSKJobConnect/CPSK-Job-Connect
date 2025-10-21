@@ -1,6 +1,6 @@
 // lib/role-config.ts
 import { FormField, Role, RoleConfig } from "@/types/auth";
-import { Building, GraduationCap } from "lucide-react";
+import { Building, GraduationCap, Shield } from "lucide-react";
 
 export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
   student: {
@@ -27,7 +27,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     description: "Administrative access",
     primaryColor: "bg-blue-600 hover:bg-blue-700",
     secondaryColor: "border-blue-200 text-blue-700 hover:bg-blue-50",
-    icon: Building,
+    icon: Shield,
     redirectPath: "/admin/dashboard",
   },
 };
