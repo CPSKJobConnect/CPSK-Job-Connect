@@ -18,6 +18,10 @@ export async function GET(req: Request) {
       select: { name: true }
     });
 
+    const tags = await prisma.jobTag.findMany({
+      select: { name: true }
+    });
+
     const locationsRaw = await prisma.jobPost.findMany({
       select: { location: true }
     });
@@ -30,6 +34,7 @@ export async function GET(req: Request) {
       types: types.map((t) => t.name),
       arrangements: arrangements.map((a) => a.name),
       salaryRanges,
+      tags,
     });
   } catch (error) {
     console.error("Error fetching job filters:", error);
