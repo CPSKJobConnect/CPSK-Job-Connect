@@ -55,7 +55,7 @@ export default function Page() {
       }
     });
   
-    if (formData.salary.min && formData.salary.max && +formData.salary.min > +formData.salary.max) {
+    if (formData.salary.min != null && formData.salary.max != null && +formData.salary.min > +formData.salary.max) {
       errors.push("Min Salary should be less than Max Salary");
     }
 
@@ -86,8 +86,28 @@ export default function Page() {
     return errors;
   };
   
-  const handlePost = () => {
-    // post job
+  const handlePost = async () => {
+    try {
+      const res = await fetch("/api/company/jobs/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          is_published: true,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert("✅ Job posted successfully!");
+      } else {
+        const err = await res.json();
+        alert(`❌ Failed to post job: ${err.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error posting job:", error);
+      alert("⚠️ Something went wrong while posting the job.");
+    }
   };
 
   const handleDraft = () => {
