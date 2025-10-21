@@ -281,6 +281,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
             <SkillCombobox
               selectedSkill={formData.skills}
               setSelectedSkill={(skills) => setFormData({ ...formData, skills })}
+              existingSkills={tags}
             />
         ) : (
           job.skills.map((tag, idx) => (
@@ -301,6 +302,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
           selectedCategory={formData.category}
           setSelectedCategory={(category) => setFormData({ ...formData, category })}
           placeholder={formData.category}
+          categoryList={categoryList}
           />
       </div>
       }
