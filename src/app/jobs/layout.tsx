@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { signOut } from "next-auth/react";
+import Link from "next/link";
 
 type Props = { children: React.ReactNode };
 
@@ -38,19 +39,25 @@ export default function JobsLayout({ children }: Props) {
     // Logged-in: links + avatar
     <div className="flex items-center gap-4">
       {allLinks.map(link => (
-        <a
+        <Link
           key={link.href}
           href={link.href}
-          className={`px-3 py-2 rounded-md font-semibold transition-colors ${link.active ? "bg-white/20 text-white" : "text-gray-200 hover:bg-white/10 hover:text-white"
+          className={`px-3 py-2 rounded-md font-semibold transition-colors ${
+            link.active ? "bg-white/20 text-white" : "text-gray-200 hover:bg-white/10 hover:text-white"
             }`}
         >
           {link.label}
-        </a>
+        </Link>
       ))}
 
       <Popover>
         <PopoverTrigger asChild>
-          <div role="button" tabIndex={0} aria-haspopup="menu" className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center">
+          <div
+            role="button"
+            tabIndex={0}
+            aria-haspopup="menu"
+            className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center"
+          >
             {session.user?.logoUrl ? (
               <Image
                 src={session.user.logoUrl}
@@ -67,15 +74,31 @@ export default function JobsLayout({ children }: Props) {
           </div>
         </PopoverTrigger>
         <PopoverContent className="w-50 text-center">
-          <p className="text-sm font-medium mb-2">{session.user?.name}</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full text-red-500 hover:text-red-600"
-            onClick={() => signOut({ callbackUrl: "/" })}
-          >
-            Sign out
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="link"
+              size="sm"
+              className="w-full"
+              onClick={() => {
+                const role = session.user?.role;
+                if (!role) {
+                  router.push('/register/complete');
+                } else {
+                  router.push(`/${role}/profile`);
+                }
+              }}
+            >
+              <p className="text-sm font-medium">{session.user?.name}</p>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-red-500 hover:text-red-600"
+              onClick={() => signOut({ callbackUrl: "/" })}
+            >
+              Sign out
+            </Button>
+          </div>
         </PopoverContent>
       </Popover>
     </div>
