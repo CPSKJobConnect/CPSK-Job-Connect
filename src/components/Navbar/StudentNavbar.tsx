@@ -55,7 +55,7 @@ export default function StudentNavbar() {
             </div>
           </PopoverTrigger>
 
-          <PopoverContent className="w-40">
+          <PopoverContent className="w-50 text-center">
             <p className="text-sm font-medium mb-2">{session.user?.name}</p>
             <Button
               variant="ghost"
