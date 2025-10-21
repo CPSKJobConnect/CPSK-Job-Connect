@@ -31,6 +31,7 @@ interface JobDescriptionProps {
   size: "sm" | "md";
   onApply: boolean;
   onEdit: boolean;
+  tags: string[];
 }
 
 const typeColors: Record<string, string> = {
@@ -43,7 +44,7 @@ const typeColors: Record<string, string> = {
 
 
 
-const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) => {
+const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionProps) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [formData, setFormData] = useState<JobPostFormData>({
