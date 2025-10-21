@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
-import { mockSkill } from "public/data/fakeFilterInfo"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -26,18 +25,14 @@ import { IoIosClose } from "react-icons/io";
 interface SkillComboboxProps {
   selectedSkill: string[];
   setSelectedSkill: (skills: string[]) => void;
+  existingSkills: string[];
 }
 
-const SkillCombobox = ({ selectedSkill, setSelectedSkill }: SkillComboboxProps) => {
+const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills }: SkillComboboxProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [value, setValue] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [existingSkills, setExistingSkills] = useState<string[]>([]);
-
-  useEffect(() => {
-    // fetch existing skill
-    setExistingSkills(mockSkill);
-  }, [])
+  const [skillList, setSkillList] = useState<string[]>(existingSkills);
 
   useEffect(() => {
     console.log("selected skill: ", selectedSkill)
@@ -45,11 +40,11 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill }: SkillComboboxProps) 
 
   const handleSkillAdded = () => {
     if (searchTerm && !existingSkills.includes(searchTerm)) {
-        setExistingSkills((prev) => [...prev, searchTerm]);
+        setSkillList((prev) => [...prev, searchTerm]);
     }
 
     if (searchTerm && !selectedSkill.includes(searchTerm)) {
-        setSelectedSkill([...selectedSkill, searchTerm]);
+        setSkillList([...selectedSkill, searchTerm]);
     }
   };
 
@@ -119,13 +114,13 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill }: SkillComboboxProps) 
             </div>
             </CommandEmpty>
             <CommandGroup>
-              {existingSkills.map((skill, idx) => (
+              {skillList.map((skill, idx) => (
                 <CommandItem
                   key={idx}
                   value={skill}
                   onSelect={handleSelectSkill}
                 >
-                  {skill}
+                  {skill.name}
                   <Check
                     className={cn(
                       "ml-auto",

@@ -15,34 +15,18 @@ import { JobPostFormData} from "@/types/job";
 interface JobPostDetailProps {
   formData: JobPostFormData;
   setFormData: React.Dispatch<React.SetStateAction<JobPostFormData>>;
+  categories: string[];
+  locations: string[];
+  types: string[];
+  arrangements: string[];
 }
 
 
-const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => {
+const JobPostDetailSection = ({ formData, setFormData, categories, locations, types, arrangements }: JobPostDetailProps) => {
   const [locationList, setLocationList] = useState<string[]>([]);
   const [jobTypeList, setJobTypeList] = useState<string[]>([]);
   const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
   const [categoryList, setCategoryList] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const res = await fetch("/api/jobs/filter");
-        if (!res.ok) throw new Error("Failed to fetch filters");
-
-        const data = await res.json();
-
-        setCategoryList(data.categories || []);
-        setLocationList(data.locations || []);
-        setJobTypeList(data.types || []);
-        setJobArrangementList(data.arrangements || []);
-      } catch (error) {
-        console.error("Error fetching job filter data:", error);
-      }
-    };
-
-    fetchFilters();
-  }, []);
 
     const handleSelect = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -70,7 +54,7 @@ const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => 
                   selectedCategory={formData.category}
                   setSelectedCategory={(category) => setFormData({ ...formData, category })}
                   placeholder="e.g. Engineer, Finance"
-                  categoryList={categoryList}
+                  categoryList={categories}
                 />
               </div>
             </div>
@@ -83,7 +67,7 @@ const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => 
                     <SelectValue placeholder="Select location" />
                   </SelectTrigger>
                   <SelectContent>
-                    {locationList.map((loc) => (
+                    {locations.map((loc) => (
                       <SelectItem key={loc} value={loc}>{loc}</SelectItem>
                     ))}
                   </SelectContent>
@@ -99,7 +83,7 @@ const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => 
                             <SelectValue placeholder="Select Type" />
                         </SelectTrigger>
                         <SelectContent>
-                            {jobTypeList.map((type) => (
+                            {types.map((type) => (
                             <SelectItem key={type} value={type}>
                             {type}
                         </SelectItem>
@@ -115,7 +99,7 @@ const JobPostDetailSection = ({ formData, setFormData }: JobPostDetailProps) => 
                     <SelectValue placeholder="Select Arrangement" />
                   </SelectTrigger>
                   <SelectContent>
-                    {jobArrangementList.map((arr) => (
+                    {arrangements.map((arr) => (
                       <SelectItem key={arr} value={arr}>{arr}</SelectItem>
                     ))}
                   </SelectContent>
