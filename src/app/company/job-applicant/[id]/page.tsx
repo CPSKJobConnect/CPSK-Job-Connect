@@ -46,7 +46,7 @@ export default function Page() {
 
 
   const handlePostJob = () => {
-    router.push(`/company/job-posting/${params.id}`);
+    router.push(`/company/job-posting`);
   }
 
     return (
