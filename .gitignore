@@ -55,5 +55,3 @@ next-env.d.ts
 /supabase/.temp/
 /supabase/.branches/
 /.supabase/
-TESTING_SAVED_JOBS.md
-REFACTORING_SUMMARY.md
