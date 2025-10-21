@@ -16,10 +16,24 @@ import { toast } from "sonner"
 
 export default function Page() {
   const [formData, setFormData] = useState<JobPostFormData>(defaultJobPostForm);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
+  const [types, setTypes] = useState<string[]>([]);
+  const [arrangements, setArrangements] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
 
   useEffect(() => {
-    console.log("post form: ", formData);
-  }, [formData]);
+    const fetchFilters = async () => {
+        const res = await fetch("/api/jobs/filter");
+        const data = await res.json();
+        setCategories(data.categories || []);
+        setLocations(data.locations || []);
+        setTypes(data.types || []);
+        setArrangements(data.arrangements || []);
+        setTags(data.tags || []);
+    };
+    fetchFilters();
+  }, []);
 
   const validateForm = (formData: JobPostFormData) => {
     const errors: string[] = [];
@@ -96,6 +110,10 @@ export default function Page() {
           <JobPostDetailSection 
           formData={formData}
           setFormData={setFormData}
+          categories={categories}
+          locations={locations}
+          types={types}
+          arrangements={arrangements}
           />
         </TabsContent>
 
@@ -103,6 +121,7 @@ export default function Page() {
           <JobPostDescriptionSection 
           formData={formData}
           setFormData={setFormData}
+          tags={tags}
           />
         </TabsContent>
       </Tabs>
