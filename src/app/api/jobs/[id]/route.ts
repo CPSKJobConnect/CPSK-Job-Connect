@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
-export async function GET(request: Request, context: { params: { id: string } }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
     const job = await prisma.jobPost.findUnique({

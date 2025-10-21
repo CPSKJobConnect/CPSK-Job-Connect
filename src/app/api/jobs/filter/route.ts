@@ -18,18 +18,16 @@ export async function GET(req: Request) {
       select: { name: true }
     });
 
-    const locationsRaw = await prisma.jobPost.findMany({
-      select: { location: true }
+    const tags = await prisma.jobTag.findMany({
+      select: { name: true }
     });
-    const locationsSet = new Set(locationsRaw.map((loc) => loc.location));
-    const locations = Array.from(locationsSet);
-    
+
     return NextResponse.json({
       categories: categories.map((c) => c.name),
-      locations,
       types: types.map((t) => t.name),
       arrangements: arrangements.map((a) => a.name),
       salaryRanges,
+      tags: tags.map((t) => t.name),
     });
   } catch (error) {
     console.error("Error fetching job filters:", error);
