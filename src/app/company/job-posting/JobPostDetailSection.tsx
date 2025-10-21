@@ -111,7 +111,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, locations, ty
               <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Min Salary</p>
                 <Input
-                  type="text"
+                  type="number"
                   name="minSalary"
                   value={formData.salary.min}
                   onChange={(e) => setFormData({ ...formData, 
@@ -126,7 +126,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, locations, ty
               <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Max Salary</p>
                 <Input
-                  type="text"
+                  type="number"
                   name="maxSalary"
                   value={formData.salary.max}
                   onChange={(e) => setFormData({ ...formData, 
