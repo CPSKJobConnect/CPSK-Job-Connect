@@ -8,17 +8,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatPostedDate } from "@/lib/dateHelper";
 import { JobInfo } from "@/types/job";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { FaRegStar, FaStar } from "react-icons/fa";
 import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineLink, MdOutlinePeopleAlt, MdOutlineReportProblem, MdOutlineShare, MdOutlineTimer } from "react-icons/md";
 import { Button } from "./ui/button";
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 
 interface JobCardProps {
   info: JobInfo;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
 }
 
 const typeColors: Record<string, string> = {
@@ -84,11 +84,12 @@ const JobCard = (job: JobCardProps) => {
     checkIfSaved();
   }, [session?.user?.id, job.info.id, job.info.isSaved]);
   const baseStyle =
-    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-100/60" : "bg-white"} p-4 flex flex-col gap-2 hover:bg-[#F3FEFA] transition mb-5`;
+    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-200/70 cursor-not-allowed" : "bg-white hover:bg-[#F3FEFA]"} p-4 flex flex-col gap-2 transition mb-5 transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg`;
 
     const sizeStyle = {
       sm: "w-full sm:w-[400px] min-h-[140px]",
-      md: "w-full sm:w-[400px] min-h-[250px] md:w-[550px]"
+      md: "w-full sm:w-[400px] min-h-[250px] md:w-[550px]",
+      lg: "w-full md:w-full min-h-[250px]",
     }[job.size || "md"];
 
   const handleSaveToggle = async () => {
@@ -136,7 +137,13 @@ const JobCard = (job: JobCardProps) => {
   };
 
   return (
-    <div className={`${baseStyle} ${sizeStyle}`}>
+    <div
+      className={`${baseStyle} ${sizeStyle}`}
+      onClick={(e) => {
+        if (isClosed) e.stopPropagation();
+      }}
+      aria-disabled={isClosed}
+    >
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
           <Image
@@ -152,12 +159,15 @@ const JobCard = (job: JobCardProps) => {
           </div>
         </div>
         <div className="flex gap-3 p-2">
-          {/* bookmark star */}
           <button
-            onClick={handleSaveToggle}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSaveToggle();
+            }}
             disabled={isLoading || isCheckingStatus}
             className="transition-colors disabled:opacity-50"
             aria-label={isSaved ? "Unsave job" : "Save job"}
+            type="button"
           >
             {isCheckingStatus ? (
               // Show outline star while checking status
@@ -172,7 +182,14 @@ const JobCard = (job: JobCardProps) => {
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <MdOutlineShare className="w-5 h-5" />
+              <button
+                onClick={(e) => e.stopPropagation()}
+                aria-label="Share job"
+                type="button"
+                className="p-0"
+              >
+                <MdOutlineShare className="w-5 h-5" />
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="start">
                 <DropdownMenuItem>

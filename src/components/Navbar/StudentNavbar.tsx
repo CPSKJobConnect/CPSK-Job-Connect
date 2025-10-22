@@ -53,13 +53,13 @@ export default function StudentNavbar() {
               }`}>
             Find Jobs
             </Link>
-            <Link href="/student/my-application"
+            <Link href="/student/bookmark"
             className={`px-3 py-2 rounded-md transition-colors font-semibold ${
                 pathname === "/student/my-application"
                   ? "bg-white/20 text-white"
                   : "text-gray-200 hover:bg-white/10 hover:text-white"
               }`}>
-            My Applications
+            Bookmark
             </Link>
 
             {mounted && (
