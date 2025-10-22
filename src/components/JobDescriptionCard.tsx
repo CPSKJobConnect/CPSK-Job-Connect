@@ -31,6 +31,7 @@ interface JobDescriptionProps {
   size: "sm" | "md";
   onApply: boolean;
   onEdit: boolean;
+  tags?: string[];
 }
 
 const typeColors: Record<string, string> = {
