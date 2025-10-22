@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
-import { mockSkill } from "public/data/fakeFilterInfo"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -26,37 +25,39 @@ import { IoIosClose } from "react-icons/io";
 interface SkillComboboxProps {
   selectedSkill: string[];
   setSelectedSkill: (skills: string[]) => void;
+  existingSkills: string[];
 }
 
-const SkillCombobox = ({ selectedSkill, setSelectedSkill }: SkillComboboxProps) => {
+const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills }: SkillComboboxProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [value, setValue] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [existingSkills, setExistingSkills] = useState<string[]>([]);
-
-  useEffect(() => {
-    // fetch existing skill
-    setExistingSkills(mockSkill);
-  }, [])
+  const [skillList, setSkillList] = useState<string[]>(existingSkills);
 
   useEffect(() => {
     console.log("selected skill: ", selectedSkill)
   }, [selectedSkill])
 
   const handleSkillAdded = () => {
-    if (searchTerm && !existingSkills.includes(searchTerm)) {
-        setExistingSkills((prev) => [...prev, searchTerm]);
-    }
+    if (searchTerm) {
+        if (!skillList.includes(searchTerm)) {
+            setSkillList((prev) => [...prev, searchTerm]);
+        }
 
-    if (searchTerm && !selectedSkill.includes(searchTerm)) {
-        setSelectedSkill([...selectedSkill, searchTerm]);
+        if (!selectedSkill.includes(searchTerm)) {
+            setSelectedSkill([...selectedSkill, searchTerm]);
+        }
+
+        setValue(searchTerm);
+        setSearchTerm("");
     }
   };
 
-  const handleSelectSkill = (skill: string) => {
-    if (!selectedSkill.includes(skill)) {
-      setSelectedSkill([...selectedSkill, skill]);
+  const handleSelectSkill = (skillName: string) => {
+    if (!selectedSkill.includes(skillName)) {
+      setSelectedSkill([...selectedSkill, skillName]);
     }
+    setValue(skillName);
     setOpen(false);
   };
 
@@ -119,7 +120,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill }: SkillComboboxProps) 
             </div>
             </CommandEmpty>
             <CommandGroup>
-              {existingSkills.map((skill, idx) => (
+              {skillList.map((skill, idx) => (
                 <CommandItem
                   key={idx}
                   value={skill}

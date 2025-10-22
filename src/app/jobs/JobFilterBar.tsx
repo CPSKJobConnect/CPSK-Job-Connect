@@ -9,11 +9,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import LocationCombobox from "@/components/LocationCombobox";
 import { JobFilterInfo } from "@/types/filter";
 import { useEffect, useState } from "react";
 import { BiCategory } from "react-icons/bi";
-import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
 import { IoLocationOutline } from "react-icons/io5";
+import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
 import { LuFilter, LuTags } from "react-icons/lu";
 import { MdOutlineDateRange } from "react-icons/md";
 import { TbCurrencyBaht } from "react-icons/tb";
@@ -119,20 +120,11 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
         <div className="flex flex-col md:flex-row justify-between gap-3 items-stretch md:items-center p-2">
             <div className="relative flex-1">
                 <IoLocationOutline className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"/>
-                <Select value={filters.location} 
-                onValueChange={(val) => updateFilter("location", val)}>
-                    <SelectTrigger className="pl-10 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
-                        <SelectValue placeholder="Location" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectLabel>Locations</SelectLabel>
-                            {filter?.locations?.map((location, idx) => (
-                                <SelectItem key={idx} value={location}>{location}</SelectItem>
-                            ))}
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
+                <LocationCombobox
+                    value={filters.location}
+                    showIcon={true}
+                    onChange={(val) => updateFilter("location", val)}
+                />
             </div>
 
             <div className="relative flex-1">
