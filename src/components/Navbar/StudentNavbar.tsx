@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useRouter } from "next/navigation";
+import { User, Bookmark, LogOut } from 'lucide-react';
 
 export default function StudentNavbar() {
   const { data: session } = useSession();
@@ -62,38 +63,53 @@ export default function StudentNavbar() {
             </div>
           </PopoverTrigger>
 
-          <PopoverContent className="w-50 text-center">
-            {/* Profile Button */}
-            <Button
-              variant="link"
-              size="sm"
-              className="w-full"
-              onClick={() => {'/student/profile'}}
-            >
-              <p className="text-sm font-medium">{session.user?.name}</p>
-            </Button>
+          <PopoverContent className="w-56 p-2">
+            <div className="flex flex-col space-y-1">
+              {/* Profile Section */}
+              <div className="px-3 py-2 mb-1">
+                <p className="text-sm font-semibold text-gray-900">{session.user?.name}</p>
+                <p className="text-xs text-gray-500">{session.user?.email}</p>
+              </div>
 
-            {/* Bookmark for Student Button */}
-            {session.user?.role === 'student' && (
+              <div className="border-t border-gray-100 my-1"></div>
+
+              {/* Profile Button */}
               <Button
-                variant="link"
+                variant="ghost"
                 size="sm"
-                className="w-full"
-                onClick={() => router.push('/student/bookmarks')}
+                className="w-full justify-start gap-2 hover:bg-gray-100 text-gray-700 hover:text-gray-900 font-normal"
+                onClick={() => router.push('/student/profile')}
               >
-                <p className="text-[14px]">Bookmarks</p>
+                <User className="h-4 w-4" />
+                <span>Profile</span>
               </Button>
-            )}
 
-            {/* Sign Out Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full text-red-500 hover:text-red-600"
-              onClick={() => signOut({ callbackUrl: "/" })}
-            >
-              Sign out
-            </Button>
+              {/* Bookmark for Student Button */}
+              {session.user?.role === 'student' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-2 hover:bg-gray-100 text-gray-700 hover:text-gray-900 font-normal"
+                  onClick={() => router.push('/student/bookmarks')}
+                >
+                  <Bookmark className="h-4 w-4" />
+                  <span>Bookmarks</span>
+                </Button>
+              )}
+
+              <div className="border-t border-gray-100 my-1"></div>
+
+              {/* Sign Out Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2 hover:bg-red-50 text-red-600 hover:text-red-700 font-normal"
+                onClick={() => signOut({ callbackUrl: "/" })}
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign out</span>
+              </Button>
+            </div>
           </PopoverContent>
         </Popover>
       )}
