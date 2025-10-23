@@ -6,6 +6,7 @@ import { FaRegFileAlt } from "react-icons/fa";
 import { MdTipsAndUpdates } from "react-icons/md";
 import React from "react";
 import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useParams } from "next/navigation";
 import { mockJobInCompany } from "public/data/mockJobInCompany";
 import { JobInfo } from "@/types/job";
@@ -20,6 +21,8 @@ export default function Page() {
   const router = useRouter();
   const [jobPost, setJobPost] = useState<JobInfo[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!params?.id) return;
@@ -35,6 +38,36 @@ export default function Page() {
     setJobPost(jobs);
 
   }, [params?.id]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const m = window.matchMedia("(max-width: 1024px)");
+      const handler = (e: MediaQueryListEvent | MediaQueryList) => setIsSmallScreen((e as any).matches);
+      setIsSmallScreen(m.matches);
+      if (typeof m.addEventListener === "function") {
+        m.addEventListener("change", handler as any);
+      } else if (typeof (m as any).addListener === "function") {
+        (m as any).addListener(handler as any);
+      }
+      return () => {
+        if (typeof m.removeEventListener === "function") {
+          m.removeEventListener("change", handler as any);
+        } else if (typeof (m as any).removeListener === "function") {
+          (m as any).removeListener(handler as any);
+        }
+      };
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isSmallScreen && dialogOpen) {
+      setDialogOpen(false);
+    }
+
+    if (isSmallScreen && selectedCardId !== null) {
+      setDialogOpen(true);
+    }
+  }, [isSmallScreen, selectedCardId]);
 
   const selectedJob = selectedCardId !== null ? jobPost[selectedCardId] : null;
 
@@ -66,40 +99,58 @@ export default function Page() {
           </div>
           <div className="flex md:flex-row sm:flex-col gap-8">
             <div className="basis-1/5">
-              <AllJobPost info={jobPost} onSelectCard={(id) => setSelectedCardId(id)} />
-            </div>
-            <div className="basis-4/5">
-              <div className="flex flex-col rounded-md shadow-md p-3 max-h-[120vh]">
-                <div>
-                  {selectedCardId !== null ? (
-                    <JobDescriptionCard
-                      size="md"
-                      onApply={false}
-                      onEdit={true}
-                      job={jobPost.find((job) => job.id === selectedCardId.toString())!}                 
-                    />
-                  ) : (
-                  <div className="flex flex-col items-center gap-4 py-44">
-                    <div className="bg-[#ABE9D6] rounded-full w-[60px] h-[60px] flex items-center justify-center">
-                      <FaRegFileAlt className="text-xl text-[#2BA17C]" />
-                    </div>
-                    <p className="font-bold">
-                      Details of the job post will be shown here
-                    </p>
-                    <div className="bg-[#F3FEFA] flex flex-row gap-2 rounded-xl p-3">
-                      <MdTipsAndUpdates className="text-[#2BA17C]" />
-                      <p className="text-sm">
-                        Tip: You can quickly manage your job post here!
+                <AllJobPost info={jobPost} onSelectCard={(id) => setSelectedCardId(id)} />
+              </div>
+              <div className="hidden lg:flex flex-1 justify-center">
+                <div className="flex flex-col rounded-md shadow-md p-3 max-h-[120vh] w-full">
+                  <div>
+                    {selectedCardId !== null ? (
+                      <JobDescriptionCard
+                        size="md"
+                        onApply={false}
+                        onEdit={true}
+                        job={selectedJob!}
+                      />
+                    ) : (
+                    <div className="flex flex-col items-center gap-4 py-44">
+                      <div className="bg-[#ABE9D6] rounded-full w-[60px] h-[60px] flex items-center justify-center">
+                        <FaRegFileAlt className="text-xl text-[#2BA17C]" />
+                      </div>
+                      <p className="font-bold">
+                        Details of the job post will be shown here
                       </p>
+                      <div className="bg-[#F3FEFA] flex flex-row gap-2 rounded-xl p-3">
+                        <MdTipsAndUpdates className="text-[#2BA17C]" />
+                        <p className="text-sm">
+                          Tip: You can quickly manage your job post here!
+                        </p>
+                      </div>
                     </div>
+                    )}
                   </div>
+                  {selectedCardId !== null && (
+                    <ApplicationList job_id={selectedCardId} applicants={applicants?.applicants || []} />
                   )}
                 </div>
-                {selectedCardId &&
-                  <ApplicationList job_id={selectedCardId} applicants={applicants?.applicants || []} />
-                }
               </div>
-            </div>
+              <Dialog open={dialogOpen} onOpenChange={(open) => {
+                setDialogOpen(open);
+                if (!open) setSelectedCardId(null);
+              }}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{selectedJob !== null ? selectedJob.title : ""}</DialogTitle>
+                  </DialogHeader>
+                  <div className="max-h-[70vh] overflow-y-auto">
+                    {selectedJob !== null && (
+                      <div className="space-y-4">
+                        <JobDescriptionCard size="md" onApply={false} onEdit={true} job={selectedJob} />
+                        <ApplicationList job_id={selectedCardId!} applicants={applicants?.applicants || []} />
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
           </div>
         </div>
       </div>
