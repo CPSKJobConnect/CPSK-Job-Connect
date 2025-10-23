@@ -7,8 +7,8 @@ import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineTimer, MdOutlinePeopleAlt } from "react-icons/md";
 import { IoDocumentTextOutline } from "react-icons/io5";
 import { FileMeta } from "@/types/file";
-import DocumentUploadSection from "./DocumentUploadSection";
-import StudentInfoCard from "./StudentInfoCard";
+import DocumentUploadSection from "../DocumentUploadSection";
+import StudentInfoCard from "../StudentInfoCard";
 import { Button } from "@/components/ui/button";
 import { Student } from "@/types/user";
 
