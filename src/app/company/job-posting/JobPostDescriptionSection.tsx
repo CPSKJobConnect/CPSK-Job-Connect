@@ -2,15 +2,17 @@
 import { Textarea } from "@/components/ui/textarea";
 import { JobPostFormData } from "@/types/job";
 import SkillCombobox from "../../../components/SkillCombobox";
-
+import React, { useState } from "react";
 
 interface JobPostDescriptionProps {
     formData: JobPostFormData;
     setFormData: React.Dispatch<React.SetStateAction<JobPostFormData>>;
+    tags: string[];
 }
 
 
-const JobPostDescriptionSection = ({ formData, setFormData }: JobPostDescriptionProps) => {
+const JobPostDescriptionSection = ({ formData, setFormData, tags }: JobPostDescriptionProps) => {
+    const [minSalary, setMinSalary] = useState<number | "">(0);
 
     return (
         <div className="flex flex-col gap-6 bg-white p-6 rounded-md shadow-md h-full">
@@ -18,10 +20,10 @@ const JobPostDescriptionSection = ({ formData, setFormData }: JobPostDescription
             <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Skills</p>
                 <SkillCombobox
-                selectedSkill={formData.skills}
-                setSelectedSkill={(skills) =>
-                    setFormData({ ...formData, skills })
-                }
+                    selectedSkill={formData.skills}
+                    setSelectedSkill={(skills) =>
+                    setFormData({ ...formData, skills })}
+                    existingSkills={tags}
                 />
 
             </div>
