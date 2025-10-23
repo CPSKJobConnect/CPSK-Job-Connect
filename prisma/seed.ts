@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 // Use DIRECT_URL for seeding to avoid pooler prepared statement conflicts
 const prisma = new PrismaClient({
@@ -198,6 +199,35 @@ async function main() {
   }
 
   console.log('✅ Job categories seeded');
+
+  // Seed Default Admin Account
+  const adminEmail = 'admin@cpsk.edu';
+  const adminPassword = 'admin123'; // Change this in production!
+
+  const existingAdmin = await prisma.account.findUnique({
+    where: { email: adminEmail },
+  });
+
+  if (!existingAdmin) {
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+    await prisma.account.create({
+      data: {
+        email: adminEmail,
+        password: hashedPassword,
+        username: 'Admin',
+        role: 3, // Admin role ID
+        emailVerified: new Date(),
+      },
+    });
+
+    console.log('✅ Admin account created');
+    console.log(`   Email: ${adminEmail}`);
+    console.log(`   Password: ${adminPassword}`);
+    console.log('   ⚠️  IMPORTANT: Change the admin password after first login!');
+  } else {
+    console.log('ℹ️  Admin account already exists, skipping creation');
+  }
 
   console.log('Seeding finished successfully! 🎉');
 }
