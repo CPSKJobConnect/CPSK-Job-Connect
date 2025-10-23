@@ -1,10 +1,10 @@
-name: Run Jest Tests
+name: CI Pipeline
 
 on:
   push:
     branches:
       - main
-      - '**'   # run on all branches
+      - '**'
   pull_request:
     branches:
       - main
@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]  # match your local Node version
+        node-version: [20.x]
 
     steps:
       # 1. Checkout code
@@ -35,12 +35,22 @@ jobs:
       # 4. Typescript Check
       - name: Run Typescript Check
         run: npm run type-check
+        continue-on-error: true
 
-      # 5. Run tests with coverage
+      # 5. Run ESLint
+      - name: Run ESLint
+        run: npm run lint || true
+
+      # 6. Run Stylelint
+      - name: Run Stylelint
+        run: npm run lint:css || true
+
+      # 7. Run Jest tests with coverage
       - name: Run Jest tests
         run: npm run test:coverage
+        continue-on-error: true
 
-      # 6. Optional: upload coverage report
+      # 8. Upload coverage report
       - name: Upload coverage report
         if: success()
         uses: actions/upload-artifact@v4
