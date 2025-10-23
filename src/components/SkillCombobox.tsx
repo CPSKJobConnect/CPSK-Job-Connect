@@ -25,10 +25,10 @@ import { IoIosClose } from "react-icons/io";
 interface SkillComboboxProps {
   selectedSkill: string[];
   setSelectedSkill: (skills: string[]) => void;
-  existingSkills: string[];
+  existingSkills?: string[];
 }
 
-const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills }: SkillComboboxProps) => {
+const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }: SkillComboboxProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [value, setValue] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
