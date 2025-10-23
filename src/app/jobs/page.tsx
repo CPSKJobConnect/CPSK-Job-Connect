@@ -11,17 +11,20 @@ import { useEffect, useState } from "react";
 import { FaRegFileAlt } from "react-icons/fa";
 import { IoMdSearch } from "react-icons/io";
 import { MdTipsAndUpdates } from "react-icons/md";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Page() {
   const [jobData, setJobData] = useState<JobInfo[]>([]);
   const [filteredJob, setFilteredJob] = useState<JobInfo[]>([]);
   const [filterInfo, setFilterInfo] = useState<JobFilterInfo | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [jobToShow, setJobToShow] = useState<JobInfo[]>([]);
   const [filterApplied, setFilterApplied] = useState(false);
 
   useEffect(() => {
-    const fetchJobsAndFilters = async () => {
+  const fetchJobsAndFilters = async () => {
       try {
         const resJobs = await fetch("/api/jobs");
         const dataJobs = await resJobs.json();
@@ -36,6 +39,17 @@ export default function Page() {
     };
 
     fetchJobsAndFilters();
+    if (typeof window !== "undefined") {
+      const m = window.matchMedia("(max-width: 1024px)");
+      const handler = (e: MediaQueryListEvent | MediaQueryList) => setIsSmallScreen((e as any).matches);
+      setIsSmallScreen(m.matches);
+      if (m.addEventListener) m.addEventListener("change", handler as any);
+      else m.addListener(handler as any);
+      return () => {
+        if (m.removeEventListener) m.removeEventListener("change", handler as any);
+        else m.removeListener(handler as any);
+      };
+    }
   }, []);
 
   useEffect(() => {
@@ -46,10 +60,19 @@ export default function Page() {
     }
   }, [filteredJob, jobData, filterApplied]);
 
+  useEffect(() => {
+    if (!isSmallScreen && dialogOpen) {
+      setDialogOpen(false);
+    }
+
+    if (isSmallScreen && selectedCardId !== null) {
+      setDialogOpen(true);
+    }
+  }, [isSmallScreen, selectedCardId]);
+
   const handleSearch = (filters: FilterFormData) => {
     setFilterApplied(true);
 
-    // Convert form data to filter format
     const jobFilters: JobFilters = {
       keyword: filters.keyword || undefined,
       jobCategory: filters.jobCategory || undefined,
@@ -67,20 +90,23 @@ export default function Page() {
 
   return (
     <div className="flex flex-col gap-6 px-10">
-      <div className="sticky top-0 z-10 mb-1">
+      <div className="sticky top-0 z-10">
         <JobFilterBar filter={filterInfo} onSearch={handleSearch} />
       </div>
       {jobToShow.length > 0 ? (
         <div className="flex flex-col md:flex-col lg:flex-row sm:flex-col gap-8 h-screen">
           <div className="overflow-y-auto">
             {jobToShow.map((job, idx) => (
-              <div key={idx} onClick={() => setSelectedCardId(idx)}>
+              <div key={idx} onClick={() => {
+                setSelectedCardId(idx);
+                if (isSmallScreen) setDialogOpen(true);
+              }}>
                 <JobCard size="md" info={job} />
               </div>
             ))}
           </div>
 
-          <div className="flex flex-1 justify-center">
+          <div className="hidden lg:flex flex-1 justify-center">
             {selectedCardId !== null ? (
               <JobDescriptionCard
                 size="md"
@@ -105,6 +131,27 @@ export default function Page() {
               </div>
             )}
           </div>
+
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) setSelectedCardId(null);
+          }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{selectedCardId !== null ? jobToShow[selectedCardId].title : ""}</DialogTitle>
+              </DialogHeader>
+              <div className="max-h-[70vh] overflow-y-auto">
+                {selectedCardId !== null && (
+                  <JobDescriptionCard
+                    size="md"
+                    onApply={true}
+                    onEdit={false}
+                    job={jobToShow[selectedCardId]}
+                  />
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4 py-44">

@@ -146,17 +146,17 @@ const JobCard = (job: JobCardProps) => {
       </div>
 
       <div className="flex gap-4 py-2">
-        <div className="flex gap-1">
+        <div className="flex gap-1 min-w-0 items-center">
           <div className="py-1"><IoLocationOutline /></div>
-          <span>{job.info.location}</span>
+          <span className="truncate text-sm text-gray-700 max-w-[250px]" title={job.info.location}>{job.info.location}</span>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 min-w-0 items-center">
           <div className="py-1"><MdOutlineTimer /></div>
-          <span>{formatPostedDate(job.info.posted)}</span>
+          <span className="text-sm text-gray-700">{formatPostedDate(job.info.posted)}</span>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 min-w-0 items-center">
           <div className="py-1"><MdOutlinePeopleAlt /></div>
-          <span>{job.info.applied} applied</span>
+          <span className="text-sm text-gray-700">{job.info.applied} applied</span>
         </div>
       </div>
 
