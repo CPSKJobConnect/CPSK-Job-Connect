@@ -6,7 +6,7 @@ export default withAuth(
   function middleware(req) {
     const { pathname } = req.nextUrl
     const token = req.nextauth.token
-    const role = token?.role
+    const role = token?.role?.toLowerCase()
 
     console.log("🔍 Middleware hit:", pathname, "Role:", role)
     // TEMPORARY BYPASS for admin routes
@@ -33,6 +33,11 @@ export default withAuth(
         loginUrl.searchParams.set("callbackUrl", pathname)
         return NextResponse.redirect(loginUrl)
       }
+      if (pathname.startsWith("/admin")) {
+        const loginUrl = new URL("/login/admin", req.url)
+        loginUrl.searchParams.set("callbackUrl", pathname)
+        return NextResponse.redirect(loginUrl)
+      }
       return NextResponse.redirect(new URL("/", req.url))
     }
 
@@ -43,19 +48,24 @@ export default withAuth(
         return NextResponse.redirect(new URL("/register/complete", req.url))
       }
 
-      // Student trying to access company routes
-      if (role === "student" && pathname.startsWith("/company")) {
+      // Student trying to access company or admin routes
+      if (role === "student" && (pathname.startsWith("/company") || pathname.startsWith("/admin"))) {
         return NextResponse.redirect(new URL("/student/dashboard", req.url))
       }
 
-      // Company trying to access student routes
-      if (role === "company" && pathname.startsWith("/student")) {
+      // Company trying to access student or admin routes
+      if (role === "company" && (pathname.startsWith("/student") || pathname.startsWith("/admin"))) {
         return NextResponse.redirect(new URL("/company/dashboard", req.url))
       }
 
-        // Admin trying to access non-admin routes
-      if (role === "admin" && !pathname.startsWith("/admin")) {
+      // Admin trying to access student or company routes
+      if (role === "admin" && (pathname.startsWith("/student") || pathname.startsWith("/company"))) {
         return NextResponse.redirect(new URL("/admin/dashboard", req.url))
+      }
+
+      // Only admins can access /admin routes
+      if (pathname.startsWith("/admin") && role !== "admin") {
+        return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
       }
 
       // Redirect authenticated users from auth pages and homepage to their dashboard
