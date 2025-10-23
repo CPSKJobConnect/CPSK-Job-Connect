@@ -1,13 +1,13 @@
 "use client"
 
-import { UserRole } from "@/types/auth"
+import { Role } from "@/types/auth"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
-  requiredRole?: UserRole
+  requiredRole?: Role
 }
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {

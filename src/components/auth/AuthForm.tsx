@@ -59,8 +59,9 @@ export function AuthForm({ role, mode }: AuthFormProps) {
       if (callbackUrl) {
         router.push(callbackUrl)
       } else {
-        const userRoleConfig = ROLE_CONFIGS[session.user.role as Role]
-        router.push(userRoleConfig?.redirectPath || `/${session.user.role}/dashboard`)
+        const normalizedRole = session.user.role.toLowerCase() as Role
+        const userRoleConfig = ROLE_CONFIGS[normalizedRole]
+        router.push(userRoleConfig?.redirectPath || `/${normalizedRole}/dashboard`)
       }
     }
   }, [session, awaitingSession, router, callbackUrl])
