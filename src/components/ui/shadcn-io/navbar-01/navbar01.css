@@ -1,0 +1,28 @@
+html, body {
+  height: 100%;       /* make html & body span full viewport */
+  margin: 0;
+}
+
+html {
+  background: linear-gradient(to bottom, #006C67, #d0f0fa); /* gradient for overscroll */
+}
+
+body {
+  min-height: 100%;       /* ensures body is full height */
+  background: transparent; /* let html gradient show through */
+  overscroll-behavior-y: contain;
+}
+
+#signin-btn {
+  background-color: white;
+  color: black;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  /* border-radius: 8px; */
+  border: #048971 0.25px solid;
+}
+
+#signin-btn:hover {
+  background-color: #dadada;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}

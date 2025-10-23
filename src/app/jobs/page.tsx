@@ -19,6 +19,7 @@ export default function Page() {
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [jobToShow, setJobToShow] = useState<JobInfo[]>([]);
   const [filterApplied, setFilterApplied] = useState(false);
+  const selectedJob = selectedCardId !== null ? jobToShow[selectedCardId] : null;
 
   useEffect(() => {
     const fetchJobsAndFilters = async () => {
@@ -49,7 +50,6 @@ export default function Page() {
   const handleSearch = (filters: FilterFormData) => {
     setFilterApplied(true);
 
-    // Convert form data to filter format
     const jobFilters: JobFilters = {
       keyword: filters.keyword || undefined,
       jobCategory: filters.jobCategory || undefined,
@@ -66,10 +66,14 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col gap-6 px-10">
+    <div className="flex flex-col gap-6 px-10 mt-7">
       <div className="sticky top-0 z-10 mb-1">
-        <JobFilterBar filter={filterInfo} onSearch={handleSearch} />
+        <JobFilterBar
+          filter={filterInfo}
+          onSearch={handleSearch}
+        />
       </div>
+
       {jobToShow.length > 0 ? (
         <div className="flex flex-col md:flex-col lg:flex-row sm:flex-col gap-8 h-screen">
           <div className="overflow-y-auto">
@@ -81,12 +85,13 @@ export default function Page() {
           </div>
 
           <div className="flex flex-1 justify-center">
-            {selectedCardId !== null ? (
+            {selectedJob ? (
               <JobDescriptionCard
                 size="md"
                 onApply={true}
                 onEdit={false}
-                job={jobToShow.find((job, idx) => idx === selectedCardId)!}
+                job={selectedJob}
+                tags={selectedJob.skills}
               />
             ) : (
               <div className="flex flex-col items-center gap-4 py-44">
