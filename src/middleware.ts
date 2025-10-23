@@ -10,10 +10,10 @@ export default withAuth(
 
     console.log("🔍 Middleware hit:", pathname, "Role:", role)
     // TEMPORARY BYPASS for admin routes
-    if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
-      console.log("⚙️ Skipping middleware for admin routes (temporary)")
-      return NextResponse.next()
-    }
+    // if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+    //   console.log("⚙️ Skipping middleware for admin routes (temporary)")
+    //   return NextResponse.next()
+    // }
 
     // Public routes
     const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/jobs"]
