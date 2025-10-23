@@ -41,7 +41,13 @@ export async function POST (req: Request) {
         job_post_id: Number(jobId),
       },
     });
+    // const jobPost = await prisma.jobPost.findUnique({
+    //   where: { id: Number(jobId) },
+    //   select: { jobName: true },
+    // });
     // After successfully saving the job
+    // console.log(`Saved job: ${jobPost?.jobName}`);  
+    
     return NextResponse.json(
       {savedJob, message: "Job saved successfully"},
       { status: 201 }
@@ -104,8 +110,18 @@ export async function DELETE (req: Request) {
         student_id: student.id,
         job_post_id: Number(jobId),
       }
+    },
+    select: { id: true ,
+      student_id: true,
+      job_post_id: true,
+      jobPost: {
+        select: {
+          jobName: true,
+        }
+      }
     }
   });
+  // console.log(`Unsaved job: ${deletedJob.jobPost.jobName} for student: ${student.id}`);
   // After successfully removing the saved job
   return NextResponse.json(
     { message: "Job unsaved successfully" },
@@ -191,6 +207,10 @@ export async function GET (req: Request) {
             jobArrangement: true,
             categories: true,
             tags: true,
+            applications: {
+              where: { student_id: student.id },
+              select: { id: true }
+            },
             _count: {
               select: { applications: true }
             }
@@ -201,8 +221,43 @@ export async function GET (req: Request) {
         created_at: "desc" // most recently saved first
       }
     });
+
+    // Transform data to match BookmarkJobInfo format for frontend
+    const transformedJobs = savedJobs.map(savedJob => ({
+      job: {
+        id: String(savedJob.jobPost.id),
+        companyLogo: savedJob.jobPost.company.account.logoUrl || "/default-logo.png",
+        companyBg: savedJob.jobPost.company.account.backgroundUrl || "/default-bg.png",
+        title: savedJob.jobPost.jobName,
+        companyName: savedJob.jobPost.company.name,
+        category: savedJob.jobPost.categories[0]?.name || "General",
+        location: savedJob.jobPost.location,
+        posted: savedJob.jobPost.created_at.toISOString(),
+        applied: savedJob.jobPost._count.applications,
+        salary: {
+          min: savedJob.jobPost.min_salary,
+          max: savedJob.jobPost.max_salary
+        },
+        skills: savedJob.jobPost.tags.map(tag => tag.name),
+        description: {
+          overview: savedJob.jobPost.aboutRole,
+          responsibility: savedJob.jobPost.aboutRole,
+          requirement: savedJob.jobPost.requirements.join("\n"),
+          qualification: savedJob.jobPost.qualifications.join("\n")
+        },
+        type: savedJob.jobPost.jobType.name.toLowerCase(),
+        arrangement: savedJob.jobPost.jobArrangement.name.toLowerCase(),
+        deadline: savedJob.jobPost.deadline.toISOString(),
+        status: savedJob.jobPost.deadline < new Date() ? "expire" : "active",
+        isSaved: true
+      },
+      added_at: savedJob.created_at.toISOString(),
+      isBookmarked: true,
+      isApplied: savedJob.jobPost.applications.length > 0
+    }));
+
       return NextResponse.json(
-        { savedJobs },
+        { savedJobs: transformedJobs },
         { status: 200 }
       );
 
