@@ -100,7 +100,7 @@ export default function JobsLayout({ children }: Props) {
                 className="w-full"
                 onClick={() => router.push('/student/bookmarks')}
               >
-                Bookmarks
+                <p className="text-[14px]">Bookmarks</p>
               </Button>
             )}
 

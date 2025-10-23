@@ -81,7 +81,7 @@ export default function StudentNavbar() {
                 className="w-full"
                 onClick={() => router.push('/student/bookmarks')}
               >
-                Bookmarks
+                <p className="text-[14px]">Bookmarks</p>
               </Button>
             )}
 
