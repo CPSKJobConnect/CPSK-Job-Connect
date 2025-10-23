@@ -43,11 +43,17 @@ export default function Page() {
       const m = window.matchMedia("(max-width: 1024px)");
       const handler = (e: MediaQueryListEvent | MediaQueryList) => setIsSmallScreen((e as any).matches);
       setIsSmallScreen(m.matches);
-      if (m.addEventListener) m.addEventListener("change", handler as any);
-      else m.addListener(handler as any);
+      if (typeof m.addEventListener === "function") {
+        m.addEventListener("change", handler as any);
+      } else if (typeof (m as any).addListener === "function") {
+        (m as any).addListener(handler as any);
+      }
       return () => {
-        if (m.removeEventListener) m.removeEventListener("change", handler as any);
-        else m.removeListener(handler as any);
+        if (typeof m.removeEventListener === "function") {
+          m.removeEventListener("change", handler as any);
+        } else if (typeof (m as any).removeListener === "function") {
+          (m as any).removeListener(handler as any);
+        }
       };
     }
   }, []);
