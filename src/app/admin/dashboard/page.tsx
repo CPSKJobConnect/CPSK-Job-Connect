@@ -272,7 +272,20 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <HorizontalBarChart data={topSkillsData} height={300} />
+            <div className="space-y-2">
+              {stats.topSkills.length === 0 ? (
+                <p className="text-muted-foreground">No skills found</p>
+              ) : (
+                <ol className="list-decimal list-inside space-y-1">
+                  {stats.topSkills.map((skill, idx) => (
+                    <li key={skill.name} className="flex justify-between items-center">
+                      <span className="truncate mr-4">{skill.name}</span>
+                      <span className="text-sm font-medium">{skill.count} jobs</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
           </CardContent>
         </Card>
 
