@@ -1,28 +1,29 @@
 "use client";
 import { IoMdAdd } from "react-icons/io";
-import AllJobPost from "../AllJobPost";
+import AllJobPost from "./AllJobPost";
 import JobDescriptionCard from "@/components/JobDescriptionCard";
 import { FaRegFileAlt } from "react-icons/fa";
 import { MdTipsAndUpdates } from "react-icons/md";
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { mockJobInCompany } from "public/data/mockJobInCompany";
 import { JobInfo } from "@/types/job";
-import ApplicationList from "../ApplicationList";
+import ApplicationList from "./ApplicationList";
 import { fakeJobData } from "public/data/fakeJobDescription";
 import { mockApplicantList } from "public/data/mockApplicantList";
 
 export default function Page() {
-  const params = useParams();
   const router = useRouter();
+  const { data: session } = useSession();
   const [jobPost, setJobPost] = useState<JobInfo[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!params?.id) return;
+    if (!session?.user?.id) return;
 
     const jobLinks = mockJobInCompany.filter(
-      (j) => j.company_id === params.id
+      (j) => j.company_id === session.user.id
     );
 
     const jobs = jobLinks
@@ -30,7 +31,7 @@ export default function Page() {
       .filter((j): j is JobInfo => j !== undefined);
 
     setJobPost(jobs);
-  }, [params?.id]);
+  }, [session?.user?.id]);
 
   const selectedJob = selectedCardId !== null
     ? jobPost.find(job => job.id === selectedCardId.toString())
