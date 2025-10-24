@@ -23,7 +23,7 @@ export default function JobsLayout({ children }: Props) {
     roleLinks.push({ href: '/student/dashboard', label: 'Dashboard', active: pathname === '/student/dashboard' });
     roleLinks.push({ href: '/student/my-application', label: 'My Applications', active: pathname === '/student/my-application' });
   } else if (session?.user?.role === 'company') {
-    roleLinks.push({ href: '/company/job-applicant', label: 'Jobs & Applicants', active: pathname === '/company/job-applicant' });
+    roleLinks.push({ href: '/company/applications', label: 'Applications', active: pathname === '/company/applications' });
   } else if (session?.user?.role === 'admin') {
     roleLinks.push({ href: '/admin/dashboard', label: 'Dashboard', active: pathname === '/admin/dashboard' });
   }

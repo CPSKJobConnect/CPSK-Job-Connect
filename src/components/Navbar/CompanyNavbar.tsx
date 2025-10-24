@@ -19,7 +19,7 @@ export default function CompanyNavbar() {
   const links: Navbar01NavLink[] = [
     { href: '/company/dashboard', label: 'Dashboard', active: pathname === '/company/dashboard' },
     { href: '/company/job-posting', label: 'Job Posting', active: pathname === '/company/job-posting' },
-    { href: '/company/job-applicant', label: 'Job Applicants', active: pathname === '/company/job-applicant' },
+    { href: '/company/applications', label: 'Applications', active: pathname === '/company/applications' },
   ];
 
   const rightContent = (
