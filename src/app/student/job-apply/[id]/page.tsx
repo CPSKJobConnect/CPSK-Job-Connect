@@ -151,17 +151,17 @@ export default function Page() {
 
     return (
       <>
-        <div className="flex flex-row">
-          <div className="py-14 ml-10">
+        <div className="flex flex-col md:flex-row items-start md:items-center">
+          <div className="py-6 md:py-14 md:ml-10 flex justify-center md:justify-start w-full md:w-auto">
             <Image
               src={job.companyLogo}
               alt="companyLogo"
               width={120}
               height={120}
-              className="h-auto w-auto border border-gray-100"
+              className="h-auto w-auto border border-gray-100 rounded"
             />
           </div>
-          <div className="flex flex-col p-5 mb-3">
+          <div className="flex flex-col p-5 mb-3 w-full md:flex-1">
             <p className="px-4 text-md text-gray-700">Apply For</p>
             <div className="mt-1 px-4">
               <p className="font-bold text-lg">{job.title}</p>
@@ -183,7 +183,7 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 px-4 mt-2">
+            <div className="flex flex-wrap gap-2 px-4 mt-2 overflow-x-auto">
             <span
               className={`px-2 py-1 rounded-md text-sm shadow-md ${
                 typeColors[job.type] || "bg-white text-gray-800"
@@ -193,8 +193,8 @@ export default function Page() {
             </span>
             {job?.skills?.map((tag, idx) => (
               <span
-                key={idx}
-                className="bg-white text-gray-800 shadow-md px-2 py-1 rounded-md text-sm"
+                key={tag ?? idx}
+                className="bg-white text-gray-800 shadow-md px-2 py-1 rounded-md text-sm whitespace-nowrap"
               >
                 {tag}
               </span>
@@ -202,8 +202,8 @@ export default function Page() {
             </div>
           </div>
         </div>
-        <div className="flex flex-row gap-5 px-10 items-stretch">
-          <div className="basis-1/4">
+        <div className="flex flex-col md:flex-row gap-5 px-4 md:px-10 items-stretch">
+          <div className="w-full md:basis-1/4">
             <StudentInfoCard
               firstname={student.firstname}
               lastname={student.lastname}
@@ -212,14 +212,13 @@ export default function Page() {
               faculty={student.faculty}
             />
           </div>
-
-          <div className="basis-3/4 flex flex-col gap-5 p-3 rounded-md shadow-md border border-gray-100 w-full max-w-[75%] h-full">
+          <div className="w-full md:basis-3/4 flex flex-col gap-5 p-3 rounded-md shadow-md border border-gray-100">
             <div className="flex flex-row gap-2">
                 <IoDocumentTextOutline  className="w-7 h-7" />
                 <p className="text-lg font-semibold text-gray-800">Documents</p>
             </div>
-            <div className="flex md:flex-row sm:flex-col px-10 py-3 gap-10">
-              <div className="flex-1 min-w-0">
+            <div className="flex flex-col md:flex-row px-4 md:px-10 py-3 gap-6">
+              <div className="w-full">
                 <DocumentUploadSection
                   title="Resume"
                   description="Upload your most recent resume or select from previously uploaded files"
@@ -231,7 +230,7 @@ export default function Page() {
                 />
               </div>
 
-              <div className="flex-1 min-w-0">
+              <div className="w-full">
                 <DocumentUploadSection
                   title="Portfolio"
                   description="Upload your portfolio or select from previously uploaded files"
@@ -245,10 +244,10 @@ export default function Page() {
             </div>
           </div>
         </div>
-        <div className="px-10 py-5">
-        <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white font-md px-10" onClick={handleSubmit} disabled={alreadyApplied}>
-          {alreadyApplied ? "Already Applied" : "Submit"}
-        </Button>
+        <div className="px-4 md:px-10 py-5 flex justify-center md:justify-start">
+          <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white font-md px-8 py-3 w-full md:w-auto" onClick={handleSubmit} disabled={alreadyApplied}>
+            {alreadyApplied ? "Already Applied" : "Submit"}
+          </Button>
         </div>
       </>
     );

@@ -70,8 +70,8 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
               key={student.applicant_id}
               className="flex flex-col shadow-md rounded-md p-2 border border-gray-200"
             >
-              <div className="flex flex-row justify-between items-center">
-                <div className="flex flex-row gap-4 items-center">
+              <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 md:gap-0">
+                <div className="flex flex-row gap-4 items-center min-w-0">
                   <Image
                     src={student.profile_url}
                     alt="studentProfile"
@@ -80,16 +80,15 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
                     className="rounded-full shadow-md"
                   />
                   <div className="flex flex-col">
-                    <div className="flex flex-row gap-2 items-center">
+                    <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
                       <p className="font-medium">{student.firstname}</p>
                       <p className="font-medium">{student.lastname}</p>
                     </div>
-                    <p className="text-sm text-gray-500">{student.email}</p>
+                    <p className="text-sm text-gray-500 truncate max-w-full sm:max-w-[200px] md:max-w-none">{student.email}</p>
                   </div>
                 </div>
-
-                <div className="flex justify-end gap-5">
-                  <div className="w-25">
+                <div className="flex flex-row items-center gap-3 w-full md:w-auto mt-2 md:mt-0 justify-end md:justify-start">
+                  <div className="w-32 flex-shrink-0">
                     <Select
                       value={currentStatus}
                       onValueChange={(val) =>
@@ -114,7 +113,7 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
                     </Select>
                   </div>
 
-                  <div>
+                  <div className="flex-shrink-0">
                     <StudentInfoModal applicant_id={student.applicant_id} />
                   </div>
                 </div>
