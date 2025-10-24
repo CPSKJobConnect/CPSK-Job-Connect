@@ -8,12 +8,14 @@ import { filterJobs } from "@/lib/jobFilter";
 import { JobFilterInfo } from "@/types/filter";
 import { JobInfo } from "@/types/job";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { FaRegFileAlt } from "react-icons/fa";
 import { IoMdSearch } from "react-icons/io";
 import { MdTipsAndUpdates } from "react-icons/md";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Page() {
+  const { data: session } = useSession();
   const [jobData, setJobData] = useState<JobInfo[]>([]);
   const [filteredJob, setFilteredJob] = useState<JobInfo[]>([]);
   const [filterInfo, setFilterInfo] = useState<JobFilterInfo | null>(null);
@@ -22,11 +24,16 @@ export default function Page() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [jobToShow, setJobToShow] = useState<JobInfo[]>([]);
   const [filterApplied, setFilterApplied] = useState(false);
+  const selectedJob = selectedCardId !== null ? jobToShow[selectedCardId] : null;
 
   useEffect(() => {
   const fetchJobsAndFilters = async () => {
       try {
-        const resJobs = await fetch("/api/jobs");
+        // Include userId in the query to get saved status for bookmarked jobs
+        const userId = session?.user?.id;
+        const jobsUrl = userId ? `/api/jobs?userId=${userId}` : "/api/jobs";
+
+        const resJobs = await fetch(jobsUrl);
         const dataJobs = await resJobs.json();
         setJobData(dataJobs);
 
@@ -56,7 +63,7 @@ export default function Page() {
         }
       };
     }
-  }, []);
+  }, [session?.user?.id]); // Re-fetch when user logs in/out
 
   useEffect(() => {
     if (filteredJob.length > 0 || (filteredJob.length === 0 && filterApplied)) {
@@ -99,6 +106,7 @@ export default function Page() {
       <div className="sticky top-0 z-10">
         <JobFilterBar filter={filterInfo} onSearch={handleSearch} />
       </div>
+
       {jobToShow.length > 0 ? (
         <div className="flex flex-col md:flex-col lg:flex-row sm:flex-col gap-8 h-screen">
           <div className="overflow-y-auto">
@@ -113,12 +121,13 @@ export default function Page() {
           </div>
 
           <div className="hidden lg:flex flex-1 justify-center">
-            {selectedCardId !== null ? (
+            {selectedJob ? (
               <JobDescriptionCard
                 size="md"
                 onApply={true}
                 onEdit={false}
-                job={jobToShow.find((job, idx) => idx === selectedCardId)!}
+                job={selectedJob}
+                tags={selectedJob.skills}
               />
             ) : (
               <div className="flex flex-col items-center gap-4 py-44">

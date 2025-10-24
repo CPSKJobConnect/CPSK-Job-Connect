@@ -9,11 +9,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import LocationCombobox from "@/components/LocationCombobox";
 import { JobFilterInfo } from "@/types/filter";
 import { useEffect, useState } from "react";
 import { BiCategory } from "react-icons/bi";
-import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
 import { IoLocationOutline } from "react-icons/io5";
+import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
 import { LuFilter, LuTags } from "react-icons/lu";
 import { MdOutlineDateRange } from "react-icons/md";
 import { TbCurrencyBaht } from "react-icons/tb";
@@ -97,19 +98,11 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
 
             <div className="hidden sm:flex items-center h-10 border-l border-gray-200 pl-4 mr-4 min-w-[220px]">
                 <IoLocationOutline className="text-gray-400 mr-3" />
-                <Select value={filters.location} onValueChange={(val) => updateFilter("location", val)}>
-                    <SelectTrigger className="w-full pl-0 pr-3 py-1 rounded-md border-none shadow-none focus:ring-0 focus:outline-none text-sm">
-                        <SelectValue placeholder="Add country or city" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectLabel>Locations</SelectLabel>
-                            {filter?.locations?.map((location, idx) => (
-                                <SelectItem key={idx} value={location}>{location}</SelectItem>
-                            ))}
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
+                <LocationCombobox
+                    value={filters.location}
+                    showIcon={true}
+                    onChange={(val) => updateFilter("location", val)}
+                />
             </div>
 
             <button

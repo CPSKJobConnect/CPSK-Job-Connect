@@ -1,0 +1,31 @@
+html, body {
+  height: 100%; /* keep default sizing */
+  margin: 0;
+}
+
+/* NOTE
+   This file previously applied a gradient to the global <html> background
+   which made the whole app appear green. The navbar should only style the
+   header itself (see the header element in the navbar component). Remove any
+   global html/body background here to avoid coloring every page.
+*/
+
+body {
+  min-height: 100%;
+  background: transparent;
+  overscroll-behavior-y: contain;
+}
+
+#signin-btn {
+  background-color: white;
+  color: black;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  /* border-radius: 8px; */
+  border: #048971 0.25px solid;
+}
+
+#signin-btn:hover {
+  background-color: #dadada;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}

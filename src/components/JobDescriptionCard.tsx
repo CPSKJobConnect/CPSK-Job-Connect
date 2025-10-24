@@ -12,6 +12,10 @@ import { JobInfo } from "@/types/job";
 import { useState, useEffect } from "react";
 import { JobPostFormData } from "@/types/job";
 import EditJobCard from "./EditJobCard";
+import SkillCombobox from "./SkillCombobox";
+import CategoryCombobox from "./CategoryCombobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+
 
 
 interface JobDescriptionProps {
@@ -19,6 +23,7 @@ interface JobDescriptionProps {
   size: "sm" | "md";
   onApply: boolean;
   onEdit: boolean;
+  tags?: string[];
 }
 
 const typeColors: Record<string, string> = {
@@ -29,7 +34,9 @@ const typeColors: Record<string, string> = {
   hybrid: "bg-purple-200 text-gray-800"
 };
 
-const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) => {
+
+
+const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionProps) => {
   const router = useRouter();
   const [formData, setFormData] = useState<JobPostFormData>(() => ({
     title: job.title,
@@ -137,9 +144,14 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
       </div>
 
       <div className="flex flex-wrap gap-2 px-4 mt-2">
-        <span className={`px-2 py-1 rounded-md text-sm shadow-md ${typeColors[job.type] || "bg-white text-gray-800"}`}>
+        <span
+          className={`px-2 py-1 rounded-md text-sm shadow-md ${
+          typeColors[job.type] || "bg-white text-gray-800"
+          }`}
+        >
           {job.type}
         </span>
+
         {job.skills.map((tag, idx) => (
             <span
               key={tag ?? idx}
