@@ -114,7 +114,7 @@ export default function ManageUserPage() {
 
   const handleToggleUserStatus = async (userId: number, currentStatus: boolean) => {
     try {
-      const response = await fetch(`/api/admin/users/${userId}/toggle-status`, {
+      const response = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
