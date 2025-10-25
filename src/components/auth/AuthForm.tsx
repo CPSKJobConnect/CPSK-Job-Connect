@@ -33,10 +33,10 @@ export function AuthForm({ role, mode }: AuthFormProps) {
 
   const callbackUrl = searchParams.get("callbackUrl")
 
-  const schema = mode === "login" 
-    ? loginSchema 
-    : role === "student" 
-      ? studentRegisterSchema 
+  const schema = mode === "login"
+    ? loginSchema
+    : role === "student"
+      ? studentRegisterSchema
       : companyRegisterSchema
 
   const {
@@ -103,7 +103,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           formData.append("faculty", data.faculty!)
           formData.append("year", data.year!.toString())
           formData.append("phone", data.phone!)
-          
+
           if (selectedFile) {
             formData.append("transcript", selectedFile)
           }
@@ -113,18 +113,22 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           formData.append("website", data.website || "")
           formData.append("description", data.description!)
           formData.append("phone", data.phone!)
+
+          if (selectedFile) {
+            formData.append("evidence", selectedFile)
+          }
           // formData.append("year", data.year!.toString())
         }
 
 
-        
+
         const response = await fetch("/api/register", {
           method: "POST",
           body: formData,
         })
 
         const responseText = await response.text()
-        
+
         let result;
         try {
           result = JSON.parse(responseText)
@@ -162,9 +166,9 @@ export function AuthForm({ role, mode }: AuthFormProps) {
   const handleGoogleSignIn = useCallback(async () => {
     setIsLoading(true)
     try {
-      await signIn("google", { 
+      await signIn("google", {
         callbackUrl: roleConfig.redirectPath,
-        redirect: true 
+        redirect: true
       })
     } catch (error) {
       setError("Google sign-in failed")
@@ -190,7 +194,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           {mode === "login" ? "Sign in" : "Create Account"} as {roleConfig.title}
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent>
         {error && (
           <Alert className="mb-4" variant="destructive">
@@ -332,8 +336,8 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                         onChange={handleFileChange}
                         className="hidden"
                       />
-                      <Label 
-                        htmlFor="transcript" 
+                      <Label
+                        htmlFor="transcript"
                         className="flex items-center justify-center w-full h-10 px-3 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
                       >
                         <Upload className="w-4 h-4 mr-2" />
@@ -409,6 +413,29 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                     )}
                   </div>
 
+                  <div>
+                    <Label htmlFor="evidence">Company Evidence Document (Required)</Label>
+                    <div className="mt-1 flex items-center space-x-2 bg-gray-50">
+                      <Input
+                        id="evidence"
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <Label
+                        htmlFor="evidence"
+                        className="flex items-center justify-center w-full h-10 px-3 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {selectedFile ? selectedFile.name : "Choose evidence file"}
+                      </Label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Upload documents like business license, registration certificate, or other proof of company legitimacy
+                    </p>
+                  </div>
+
                   {/* <div>
                     <Label htmlFor="year">Founded Year</Label>
                     <Input
@@ -433,12 +460,12 @@ export function AuthForm({ role, mode }: AuthFormProps) {
             className={`w-full ${roleConfig.primaryColor} cursor-pointer`}
             disabled={isLoading}
           >
-            {isLoading 
-              ? awaitingSession 
-                ? "Authenticating..." 
-                : "Loading..." 
-              : mode === "login" 
-                ? "Sign In" 
+            {isLoading
+              ? awaitingSession
+                ? "Authenticating..."
+                : "Loading..."
+              : mode === "login"
+                ? "Sign In"
                 : "Create Account"}
           </Button>
 
