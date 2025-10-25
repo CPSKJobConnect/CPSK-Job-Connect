@@ -1,5 +1,5 @@
 "use client";
-import DocumentSelector from "@/app/student/job-apply/[id]/DocumentSelector";
+import DocumentSelector from "@/app/student/job-apply/DocumentSelector";
 import FileUpload from "@/components/FileUpload";
 import { FileMeta } from "@/types/file";
 import { IoMdClose } from "react-icons/io";

@@ -8,11 +8,13 @@ import { filterJobs } from "@/lib/jobFilter";
 import { JobFilterInfo } from "@/types/filter";
 import { JobInfo } from "@/types/job";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { FaRegFileAlt } from "react-icons/fa";
 import { IoMdSearch } from "react-icons/io";
 import { MdTipsAndUpdates } from "react-icons/md";
 
 export default function Page() {
+  const { data: session } = useSession();
   const [jobData, setJobData] = useState<JobInfo[]>([]);
   const [filteredJob, setFilteredJob] = useState<JobInfo[]>([]);
   const [filterInfo, setFilterInfo] = useState<JobFilterInfo | null>(null);
@@ -24,7 +26,11 @@ export default function Page() {
   useEffect(() => {
     const fetchJobsAndFilters = async () => {
       try {
-        const resJobs = await fetch("/api/jobs");
+        // Include userId in the query to get saved status for bookmarked jobs
+        const userId = session?.user?.id;
+        const jobsUrl = userId ? `/api/jobs?userId=${userId}` : "/api/jobs";
+
+        const resJobs = await fetch(jobsUrl);
         const dataJobs = await resJobs.json();
         setJobData(dataJobs);
 
@@ -37,7 +43,7 @@ export default function Page() {
     };
 
     fetchJobsAndFilters();
-  }, []);
+  }, [session?.user?.id]); // Re-fetch when user logs in/out
 
   useEffect(() => {
     if (filteredJob.length > 0 || (filteredJob.length === 0 && filterApplied)) {
@@ -66,9 +72,12 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col gap-6 px-10">
+    <div className="flex flex-col gap-6 px-10 mt-7">
       <div className="sticky top-0 z-10 mb-1">
-        <JobFilterBar filter={filterInfo} onSearch={handleSearch} />
+        <JobFilterBar
+          filter={filterInfo}
+          onSearch={handleSearch}
+        />
       </div>
 
       {jobToShow.length > 0 ? (

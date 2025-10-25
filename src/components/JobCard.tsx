@@ -8,17 +8,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatPostedDate } from "@/lib/dateHelper";
 import { JobInfo } from "@/types/job";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { FaRegStar, FaStar } from "react-icons/fa";
 import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineLink, MdOutlinePeopleAlt, MdOutlineReportProblem, MdOutlineShare, MdOutlineTimer } from "react-icons/md";
 import { Button } from "./ui/button";
-import { useState } from "react";
-import { useSession } from "next-auth/react";
 
 interface JobCardProps {
   info: JobInfo;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
 }
 
 const typeColors: Record<string, string> = {
@@ -34,17 +34,67 @@ const JobCard = (job: JobCardProps) => {
   const { data: session } = useSession();
   const [isSaved, setIsSaved] = useState(job.info.isSaved || false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
   const isClosed = job.info.status === "expire";
+
+  // Check if job is bookmarked when component mounts
+  // This ensures the star icon reflects the current saved status
+  useEffect(() => {
+    const checkIfSaved = async () => {
+      // Only check if user is logged in
+      if (!session?.user?.id) {
+        setIsSaved(false);
+        return;
+      }
+
+      // If isSaved prop is already provided, use it
+      // This avoids unnecessary API calls when data comes from server
+      if (job.info.isSaved !== undefined) {
+        setIsSaved(job.info.isSaved);
+        return;
+      }
+
+      // Fetch the saved status from API
+      setIsCheckingStatus(true);
+      try {
+        const response = await fetch(
+          `/api/students/saved-jobs?jobId=${job.info.id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setIsSaved(data.isSaved);
+        }
+      } catch (error) {
+        console.error("Error checking saved status:", error);
+        // On error, assume not saved
+        setIsSaved(false);
+      } finally {
+        setIsCheckingStatus(false);
+      }
+    };
+
+    checkIfSaved();
+  }, [session?.user?.id, job.info.id, job.info.isSaved]);
   const baseStyle =
-    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-100/60" : "bg-white"} p-4 flex flex-col gap-2 hover:bg-[#F3FEFA] transition mb-5`;
+    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-200/70 cursor-not-allowed" : "bg-white hover:bg-[#F3FEFA]"} p-4 flex flex-col gap-2 transition mb-5 transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg`;
 
     const sizeStyle = {
       sm: "w-full sm:w-[400px] min-h-[140px]",
-      md: "w-full sm:w-[400px] min-h-[250px] md:w-[550px]"
+      md: "w-full sm:w-[400px] min-h-[250px] md:w-[550px]",
+      lg: "w-full md:w-full min-h-[250px]",
     }[job.size || "md"];
 
   const handleSaveToggle = async () => {
+    // Check if user is logged in
+    // Session is managed by NextAuth - if no session, user needs to login
     if (!session?.user?.id) {
       alert("Please login to save jobs");
       return;
@@ -52,19 +102,26 @@ const JobCard = (job: JobCardProps) => {
 
     setIsLoading(true);
     try {
+      // Use DELETE to unsave, POST to save
       const method = isSaved ? "DELETE" : "POST";
-      const response = await fetch("/api/jobs/saved", {
+
+      // NEW ENDPOINT: /api/students/saved-jobs (secure, middleware-protected)
+      // OLD ENDPOINT was: /api/jobs/saved (insecure, public)
+      const response = await fetch("/api/students/saved-jobs", {
         method,
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: session.user.id,
+          // SECURITY IMPROVEMENT: We only send jobId now
+          // The userId is extracted from the session on the server
+          // This prevents users from impersonating others
           jobId: job.info.id,
         }),
       });
 
       if (response.ok) {
+        // Toggle the local state for immediate UI feedback
         setIsSaved(!isSaved);
       } else {
         const error = await response.json();
@@ -80,7 +137,13 @@ const JobCard = (job: JobCardProps) => {
   };
 
   return (
-    <div className={`${baseStyle} ${sizeStyle}`}>
+    <div
+      className={`${baseStyle} ${sizeStyle}`}
+      onClick={(e) => {
+        if (isClosed) e.stopPropagation();
+      }}
+      aria-disabled={isClosed}
+    >
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
           <Image
@@ -96,22 +159,37 @@ const JobCard = (job: JobCardProps) => {
           </div>
         </div>
         <div className="flex gap-3 p-2">
-          {/* bookmark star */}
           <button
-            onClick={handleSaveToggle}
-            disabled={isLoading}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSaveToggle();
+            }}
+            disabled={isLoading || isCheckingStatus}
             className="transition-colors disabled:opacity-50"
             aria-label={isSaved ? "Unsave job" : "Save job"}
+            type="button"
           >
-            {isSaved ? (
+            {isCheckingStatus ? (
+              // Show outline star while checking status
+              <FaRegStar className="w-5 h-5 text-gray-400 animate-pulse" />
+            ) : isSaved ? (
+              // Show filled yellow star if saved
               <FaStar className="w-5 h-5 text-yellow-500 hover:text-yellow-600" />
             ) : (
+              // Show outline star if not saved
               <FaRegStar className="w-5 h-5 hover:text-yellow-500" />
             )}
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <MdOutlineShare className="w-5 h-5" />
+              <button
+                onClick={(e) => e.stopPropagation()}
+                aria-label="Share job"
+                type="button"
+                className="p-0"
+              >
+                <MdOutlineShare className="w-5 h-5" />
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="start">
                 <DropdownMenuItem>
