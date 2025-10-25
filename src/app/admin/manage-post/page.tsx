@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -41,7 +42,8 @@ import {
   Users,
   CheckCircle,
   XCircle,
-  Briefcase
+  Briefcase,
+  AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -91,8 +93,10 @@ export default function ManagePostPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [reportedFilter, setReportedFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<Pagination | null>(null);
+  const searchParams = useSearchParams();
 
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -120,9 +124,15 @@ export default function ManagePostPage() {
   const [qualificationText, setQualificationText] = useState("");
 
   useEffect(() => {
+    // Check if we came from dashboard with reported filter
+    const filterParam = searchParams.get('filter');
+    if (filterParam === 'reported') {
+      setReportedFilter(true);
+    }
+
     fetchJobPosts();
     fetchReferenceData();
-  }, [currentPage, searchTerm, statusFilter]);
+  }, [currentPage, searchTerm, statusFilter, reportedFilter, searchParams]);
 
   const fetchJobPosts = async () => {
     try {
@@ -130,7 +140,8 @@ export default function ManagePostPage() {
         page: currentPage.toString(),
         limit: "10",
         ...(searchTerm && { search: searchTerm }),
-        ...(statusFilter && { status: statusFilter })
+        ...(statusFilter && { status: statusFilter }),
+        ...(reportedFilter && { reported: "true" })
       });
 
       const response = await fetch(`/api/admin/job-posts?${params}`);
@@ -393,6 +404,19 @@ export default function ManagePostPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="reported-filter" className="flex items-center gap-2 cursor-pointer">
+                <AlertTriangle className="w-4 h-4 text-orange-500" />
+                Reported Posts Only
+              </Label>
+              <input
+                id="reported-filter"
+                type="checkbox"
+                checked={reportedFilter}
+                onChange={(e) => setReportedFilter(e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -418,8 +442,8 @@ export default function ManagePostPage() {
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-xl font-semibold">{jobPost.jobName}</h3>
                       <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${jobPost.isPublished
-                          ? "border-transparent bg-primary text-primary-foreground"
-                          : "border-transparent bg-secondary text-secondary-foreground"
+                        ? "border-transparent bg-primary text-primary-foreground"
+                        : "border-transparent bg-secondary text-secondary-foreground"
                         }`}>
                         {jobPost.isPublished ? "Published" : "Draft"}
                       </div>
