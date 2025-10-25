@@ -26,6 +26,7 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
+    const reported = searchParams.get("reported") || "";
 
     const skip = (page - 1) * limit;
 
@@ -41,6 +42,16 @@ export async function GET(request: Request) {
 
     if (status) {
       whereClause.is_Published = status === "published";
+    }
+
+    if (reported === "true") {
+      // Filter for job posts that have reports
+      whereClause.id = {
+        in: await prisma.report.findMany({
+          select: { post_id: true },
+          distinct: ['post_id']
+        }).then(reports => reports.map(r => r.post_id))
+      };
     }
 
     const [jobPosts, totalCount] = await Promise.all([
