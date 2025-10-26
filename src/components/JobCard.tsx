@@ -146,13 +146,19 @@ const JobCard = (job: JobCardProps) => {
     >
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
-          <Image
-            src={job.info.companyLogo}
-            alt="companyLogo"
-            width={60}
-            height={60}
-            className="h-auto bg-white translate-y-1 shadow-md rounded-md"
-          />
+          {job.info.companyLogo ? (
+            <Image
+              src={job.info.companyLogo}
+              alt="companyLogo"
+              width={60}
+              height={60}
+              className="h-auto bg-white translate-y-1 shadow-md rounded-md"
+            />
+          ) : (
+            <div className="w-[60px] h-[60px] bg-gray-200 translate-y-1 shadow-md rounded-md flex items-center justify-center">
+              <span className="text-gray-500 text-xs">No Logo</span>
+            </div>
+          )}
           <div className="p-2">
             <p className="font-bold text-md">{job.info.title}</p>
             <p className="text-gray-600">{job.info.companyName}</p>
