@@ -7,43 +7,102 @@ import { MdTipsAndUpdates } from "react-icons/md";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { mockJobInCompany } from "public/data/mockJobInCompany";
-import { JobInfo } from "@/types/job";
+import { JobWithApplications } from "@/types/job";
 import ApplicationList from "./ApplicationList";
-import { fakeJobData } from "public/data/fakeJobDescription";
-import { mockApplicantList } from "public/data/mockApplicantList";
 
 export default function Page() {
   const router = useRouter();
   const { data: session } = useSession();
-  const [jobPost, setJobPost] = useState<JobInfo[]>([]);
+
+  // State for API data - using JobWithApplications directly (no transformation needed!)
+  const [jobs, setJobs] = useState<JobWithApplications[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // State for selected job
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
 
+  // Fetch data from API
   useEffect(() => {
-    if (!session?.user?.id) return;
+    const fetchApplications = async () => {
+      // Wait for session to be loaded
+      if (!session?.user?.email) {
+        setLoading(false);
+        return;
+      }
 
-    const jobLinks = mockJobInCompany.filter(
-      (j) => j.company_id === session.user.id
-    );
+      try {
+        setLoading(true);
+        setError(null);
 
-    const jobs = jobLinks
-      .map((link) => fakeJobData.find((job) => job.id === link.post_id))
-      .filter((j): j is JobInfo => j !== undefined);
+        // Call our API
+        const response = await fetch('/api/company/applications');
 
-    setJobPost(jobs);
-  }, [session?.user?.id]);
+        // Check if response is OK
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
+        // Parse JSON
+        const result = await response.json();
+
+        // Check if API returned success
+        if (result.success) {
+          setJobs(result.data);  // Use API data directly - no transformation!
+          console.log('✅ Fetched jobs:', result.data);
+        } else {
+          throw new Error(result.error || 'Failed to fetch applications');
+        }
+      } catch (err) {
+        console.error('❌ Error fetching applications:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch applications');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, [session?.user?.email]);
+
+  // Get selected job and its applications
   const selectedJob = selectedCardId !== null
-    ? jobPost.find(job => job.id === selectedCardId.toString())
+    ? jobs.find(job => job.id === selectedCardId)
     : null;
-
-  const applicants =
-    selectedJob != null
-      ? mockApplicantList.find((a) => a.job_id === selectedJob.id)
-      : null;
 
   const handlePostJob = () => {
     router.push(`/company/job-posting`);
+  };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="p-5 flex items-center justify-center h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FD873E]"></div>
+          <p className="text-gray-500">Loading applications...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="p-5 flex items-center justify-center h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <div className="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center">
+            <FaRegFileAlt className="text-2xl text-red-500" />
+          </div>
+          <p className="text-red-500 font-semibold">Error: {error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-[#FD873E] text-white rounded-md hover:bg-[#ff985a]"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -57,9 +116,12 @@ export default function Page() {
             </p>
           </div>
           <div className="flex justify-end p-2">
-            <div className="flex flex-row bg-[#FD873E] rounded-md shadow-md gap-1 p-2">
+            <div
+              className="flex flex-row bg-[#FD873E] rounded-md shadow-md gap-1 p-2 cursor-pointer hover:bg-[#ff985a] transition-colors"
+              onClick={handlePostJob}
+            >
               <IoMdAdd className="text-white w-5 h-5 mt-1"/>
-              <p className="text-white font-semibold text-md" onClick={handlePostJob}>
+              <p className="text-white font-semibold text-md">
                 Post New Job
               </p>
             </div>
@@ -68,7 +130,10 @@ export default function Page() {
 
         <div className="flex md:flex-row sm:flex-col gap-8">
           <div className="basis-1/5">
-            <AllJobPost info={jobPost} onSelectCard={(id) => setSelectedCardId(id)} />
+            <AllJobPost
+              info={jobs}
+              onSelectCard={(id) => setSelectedCardId(id)}
+            />
           </div>
 
           <div className="basis-4/5">
@@ -100,8 +165,8 @@ export default function Page() {
 
               {selectedJob && (
                 <ApplicationList
-                  job_id={Number(selectedJob.id)}
-                  applicants={applicants?.applicants || []}
+                  job_id={selectedJob.id}
+                  applicants={selectedJob.applications}
                 />
               )}
             </div>

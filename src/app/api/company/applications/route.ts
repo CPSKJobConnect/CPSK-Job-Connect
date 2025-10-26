@@ -136,6 +136,23 @@ export async function GET(request: NextRequest) {
       categories: job.categories,
       tags: job.tags,
       totalApplications: job._count.applications,
+      // Add description object for frontend compatibility
+      description: {
+        overview: job.aboutRole,
+        responsibility: "", // Empty for now, can add to DB later if needed
+        requirement: job.requirements.join(", "),
+        qualification: job.qualifications.join(", "),
+      },
+      // Add company info from session (handle empty strings too)
+      companyLogo: (session.user?.logoUrl && session.user.logoUrl.trim()) || "/images/default-logo.png",
+      companyBg: (session.user?.backgroundUrl && session.user.backgroundUrl.trim()) || "/images/default-bg.jpg",
+      companyName: account.company?.name || "Unknown Company",
+      // Add other fields frontend expects
+      posted: job.created_at.toISOString(),
+      applied: job._count.applications,
+      skills: job.tags.map((tag) => tag.name),
+      category: job.categories[0]?.name || "",
+      status: job.is_Published ? "active" : "draft",
       // Transform applications to frontend format
       applications: job.applications.map((app) => ({
         id: app.id,
