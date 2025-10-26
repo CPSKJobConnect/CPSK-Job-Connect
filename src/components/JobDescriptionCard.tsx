@@ -9,12 +9,9 @@ import { LiaMoneyCheckAltSolid } from "react-icons/lia";
 import { RiDeleteBinFill } from "react-icons/ri";
 import { HiOutlineOfficeBuilding } from "react-icons/hi";
 import { JobInfo } from "@/types/job";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { JobPostFormData } from "@/types/job";
 import EditJobCard from "./EditJobCard";
-import SkillCombobox from "./SkillCombobox";
-import CategoryCombobox from "./CategoryCombobox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 
 

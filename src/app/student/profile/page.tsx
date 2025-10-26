@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Student } from "@/types/user";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { IoCallOutline, IoCameraOutline, IoIdCardOutline, IoMailOutline, IoPersonCircleOutline, IoSchoolOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -17,6 +18,8 @@ export default function StudentProfilePage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: session, update: updateSession } = useSession();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
 
   const fetchStudentProfile = async () => {
     try {
@@ -193,7 +196,7 @@ export default function StudentProfilePage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="profile" className="w-full">
+      <Tabs value={tabParam || "profile"} className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>

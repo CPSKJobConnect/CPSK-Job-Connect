@@ -4,7 +4,8 @@ import { FiEdit } from "react-icons/fi";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { JobPostFormData, JobInfo } from "@/types/job";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import JobDescriptionCard from "./JobDescriptionCard";
 import SkillCombobox from "./SkillCombobox";
 import { mockCategory, mockJobType, mockJobArrangement } from "public/data/fakeFilterInfo";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -30,6 +31,7 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
   const [categoryList, setCategoryList] = useState<string[]>([]);
   const [jobTypeList, setJobTypeList] = useState<string[]>([]);
   const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
+  const [preview, SetPreview] = useState<boolean>(false);
 
   useEffect(() => {
     const initial = [...new Set(mockCompanies[0].address)];
@@ -59,6 +61,33 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
     setOpen(false);
   }
 
+  const previewJob = useMemo<JobInfo>(() => ({
+      title: formData.title,
+      companyName: "Your Company",
+      companyLogo: "/assets/images/companyLogo.png",
+      companyBg: "/assets/images/companyBg.jpg",
+      category: formData.category,
+      location: formData.location,
+      arrangement: formData.arrangement,
+      salary: {
+        min: formData.salary.min,
+        max: formData.salary.max,
+      },
+      applied: 0,
+      type: formData.type,
+      skills: formData.skills,
+      description: {
+        overview: formData.description.overview,
+        responsibility: formData.description.responsibility,
+        requirement: formData.description.requirement,
+        qualification: formData.description.qualification,
+      },
+      id: "",
+      posted: "",
+      deadline: formData.deadline || "",
+      status: "",
+    }), [formData]);
+
   return (
     <Dialog>
         <DialogTrigger asChild>
@@ -68,196 +97,206 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
                     <p>Edit</p>
                 </div>
             </Button>
-        </DialogTrigger>
-        {open && (
-        <DialogContent className="md:min-w-[700px] sm:min-w-[400px] max-h-[80vh] overflow-hidden overflow-y-auto">
-            <DialogHeader>
-                <DialogTitle>Edit Job Post - {job.title}</DialogTitle>
-            </DialogHeader>
-
-            <div className="px-4 pb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex flex-col">
-                  <label className="text-sm text-gray-700 mb-1">Location</label>
-                  <Select
-                    value={formData.location} 
-                    onValueChange={(value) => setFormData({ ...formData, location: value })}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select location" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {locationList.map((loc) => (
-                        <SelectItem key={loc} value={loc}>
-                          {loc}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col">
-                  <label className="text-sm text-gray-700 mb-1">Arrangement</label>
-                  <Select
-                    value={formData.arrangement} 
-                    onValueChange={(value) => setFormData({ ...formData, arrangement: value })}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select arrangement" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {jobArrangementList.map((arr) => (
-                        <SelectItem key={arr} value={arr}>
-                          {arr}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col">
-                  <label className="text-sm text-gray-700 mb-1">Job Type</label>
-                  <Select
-                    value={formData.type} 
-                    onValueChange={(value) => setFormData({ ...formData, type: value })}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select job type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {jobTypeList.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col">
-                  <label className="text-sm text-gray-700 mb-1">Salary (min)</label>
-                  <Input
-                    className="w-full"
-                    value={formData.salary.min}
-                    onChange={(e) => setFormData({ ...formData, 
-                        salary: {
-                            ...formData.salary,
-                            min: Number(e.target.value)
-                        }
-                    })}
-                    placeholder={String(job.salary.min)}
-                  />
-                </div>
-
-                <div className="flex flex-col">
-                    <label className="text-sm text-gray-700 mb-1">Salary (max)</label>
-                    <Input
-                        className="w-full"
-                        value={formData.salary.max}
-                        onChange={(e) => setFormData({ ...formData, 
-                            salary: {
-                                ...formData.salary,
-                                max: Number(e.target.value)
-                            }
-                        })}
-                        placeholder={String(job.salary.max)}
-                    />
-                </div>
-
-                <div className="flex flex-col md:col-span-2">
-                    <label className="text-sm text-gray-700 mb-1">Skills</label>
-                    <SkillCombobox
-                        selectedSkill={formData.skills}
-                        setSelectedSkill={(skills) => setFormData({ ...formData, skills })}
-                    />
-                </div>
-
-                <div className="flex flex-col md:col-span-2">
-                    <label className="text-sm text-gray-700 mb-1">Category</label>
-                    <Select
-                        value={formData.category} 
-                        onValueChange={(value) => setFormData({ ...formData, category: value })}
-                    >
-                        <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        {categoryList.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                            {cat}
-                            </SelectItem>
-                        ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                
-                <div className="flex flex-col md:col-span-2">
-                  <label className="text-sm text-gray-700 mb-1">Overview</label>
-                    <Input
-                    value={formData.description.overview}
-                    onChange={(e) => setFormData({ ...formData, 
-                        description: {
-                            ...formData.description,
-                            overview: e.target.value
-                        }
-                    })}
-                    placeholder={job.description.overview}
-                    />
-                </div>
-
-                <div className="flex flex-col md:col-span-2">
-                  <label className="text-sm text-gray-700 mb-1">Responsibility</label>
-                    <Input
-                    value={formData.description.responsibility}
-                    onChange={(e) => setFormData({ ...formData, 
-                        description: {
-                            ...formData.description,
-                            responsibility: e.target.value
-                        }
-                    })}
-                    placeholder={job.description.responsibility}
-                    />
-                </div>
-                
-                <div className="flex flex-col md:col-span-2">
-                  <label className="text-sm text-gray-700 mb-1">Requirement</label>
-                    <Input
-                    value={formData.description.requirement}
-                    onChange={(e) => setFormData({ ...formData, 
-                        description: {
-                            ...formData.description,
-                            requirement: e.target.value
-                        }
-                    })}
-                    placeholder={job.description.requirement}
-                    />
-                </div>
-
-                <div className="flex flex-col md:col-span-2">
-                  <label className="text-sm text-gray-700 mb-1">Qualification</label>
-                    <Input
-                    value={formData.description.qualification}
-                    onChange={(e) => setFormData({ ...formData, 
-                        description: {
-                            ...formData.description,
-                            qualification: e.target.value
-                        }
-                    })}
-                    placeholder={job.description.qualification}
-                    />
-                </div>
+      </DialogTrigger>
+      {open && (
+        preview ? (
+          <div>
+              <p className="font-semibold">Preview</p>
+              <div className="mt-4">
+                  <JobDescriptionCard size="md" job={previewJob} onApply={false} onEdit={false} />
               </div>
             </div>
+        ) : (
+      <DialogContent className="md:min-w-[700px] sm:min-w-[400px] max-h-[80vh] overflow-hidden overflow-y-auto">
+          <DialogHeader>
+              <DialogTitle>Edit Job Post - {job.title}</DialogTitle>
+          </DialogHeader>
 
-            <div className="px-4 pb-6 flex justify-end gap-3">
-              <Button onClick={handleCancel} variant="ghost" className="h-10">
-                Cancel
-              </Button>
-              <Button onClick={handleEdit} className="h-10 bg-[#2BA17C] hover:bg-[#27946F]">
-                Save
-              </Button>
+          <div className="px-4 pb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col">
+                <label className="text-sm text-gray-700 mb-1">Location</label>
+                <Select
+                  value={formData.location} 
+                  onValueChange={(value) => setFormData({ ...formData, location: value })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locationList.map((loc) => (
+                      <SelectItem key={loc} value={loc}>
+                        {loc}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-sm text-gray-700 mb-1">Arrangement</label>
+                <Select
+                  value={formData.arrangement} 
+                  onValueChange={(value) => setFormData({ ...formData, arrangement: value })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select arrangement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {jobArrangementList.map((arr) => (
+                      <SelectItem key={arr} value={arr}>
+                        {arr}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-sm text-gray-700 mb-1">Job Type</label>
+                <Select
+                  value={formData.type} 
+                  onValueChange={(value) => setFormData({ ...formData, type: value })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select job type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {jobTypeList.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-sm text-gray-700 mb-1">Salary (min)</label>
+                <Input
+                  className="w-full"
+                  value={formData.salary.min}
+                  onChange={(e) => setFormData({ ...formData, 
+                      salary: {
+                          ...formData.salary,
+                          min: Number(e.target.value)
+                      }
+                  })}
+                  placeholder={String(job.salary.min)}
+                />
+              </div>
+
+              <div className="flex flex-col">
+                  <label className="text-sm text-gray-700 mb-1">Salary (max)</label>
+                  <Input
+                      className="w-full"
+                      value={formData.salary.max}
+                      onChange={(e) => setFormData({ ...formData, 
+                          salary: {
+                              ...formData.salary,
+                              max: Number(e.target.value)
+                          }
+                      })}
+                      placeholder={String(job.salary.max)}
+                  />
+              </div>
+
+              <div className="flex flex-col md:col-span-2">
+                  <label className="text-sm text-gray-700 mb-1">Skills</label>
+                  <SkillCombobox
+                      selectedSkill={formData.skills}
+                      setSelectedSkill={(skills) => setFormData({ ...formData, skills })}
+                  />
+              </div>
+
+              <div className="flex flex-col md:col-span-2">
+                  <label className="text-sm text-gray-700 mb-1">Category</label>
+                  <Select
+                      value={formData.category} 
+                      onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  >
+                      <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                      {categoryList.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                          {cat}
+                          </SelectItem>
+                      ))}
+                      </SelectContent>
+                  </Select>
+              </div>
+              
+              <div className="flex flex-col md:col-span-2">
+                <label className="text-sm text-gray-700 mb-1">Overview</label>
+                  <Input
+                  value={formData.description.overview}
+                  onChange={(e) => setFormData({ ...formData, 
+                      description: {
+                          ...formData.description,
+                          overview: e.target.value
+                      }
+                  })}
+                  placeholder={job.description.overview}
+                  />
+              </div>
+
+              <div className="flex flex-col md:col-span-2">
+                <label className="text-sm text-gray-700 mb-1">Responsibility</label>
+                  <Input
+                  value={formData.description.responsibility}
+                  onChange={(e) => setFormData({ ...formData, 
+                      description: {
+                          ...formData.description,
+                          responsibility: e.target.value
+                      }
+                  })}
+                  placeholder={job.description.responsibility}
+                  />
+              </div>
+              
+              <div className="flex flex-col md:col-span-2">
+                <label className="text-sm text-gray-700 mb-1">Requirement</label>
+                  <Input
+                  value={formData.description.requirement}
+                  onChange={(e) => setFormData({ ...formData, 
+                      description: {
+                          ...formData.description,
+                          requirement: e.target.value
+                      }
+                  })}
+                  placeholder={job.description.requirement}
+                  />
+              </div>
+
+              <div className="flex flex-col md:col-span-2">
+                <label className="text-sm text-gray-700 mb-1">Qualification</label>
+                  <Input
+                  value={formData.description.qualification}
+                  onChange={(e) => setFormData({ ...formData, 
+                      description: {
+                          ...formData.description,
+                          qualification: e.target.value
+                      }
+                  })}
+                  placeholder={job.description.qualification}
+                  />
+              </div>
             </div>
-        </DialogContent>)}
+          </div>
+
+          <div className="px-4 pb-6 flex justify-end gap-3">
+            <Button onClick={handleCancel} variant="ghost" className="h-10">
+              Cancel
+            </Button>
+            <Button onClick={handleEdit} className="h-10 bg-[#2BA17C] hover:bg-[#27946F]">
+              Save
+            </Button>
+          </div>
+      </DialogContent>
+        )
+      )}
     </Dialog>
   );
 }
