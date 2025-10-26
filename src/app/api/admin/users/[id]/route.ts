@@ -14,13 +14,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin
-    const adminAccount = await prisma.account.findUnique({
-      where: { email: session.user.email },
-      include: { accountRole: true }
-    });
+    // Check if user is admin (using session role)
+    const userRole = (session.user as any).role?.toLowerCase();
+    console.log("🔍 User role:", userRole);
 
-    if (!adminAccount || adminAccount.accountRole?.name !== "Admin") {
+    if (userRole !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -28,7 +26,7 @@ export async function PATCH(
     const { isActive } = await request.json();
 
     // Prevent admin from deactivating themselves
-    if (userId === adminAccount.id) {
+    if (userId === userRole.id) {
       return NextResponse.json({ error: "Cannot modify your own account" }, { status: 400 });
     }
 
@@ -102,20 +100,18 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin
-    const adminAccount = await prisma.account.findUnique({
-      where: { email: session.user.email },
-      include: { accountRole: true }
-    });
+    // Check if user is admin (using session role)
+    const userRole = (session.user as any).role?.toLowerCase();
+    console.log("🔍 User role:", userRole);
 
-    if (!adminAccount || adminAccount.accountRole?.name !== "Admin") {
+    if (userRole !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const userId = parseInt(params.id);
 
     // Prevent admin from deleting themselves
-    if (userId === adminAccount.id) {
+    if (userId === userRole.id) {
       return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
     }
 
