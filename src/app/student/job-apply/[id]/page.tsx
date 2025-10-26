@@ -11,6 +11,18 @@ import DocumentUploadSection from "../DocumentUploadSection";
 import StudentInfoCard from "../StudentInfoCard";
 import { Button } from "@/components/ui/button";
 import { Student } from "@/types/user";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { toast } from "@/lib/toastTemplate";
 
 
 const typeColors: Record<string, string> = {
@@ -94,16 +106,16 @@ export default function Page() {
   }, [student, job]);
     const handleSubmit = async () => {
     if (!uploadedResume && !selectedResume) {
-      alert("Please select or upload your Resume before submitting.");
+      toast.error("Resume Missing", "Please select or upload your Resume before submitting.");
       return;
     }
     if (!uploadedPortfolio && !selectedPortfolio) {
-      alert("Please select or upload your Portfolio before submitting.");
+      toast.error("Portfolio Missing", "Please select or upload your Portfolio before submitting.");
       return;
     }
 
     if (!student || !job) {
-      alert("Student or Job data is missing.");
+      toast.error("Data Missing", "Student or Job data is missing.");
       return;
     }
 
@@ -133,15 +145,13 @@ export default function Page() {
 
       if (!res.ok) {
         console.error(data);
-        alert("Failed to submit application.");
+        toast.error("Failed to submit application.", "Please try again later.");
         return;
       }
-
-      alert("Application submitted successfully!");
-      console.log("Application response:", data);
+      toast.success("Application submitted!", "Your job application has been sent successfully.");
+      router.push("/student/profile?tab=applications");
     } catch (err) {
-      console.error(err);
-      alert("Error submitting application.");
+      toast.error("An error occurred while submitting your application.", "Please try again later.");
     }
   };
 
@@ -217,8 +227,8 @@ export default function Page() {
                 <IoDocumentTextOutline  className="w-7 h-7" />
                 <p className="text-lg font-semibold text-gray-800">Documents</p>
             </div>
-            <div className="flex flex-col md:flex-row px-4 md:px-10 py-3 gap-6">
-              <div className="w-full">
+            <div className="flex flex-col md:flex-row gap-6 px-2 md:px-6 py-3">
+              <div className="w-full md:w-1/2 min-w-0">
                 <DocumentUploadSection
                   title="Resume"
                   description="Upload your most recent resume or select from previously uploaded files"
@@ -230,7 +240,7 @@ export default function Page() {
                 />
               </div>
 
-              <div className="w-full">
+              <div className="w-full md:w-1/2 min-w-0">
                 <DocumentUploadSection
                   title="Portfolio"
                   description="Upload your portfolio or select from previously uploaded files"
@@ -245,9 +255,72 @@ export default function Page() {
           </div>
         </div>
         <div className="px-4 md:px-10 py-5 flex justify-center md:justify-start">
-          <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white font-md px-8 py-3 w-full md:w-auto" onClick={handleSubmit} disabled={alreadyApplied}>
-            {alreadyApplied ? "Already Applied" : "Submit"}
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white font-md px-8 py-3 w-full md:w-auto" disabled={alreadyApplied}>
+                {alreadyApplied ? "Already Applied" : "Submit"}
+              </Button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Your Application</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You are about to submit your application. Please preview the form and verify that all information is accurate before proceeding.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div className="max-h-[60vh] overflow-y-auto px-4 py-2">
+                <section className="mb-4 shadow-md border border-gray-100 rounded-md p-4">
+                  <h3 className="text-sm font-semibold text-gray-700">Job</h3>
+                  <div className="mt-2 text-sm text-gray-600">
+                    <p className="font-medium">{job.title} — {job.companyName}</p>
+                    <p className="text-xs">{job.location} • {job.type} • {job.arrangement}</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {job.skills?.map((s, i) => (
+                        <span key={s ?? i} className="text-xs bg-white px-2 py-1 rounded-md shadow-sm">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+                
+                <section className="shadow-md border border-gray-100 rounded-md p-4">
+                  <section className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-700">Student Info</h3>
+                    <div className="mt-2 text-sm text-gray-600">
+                      <p className="font-medium">{student.firstname} {student.lastname}</p>
+                      <p className="text-xs">Email: {student.email}</p>
+                      <p className="text-xs">Phone: {student.phone}</p>
+                      <p className="text-xs">Faculty: {student.faculty}</p>
+                    </div>
+                  </section>
+
+                  <section className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-700">Documents</h3>
+                    <div className="mt-2 text-sm text-gray-600 space-y-1">
+                      <div>
+                        <p className="text-xs font-medium">Resume</p>
+                        <p className="text-xs">{uploadedResume ? uploadedResume.name : selectedResume ? selectedResume.name || `File #${selectedResume.id}` : "(none)"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium">Portfolio</p>
+                        <p className="text-xs">{uploadedPortfolio ? uploadedPortfolio.name : selectedPortfolio ? selectedPortfolio.name || `File #${selectedPortfolio.id}` : "(none)"}</p>
+                      </div>
+                    </div>
+                  </section>
+                </section>
+              </div>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction asChild>
+                  <Button onClick={handleSubmit} className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white px-6 py-2">
+                    Apply
+                  </Button>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </>
     );
