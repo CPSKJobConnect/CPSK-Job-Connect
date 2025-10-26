@@ -60,17 +60,13 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
     router.push(`/student/job-apply/${job.id}`);
   };
 
-  const handleSave = () => {
-    
-  };
-
   const handleEdit = () => {
     console.log(formData);
     alert("Job post updated (mock)");
   };
 
   const handleDelete = () => {
-    
+    console.log('delete')
   };
 
   return (
@@ -189,10 +185,6 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
             <Button onClick={handleApply}
               className="lg:w-40 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition">
               Quick Apply
-            </Button>
-            <Button onClick={handleSave}
-            className="h-10 bg-[#67C3A6] shadow-lg hover:bg-[#27946F] transition">
-            Save
             </Button>
           </>
         )}

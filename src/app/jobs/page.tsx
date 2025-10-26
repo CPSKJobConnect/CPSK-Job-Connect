@@ -25,9 +25,20 @@ export default function Page() {
   const [jobToShow, setJobToShow] = useState<JobInfo[]>([]);
   const [filterApplied, setFilterApplied] = useState(false);
   const selectedJob = selectedCardId !== null ? jobToShow[selectedCardId] : null;
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
-  const fetchJobsAndFilters = async () => {
+    const fetchUserRole = async () => {
+      try {
+        const res = await fetch("/api/auth/session");
+        const data = await res.json();
+        setRole(data.user?.role || null);
+      } catch (err) {
+        console.error("Error fetching user role:", err);
+      }
+    };
+    
+    const fetchJobsAndFilters = async () => {
       try {
         // Include userId in the query to get saved status for bookmarked jobs
         const userId = session?.user?.id;
@@ -45,7 +56,9 @@ export default function Page() {
       }
     };
 
+    fetchUserRole();
     fetchJobsAndFilters();
+
     if (typeof window !== "undefined") {
       const m = window.matchMedia("(max-width: 1024px)");
       const handler = (e: MediaQueryListEvent | MediaQueryList) => setIsSmallScreen((e as any).matches);
@@ -122,13 +135,21 @@ export default function Page() {
 
           <div className="hidden lg:flex flex-1 justify-center">
             {selectedJob ? (
-              <JobDescriptionCard
-                size="md"
-                onApply={true}
-                onEdit={false}
-                job={selectedJob}
-                tags={selectedJob.skills}
-              />
+              role === 'company' ? (
+                <JobDescriptionCard
+                  size="md"
+                  onApply={false}
+                  onEdit={false}
+                  job={selectedJob}
+                />
+              ): (
+                <JobDescriptionCard
+                  size="md"
+                  onApply={true}
+                  onEdit={false}
+                  job={selectedJob}
+                />
+              )
             ) : (
               <div className="flex flex-col items-center gap-4 py-44">
                 <div className="bg-[#ABE9D6] rounded-full w-[60px] h-[60px] flex items-center justify-center">
@@ -156,13 +177,22 @@ export default function Page() {
                 <DialogTitle>{selectedCardId !== null ? jobToShow[selectedCardId].title : ""}</DialogTitle>
               </DialogHeader>
               <div className="max-h-[70vh] overflow-y-auto">
-                {selectedCardId !== null && (
-                  <JobDescriptionCard
-                    size="md"
-                    onApply={true}
-                    onEdit={false}
-                    job={jobToShow[selectedCardId]}
-                  />
+                {selectedJob !== null && (
+                  role === 'company' ? (
+                    <JobDescriptionCard
+                      size="md"
+                      onApply={false}
+                      onEdit={false}
+                      job={selectedJob}
+                    />
+                  ): (
+                    <JobDescriptionCard
+                      size="md"
+                      onApply={true}
+                      onEdit={false}
+                      job={selectedJob}
+                    />
+                  )
                 )}
               </div>
             </DialogContent>
