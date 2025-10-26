@@ -19,6 +19,7 @@ import { Button } from "./ui/button";
 interface JobCardProps {
   info: JobInfo;
   size?: "sm" | "md" | "lg";
+  onUnbookmark?: (jobId: string) => void;
 }
 
 const typeColors: Record<string, string> = {
@@ -123,6 +124,11 @@ const JobCard = (job: JobCardProps) => {
       if (response.ok) {
         // Toggle the local state for immediate UI feedback
         setIsSaved(!isSaved);
+        // If this was an unbookmark (DELETE) and parent provided a callback, notify parent to remove the card
+        if (method === "DELETE" && typeof (job as any).onUnbookmark === "function") {
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          (job as any).onUnbookmark(job.info.id);
+        }
       } else {
         const error = await response.json();
         console.error("Failed to toggle save:", error);
