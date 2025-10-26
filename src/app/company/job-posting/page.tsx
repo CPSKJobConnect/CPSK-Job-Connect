@@ -6,7 +6,14 @@ import JobPostDescriptionSection from "@/app/company/job-posting/JobPostDescript
 import JobDescriptionCard from "@/components/JobDescriptionCard";
 import { JobInfo, JobPostFormData } from "@/types/job";
 import { defaultJobPostForm } from "@/types/job";
-import { toast } from "sonner"
+import { toast } from "@/lib/toastTemplate";
+
+
+interface CompanyProps {
+  name: string;
+  profile_url: string;
+  bg_profile_url: string;
+}
 
 
 export default function Page() {
@@ -17,6 +24,7 @@ export default function Page() {
   const [types, setTypes] = useState<string[]>([]);
   const [arrangements, setArrangements] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
+  const [company, setCompany] = useState<CompanyProps | null>(null);
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -29,57 +37,20 @@ export default function Page() {
         setTags(data.tags || []);
     };
     fetchFilters();
+
+    const fetchCompany = async () => {
+      const res = await fetch("/api/auth/session");
+      const data = await res.json();
+      console.log("Session data:", data);
+      setCompany(data.user || null)
+    };
+    fetchCompany();
   }, []);
 
   const validateForm = (formData: JobPostFormData) => {
-    const errors: string[] = [];
-    const today = new Date();
-    const deadline = new Date(formData.deadline);
-
-    const requiredFields: { key: keyof JobPostFormData; label: string }[] = [
-      { key: "title", label: "Title" },
-      { key: "location", label: "Location" },
-      { key: "type", label: "Type" },
-      { key: "arrangement", label: "Arrangement" },
-      { key: "salary", label: "Salary" },
-      { key: "deadline", label: "Deadline" },
-    ];
-    
-    requiredFields.forEach(field => {
-      if (!formData[field.key]) {
-        errors.push(`${field.label} is required`);
-      }
-    });
-  
-    if (formData.salary.min != null && formData.salary.max != null && +formData.salary.min > +formData.salary.max) {
-      errors.push("Min Salary should be less than Max Salary");
-    }
-
-    if (deadline < today) {
-      errors.push("The deadline must be a future date.");
-    }
-  
-    if (!formData.skills || formData.skills.length === 0) {
-      errors.push("At least one skill is required");
-    }
-    
-    if (!formData.category) {
-      errors.push("Category is required");
-    }
-
-    const descFields: { key: keyof JobPostFormData["description"]; label: string }[] = [
-      { key: "overview", label: "Overview" },
-      { key: "responsibility", label: "Responsibility" },
-      { key: "requirement", label: "Requirement" },
-      { key: "qualification", label: "Qualification" },
-    ];
-    descFields.forEach(field => {
-      if (!formData.description[field.key]) {
-        errors.push(`${field.label} is required`);
-      }
-    });
-  
-    return errors;
+    const detailErrors = validateDetail(formData);
+    const descErrors = validateDescription(formData);
+    return [...detailErrors, ...descErrors];
   };
 
   const validateDetail = (formData: JobPostFormData) => {
@@ -93,23 +64,27 @@ export default function Page() {
       { key: "deadline", label: "Deadline" },
     ];
 
-    requiredFields.forEach(field => {
-      if (!formData[field.key]) {
+    requiredFields.forEach((field) => {
+      const value = (formData as any)[field.key];
+      if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) {
         errors.push(`${field.label} is required`);
       }
     });
 
-    if (formData.salary.min && formData.salary.max && +formData.salary.min > +formData.salary.max) {
+    if (formData.salary && formData.salary.min && formData.salary.max && +formData.salary.min > +formData.salary.max) {
       errors.push("Min Salary should be less than Max Salary");
     }
 
-    if (formData.deadline) {
-      const today = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (!formData.deadline) {
+      errors.push("Deadline is required");
+    } else {
       const deadline = new Date(formData.deadline);
+      deadline.setHours(0, 0, 0, 0);
       if (deadline < today) {
         errors.push("The deadline must be a future date.");
       }
-      return errors;
     }
 
     if (!formData.category) {
@@ -127,8 +102,9 @@ export default function Page() {
       { key: "requirement", label: "Requirement" },
       { key: "qualification", label: "Qualification" },
     ];
-    descFields.forEach(field => {
-      if (!formData.description[field.key]) {
+
+    descFields.forEach((field) => {
+      if (!formData.description || !formData.description[field.key]) {
         errors.push(`${field.label} is required`);
       }
     });
@@ -142,9 +118,9 @@ export default function Page() {
 
   const previewJob = useMemo<JobInfo>(() => ({
     title: formData.title,
-    companyName: "Your Company",
-    companyLogo: "/assets/images/companyLogo.png",
-    companyBg: "/assets/images/companyBg.jpg",
+    companyName: company?.name || "Your Company",
+    companyLogo: company?.profile_url || "/assets/images/companyLogo.png",
+    companyBg: company?.bg_profile_url || "/assets/images/companyBg.jpg",
     category: formData.category,
     location: formData.location,
     arrangement: formData.arrangement,
@@ -165,7 +141,7 @@ export default function Page() {
     posted: "",
     deadline: formData.deadline || "",
     status: "",
-  }), [formData]);
+  }), [formData, company]);
   
   const handlePost = async () => {
     try {
@@ -180,14 +156,14 @@ export default function Page() {
 
       if (res.ok) {
         const data = await res.json();
-        alert("✅ Job posted successfully!");
+        toast.success("Job posted successfully!", "Your job has been published.");
       } else {
         const err = await res.json();
-        alert(`❌ Failed to post job: ${err.error || "Unknown error"}`);
+        toast.error("Failed to post job", err.error || "Unknown error");
       }
     } catch (error) {
       console.error("Error posting job:", error);
-      alert("⚠️ Something went wrong while posting the job.");
+      toast.error("Something went wrong while posting the job.", "Please try again later.");
     }
   };
 
@@ -204,14 +180,14 @@ export default function Page() {
 
       if (res.ok) {
         const data = await res.json();
-        alert("✅ Job drafted successfully!");
+        toast.success("Job drafted successfully!", "Your job has been saved as a draft.");
       } else {
         const err = await res.json();
-        alert(`❌ Failed to draft job: ${err.error || "Unknown error"}`);
+        toast.error("Failed to draft job", err.error || "Unknown error");
       }
     } catch (error) {
       console.error("Error posting job:", error);
-      alert("⚠️ Something went wrong while draft the job.");
+      toast.error("Something went wrong while drafting the job.", "Please try again later.");
     }
   };
 
@@ -285,7 +261,7 @@ export default function Page() {
                   if (step === 1) {
                     const errors = validateDetail(formData);
                     if (errors.length > 0) {
-                      errors.forEach((err) => toast.error(err, { duration: 4000 }));
+                      errors.forEach((err) => toast.error(err));
                       return;
                     }
                   }
@@ -293,7 +269,7 @@ export default function Page() {
                   if (step === 2) {
                     const errors = validateDescription(formData);
                     if (errors.length > 0) {
-                      errors.forEach((err) => toast.error(err, { duration: 4000 }));
+                      errors.forEach((err) => toast.error(err));
                       return;
                     }
                   }
@@ -307,7 +283,7 @@ export default function Page() {
                     onClick={() => {
                       const errors = validateForm(formData);
                       if (errors.length > 0) {
-                        errors.forEach(err => toast.error(err, { duration: 5000 }));
+                        errors.forEach(err => toast.error(err));
                       } else {
                         handlePost();
                       }
@@ -321,7 +297,7 @@ export default function Page() {
                     onClick={() => {
                       const errors = validateForm(formData);
                       if (errors.length > 0) {
-                        errors.forEach(err => toast.error(err, { duration: 5000 }));
+                        errors.forEach(err => toast.error(err));
                       } else {
                         handleDraft();
                       }
