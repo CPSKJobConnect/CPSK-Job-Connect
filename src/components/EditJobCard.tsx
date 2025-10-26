@@ -31,7 +31,7 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
   const [categoryList, setCategoryList] = useState<string[]>([]);
   const [jobTypeList, setJobTypeList] = useState<string[]>([]);
   const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
-  const [preview, SetPreview] = useState<boolean>(false);
+  const [preview, setPreview] = useState<boolean>(false);
 
   useEffect(() => {
     const initial = [...new Set(mockCompanies[0].address)];
@@ -59,6 +59,19 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
       description: { ...job.description },
     });
     setOpen(false);
+  }
+
+  const onSave = async () => {
+    try {
+      // call parent handler (may be sync or async)
+      await Promise.resolve(handleEdit ? handleEdit() : undefined);
+    } catch (err) {
+      console.error("Error in handleEdit:", err);
+    } finally {
+      // close dialog and reset preview
+      setOpen(false);
+      setPreview(false);
+    }
   }
 
   const previewJob = useMemo<JobInfo>(() => ({
@@ -99,20 +112,20 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
             </Button>
       </DialogTrigger>
       {open && (
-        preview ? (
-          <div>
+      <DialogContent className="md:min-w-[700px] sm:min-w-[400px] max-h-[80vh] overflow-hidden overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Job Post - {job.title}</DialogTitle>
+        </DialogHeader>
+
+        <div className="px-4 pb-6">
+          {preview ? (
+            <>
               <p className="font-semibold">Preview</p>
               <div className="mt-4">
-                  <JobDescriptionCard size="md" job={previewJob} onApply={false} onEdit={false} />
+                <JobDescriptionCard size="md" job={previewJob} onApply={false} onEdit={false} />
               </div>
-            </div>
-        ) : (
-      <DialogContent className="md:min-w-[700px] sm:min-w-[400px] max-h-[80vh] overflow-hidden overflow-y-auto">
-          <DialogHeader>
-              <DialogTitle>Edit Job Post - {job.title}</DialogTitle>
-          </DialogHeader>
-
-          <div className="px-4 pb-6">
+            </>
+          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col">
                 <label className="text-sm text-gray-700 mb-1">Location</label>
@@ -284,18 +297,34 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
                   />
               </div>
             </div>
-          </div>
+          )}
+        </div>
 
-          <div className="px-4 pb-6 flex justify-end gap-3">
-            <Button onClick={handleCancel} variant="ghost" className="h-10">
-              Cancel
-            </Button>
-            <Button onClick={handleEdit} className="h-10 bg-[#2BA17C] hover:bg-[#27946F]">
-              Save
-            </Button>
-          </div>
+        <div className="px-4 pb-6 flex justify-end gap-3">
+          <Button onClick={handleCancel} variant="ghost" className="h-10">
+            Cancel
+          </Button>
+          {preview ? (
+            <>
+              <Button onClick={() => setPreview(false)} variant="ghost" className="h-10">
+                Back to Edit
+              </Button>
+              <Button onClick={onSave} className="h-10 bg-[#2BA17C] hover:bg-[#27946F]">
+                Save
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button onClick={() => setPreview(true)} className="h-10 bg-gray-200 text-gray-700 hover:bg-gray-300">
+                Preview
+              </Button>
+              <Button onClick={onSave} className="h-10 bg-[#2BA17C] hover:bg-[#27946F]">
+                Save
+              </Button>
+            </>
+          )}
+        </div>
       </DialogContent>
-        )
       )}
     </Dialog>
   );
