@@ -118,9 +118,6 @@ export default function LocationCombobox({ value, onChange, showIcon = false, cl
               : "w-full pl-0 pr-3 py-1 rounded-md border-none shadow-none focus:ring-0 focus:outline-none text-sm justify-between text-gray-700 md:w-[500px]"
           }
         >
-          {showIcon && (
-            <IoLocationOutline className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-          )}
           <span
             className={`
                 ${value ? "text-gray-700" : "text-gray-400"}
