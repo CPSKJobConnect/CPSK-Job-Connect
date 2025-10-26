@@ -1,12 +1,11 @@
 import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { getApiSession } from "@/lib/api-auth";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getApiSession(request);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -32,12 +31,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
-    // Upload to Supabase storage
+    // Initialize Supabase client
     const supabase = createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_ANON_KEY!
     );
 
+    // Delete old profile image if it exists
+    if (account.logoUrl) {
+      try {
+        // Extract the file path from the signed URL
+        // Signed URL format: https://.../storage/v1/object/sign/documents/profile-images/...?token=...
+        const urlParts = account.logoUrl.split('/documents/');
+        if (urlParts.length > 1) {
+          const oldFilePath = urlParts[1].split('?')[0]; // Remove query params
+
+          const { error: deleteError } = await supabase.storage
+            .from("documents")
+            .remove([oldFilePath]);
+
+          if (deleteError) {
+            console.warn("Failed to delete old profile image:", deleteError);
+            // Continue with upload even if deletion fails
+          } else {
+            console.log("Successfully deleted old profile image:", oldFilePath);
+          }
+        }
+      } catch (error) {
+        console.warn("Error parsing old image URL:", error);
+        // Continue with upload even if parsing fails
+      }
+    }
+
+    // Upload new profile image to Supabase storage
     const filePath = `profile-images/${account.id}/${Date.now()}_${file.name}`;
     const { data, error } = await supabase.storage
       .from("documents")

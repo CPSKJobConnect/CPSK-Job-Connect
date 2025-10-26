@@ -1,14 +1,13 @@
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { getApiSession } from "@/lib/api-auth";
+import { NextRequest, NextResponse } from "next/server";
 
 
-export async function POST (req: Request) {
+export async function POST (req: NextRequest) {
   // Checklist: 1. get user from session 2. get jobId from request body 3. validate jobId 4. check if saved job exists 5. if not exists, create it 6. if exists, return error 7. return appropriate response
   try {
     // Get authenticated user from session
-    const session = await getServerSession(authOptions);
+    const session = await getApiSession(req);
     if (!session?.user?.email) {
       return NextResponse.json(
         { error: "Unauthorized - Please log in" },
@@ -70,11 +69,11 @@ export async function POST (req: Request) {
   }
 }
 
-export async function DELETE (req: Request) {
+export async function DELETE (req: NextRequest) {
   // Checklist: 1. get user from session 2. get jobId from request body 3. validate jobId 4. check if saved job exists 5. if exists, remove it 6. if not exists, return error 7. return appropriate response
-  try { 
+  try {
     // Get authenticated user from session
-    const session = await getServerSession(authOptions);
+    const session = await getApiSession(req);
     if (!session?.user?.email) {
       return NextResponse.json(
         { error: "Unauthorized - Please log in" },
@@ -147,11 +146,11 @@ export async function DELETE (req: Request) {
 }
 
 // GET all saved jobs for the authenticated student
-export async function GET (req: Request) {
+export async function GET (req: NextRequest) {
   // jobId (optional): if provided, checks that the specific job post is saved by the student
   // Behavior: 1. If jobId is provided, return a boolean indicating if the job is saved 2. If jobId is not provided, return a list of all saved jobs for the student
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getApiSession(req);
     if (!session?.user?.email) {
       return NextResponse.json(
         {error: "Unauthorized - Please log in" },
