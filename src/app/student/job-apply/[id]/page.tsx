@@ -149,7 +149,7 @@ export default function Page() {
         return;
       }
       toast.success("Application submitted!", "Your job application has been sent successfully.");
-      router.push("/student/profile?tab=applications");
+      router.push("/student/profile");
     } catch (err) {
       toast.error("An error occurred while submitting your application.", "Please try again later.");
     }

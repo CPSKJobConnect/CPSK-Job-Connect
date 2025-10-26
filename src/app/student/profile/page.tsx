@@ -116,6 +116,8 @@ export default function StudentProfilePage() {
     );
   }
 
+  const defaultTab = "profile";
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Profile Header */}
@@ -196,7 +198,7 @@ export default function StudentProfilePage() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={tabParam || "profile"} className="w-full">
+      <Tabs defaultValue="profile" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
