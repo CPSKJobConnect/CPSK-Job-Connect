@@ -1,6 +1,5 @@
 import { FileMeta } from "./file";
-
-export type Role = "student" | "company" | "admin";
+import { Role } from "./auth";
 
 export interface BaseUser {
     id: number;

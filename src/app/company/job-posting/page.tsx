@@ -16,10 +16,24 @@ import { toast } from "sonner"
 
 export default function Page() {
   const [formData, setFormData] = useState<JobPostFormData>(defaultJobPostForm);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
+  const [types, setTypes] = useState<string[]>([]);
+  const [arrangements, setArrangements] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
 
   useEffect(() => {
-    console.log("post form: ", formData);
-  }, [formData]);
+    const fetchFilters = async () => {
+        const res = await fetch("/api/jobs/filter");
+        const data = await res.json();
+        setCategories(data.categories || []);
+        setLocations(data.locations || []);
+        setTypes(data.types || []);
+        setArrangements(data.arrangements || []);
+        setTags(data.tags || []);
+    };
+    fetchFilters();
+  }, []);
 
   const validateForm = (formData: JobPostFormData) => {
     const errors: string[] = [];
@@ -41,7 +55,7 @@ export default function Page() {
       }
     });
   
-    if (formData.salary.min && formData.salary.max && +formData.salary.min > +formData.salary.max) {
+    if (formData.salary.min != null && formData.salary.max != null && +formData.salary.min > +formData.salary.max) {
       errors.push("Min Salary should be less than Max Salary");
     }
 
@@ -72,12 +86,52 @@ export default function Page() {
     return errors;
   };
   
-  const handlePost = () => {
-    // post job
+  const handlePost = async () => {
+    try {
+      const res = await fetch("/api/company/jobs/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          is_published: true,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert("✅ Job posted successfully!");
+      } else {
+        const err = await res.json();
+        alert(`❌ Failed to post job: ${err.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error posting job:", error);
+      alert("⚠️ Something went wrong while posting the job.");
+    }
   };
 
-  const handleDraft = () => {
-    // draft job
+  const handleDraft = async () => {
+    try {
+      const res = await fetch("/api/company/jobs/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          is_published: false,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert("✅ Job drafted successfully!");
+      } else {
+        const err = await res.json();
+        alert(`❌ Failed to draft job: ${err.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error posting job:", error);
+      alert("⚠️ Something went wrong while draft the job.");
+    }
   };
 
   return (
@@ -96,6 +150,10 @@ export default function Page() {
           <JobPostDetailSection 
           formData={formData}
           setFormData={setFormData}
+          categories={categories}
+          locations={locations}
+          types={types}
+          arrangements={arrangements}
           />
         </TabsContent>
 
@@ -103,6 +161,7 @@ export default function Page() {
           <JobPostDescriptionSection 
           formData={formData}
           setFormData={setFormData}
+          tags={tags}
           />
         </TabsContent>
       </Tabs>
@@ -123,6 +182,7 @@ export default function Page() {
         </Button>
 
         <Button
+          variant='default'
           className="bg-gray-200 text-gray-700 hover:bg-gray-300 font-semibold"
           onClick={() => {
             const errors = validateForm(formData);

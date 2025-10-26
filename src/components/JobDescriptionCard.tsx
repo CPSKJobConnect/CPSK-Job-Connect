@@ -31,6 +31,7 @@ interface JobDescriptionProps {
   size: "sm" | "md";
   onApply: boolean;
   onEdit: boolean;
+  tags?: string[];
 }
 
 const typeColors: Record<string, string> = {
@@ -43,7 +44,7 @@ const typeColors: Record<string, string> = {
 
 
 
-const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) => {
+const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionProps) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [formData, setFormData] = useState<JobPostFormData>({
@@ -281,6 +282,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
             <SkillCombobox
               selectedSkill={formData.skills}
               setSelectedSkill={(skills) => setFormData({ ...formData, skills })}
+              existingSkills={tags || []}
             />
         ) : (
           job.skills.map((tag, idx) => (
@@ -301,6 +303,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
           selectedCategory={formData.category}
           setSelectedCategory={(category) => setFormData({ ...formData, category })}
           placeholder={formData.category}
+          categoryList={categoryList}
           />
       </div>
       }

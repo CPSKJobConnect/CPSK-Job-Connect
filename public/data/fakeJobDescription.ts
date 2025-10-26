@@ -2,7 +2,7 @@ import { JobInfo } from "@/types/job";
 
 export const fakeJobData: JobInfo[] = [
   {
-    id: "1",
+    id: "2",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
     title: "Frontend Developer",
@@ -25,7 +25,7 @@ export const fakeJobData: JobInfo[] = [
     status: "active"
   },
   {
-    id: "2",
+    id: "3",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
     title: "Backend Developer",
@@ -48,7 +48,7 @@ export const fakeJobData: JobInfo[] = [
     status: "active"
   },
   {
-    id: "3",
+    id: "4",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
     title: "UI/UX Designer",
@@ -71,7 +71,7 @@ export const fakeJobData: JobInfo[] = [
     status: "expire"
   },
   {
-    id: "4",
+    id: "5",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
     title: "Data Analyst",
@@ -94,7 +94,7 @@ export const fakeJobData: JobInfo[] = [
     status: "expire"
   },
   {
-    id: "5",
+    id: "6",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
     title: "Marketing Intern",
@@ -117,7 +117,7 @@ export const fakeJobData: JobInfo[] = [
     status: "expire"
   },
   {
-    id: "6",
+    id: "7",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
     title: "Project Manager",
@@ -140,7 +140,7 @@ export const fakeJobData: JobInfo[] = [
     status: "draft"
   },
   {
-    id: "7",
+    id: "8",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
     title: "QA Tester",
@@ -163,7 +163,7 @@ export const fakeJobData: JobInfo[] = [
     status: "active"
   },
   {
-    id: "8",
+    id: "9",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
     title: "Accountant",
@@ -186,7 +186,7 @@ export const fakeJobData: JobInfo[] = [
     status: "active"
   },
   {
-    id: "9",
+    id: "10",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
     title: "HR Specialist",
@@ -209,7 +209,7 @@ export const fakeJobData: JobInfo[] = [
     status: "expire"
   },
   {
-    id: "10",
+    id: "11",
     companyLogo: "/assets/images/companyLogo.png",
     companyBg: "/assets/images/companyBg.jpg",
     title: "Customer Support",
