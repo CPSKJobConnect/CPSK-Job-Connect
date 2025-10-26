@@ -9,7 +9,7 @@ import { LiaMoneyCheckAltSolid } from "react-icons/lia";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBinFill } from "react-icons/ri";
 import { HiOutlineOfficeBuilding } from "react-icons/hi";
-import { JobInfo } from "@/types/job";
+import { JobInfo, JobWithApplications } from "@/types/job";
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
 import { JobPostFormData } from "@/types/job";
@@ -27,7 +27,7 @@ import {
 
 
 interface JobDescriptionProps {
-  job: JobInfo;
+  job: JobInfo | JobWithApplications;
   size: "sm" | "md";
   onApply: boolean;
   onEdit: boolean;
@@ -47,6 +47,12 @@ const typeColors: Record<string, string> = {
 const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionProps) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
+
+  // Helper to convert Date to string if needed
+  const deadlineStr = job.deadline instanceof Date
+    ? job.deadline.toISOString().split('T')[0]
+    : job.deadline;
+
   const [formData, setFormData] = useState<JobPostFormData>({
     title: job.title,
     category: job.category,
@@ -55,7 +61,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
     arrangement: job.arrangement,
     salary: { min: job.salary.min, max: job.salary.max },
     posted: job.posted,
-    deadline: job.deadline,
+    deadline: deadlineStr,
     skills: job.skills,
     description: {
       overview: job.description.overview,
@@ -105,12 +111,16 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
   return (
     <div className={`${baseStyle} ${sizeStyle}`}>
       <div className="relative w-full h-40">
-        <Image
-          src={job.companyBg}
-          alt="company background"
-          fill
-          className="object-cover"
-        />
+        {job.companyBg && job.companyBg.trim() ? (
+          <Image
+            src={job.companyBg}
+            alt="company background"
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-blue-400 to-purple-500" />
+        )}
         {onEdit && (
           <>
             {isEditing ? (
@@ -160,13 +170,19 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
         )}
 
         <div className="absolute -bottom-6 left-4 bg-white p-2 rounded-md shadow-md">
-          <Image
-            src={job.companyLogo}
-            alt="companyLogo"
-            width={60}
-            height={60}
-            className="h-auto w-auto"
-          />
+          {job.companyLogo && job.companyLogo.trim() ? (
+            <Image
+              src={job.companyLogo}
+              alt="companyLogo"
+              width={60}
+              height={60}
+              className="h-auto w-auto"
+            />
+          ) : (
+            <div className="w-[60px] h-[60px] bg-gray-200 rounded-md flex items-center justify-center">
+              <HiOutlineOfficeBuilding className="w-8 h-8 text-gray-400" />
+            </div>
+          )}
         </div>
       </div>
 

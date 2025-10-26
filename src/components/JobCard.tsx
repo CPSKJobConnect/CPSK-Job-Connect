@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatPostedDate } from "@/lib/dateHelper";
-import { JobInfo } from "@/types/job";
+import { JobInfo, JobWithApplications } from "@/types/job";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -17,7 +17,7 @@ import { MdOutlineLink, MdOutlinePeopleAlt, MdOutlineReportProblem, MdOutlineSha
 import { Button } from "./ui/button";
 
 interface JobCardProps {
-  info: JobInfo;
+  info: JobInfo | JobWithApplications; // Accept both types!
   size?: "sm" | "md" | "lg";
 }
 
@@ -35,6 +35,9 @@ const JobCard = (job: JobCardProps) => {
   const [isSaved, setIsSaved] = useState(job.info.isSaved || false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+
+  // Helper to get job ID as string (handles both string and number types)
+  const jobId = typeof job.info.id === 'number' ? job.info.id.toString() : job.info.id;
 
   const isClosed = job.info.status === "expire";
 
@@ -59,7 +62,7 @@ const JobCard = (job: JobCardProps) => {
       setIsCheckingStatus(true);
       try {
         const response = await fetch(
-          `/api/students/saved-jobs?jobId=${job.info.id}`,
+          `/api/students/saved-jobs?jobId=${jobId}`,
           {
             method: "GET",
             headers: {
@@ -82,7 +85,7 @@ const JobCard = (job: JobCardProps) => {
     };
 
     checkIfSaved();
-  }, [session?.user?.id, job.info.id, job.info.isSaved]);
+  }, [session?.user?.id, jobId, job.info.isSaved]);
   const baseStyle =
     `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-200/70 cursor-not-allowed" : "bg-white hover:bg-[#F3FEFA]"} p-4 flex flex-col gap-2 transition mb-5 transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg`;
 
@@ -116,7 +119,7 @@ const JobCard = (job: JobCardProps) => {
           // SECURITY IMPROVEMENT: We only send jobId now
           // The userId is extracted from the session on the server
           // This prevents users from impersonating others
-          jobId: job.info.id,
+          jobId: jobId,
         }),
       });
 

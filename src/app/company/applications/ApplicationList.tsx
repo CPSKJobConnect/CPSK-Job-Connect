@@ -11,20 +11,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import StudentInfoModal from "./StudentInfoModal";
-
-interface Applicant {
-  applicant_id: string;
-  profile_url: string;
-  firstname: string;
-  lastname: string;
-  email: string;
-  status: string;
-  applied_at: Date;
-}
+import { Application } from "@/types/job";
 
 interface ApplicantListProps {
-  job_id: number | null;
-  applicants: Applicant[];
+  job_id: number;
+  applicants: Application[];
 }
 
 type StatusType = "pending" | "reviewed" | "interviewed" | "accepted" | "rejected";
@@ -39,91 +30,106 @@ const statusColors: Record<StatusType, string> = {
 
 const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
   const statusTypes: StatusType[] = ["pending", "reviewed", "interviewed", "accepted", "rejected"];
-  const [statusMap, setStatusMap] = useState<Record<string, StatusType>>(
+  const [statusMap, setStatusMap] = useState<Record<number, StatusType>>(
     () =>
       Object.fromEntries(
-        applicants.map((a) => [a.applicant_id, a.status as StatusType])
+        applicants.map((a) => [a.id, a.status.name as StatusType])
       )
   );
 
-  const handleStatus = (applicant_id: string, newStatus: StatusType) => {
-    setStatusMap((prev) => ({ ...prev, [applicant_id]: newStatus }));
-    setTimeout(() => {
-      console.log(`(mock POST) updated applicant ${applicant_id} to "${newStatus}"`);
-    }, 500);
+  const handleStatus = async (applicationId: number, newStatus: StatusType) => {
+    // Optimistic update
+    setStatusMap((prev) => ({ ...prev, [applicationId]: newStatus }));
+
+    try {
+      // TODO: Call API to update status
+      const response = await fetch(`/api/applications/${applicationId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      console.log(`✅ Updated application ${applicationId} to "${newStatus}"`);
+    } catch (error) {
+      console.error('❌ Error updating status:', error);
+      // Revert on error
+      const originalStatus = applicants.find(a => a.id === applicationId)?.status.name as StatusType;
+      setStatusMap((prev) => ({ ...prev, [applicationId]: originalStatus }));
+    }
   };
 
   return (
     <div className="flex flex-col rounded-md shadow-md w-full gap-4 p-4 overflow-y-auto">
       <p className="text-lg font-semibold text-gray-700">Student Applications</p>
       {applicants.length === 0 ? (
-      <div className="flex flex-col items-center justify-center py-10 text-gray-500">
-        <p className="text-center text-sm">No applicants yet</p>
-      </div>
-    ) : (
-      <div className="flex flex-col gap-4">
-        {applicants.map((student) => {
-          const currentStatus = statusMap[student.applicant_id] || (student.status as StatusType);
+        <div className="flex flex-col items-center justify-center py-10 text-gray-500">
+          <p className="text-center text-sm">No applicants yet</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {applicants.map((application) => {
+            const currentStatus = statusMap[application.id] || (application.status.name as StatusType);
 
-          return (
-            <div
-              key={student.applicant_id}
-              className="flex flex-col shadow-md rounded-md p-2 border border-gray-200"
-            >
-              <div className="flex flex-row justify-between items-center">
-                <div className="flex flex-row gap-4 items-center">
-                  <Image
-                    src={student.profile_url}
-                    alt="studentProfile"
-                    width={60}
-                    height={60}
-                    className="rounded-full shadow-md"
-                  />
-                  <div className="flex flex-col">
-                    <div className="flex flex-row gap-2 items-center">
-                      <p className="font-medium">{student.firstname}</p>
-                      <p className="font-medium">{student.lastname}</p>
+            return (
+              <div
+                key={application.id}
+                className="flex flex-col shadow-md rounded-md p-2 border border-gray-200"
+              >
+                <div className="flex flex-row justify-between items-center">
+                  <div className="flex flex-row gap-4 items-center">
+                    <Image
+                      src={application.studentProfilePic || "/default-avatar.png"}
+                      alt={application.studentName}
+                      width={60}
+                      height={60}
+                      className="rounded-full shadow-md"
+                    />
+                    <div className="flex flex-col">
+                      <p className="font-medium">{application.studentName}</p>
+                      <p className="text-sm text-gray-500">{application.studentEmail}</p>
                     </div>
-                    <p className="text-sm text-gray-500">{student.email}</p>
                   </div>
-                </div>
 
-                <div className="flex justify-end gap-5">
-                  <div className="w-25">
-                    <Select
-                      value={currentStatus}
-                      onValueChange={(val) =>
-                        handleStatus(student.applicant_id, val as StatusType)
-                      }
-                    >
-                      <SelectTrigger
-                        className={`rounded-full w-full text-sm p-1 transition-all duration-200 border-none p-3 ${statusColors[currentStatus]}`}
+                  <div className="flex justify-end gap-5">
+                    <div className="w-25">
+                      <Select
+                        value={currentStatus}
+                        onValueChange={(val) =>
+                          handleStatus(application.id, val as StatusType)
+                        }
                       >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Status</SelectLabel>
-                          {statusTypes.map((status) => (
-                            <SelectItem key={status} value={status}>
-                              {status}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                        <SelectTrigger
+                          className={`rounded-full w-full text-sm transition-all duration-200 border-none p-3 ${statusColors[currentStatus]}`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Status</SelectLabel>
+                            {statusTypes.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div>
-                    <StudentInfoModal applicant_id={student.applicant_id} />
+                    <div>
+                      <StudentInfoModal applicant_id={application.id.toString()} />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-    )}
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,9 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
 import JobCard from "@/components/JobCard";
-import { mockDepartmentData } from "public/data/mockDepartment";
-import { JobInfo } from "@/types/job";
-import { filterByCategory } from "@/lib/jobFilter";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -13,10 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { JobWithApplications } from "@/types/job";
+import { useEffect, useState } from "react";
 
 interface AllJobPostProps {
-  info: JobInfo[];
+  info: JobWithApplications[];
   onSelectCard: (id: number) => void;
 }
 
@@ -25,15 +23,19 @@ type PostType = "All Posts" | "Active" | "Draft" | "Close";
 const AllJobPost = ({ info, onSelectCard }: AllJobPostProps) => {
   const postTypes: PostType[] = ["All Posts", "Active", "Draft", "Close"];
   const [selectedType, setSelectedType] = useState<PostType>("All Posts");
-  const [jobPost, setJobPost] = useState<JobInfo[]>([]);
-  const [filteredJobPost, setFilteredJobPost] = useState<JobInfo[]>([]);
+  const [jobPost, setJobPost] = useState<JobWithApplications[]>([]);
+  const [filteredJobPost, setFilteredJobPost] = useState<JobWithApplications[]>([]);
   const [allDepartment, setAllDepartment] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>();
 
   useEffect(() => {
     setJobPost(info);
-    setAllDepartment(mockDepartmentData.departments);
-  }, [jobPost, allDepartment]);
+    // Extract unique departments from jobs
+    const departments = Array.from(
+      new Set(info.flatMap(job => job.categories.map(cat => cat.name)))
+    );
+    setAllDepartment(departments);
+  }, [info]);
 
   useEffect(() => {
     let result = [...jobPost];
@@ -47,7 +49,10 @@ const AllJobPost = ({ info, onSelectCard }: AllJobPostProps) => {
     });
 
     if (selectedDepartment) {
-      result = filterByCategory(result, selectedDepartment);
+      // Filter by category - check if any category matches
+      result = result.filter((job) =>
+        job.categories.some((cat) => cat.name === selectedDepartment)
+      );
     }
 
     setFilteredJobPost(result);
@@ -62,7 +67,6 @@ const AllJobPost = ({ info, onSelectCard }: AllJobPostProps) => {
   return (
     <div className="flex flex-col rounded-md shadow-md w-full gap-2 p-4 overflow-y-hidden max-h-[120vh]">
       <p className="text-md font-semibold text-gray-700">Job Posts ({filteredJobPost.length})</p>
-
       <div className="flex flex-col gap-3 flex-1">
         <div className="flex flex-row gap-2">
           {postTypes.map((type, idx) => (
@@ -107,8 +111,8 @@ const AllJobPost = ({ info, onSelectCard }: AllJobPostProps) => {
         </div>
 
         <div className="h-screen overflow-y-auto">
-          {filteredJobPost.map((job, idx) => (
-            <div key={job.id} onClick={() => onSelectCard(Number(job.id))}>
+          {filteredJobPost.map((job) => (
+            <div key={job.id} onClick={() => onSelectCard(job.id)}>
               <JobCard size="sm" info={job} />
             </div>
           ))}
