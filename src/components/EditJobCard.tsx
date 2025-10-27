@@ -22,7 +22,13 @@ interface EditJobCardProps {
   job: JobInfo;
   formData: JobPostFormData;
   setFormData: (data: JobPostFormData) => void;
-  handleEdit?: () => void;
+  handleEdit?: () => Promise<boolean> | boolean;
+}
+
+interface CompanyProps {
+  name: string;
+  profile_url: string;
+  bg_profile_url: string;
 }
 
 export default function EditJobCard({ job, formData, setFormData, handleEdit}: EditJobCardProps) {
@@ -32,6 +38,7 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
   const [jobTypeList, setJobTypeList] = useState<string[]>([]);
   const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
   const [preview, setPreview] = useState<boolean>(false);
+  const [company, setCompany] = useState<CompanyProps | null>(null);
 
   useEffect(() => {
     const initial = [...new Set(mockCompanies[0].address)];
@@ -39,6 +46,14 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
     setCategoryList(mockCategory);
     setJobTypeList(mockJobType);
     setJobArrangementList(mockJobArrangement);
+
+    const fetchCompany = async () => {
+      const res = await fetch("/api/auth/session");
+      const data = await res.json();
+      console.log("Session data:", data);
+      setCompany(data.user || null)
+    };
+    fetchCompany();
   }, []);
 
   useEffect(() => {
@@ -62,13 +77,14 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
   }
 
   const onSave = async () => {
+    let result = true;
     try {
-      // call parent handler (may be sync or async)
-      await Promise.resolve(handleEdit ? handleEdit() : undefined);
+      result = handleEdit ? await Promise.resolve(handleEdit()) : true;
     } catch (err) {
       console.error("Error in handleEdit:", err);
-    } finally {
-      // close dialog and reset preview
+      result = false;
+    }
+    if (result) {
       setOpen(false);
       setPreview(false);
     }
@@ -76,9 +92,9 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
 
   const previewJob = useMemo<JobInfo>(() => ({
       title: formData.title,
-      companyName: "Your Company",
-      companyLogo: "/assets/images/companyLogo.png",
-      companyBg: "/assets/images/companyBg.jpg",
+      companyName: company?.name || "Your Company",
+      companyLogo: company?.profile_url || "/assets/images/companyLogo.png",
+      companyBg: company?.bg_profile_url || "/assets/images/companyBg.jpg",
       category: formData.category,
       location: formData.location,
       arrangement: formData.arrangement,
@@ -188,13 +204,19 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
                 <label className="text-sm text-gray-700 mb-1">Salary (min)</label>
                 <Input
                   className="w-full"
-                  value={formData.salary.min}
-                  onChange={(e) => setFormData({ ...formData, 
+                  value={formData.salary.min?.toString() ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numericValue = Number(value);
+
+                    setFormData({
+                      ...formData,
                       salary: {
-                          ...formData.salary,
-                          min: Number(e.target.value)
-                      }
-                  })}
+                        ...formData.salary,
+                        min: isNaN(numericValue) ? 0 : numericValue,
+                      },
+                    });
+                  }}
                   placeholder={String(job.salary.min)}
                 />
               </div>
@@ -203,13 +225,19 @@ export default function EditJobCard({ job, formData, setFormData, handleEdit}: E
                   <label className="text-sm text-gray-700 mb-1">Salary (max)</label>
                   <Input
                       className="w-full"
-                      value={formData.salary.max}
-                      onChange={(e) => setFormData({ ...formData, 
+                      value={formData.salary.max?.toString() ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const numericValue = Number(value);
+
+                        setFormData({
+                          ...formData,
                           salary: {
-                              ...formData.salary,
-                              max: Number(e.target.value)
-                          }
-                      })}
+                            ...formData.salary,
+                            max: isNaN(numericValue) ? 0 : numericValue,
+                          },
+                        });
+                      }}
                       placeholder={String(job.salary.max)}
                   />
               </div>
