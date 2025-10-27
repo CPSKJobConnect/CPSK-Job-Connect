@@ -46,10 +46,12 @@ export default function Page() {
 
         const resJobs = await fetch(jobsUrl);
         const dataJobs = await resJobs.json();
+        console.log("Fetched jobs:", dataJobs);
         setJobData(dataJobs);
 
         const resFilters = await fetch("/api/jobs/filter");
         const dataFilters = await resFilters.json();
+        console.log("Fetched filter info:", dataFilters);
         setFilterInfo(dataFilters);
       } catch (err) {
         console.error("Error fetching jobs or filters:", err);

@@ -9,9 +9,11 @@ import { LiaMoneyCheckAltSolid } from "react-icons/lia";
 import { RiDeleteBinFill } from "react-icons/ri";
 import { HiOutlineOfficeBuilding } from "react-icons/hi";
 import { JobInfo } from "@/types/job";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { JobPostFormData } from "@/types/job";
 import EditJobCard from "./EditJobCard";
+import { validateForm } from "@/lib/validateJobForm";
+import { toast } from "sonner";
 
 
 
@@ -62,22 +64,92 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
 
   const handleEdit = () => {
     console.log(formData);
-    alert("Job post updated (mock)");
+    const validationErrors = validateForm(formData);
+    console.log(validationErrors);
+    if (validationErrors.length > 0) {
+      validationErrors.forEach((err) => toast.error(err, { duration: 4000 }));
+      return false;
+    }
+
+    toast.success("Job post updated");
+    return true;
   };
 
   const handleDelete = () => {
     console.log('delete')
   };
 
+  const [overviewOpen, setOverviewOpen] = useState(false);
+  const [responsibilityOpen, setResponsibilityOpen] = useState(false);
+  const [requirementOpen, setRequirementOpen] = useState(false);
+  const [qualificationOpen, setQualificationOpen] = useState(false);
+
+  const Section: React.FC<{
+    title: string;
+    text: string;
+    open: boolean;
+    setOpen: (v: boolean) => void;
+  }> = ({ title, text, open, setOpen }) => {
+    const ref = useRef<HTMLDivElement | null>(null);
+    const [isOverflowing, setIsOverflowing] = useState(false);
+
+    const COLLAPSED_MAX_PX = 112;
+
+    const checkOverflow = () => {
+      const el = ref.current;
+      if (!el) return setIsOverflowing(false);
+      setIsOverflowing(el.scrollHeight > COLLAPSED_MAX_PX + 1);
+    };
+
+    useEffect(() => {
+      checkOverflow();
+      window.addEventListener("resize", checkOverflow);
+      return () => window.removeEventListener("resize", checkOverflow);
+    }, [text]);
+
+    return (
+      <div>
+        <p className="font-bold">{title}</p>
+        <div
+          ref={ref}
+          className={`text-sm text-gray-700 mt-2 whitespace-pre-wrap break-words break-all ${
+            open ? "max-h-[40vh] overflow-auto" : "max-h-28 overflow-hidden"
+          }`}
+        >
+          {text}
+        </div>
+
+        {isOverflowing && (
+          <div className="mt-2">
+            <button
+              className="text-sm text-[#2BA17C] hover:underline"
+              onClick={() => setOpen(!open)}
+              type="button"
+              aria-expanded={open}
+            >
+              {open ? "Show less" : "More"}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={`${baseStyle} ${sizeStyle}`}>
       <div className="relative w-full h-40">
-        <Image
-          src={job.companyBg}
-          alt="company background"
-          fill
-          className="object-cover"
-        />
+        {job.companyBg ? (
+            <Image
+              src={job.companyBg}
+              alt={job.companyName || "companyBg"}
+              fill
+              className="object-cover"
+            />
+            ) : (
+            <div className="absolute inset-0 bg-gray-100 rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+              {job.companyName ? job.companyName.charAt(0).toUpperCase() : "C"}
+            </div>
+          )}
         {onEdit && (
           <>
             <div className="absolute flex right-16 top-2">
@@ -100,13 +172,19 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
         )}
 
         <div className="absolute -bottom-6 left-4 bg-white p-2 rounded-md shadow-md">
-          <Image
-            src={job.companyLogo}
-            alt="companyLogo"
-            width={60}
-            height={60}
-            className="h-auto w-auto"
-          />
+          {job.companyLogo ? (
+            <Image
+              src={job.companyLogo}
+              alt={job.companyName || "companyLogo"}
+              width={60}
+              height={60}
+              className="h-auto w-auto"
+            />
+            ) : (
+            <div className="h-[60px] w-[60px] bg-gray-100 rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+              {job.companyName ? job.companyName.charAt(0).toUpperCase() : "C"}
+            </div>
+          )}
         </div>
       </div>
 
@@ -156,27 +234,30 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
       </div>
 
       <div className="flex-1 overflow-y-auto px-4">
-      <div className="flex flex-col gap-6 px-5 mt-5">
-        <div>
-          <p className="font-bold">About Role</p>
-          <p>{job.description.overview}</p>
-        </div>
+        <div className="flex flex-col gap-6 px-5 mt-5">
+          <Section title="About Role" text={job.description.overview || ""} open={overviewOpen} setOpen={setOverviewOpen} />
 
-        <div>
-          <p className="font-bold">Responsibilities</p>
-          <p>{job.description.responsibility}</p>
-        </div>
+          <Section
+            title="Responsibilities"
+            text={job.description.responsibility || ""}
+            open={responsibilityOpen}
+            setOpen={setResponsibilityOpen}
+          />
 
-        <div>
-          <p className="font-bold">Requirements</p>
-          <p>{job.description.requirement}</p>
-        </div>
+          <Section
+            title="Requirements"
+            text={job.description.requirement || ""}
+            open={requirementOpen}
+            setOpen={setRequirementOpen}
+          />
 
-        <div>
-          <p className="font-bold">Qualifications</p>
-          <p>{job.description.qualification}</p>
+          <Section
+            title="Qualifications"
+            text={job.description.qualification || ""}
+            open={qualificationOpen}
+            setOpen={setQualificationOpen}
+          />
         </div>
-      </div>
       </div>
 
       <div className="px-4 py-4 flex justify-start gap-3 mt-auto">

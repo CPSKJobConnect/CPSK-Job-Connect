@@ -107,15 +107,17 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
           <CommandList>
             <CommandEmpty>
             <div className="flex flex-col gap-3 items-center">
-                <p className="text-gray-600 text-sm text-center">
-                    No results found. Add <span className="font-semibold text-gray-800">{searchTerm}</span> as a new skill?
+                <p className="text-gray-600 text-sm text-center max-w-[150px]">
+                    No results found. Add <span className="font-semibold text-gray-800 truncate block">{searchTerm}</span> as a new skill?
                 </p>
                 <Button
                     onClick={handleSkillAdded}
-                    className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-full max-w-[200px] max-h-[30px]"
+                    className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-auto max-h-[30px] max-w-[200px]"
                 >
-                    <IoIosAdd className="w-5 h-5" />
-                    <span>Add new skill: {searchTerm}</span>
+                    <IoIosAdd className="w-5 h-5 flex-shrink-0" />
+                    <span className="truncate max-w-[150px]">
+                        Add new skill: {searchTerm}
+                    </span>
                 </Button>
             </div>
             </CommandEmpty>
