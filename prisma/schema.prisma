@@ -167,7 +167,7 @@ model Application {
   updated_at        DateTime          @updatedAt
   portfolio_id      Int?
   resume_id         Int?
-  jobPost           JobPost           @relation(fields: [job_post_id], references: [id])
+  jobPost           JobPost           @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
   portfolioDocument Document?         @relation("PortfolioDocument", fields: [portfolio_id], references: [id])
   resumeDocument    Document?         @relation("ResumeDocument", fields: [resume_id], references: [id])
   applicationStatus ApplicationStatus @relation(fields: [status], references: [id])
