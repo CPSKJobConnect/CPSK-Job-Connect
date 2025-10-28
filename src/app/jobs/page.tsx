@@ -46,8 +46,17 @@ export default function Page() {
 
         const resJobs = await fetch(jobsUrl);
         const dataJobs = await resJobs.json();
-        console.log("Fetched jobs:", dataJobs);
-        setJobData(dataJobs);
+
+        const now = Date.now();
+        const activeJobs = Array.isArray(dataJobs)
+          ? dataJobs.filter((j: JobInfo) => {
+              if (!j.deadline) return true;
+              const d = Date.parse(j.deadline);
+              if (isNaN(d)) return true;
+              return d >= now;
+            })
+          : [];
+        setJobData(activeJobs);
 
         const resFilters = await fetch("/api/jobs/filter");
         const dataFilters = await resFilters.json();
