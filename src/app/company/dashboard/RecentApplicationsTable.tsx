@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
     Select,
     SelectContent,
@@ -87,7 +88,7 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
             >
               <div className="flex items-center gap-4 w-1/4 min-w-0">
                 {student.applicant.profile_url ? (
-                  <img
+                  <Image
                     src={student.applicant.profile_url}
                     alt={`${student.applicant.name} profile`}
                     width={40}

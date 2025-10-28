@@ -18,7 +18,6 @@ export default function StudentProfilePage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: session, update: updateSession } = useSession();
-  const searchParams = useSearchParams();
 
   const fetchStudentProfile = async () => {
     try {

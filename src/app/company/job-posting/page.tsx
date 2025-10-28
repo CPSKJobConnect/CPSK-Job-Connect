@@ -157,7 +157,6 @@ export default function Page() {
               formData={formData}
               setFormData={setFormData}
               categories={categories}
-              locations={locations}
               types={types}
               arrangements={arrangements}
             />

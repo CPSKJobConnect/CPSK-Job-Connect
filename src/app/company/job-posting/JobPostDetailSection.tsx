@@ -16,13 +16,12 @@ interface JobPostDetailProps {
   formData: JobPostFormData;
   setFormData: React.Dispatch<React.SetStateAction<JobPostFormData>>;
   categories: string[];
-  locations: string[];
   types: string[];
   arrangements: string[];
 }
 
 
-const JobPostDetailSection = ({ formData, setFormData, categories, locations, types, arrangements }: JobPostDetailProps) => {
+const JobPostDetailSection = ({ formData, setFormData, categories, types, arrangements }: JobPostDetailProps) => {
 
     const handleSelect = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
