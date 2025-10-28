@@ -15,8 +15,7 @@ import { Input } from "./ui/input";
 import { JobPostFormData } from "@/types/job";
 import SkillCombobox from "./SkillCombobox";
 import CategoryCombobox from "./CategoryCombobox";
-import { mockCategory, mockJobType, mockJobArrangement } from "public/data/fakeFilterInfo";
-import { mockCompanies } from "public/data/mockCompany";
+import LocationCombobox from "./LocationCombobox";
 import {
   Select,
   SelectContent,
@@ -32,6 +31,9 @@ interface JobDescriptionProps {
   onApply: boolean;
   onEdit: boolean;
   tags?: string[];
+  categoryList?: string[];
+  typeList?: string[];
+  arrangementList?: string[];
 }
 
 const typeColors: Record<string, string> = {
@@ -44,7 +46,7 @@ const typeColors: Record<string, string> = {
 
 
 
-const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionProps) => {
+const JobDescriptionCard = ({job, size, onApply, onEdit, tags, categoryList: propCategoryList, typeList: propTypeList, arrangementList: propArrangementList }: JobDescriptionProps) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [formData, setFormData] = useState<JobPostFormData>({
@@ -64,17 +66,15 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
       qualification: job.description.qualification,
     },
   });
-  const [locationList, setLocationmentList] = useState<string[]>([]);
   const [categoryList, setCategoryList] = useState<string[]>([]);
   const [jobTypeList, setJobTypeList] = useState<string[]>([]);
   const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
 
   useEffect(() => {
-    setLocationmentList(mockCompanies[0].address);
-    setCategoryList(mockCategory);
-    setJobTypeList(mockJobType);
-    setJobArrangementList(mockJobArrangement);
-  }, [])
+    setCategoryList(propCategoryList || []);
+    setJobTypeList(propTypeList || []);
+    setJobArrangementList(propArrangementList || []);
+  }, [propCategoryList, propTypeList, propArrangementList])
 
   const baseStyle =
     "rounded-xl shadow-md border border-gray-100 bg-white flex flex-col gap-2 transition mb-5";
@@ -99,14 +99,14 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
       try {
     const body = {
       location: formData.location,
-      job_arrangement_id: mockJobArrangement.find(a => a === formData.arrangement) ? mockJobArrangement.indexOf(formData.arrangement) + 1 : undefined,
-      job_type_id: mockJobType.find(t => t === formData.type) ? mockJobType.indexOf(formData.type) + 1 : undefined,
+      arrangement: formData.arrangement,
+      type: formData.type,
       min_salary: formData.salary.min,
       max_salary: formData.salary.max,
       aboutRole: formData.description.overview,
       requirements: formData.description.requirement.split("\n"),
       qualifications: formData.description.qualification.split("\n"),
-      tagIds: formData.skills.map(skill => Number(skill)), // map เป็น id ตาม database
+      tags: formData.skills,
       categoryIds: [Number(formData.category)]
     };
 
@@ -229,18 +229,11 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
         <div className="flex gap-1 items-center">
           <IoLocationOutline />
           {isEditing ? (
-            <Select 
-            value={formData.location} 
-            onValueChange={(value) => setFormData({ ...formData, location: value })}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select location" />
-              </SelectTrigger>
-              <SelectContent>
-                {locationList.map((loc) => (
-                  <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <LocationCombobox
+                value={formData.location}
+                onChange={(value) => setFormData({ ...formData, location: value })}
+                showIcon={false}
+            />
           ) : (
             <span>{job.location}</span>
           )}
