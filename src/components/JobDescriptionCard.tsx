@@ -68,7 +68,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
   const [categoryList, setCategoryList] = useState<string[]>([]);
   const [jobTypeList, setJobTypeList] = useState<string[]>([]);
   const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
-    
+
   useEffect(() => {
     setLocationmentList(mockCompanies[0].address);
     setCategoryList(mockCategory);
@@ -88,18 +88,68 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
     router.push(`/student/job-apply/${job.id}`);
   };
 
-  const handleSave = () => {
-    
+  const handleSave = async () => {
+
   };
 
-  const handleEdit = () => {
-    console.log(formData);
+  const handleEdit = async () => {
+      const confirmed = window.confirm("Are you sure you want to save these changes?");
+      if (!confirmed) return;
+
+      try {
+    const body = {
+      location: formData.location,
+      job_arrangement_id: mockJobArrangement.find(a => a === formData.arrangement) ? mockJobArrangement.indexOf(formData.arrangement) + 1 : undefined,
+      job_type_id: mockJobType.find(t => t === formData.type) ? mockJobType.indexOf(formData.type) + 1 : undefined,
+      min_salary: formData.salary.min,
+      max_salary: formData.salary.max,
+      aboutRole: formData.description.overview,
+      requirements: formData.description.requirement.split("\n"),
+      qualifications: formData.description.qualification.split("\n"),
+      tagIds: formData.skills.map(skill => Number(skill)), // map เป็น id ตาม database
+      categoryIds: [Number(formData.category)]
+    };
+
+    const res = await fetch(`/api/jobs/${job.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      alert(data.error || "Failed to update job");
+      return;
+    }
+
+    alert("Job updated successfully!");
     setIsEditing(false);
-    
+    router.push("/company/job-applicant");
+  } catch (error) {
+    console.error("Save error:", error);
+    alert("Something went wrong while saving the job.");
+  }
   };
 
-  const handleDelete = () => {
-    
+  const handleDelete = async () => {
+    const confirmed = window.confirm("Are you sure you want to delete this job post?");
+    if (!confirmed) return;
+
+    try {
+        const res = await fetch(`/api/jobs/${job.id}`, {
+            method: "DELETE",
+        });
+        if (res.ok) {
+            alert("Job deleted successfully!");
+            router.refresh();
+        } else {
+            const data = await res.json();
+            alert(data.error || "Failed to delete job.");
+        }
+    } catch (error) {
+        console.error("Delete error:", error);
+        alert("Something went wrong while deleting the job.");
+    }
   };
 
   return (
