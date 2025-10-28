@@ -1,4 +1,3 @@
-// src/tests/api/admin/dashboard/route.test.ts
 import { GET } from "@/app/api/admin/dashboard/stats/route";
 import * as statsLogic from "@/app/api/admin/dashboard/stats/stats.logic";
 import { getServerSession } from "next-auth/next";
