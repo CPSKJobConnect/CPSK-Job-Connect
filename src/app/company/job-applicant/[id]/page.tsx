@@ -110,7 +110,6 @@ export default function Page() {
                         onApply={false}
                         onEdit={true}
                         job={selectedJob!}
-                        tags={selectedJob?.skills}
                       />
                     ) : (
                     <div className="flex flex-col items-center gap-4 py-44">

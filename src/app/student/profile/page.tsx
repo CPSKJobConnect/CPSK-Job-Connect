@@ -19,7 +19,6 @@ export default function StudentProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: session, update: updateSession } = useSession();
   const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab");
 
   const fetchStudentProfile = async () => {
     try {
@@ -116,7 +115,6 @@ export default function StudentProfilePage() {
     );
   }
 
-  const defaultTab = "profile";
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">

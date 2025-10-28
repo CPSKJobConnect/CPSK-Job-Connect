@@ -18,7 +18,6 @@ interface UniversalNavbarProps {
 export default function UniversalNavbar({ links, showBookmarks = false, onSignInClick }: UniversalNavbarProps) {
   const { data: session } = useSession();
   const router = useRouter();
-  const pathname = usePathname();
 
   const defaultSignInHandler = () => {
     const section = document.getElementById("role-selection");
