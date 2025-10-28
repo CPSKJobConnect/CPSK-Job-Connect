@@ -1,10 +1,107 @@
-
 "use client"
 
-import { signOut, useSession } from "next-auth/react"
+import { useSession } from "next-auth/react"
+import { MdWorkOutline, MdOutlineArchive } from "react-icons/md";
+import { AiOutlineSchedule, AiOutlineClockCircle } from "react-icons/ai";
+import { BsClipboardCheck, BsClipboardData } from "react-icons/bs";
+import { RiDraftLine, RiUserSharedLine, RiUserHeartLine } from "react-icons/ri";
+import { PiHandshakeLight } from "react-icons/pi";
+import { HiOutlineUserGroup } from "react-icons/hi2";
+import StatCard from "@/components/StatCard";
+import { mockCompanyStat, mockApplicationTrendData, mockStatusBreakdown, mockApplications, mockTopJobs} from "../../../../public/data/mockCompanyStat";
+import ApplicationTrendChart from "./ApplicationTrendChart";
+import StatusBreakdownChart from "./StatusBreakdownChart";
+import RecentApplicationsTable from "./RecentApplicationsTable";
+import TopJobCard from "./TopJobsCard";
+import { useEffect, useState } from "react";
+import { IconType } from "react-icons/lib";
+
+
+const companyStatsConfig: Record<string, { icon: IconType; iconBg: string; iconColor: string; key: string }> = {
+  "Total Jobs": {
+    icon: MdWorkOutline,
+    iconBg: "#FFEFEA",
+    iconColor: "#FD8A5E",
+    key: "totalJobs",
+  },
+  "Active Jobs": {
+    icon: AiOutlineSchedule,
+    iconBg: "#E6F6FF",
+    iconColor: "#2E93FF",
+    key: "activeJobs",
+  },
+  "Draft Jobs": {
+    icon: RiDraftLine,
+    iconBg: "#E9F8F0",
+    iconColor: "#34C38F",
+    key: "draftJobs",
+  },
+  "Closed Jobs": {
+    icon: MdOutlineArchive,
+    iconBg: "#F4E9FF",
+    iconColor: "#A855F7",
+    key: "closedJobs",
+  },
+  "Total Applications": {
+    icon: HiOutlineUserGroup,
+    iconBg: "#FFF3E6",
+    iconColor: "#F59E0B",
+    key: "totalApplications",
+  },
+  "New Applications": {
+    icon: BsClipboardData,
+    iconBg: "#E8F5FF",
+    iconColor: "#3B82F6",
+    key: "newApplications",
+  },
+  "Pending Applications": {
+    icon: AiOutlineClockCircle,
+    iconBg: "#FFF7E6",
+    iconColor: "#FBBF24",
+    key: "pendingApplications",
+  },
+  "Reviewed Applications": {
+    icon: BsClipboardCheck,
+    iconBg: "#E7F9EE",
+    iconColor: "#10B981",
+    key: "reviewedApplications",
+  },
+  "Interviews Scheduled": {
+    icon: PiHandshakeLight,
+    iconBg: "#E8E8FF",
+    iconColor: "#6366F1",
+    key: "interviewsScheduled",
+  },
+  "Offers Rejected": {
+    icon: RiUserSharedLine,
+    iconBg: "#FFF0F4",
+    iconColor: "#EC4899",
+    key: "offersRejected",
+  },
+  "Offers Accepted": {
+    icon: RiUserHeartLine,
+    iconBg: "#E7FAF5",
+    iconColor: "#14B8A6",
+    key: "offersAccepted",
+  },
+};
+
 
 const CompanyDashboardPage = () => {
   const { data: session, status } = useSession()
+  const [companyStat, setCompanyStat] = useState<{ title: string; value: number; icon: IconType; iconBg: string; iconColor: string }[]>([]);
+
+  useEffect(() => {
+    const stats = Object.entries(companyStatsConfig).map(([title, data]) => ({
+      title,
+      value: mockCompanyStat[data.key as keyof typeof mockCompanyStat],
+      icon: data.icon,
+      iconBg: data.iconBg,
+      iconColor: data.iconColor,
+    }));
+
+    setCompanyStat(stats);
+  }, []);
 
   if (status === "loading") {
     return (
@@ -22,52 +119,37 @@ const CompanyDashboardPage = () => {
     )
   }
 
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex justify-between items-start mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Company Dashboard</h1>
-          <button
-            onClick={() => signOut({ callbackUrl: "/" })}
-            className="px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-        <div className="space-y-2">
-          <p className="text-gray-700">
-            <span className="font-medium">Welcome back,</span> {session.user.username || session.user.email}
-          </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Email:</span> {session.user.email}
-          </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Role:</span> {session.user.role}
-          </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">User ID:</span> {session.user.id}
-          </p>
-          <div className="flex items-center space-x-2 mt-3">
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            <span className="text-sm font-medium text-green-700">Authenticated</span>
-          </div>
-        </div>
+    <div className="flex flex-col gap-5 p-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-6">
+        {companyStat.map((stat, idx) => {
+          const iconData = companyStatsConfig[stat.title];
+          return (
+            <StatCard
+              key={idx}
+              title={stat.title}
+              value={stat.value.toString()}
+              icon={iconData.icon}
+              iconBg={iconData.iconBg}
+              iconColor={iconData.iconColor}
+            />
+          );
+        })}
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-          <h2 className="text-lg font-semibold text-blue-900 mb-2">Company Profile</h2>
-          <p className="text-blue-700 text-sm">Manage your company profile and information</p>
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col md:flex-row gap-5">
+          <ApplicationTrendChart data={mockApplicationTrendData} loading={false} />
+          <StatusBreakdownChart data={mockStatusBreakdown} loading={false} />
         </div>
 
-        <div className="bg-green-50 rounded-lg p-6 border border-green-200">
-          <h2 className="text-lg font-semibold text-green-900 mb-2">Job Postings</h2>
-          <p className="text-green-700 text-sm">Create and manage job postings</p>
-        </div>
-
-        <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
-          <h2 className="text-lg font-semibold text-purple-900 mb-2">Applications</h2>
-          <p className="text-purple-700 text-sm">Review and manage job applications</p>
+        <div className="flex flex-col lg:flex-row gap-5 h-full items-stretch">
+          <div className="basis-3/5 h-full min-h-0">
+            <RecentApplicationsTable applications={mockApplications} loading={false} />
+          </div>
+          <div className="basis-2/5 h-full min-h-0">
+            <TopJobCard jobs={mockTopJobs} loading={false} />
+          </div>
         </div>
       </div>
     </div>
