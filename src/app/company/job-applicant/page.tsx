@@ -15,8 +15,33 @@ export default function Page() {
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [applicants, setApplicants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<{
+  categories: string[],
+  types: string[],
+  arrangements: string[],
+  tags: string[],
+}>({ categories: [], types: [], arrangements: [], tags: [] });
 
-  // ✅ ดึงข้อมูล job โดยใช้ session-based API
+  useEffect(() => {
+  const fetchFilters = async () => {
+    try {
+      const res = await fetch("/api/jobs/filter");
+      if (!res.ok) throw new Error("Failed to fetch filters");
+      const data = await res.json();
+      setFilters({
+        categories: data.categories || [],
+        types: data.types || [],
+        arrangements: data.arrangements || [],
+        tags: data.tags || [],
+      });
+    } catch (error) {
+      console.error("Error fetching filters:", error);
+    }
+  };
+
+  fetchFilters();
+}, []);
+
   useEffect(() => {
     const fetchJobs = async () => {
       try {
@@ -33,12 +58,6 @@ export default function Page() {
     fetchJobs();
   }, []);
 
-  // ✅ Log เพื่อตรวจสอบข้อมูลที่โหลดได้
-  useEffect(() => {
-    console.log("Fetched jobs:", jobPost);
-  }, [jobPost]);
-
-  // ✅ ดึงรายชื่อ applicant เมื่อเลือก job
   useEffect(() => {
     if (!selectedCardId) {
       setApplicants([]);
@@ -100,7 +119,7 @@ export default function Page() {
         <div className="flex md:flex-row sm:flex-col gap-8">
           {/* Job List */}
           <div className="basis-1/5">
-            <AllJobPost info={jobPost} onSelectCard={(id) => setSelectedCardId(id)} />
+            <AllJobPost info={jobPost} onSelectCard={(id) => setSelectedCardId(id)} allDepartment={filters.categories} />
           </div>
 
           {/* Job Detail */}
@@ -113,7 +132,10 @@ export default function Page() {
                     onApply={false}
                     onEdit={true}
                     job={selectedJob}
-                    tags={selectedJob.skills}
+                    tags={filters.tags}
+                    categoryList={filters.categories}
+                    typeList={filters.types}
+                    arrangementList={filters.arrangements}
                   />
                   <ApplicationList
                     job_id={Number(selectedJob.id)}
