@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import JobCard from "@/components/JobCard";
-import { mockDepartmentData } from "public/data/mockDepartment";
 import { JobInfo } from "@/types/job";
 import { filterByCategory } from "@/lib/jobFilter";
 import {
@@ -18,25 +17,19 @@ import { Button } from "@/components/ui/button";
 interface AllJobPostProps {
   info: JobInfo[];
   onSelectCard: (id: number) => void;
+  allDepartment: string[];
 }
 
 type PostType = "All Posts" | "Active" | "Draft" | "Close";
 
-const AllJobPost = ({ info, onSelectCard }: AllJobPostProps) => {
+const AllJobPost = ({ info, onSelectCard, allDepartment }: AllJobPostProps) => {
   const postTypes: PostType[] = ["All Posts", "Active", "Draft", "Close"];
   const [selectedType, setSelectedType] = useState<PostType>("All Posts");
-  const [jobPost, setJobPost] = useState<JobInfo[]>([]);
   const [filteredJobPost, setFilteredJobPost] = useState<JobInfo[]>([]);
-  const [allDepartment, setAllDepartment] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>();
 
   useEffect(() => {
-    setJobPost(info);
-    setAllDepartment(mockDepartmentData.departments);
-  }, [jobPost, allDepartment]);
-
-  useEffect(() => {
-    let result = [...jobPost];
+    let result = [...info];
 
     result = result.filter((job) => {
       if (selectedType === "All Posts") return true;
@@ -51,11 +44,10 @@ const AllJobPost = ({ info, onSelectCard }: AllJobPostProps) => {
     }
 
     setFilteredJobPost(result);
-  }, [jobPost, selectedType, selectedDepartment]);
+  }, [info, selectedType, selectedDepartment]);
 
   const handleClear = () => {
     setSelectedDepartment("");
-    setFilteredJobPost(jobPost);
   }
   
 
