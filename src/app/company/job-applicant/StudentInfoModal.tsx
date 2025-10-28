@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { MdOutlinePersonOutline, MdOutlineMailOutline } from "react-icons/md";
 import { LuPhone } from "react-icons/lu";
-import { mockApplicantInfo } from "public/data/mockApplicantInfo";
 import { Separator } from "@/components/ui/separator";
 import { RiExternalLinkLine } from "react-icons/ri";
 import Image from "next/image";
@@ -31,19 +30,39 @@ interface ApplicantInfo {
   certification: string[];
 }
 
-const StudentInfoModal = ({ applicant_id }: { applicant_id: string }) => {
+const StudentInfoModal = ({ applicant_id, selectedJobId }: { applicant_id: string; selectedJobId: string | number; }) => {
   const [applicantInfo, setApplicantInfo] = useState<ApplicantInfo | null>(null);
 
   useEffect(() => {
     if (!applicant_id) return;
-    const found = mockApplicantInfo.find((app: any) => app.applicant_id === applicant_id);
-    if (found) setApplicantInfo(found);
+
+      fetch(`/api/jobs/${selectedJobId}/applicants`)
+        .then(res => res.json())
+        .then(data => {
+            const info = data.applicants.find((a: any) => a.applicant_id.toString() === applicant_id);
+            if (info) setApplicantInfo({
+                profile_url: info.logoUrl || "/assets/images/companyLogo.png",
+                firstname: info.name.split(" ")[0],
+                lastname: info.name.split(" ")[1] || "",
+                email: info.email,
+                phone_number: info.phone,
+                applied_position: "Position TBD",
+                applied_at: info.applied_at,
+                documents: {
+                    resume_url: info.resume ?? "",
+                    portfolio_url: info.portfolio ?? "",
+                },
+                work_experience: [],
+                certification: [],
+            });
+        })
+        .catch(console.error);
   }, [applicant_id]);
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="flex flex-row gap-1 bg-[#FD873E] text-white rounded-xl shadow-md 
+        <Button className="flex flex-row gap-1 bg-[#FD873E] text-white rounded-xl shadow-md
                           hover:bg-[#FF9A50] hover:shadow-lg">
           <MdOutlinePersonOutline size={20} />
           <p>Profile</p>
