@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
 import {
   Tabs,
@@ -21,6 +22,7 @@ export default function Page() {
   const [types, setTypes] = useState<string[]>([]);
   const [arrangements, setArrangements] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -100,6 +102,7 @@ export default function Page() {
       if (res.ok) {
         const data = await res.json();
         alert("✅ Job posted successfully!");
+        router.push("/company/job-applicant");
       } else {
         const err = await res.json();
         alert(`❌ Failed to post job: ${err.error || "Unknown error"}`);
