@@ -63,3 +63,31 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     return NextResponse.json({ error: "Failed to fetch job" }, { status: 500 });
   }
 }
+
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const jobId = Number(id);
+
+    const existingJob = await prisma.jobPost.findUnique({
+      where: { id: jobId },
+    });
+
+    if (!existingJob) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
+    await prisma.jobPost.delete({
+      where: { id: jobId },
+    });
+
+    return NextResponse.json({ message: "Job deleted successfully" }, { status: 200 });
+  } catch (error) {
+    console.error("DELETE /api/jobs/[id] error:", error);
+    return NextResponse.json({ error: "Failed to delete job" }, { status: 500 });
+  }
+}
