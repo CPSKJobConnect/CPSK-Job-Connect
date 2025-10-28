@@ -139,6 +139,7 @@ export default function Page() {
 
       alert("Application submitted successfully!");
       console.log("Application response:", data);
+      router.push("/jobs");
     } catch (err) {
       console.error(err);
       alert("Error submitting application.");
