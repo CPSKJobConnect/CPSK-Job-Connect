@@ -91,3 +91,58 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to delete job" }, { status: 500 });
   }
 }
+
+
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const jobId = Number(id);
+
+    const existingJob = await prisma.jobPost.findUnique({
+      where: { id: jobId },
+      include: { tags: true, categories: true },
+    });
+
+    if (!existingJob) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
+    const body = await request.json();
+    const tagIds = await prisma.jobTag.findMany({
+        where: { name: { in: body.skills } },
+        select: { id: true }
+    });
+
+    const categoryIds = await prisma.jobCategory.findMany({
+        where: { name: body.category },
+        select: { id: true }
+    });
+
+    const updatedJob = await prisma.jobPost.update({
+      where: { id: jobId },
+      data: {
+        location: body.location ?? existingJob.location,
+        job_arrangement_id: body.job_arrangement_id ?? existingJob.job_arrangement_id,
+        job_type_id: body.job_type_id ?? existingJob.job_type_id,
+        min_salary: body.min_salary ?? existingJob.min_salary,
+        max_salary: body.max_salary ?? existingJob.max_salary,
+        aboutRole: body.aboutRole ?? existingJob.aboutRole,
+        requirements: body.requirements ?? existingJob.requirements,
+        qualifications: body.qualifications ?? existingJob.qualifications,
+        tags: { set: tagIds },
+        categories: { set: categoryIds }
+      },
+    });
+
+    return NextResponse.json({
+      message: "Job updated successfully",
+      job: updatedJob,
+    });
+  } catch (error) {
+    console.error("PATCH /api/jobs/[id] error:", error);
+    return NextResponse.json({ error: "Failed to update job" }, { status: 500 });
+  }
+}
