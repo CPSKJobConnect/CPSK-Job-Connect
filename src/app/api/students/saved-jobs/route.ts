@@ -223,7 +223,8 @@ export async function GET (req: Request) {
     });
 
     // Transform data to match BookmarkJobInfo format for frontend
-    const transformedJobs = savedJobs.map(savedJob => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformedJobs = savedJobs.map((savedJob: any) => ({
       job: {
         id: String(savedJob.jobPost.id),
         companyLogo: savedJob.jobPost.company.account.logoUrl || "/default-logo.png",
@@ -238,7 +239,7 @@ export async function GET (req: Request) {
           min: savedJob.jobPost.min_salary,
           max: savedJob.jobPost.max_salary
         },
-        skills: savedJob.jobPost.tags.map(tag => tag.name),
+        skills: savedJob.jobPost.tags.map((tag: { name: string }) => tag.name),
         description: {
           overview: savedJob.jobPost.aboutRole,
           responsibility: savedJob.jobPost.aboutRole,

@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
 
       const trendMap = new Map<string, number>();
 
-      applications.forEach((app) => {
+      applications.forEach((app: { applied_at: Date }) => {
         const dateKey = app.applied_at.toISOString().split('T')[0];
         trendMap.set(dateKey, (trendMap.get(dateKey) || 0) + 1);
       });
@@ -149,6 +149,12 @@ export async function GET(request: NextRequest) {
         }
       });
     }
+
+    // This should never be reached due to validation above, but TypeScript needs it
+    return NextResponse.json(
+      { error: "Invalid type parameter" },
+      { status: 400 }
+    );
 
   } catch (error) {
     console.error("Error fetching company analytics:", error);

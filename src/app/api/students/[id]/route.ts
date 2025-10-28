@@ -43,17 +43,17 @@ export async function GET() {
       phone: student.phone,
       documents: {
         resume: student.account.documents
-          .filter(d => d.doc_type_id === 1)
-          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter((d: { doc_type_id: number }) => d.doc_type_id === 1)
+          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
         cv: student.account.documents
-          .filter(d => d.doc_type_id === 2)
-          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter((d: { doc_type_id: number }) => d.doc_type_id === 2)
+          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
         portfolio: student.account.documents
-          .filter(d => d.doc_type_id === 3)
-          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter((d: { doc_type_id: number }) => d.doc_type_id === 3)
+          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
         transcript: student.account.documents
-          .filter(d => d.doc_type_id === 4)
-          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter((d: { doc_type_id: number }) => d.doc_type_id === 4)
+          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
       }
     };
 
@@ -130,17 +130,17 @@ export async function PUT(request: Request) {
       phone: updatedStudent.phone,
       documents: {
         resume: updatedStudent.account.documents
-          .filter(d => d.doc_type_id === 1)
-          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter((d: { doc_type_id: number }) => d.doc_type_id === 1)
+          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
         cv: updatedStudent.account.documents
-          .filter(d => d.doc_type_id === 2)
-          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter((d: { doc_type_id: number }) => d.doc_type_id === 2)
+          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
         portfolio: updatedStudent.account.documents
-          .filter(d => d.doc_type_id === 3)
-          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter((d: { doc_type_id: number }) => d.doc_type_id === 3)
+          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
         transcript: updatedStudent.account.documents
-          .filter(d => d.doc_type_id === 4)
-          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter((d: { doc_type_id: number }) => d.doc_type_id === 4)
+          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
       }
     };
 

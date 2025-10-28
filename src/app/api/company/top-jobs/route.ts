@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       take: limit * 2
     });
 
-    const jobsWithStats = jobs.map((job) => {
+    const jobsWithStats = jobs.map((job: { id: number; jobName: string; is_Published: boolean; deadline: Date; applications: { id: number }[] }) => {
       let status: "active" | "draft" | "closed";
 
       if (!job.is_Published) {
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    jobsWithStats.sort((a, b) => b.applications - a.applications);
+    jobsWithStats.sort((a: { applications: number }, b: { applications: number }) => b.applications - a.applications);
     const topJobs = jobsWithStats.slice(0, limit);
 
     return NextResponse.json({

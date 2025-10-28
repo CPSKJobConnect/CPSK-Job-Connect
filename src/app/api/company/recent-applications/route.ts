@@ -83,7 +83,8 @@ export async function GET(request: NextRequest) {
       skip: offset
     });
 
-    const formattedApplications = applications.map((app) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const formattedApplications = applications.map((app: any) => ({
       id: app.id,
       applicant: {
         id: app.student.id,

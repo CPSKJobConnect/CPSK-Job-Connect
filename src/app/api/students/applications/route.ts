@@ -48,7 +48,8 @@ export async function GET() {
     });
 
     // Format the response
-    const formattedApplications = applications.map(app => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const formattedApplications = applications.map((app: any) => ({
       id: app.id,
       status: app.applicationStatus.name,
       applied_at: app.applied_at,

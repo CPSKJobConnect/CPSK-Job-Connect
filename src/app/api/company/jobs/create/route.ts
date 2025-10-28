@@ -71,7 +71,7 @@ export async function POST(req: Request) {
       : undefined,
     tags: tagIds.length
       ? {
-          connect: tagIds.map(tag => ({ id: tag.id })),
+          connect: tagIds.map((tag: { id: number }) => ({ id: tag.id })),
         }
       : undefined,
   },
