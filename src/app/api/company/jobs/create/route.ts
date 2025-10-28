@@ -1,16 +1,16 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getApiSession } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email) {
+    const session = await getApiSession(request);
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
+    const body = await request.json();
 
     const jobArrangement = await prisma.jobArrangement.findUnique({
       where: { name: body.arrangement },
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     }
 
     const account = await prisma.account.findUnique({
-      where: { email: session.user.email },
+      where: { id: parseInt(session.user.id) },
       include: { company: true },
     });
 
