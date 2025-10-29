@@ -24,10 +24,9 @@ interface JobCardProps {
 
 const typeColors: Record<string, string> = {
   fulltime: "bg-pink-200 text-gray-800",
-  parttime: "bg-blue-200 text-gray-800",
+  "part-time": "bg-blue-200 text-gray-800",
   internship: "bg-orange-100 text-gray-800",
-  contract: "bg-yellow-200 text-gray-800",
-  hybrid: "bg-purple-200 text-gray-800"
+  freelance: "bg-yellow-200 text-gray-800",
 };
 
 
