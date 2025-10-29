@@ -48,6 +48,11 @@ export default function Page() {
     setAppliedJobs(sortedBookmarkedJobs.filter((j) => j.isApplied));
   }, [sortedBookmarkedJobs]);
 
+  const handleUnbookmark = (jobId: string) => {
+    setBookmarkedJobs((prev) => prev.filter((b) => b.job.id !== jobId));
+    setSortedBookmarkedJobs((prev) => prev.filter((b) => b.job.id !== jobId));
+  };
+
   const filteredBookmarks = sortedBookmarkedJobs.filter((b) => {
     if (!query) return true;
     return (
@@ -141,7 +146,7 @@ export default function Page() {
                 <Dialog key={item.job.id}>
                   <DialogTrigger asChild>
                     <div className="cursor-pointer">
-                      <JobCard size="lg" info={item.job} />
+                      <JobCard size="lg" info={item.job} onUnbookmark={handleUnbookmark} isCompanyView={false}/>
                     </div>
                   </DialogTrigger>
 
@@ -175,7 +180,7 @@ export default function Page() {
           ) : (
             <div className="flex flex-col">
               {appliedJobs.map((item: BookmarkJobInfo) => (
-                <JobCard key={item.job.id} size="lg" info={item.job} />
+                <JobCard key={item.job.id} size="lg" info={item.job} onUnbookmark={handleUnbookmark} isCompanyView={false} />
               ))}
             </div>
           )}

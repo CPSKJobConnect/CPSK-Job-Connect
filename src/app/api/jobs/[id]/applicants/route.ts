@@ -63,7 +63,7 @@ export async function GET(
           name: a.student.name,
           student_id: a.student.student_id,
           email: a.student.account.email,
-          logoUrl: a.student.account.logoUrl,
+          profile_url: a.student.account.logoUrl,
           phone: a.student.phone,
           status: a.status,
           applied_at: a.applied_at,

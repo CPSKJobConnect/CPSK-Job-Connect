@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -79,16 +79,17 @@ const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder, 
             <CommandList>
               <CommandEmpty>
                 <div className="flex flex-col gap-3 items-center p-3">
-                  <p className="text-gray-600 text-sm text-center">
-                    No results found. Add{" "}
-                    <span className="font-semibold text-gray-800">{searchTerm}</span> as a new category?
+                   <p className="text-gray-600 text-sm text-center max-w-[150px]">
+                      No results found. Add <span className="font-semibold text-gray-800 truncate block">{searchTerm}</span> as a new category?
                   </p>
                   <Button
                     onClick={handleAddCategory}
-                    className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-full max-w-[200px] max-h-[30px]"
+                    className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-auto max-h-[30px] max-w-[400px]"
                   >
-                    <IoIosAdd className="w-5 h-5" />
-                    <span>Add "{searchTerm}"</span>
+                    <IoIosAdd className="w-5 h-5 flex-shrink-0" />
+                    <span className="truncate max-w-[200px]">
+                      Add new category: {searchTerm}
+                    </span>
                   </Button>
                 </div>
               </CommandEmpty>

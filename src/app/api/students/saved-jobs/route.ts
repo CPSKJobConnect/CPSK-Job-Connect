@@ -1,32 +1,29 @@
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { getApiSession } from "@/lib/api-auth";
+import { NextRequest, NextResponse } from "next/server";
 
-
-export async function POST (req: Request) {
-  // Checklist: 1. get user from session 2. get jobId from request body 3. validate jobId 4. check if saved job exists 5. if not exists, create it 6. if exists, return error 7. return appropriate response
+export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user from session
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const session = await getApiSession(request);
+
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Unauthorized - Please log in" },
         { status: 401 }
       );
     }
-    // get job id from request body
-    const { jobId } = await req.json();
-    // Validate that jobId is provided
+
+    const { jobId } = await request.json();
+
     if (!jobId) {
       return NextResponse.json(
         { error: "Job ID is required" },
         { status: 400 }
       );
     }
-    // Get the student from user email
-    const student = await prisma.student.findFirst({
-      where: {account: { email: session.user.email } },
+
+    const student = await prisma.student.findUnique({
+      where: { account_id: parseInt(session.user.id) },
     });
     if (!student) {
       return NextResponse.json(
@@ -70,31 +67,28 @@ export async function POST (req: Request) {
   }
 }
 
-export async function DELETE (req: Request) {
-  // Checklist: 1. get user from session 2. get jobId from request body 3. validate jobId 4. check if saved job exists 5. if exists, remove it 6. if not exists, return error 7. return appropriate response
-  try { 
-    // Get authenticated user from session
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getApiSession(request);
+
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Unauthorized - Please log in" },
         { status: 401 }
       );
   }
 
-  // Parese jobId from request body
-  const { jobId } = await req.json();
-  // Validate that jobId is provided
-  // 400 Bad Request
+  const { jobId } = await request.json();
+
   if (!jobId) {
     return NextResponse.json(
       { error: "Job ID is required, bad request" },
       { status: 400 }
     );
   }
-  // find the student from user email
-  const student = await prisma.student.findFirst({
-    where: {account: { email: session.user.email } },
+
+  const student = await prisma.student.findUnique({
+    where: { account_id: parseInt(session.user.id) },
   });
   // 404 not found: server can't find the source
   if (!student) {
@@ -146,26 +140,21 @@ export async function DELETE (req: Request) {
   }
 }
 
-// GET all saved jobs for the authenticated student
-export async function GET (req: Request) {
-  // jobId (optional): if provided, checks that the specific job post is saved by the student
-  // Behavior: 1. If jobId is provided, return a boolean indicating if the job is saved 2. If jobId is not provided, return a list of all saved jobs for the student
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const session = await getApiSession(request);
+
+    if (!session?.user?.id) {
       return NextResponse.json(
-        {error: "Unauthorized - Please log in" },
-        {status: 401 }
+        { error: "Unauthorized - Please log in" },
+        { status: 401 }
       )
     }
-    // parse query parameters
-    // /api/students/saved-jobs?jobId=123
-    const {searchParams} = new URL(req.url);
-    const jobId = searchParams.get("jobId");
 
-    // find the student
-    const student = await prisma.student.findFirst({
-      where: { account: { email: session.user.email } },
+    const jobId = request.nextUrl.searchParams.get("jobId");
+
+    const student = await prisma.student.findUnique({
+      where: { account_id: parseInt(session.user.id) },
     });
     if (!student){
       return NextResponse.json(
@@ -223,7 +212,8 @@ export async function GET (req: Request) {
     });
 
     // Transform data to match BookmarkJobInfo format for frontend
-    const transformedJobs = savedJobs.map(savedJob => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformedJobs = savedJobs.map((savedJob: any) => ({
       job: {
         id: String(savedJob.jobPost.id),
         companyLogo: savedJob.jobPost.company.account.logoUrl || "/default-logo.png",
@@ -238,7 +228,7 @@ export async function GET (req: Request) {
           min: savedJob.jobPost.min_salary,
           max: savedJob.jobPost.max_salary
         },
-        skills: savedJob.jobPost.tags.map(tag => tag.name),
+        skills: savedJob.jobPost.tags.map((tag: { name: string }) => tag.name),
         description: {
           overview: savedJob.jobPost.aboutRole,
           responsibility: savedJob.jobPost.aboutRole,

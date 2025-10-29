@@ -12,7 +12,6 @@ interface JobPostDescriptionProps {
 
 
 const JobPostDescriptionSection = ({ formData, setFormData, tags }: JobPostDescriptionProps) => {
-    const [minSalary, setMinSalary] = useState<number | "">(0);
 
     return (
         <div className="flex flex-col gap-6 bg-white p-6 rounded-md shadow-md h-full">

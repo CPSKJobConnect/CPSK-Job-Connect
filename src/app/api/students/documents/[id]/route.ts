@@ -1,16 +1,16 @@
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createClient } from "@supabase/supabase-js";
-import { getServerSession } from "next-auth/next";
-import { NextResponse } from "next/server";
+import { getApiSession } from "@/lib/api-auth";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const session = await getApiSession(request);
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -20,9 +20,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Invalid document ID" }, { status: 400 });
     }
 
-    // Get student account
     const account = await prisma.account.findUnique({
-      where: { email: session.user.email }
+      where: { id: parseInt(session.user.id) }
     });
 
     if (!account) {

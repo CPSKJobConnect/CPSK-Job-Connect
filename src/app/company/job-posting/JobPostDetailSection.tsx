@@ -1,6 +1,5 @@
 "use client";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -17,17 +16,12 @@ interface JobPostDetailProps {
   formData: JobPostFormData;
   setFormData: React.Dispatch<React.SetStateAction<JobPostFormData>>;
   categories: string[];
-  locations: string[];
   types: string[];
   arrangements: string[];
 }
 
 
-const JobPostDetailSection = ({ formData, setFormData, categories, locations, types, arrangements }: JobPostDetailProps) => {
-  const [locationList, setLocationList] = useState<string[]>([]);
-  const [jobTypeList, setJobTypeList] = useState<string[]>([]);
-  const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
-  const [categoryList, setCategoryList] = useState<string[]>([]);
+const JobPostDetailSection = ({ formData, setFormData, categories, types, arrangements }: JobPostDetailProps) => {
 
     const handleSelect = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -64,9 +58,10 @@ const JobPostDetailSection = ({ formData, setFormData, categories, locations, ty
               <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Location</p>
                 <LocationCombobox
-                    value={formData.location}
-                    showIcon={false}
-                    onChange={(value) => setFormData({ ...formData, location: value })}
+                  value={formData.location}
+                  showIcon={false}
+                  onChange={(value) => setFormData({ ...formData, location: value })}
+                  className="w-full bg-white justify-between text-gray-700"
                 />
               </div>
             </div>
@@ -76,7 +71,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, locations, ty
                     <p className="text-sm font-semibold text-gray-800">Type</p>
                     <Select onValueChange={(value) => handleSelect("type", value)}>
                         <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select Type" />
+                            <SelectValue placeholder={formData.type || "Select Type"} />
                         </SelectTrigger>
                         <SelectContent>
                             {types.map((type) => (
@@ -92,7 +87,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, locations, ty
                 <p className="text-sm font-semibold text-gray-800">Arrangement</p>
                 <Select onValueChange={(value) => handleSelect("arrangement", value)}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Arrangement" />
+                    <SelectValue placeholder={formData.arrangement || "Select Arrangement"} />
                   </SelectTrigger>
                   <SelectContent>
                     {arrangements.map((arr) => (
