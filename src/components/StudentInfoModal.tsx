@@ -31,7 +31,7 @@ interface ApplicantInfo {
   certification: string[];
 }
 
-const StudentInfoModal = ({ applicant_id }: { applicant_id: string }) => {
+const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string, size?: string }) => {
   const [applicantInfo, setApplicantInfo] = useState<ApplicantInfo | null>(null);
 
   useEffect(() => {
@@ -40,11 +40,16 @@ const StudentInfoModal = ({ applicant_id }: { applicant_id: string }) => {
     if (found) setApplicantInfo(found);
   }, [applicant_id]);
 
+  const baseStyle = "flex flex-row gap-1 bg-[#FD873E] text-white rounded-xl shadow-md hover:bg-[#FF9A50] hover:shadow-lg";
+
+    const sizeStyle = {
+      sm: "p-2 text-sm h-[30px] w-[80px]",
+    }[size || ""];
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="flex flex-row gap-1 bg-[#FD873E] text-white rounded-xl shadow-md 
-                          hover:bg-[#FF9A50] hover:shadow-lg">
+        <Button className={`${baseStyle} ${sizeStyle}`}>
           <MdOutlinePersonOutline size={20} />
           <p>Profile</p>
         </Button>

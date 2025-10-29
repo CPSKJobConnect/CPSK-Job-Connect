@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import StudentInfoModal from "./StudentInfoModal";
+import StudentInfoModal from "@/components/StudentInfoModal";
 
 interface Applicant {
   applicant_id: string;

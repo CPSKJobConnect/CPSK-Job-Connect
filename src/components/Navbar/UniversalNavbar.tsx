@@ -3,7 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import { Navbar01, Navbar01NavLink } from '@/components/ui/shadcn-io/navbar-01';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -18,7 +18,6 @@ interface UniversalNavbarProps {
 export default function UniversalNavbar({ links, showBookmarks = false, onSignInClick }: UniversalNavbarProps) {
   const { data: session } = useSession();
   const router = useRouter();
-  const pathname = usePathname();
 
   const defaultSignInHandler = () => {
     const section = document.getElementById("role-selection");

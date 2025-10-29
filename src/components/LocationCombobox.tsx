@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { Check, ChevronsUpDown, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { IoLocationOutline } from "react-icons/io5";
 
 interface Province {
   provinceCode: number;

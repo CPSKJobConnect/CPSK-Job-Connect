@@ -163,13 +163,19 @@ export default function Page() {
       <>
         <div className="flex flex-col md:flex-row items-start md:items-center">
           <div className="py-6 md:py-14 md:ml-10 flex justify-center md:justify-start w-full md:w-auto">
-            <Image
-              src={job.companyLogo}
-              alt="companyLogo"
-              width={120}
-              height={120}
-              className="h-auto w-auto border border-gray-100 rounded"
-            />
+            {job.companyLogo ? (
+              <Image
+                src={job.companyLogo}
+                alt={job.companyName || "companyLogo"}
+                width={120}
+                height={120}
+                className="h-auto bg-white translate-y-1 shadow-md rounded-md"
+              />
+             ) : (
+              <div className="h-[120px] w-[120px] bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+                {job.companyName ? job.companyName.charAt(0).toUpperCase() : "C"}
+            </div>
+            )}
           </div>
           <div className="flex flex-col p-5 mb-3 w-full md:flex-1">
             <p className="px-4 text-md text-gray-700">Apply For</p>
@@ -193,7 +199,7 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 px-4 mt-2 overflow-x-auto">
+            <div className="flex flex-wrap gap-2 px-4 mt-2 p-2 overflow-x-auto">
             <span
               className={`px-2 py-1 rounded-md text-sm shadow-md ${
                 typeColors[job.type] || "bg-white text-gray-800"
