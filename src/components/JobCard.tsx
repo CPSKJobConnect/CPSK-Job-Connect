@@ -19,6 +19,7 @@ import { Button } from "./ui/button";
 interface JobCardProps {
   info: JobInfo;
   size?: "sm" | "md" | "lg";
+  onUnbookmark?: (jobId: string) => void;
 }
 
 const typeColors: Record<string, string> = {
@@ -84,7 +85,7 @@ const JobCard = (job: JobCardProps) => {
     checkIfSaved();
   }, [session?.user?.id, job.info.id, job.info.isSaved]);
   const baseStyle =
-    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-200/70 cursor-not-allowed" : "bg-white hover:bg-[#F3FEFA]"} p-4 flex flex-col gap-2 transition mb-5 transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg`;
+    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-200/70" : "bg-white hover:bg-[#F3FEFA]"} p-4 flex flex-col gap-2 transition mb-5 transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg`;
 
     const sizeStyle = {
       sm: "w-full sm:w-[400px] min-h-[140px]",
@@ -123,6 +124,11 @@ const JobCard = (job: JobCardProps) => {
       if (response.ok) {
         // Toggle the local state for immediate UI feedback
         setIsSaved(!isSaved);
+        // If this was an unbookmark (DELETE) and parent provided a callback, notify parent to remove the card
+        if (method === "DELETE" && typeof (job as any).onUnbookmark === "function") {
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          (job as any).onUnbookmark(job.info.id);
+        }
       } else {
         const error = await response.json();
         console.error("Failed to toggle save:", error);
@@ -137,22 +143,22 @@ const JobCard = (job: JobCardProps) => {
   };
 
   return (
-    <div
-      className={`${baseStyle} ${sizeStyle}`}
-      onClick={(e) => {
-        if (isClosed) e.stopPropagation();
-      }}
-      aria-disabled={isClosed}
-    >
+    <div className={`${baseStyle} ${sizeStyle}`}>
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
-          <Image
-            src={job.info.companyLogo}
-            alt="companyLogo"
-            width={60}
-            height={60}
-            className="h-auto bg-white translate-y-1 shadow-md rounded-md"
-          />
+          {job.info.companyLogo ? (
+            <Image
+              src={job.info.companyLogo}
+              alt={job.info.companyName || "companyLogo"}
+              width={60}
+              height={60}
+              className="h-auto bg-white translate-y-1 shadow-md rounded-md"
+            />
+          ) : (
+            <div className="w-15 h-15 bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+              {job.info.companyName ? job.info.companyName.charAt(0).toUpperCase() : "C"}
+            </div>
+          )}
           <div className="p-2">
             <p className="font-bold text-md">{job.info.title}</p>
             <p className="text-gray-600">{job.info.companyName}</p>
@@ -207,17 +213,17 @@ const JobCard = (job: JobCardProps) => {
       </div>
 
       <div className="flex gap-4 py-2">
-        <div className="flex gap-1">
+        <div className="flex gap-1 min-w-0 items-center">
           <div className="py-1"><IoLocationOutline /></div>
-          <span>{job.info.location}</span>
+          <span className="truncate text-sm text-gray-700 max-w-[250px]" title={job.info.location}>{job.info.location}</span>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 min-w-0 items-center">
           <div className="py-1"><MdOutlineTimer /></div>
-          <span>{formatPostedDate(job.info.posted)}</span>
+          <span className="text-sm text-gray-700">{formatPostedDate(job.info.posted)}</span>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 min-w-0 items-center">
           <div className="py-1"><MdOutlinePeopleAlt /></div>
-          <span>{job.info.applied} applied</span>
+          <span className="text-sm text-gray-700">{job.info.applied} applied</span>
         </div>
       </div>
 

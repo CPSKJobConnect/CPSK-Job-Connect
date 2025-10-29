@@ -12,6 +12,7 @@ import { useSession } from "next-auth/react";
 import { FaRegFileAlt } from "react-icons/fa";
 import { IoMdSearch } from "react-icons/io";
 import { MdTipsAndUpdates } from "react-icons/md";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Page() {
   const { data: session } = useSession();
@@ -19,11 +20,24 @@ export default function Page() {
   const [filteredJob, setFilteredJob] = useState<JobInfo[]>([]);
   const [filterInfo, setFilterInfo] = useState<JobFilterInfo | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [jobToShow, setJobToShow] = useState<JobInfo[]>([]);
   const [filterApplied, setFilterApplied] = useState(false);
   const selectedJob = selectedCardId !== null ? jobToShow[selectedCardId] : null;
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const res = await fetch("/api/auth/session");
+        const data = await res.json();
+        setRole(data.user?.role || null);
+      } catch (err) {
+        console.error("Error fetching user role:", err);
+      }
+    };
+    
     const fetchJobsAndFilters = async () => {
       try {
         // Include userId in the query to get saved status for bookmarked jobs
@@ -32,17 +46,47 @@ export default function Page() {
 
         const resJobs = await fetch(jobsUrl);
         const dataJobs = await resJobs.json();
-        setJobData(dataJobs);
+
+        const now = Date.now();
+        const activeJobs = Array.isArray(dataJobs)
+          ? dataJobs.filter((j: JobInfo) => {
+              if (!j.deadline) return true;
+              const d = Date.parse(j.deadline);
+              if (isNaN(d)) return true;
+              return d >= now;
+            })
+          : [];
+        setJobData(activeJobs);
 
         const resFilters = await fetch("/api/jobs/filter");
         const dataFilters = await resFilters.json();
+        console.log("Fetched filter info:", dataFilters);
         setFilterInfo(dataFilters);
       } catch (err) {
         console.error("Error fetching jobs or filters:", err);
       }
     };
 
+    fetchUserRole();
     fetchJobsAndFilters();
+
+    if (typeof window !== "undefined") {
+      const m = window.matchMedia("(max-width: 1024px)");
+      const handler = (e: MediaQueryListEvent | MediaQueryList) => setIsSmallScreen((e as any).matches);
+      setIsSmallScreen(m.matches);
+      if (typeof m.addEventListener === "function") {
+        m.addEventListener("change", handler as any);
+      } else if (typeof (m as any).addListener === "function") {
+        (m as any).addListener(handler as any);
+      }
+      return () => {
+        if (typeof m.removeEventListener === "function") {
+          m.removeEventListener("change", handler as any);
+        } else if (typeof (m as any).removeListener === "function") {
+          (m as any).removeListener(handler as any);
+        }
+      };
+    }
   }, [session?.user?.id]); // Re-fetch when user logs in/out
 
   useEffect(() => {
@@ -52,6 +96,16 @@ export default function Page() {
       setJobToShow(jobData);
     }
   }, [filteredJob, jobData, filterApplied]);
+
+  useEffect(() => {
+    if (!isSmallScreen && dialogOpen) {
+      setDialogOpen(false);
+    }
+
+    if (isSmallScreen && selectedCardId !== null) {
+      setDialogOpen(true);
+    }
+  }, [isSmallScreen, selectedCardId]);
 
   const handleSearch = (filters: FilterFormData) => {
     setFilterApplied(true);
@@ -72,33 +126,41 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col gap-6 px-10 mt-7">
-      <div className="sticky top-0 z-10 mb-1">
-        <JobFilterBar
-          filter={filterInfo}
-          onSearch={handleSearch}
-        />
+    <div className="flex flex-col gap-6 px-10">
+      <div className="sticky top-0 z-10">
+        <JobFilterBar filter={filterInfo} onSearch={handleSearch} />
       </div>
 
       {jobToShow.length > 0 ? (
         <div className="flex flex-col md:flex-col lg:flex-row sm:flex-col gap-8 h-screen">
           <div className="overflow-y-auto">
             {jobToShow.map((job, idx) => (
-              <div key={idx} onClick={() => setSelectedCardId(idx)}>
+              <div key={idx} onClick={() => {
+                setSelectedCardId(idx);
+                if (isSmallScreen) setDialogOpen(true);
+              }}>
                 <JobCard size="md" info={job} />
               </div>
             ))}
           </div>
 
-          <div className="flex flex-1 justify-center">
+          <div className="hidden lg:flex flex-1 justify-center">
             {selectedJob ? (
-              <JobDescriptionCard
-                size="md"
-                onApply={true}
-                onEdit={false}
-                job={selectedJob}
-                tags={selectedJob.skills}
-              />
+              role === 'company' ? (
+                <JobDescriptionCard
+                  size="md"
+                  onApply={false}
+                  onEdit={false}
+                  job={selectedJob}
+                />
+              ): (
+                <JobDescriptionCard
+                  size="md"
+                  onApply={true}
+                  onEdit={false}
+                  job={selectedJob}
+                />
+              )
             ) : (
               <div className="flex flex-col items-center gap-4 py-44">
                 <div className="bg-[#ABE9D6] rounded-full w-[60px] h-[60px] flex items-center justify-center">
@@ -116,6 +178,36 @@ export default function Page() {
               </div>
             )}
           </div>
+
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) setSelectedCardId(null);
+          }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{selectedCardId !== null ? jobToShow[selectedCardId].title : ""}</DialogTitle>
+              </DialogHeader>
+              <div className="max-h-[70vh] overflow-y-auto">
+                {selectedJob !== null && (
+                  role === 'company' ? (
+                    <JobDescriptionCard
+                      size="md"
+                      onApply={false}
+                      onEdit={false}
+                      job={selectedJob}
+                    />
+                  ): (
+                    <JobDescriptionCard
+                      size="md"
+                      onApply={true}
+                      onEdit={false}
+                      job={selectedJob}
+                    />
+                  )
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4 py-44">
