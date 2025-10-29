@@ -26,7 +26,7 @@ describe("postApproveCompany", () => {
     (prisma.company.update as jest.Mock).mockResolvedValue(mockCompany);
     (prisma.notification.create as jest.Mock).mockResolvedValue({});
 
-    const result = await postApproveCompany(1, "approved");
+    const result = await postApproveCompany(1, "approve");
 
     expect(prisma.company.update).toHaveBeenCalledWith({
       where: { id: 1 },
@@ -56,7 +56,7 @@ describe("postApproveCompany", () => {
     (prisma.company.update as jest.Mock).mockResolvedValue(mockCompany);
     (prisma.notification.create as jest.Mock).mockResolvedValue({});
 
-    const result = await postApproveCompany(2, "rejected", "Not meeting requirements");
+    const result = await postApproveCompany(2, "reject", "Not meeting requirements");
 
     expect(prisma.company.update).toHaveBeenCalledWith({
       where: { id: 2 },
@@ -75,7 +75,7 @@ describe("postApproveCompany", () => {
   });
 
   it("Throws error for invalid request data", async () => {
-    await expect(postApproveCompany(0 as any, "approved")).rejects.toThrow(
+    await expect(postApproveCompany(0 as any, "approve")).rejects.toThrow(
       "Invalid request data"
     );
     await expect(postApproveCompany(1, "invalid_action" as any)).rejects.toThrow(
@@ -86,7 +86,7 @@ describe("postApproveCompany", () => {
   it("Throws error for non-existent company", async () => {
     (prisma.company.update as jest.Mock).mockRejectedValue({ code: "P2025" });
 
-    await expect(postApproveCompany(999, "approved")).rejects.toThrow(
+    await expect(postApproveCompany(999, "approve")).rejects.toThrow(
       "Company not found"
     );
   });
