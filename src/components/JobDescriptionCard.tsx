@@ -22,7 +22,6 @@ interface JobDescriptionProps {
   size: "sm" | "md";
   onApply: boolean;
   onEdit: boolean;
-  tags?: string[];
 }
 
 const typeColors: Record<string, string> = {
@@ -34,8 +33,9 @@ const typeColors: Record<string, string> = {
 
 
 
-const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionProps) => {
+const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) => {
   const router = useRouter();
+  const isClosed = job.status === "expire";
   const [formData, setFormData] = useState<JobPostFormData>(() => ({
     title: job.title,
     category: job.category,
@@ -261,12 +261,21 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
 
       <div className="px-4 py-4 flex justify-start gap-3 mt-auto">
         {onApply && (
-          <>
-            <Button onClick={handleApply}
-              className="lg:w-40 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition">
+          isClosed ? (
+            <Button
+              disabled
+              className="lg:w-40 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition"
+            >
+              Expired
+            </Button>
+          ) : (
+            <Button
+              onClick={handleApply}
+              className="lg:w-40 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition"
+            >
               Quick Apply
             </Button>
-          </>
+          )
         )}
       </div>
     </div>
