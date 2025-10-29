@@ -18,7 +18,7 @@ export async function GET(req: Request) {
 
     const jobs = await prisma.jobPost.findMany({
       include: {
-        categories: true,
+        category: true,
         tags: true,
         applications: true,
         company: {
@@ -57,7 +57,7 @@ export async function GET(req: Request) {
         companyBg: job.company.account?.backgroundUrl ?? "",
         title: job.jobName,
         companyName: job.company.name,
-        category: job.categories.map((c) => c.name).join(", "),
+        category: job.category ? job.category.name : "",
         location: job.location,
         posted: job.created_at.toISOString(),
         applied: job.applications.length,

@@ -39,7 +39,7 @@ async function backupDatabase() {
       jobTags: await prisma.jobTag.findMany(),
       jobPosts: await prisma.jobPost.findMany({
         include: {
-          categories: true,
+          category: true,
           tags: true,
         },
       }),

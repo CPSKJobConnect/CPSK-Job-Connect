@@ -107,7 +107,7 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags, categoryList: pro
       requirements: formData.description.requirement.split("\n"),
       qualifications: formData.description.qualification.split("\n"),
       tags: formData.skills,
-      categoryIds: [Number(formData.category)]
+      category: formData.category,
     };
 
     const res = await fetch(`/api/jobs/${job.id}`, {

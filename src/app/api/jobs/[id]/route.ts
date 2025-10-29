@@ -9,7 +9,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const job = await prisma.jobPost.findUnique({
       where: { id: Number(id) },
       include: {
-        categories: true,
+        category: true,
         tags: true,
         applications: true,
         company: { include: { account: true } },
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       companyBg: job.company.account?.backgroundUrl ?? "",
       title: job.jobName,
       companyName: job.company.name,
-      category: job.categories.map((c) => c.name).join(", "),
+      category: job.category?.name ?? "",
       location: job.location,
       posted: job.created_at.toISOString(),
       applied: job.applications.length,
@@ -103,48 +103,56 @@ export async function PATCH(
 
     const existingJob = await prisma.jobPost.findUnique({
       where: { id: jobId },
-      include: { tags: true, categories: true },
+      include: { tags: true, category: true },
     });
 
     if (!existingJob) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
     const body = await request.json();
-    const arrangement = await prisma.jobArrangement.findUnique({
-        where: { name: body.arrangement }
-    });
 
-    const type = await prisma.jobType.findUnique({
-        where: { name: body.type }
-    });
+    const arrangement = body.arrangement
+      ? await prisma.jobArrangement.findUnique({ where: { name: body.arrangement } })
+      : null;
 
-    if (!arrangement || !type) {
-        return new Response(JSON.stringify({ error: "Invalid arrangement or type" }), { status: 400 });
+
+    const type = body.type
+      ? await prisma.jobType.findUnique({ where: { name: body.type } })
+      : null;
+
+    if ((body.arrangement && !arrangement) || (body.type && !type)) {
+      return NextResponse.json({ error: "Invalid arrangement or type" }, { status: 400 });
     }
 
-    const tagIds = await prisma.jobTag.findMany({
-        where: { name: { in: body.tags } },
-        select: { id: true }
-    });
+    const tagIds = body.tags?.length
+      ? await prisma.jobTag.findMany({
+          where: { name: { in: body.tags } },
+          select: { id: true },
+        })
+      : [];
 
-    const categoryIds = await prisma.jobCategory.findMany({
-        where: { name: body.category },
-        select: { id: true }
-    });
+    let categoryId = existingJob.job_category_id;
+    if (body.category) {
+      const category = await prisma.jobCategory.findUnique({ where: { name: body.category } });
+      if (!category) {
+        return NextResponse.json({ error: "Category not found" }, { status: 400 });
+      }
+      categoryId = category.id;
+    }
 
     const updatedJob = await prisma.jobPost.update({
       where: { id: jobId },
       data: {
         location: body.location ?? existingJob.location,
-        job_arrangement_id: arrangement.id ?? existingJob.job_arrangement_id,
-        job_type_id: type.id ?? existingJob.job_type_id,
+        job_arrangement_id: arrangement?.id ?? existingJob.job_arrangement_id,
+        job_type_id: type?.id ?? existingJob.job_type_id,
         min_salary: body.min_salary ?? existingJob.min_salary,
         max_salary: body.max_salary ?? existingJob.max_salary,
         aboutRole: body.aboutRole ?? existingJob.aboutRole,
         requirements: body.requirements ?? existingJob.requirements,
         qualifications: body.qualifications ?? existingJob.qualifications,
-        tags: { set: tagIds.map(tag => ({ id: tag.id })) },
-        categories: { set: categoryIds }
+        tags: tagIds.length ? { set: tagIds.map(tag => ({ id: tag.id })) } : undefined,
+        job_category_id: categoryId,
       },
     });
 

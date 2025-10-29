@@ -23,7 +23,7 @@ export async function GET() {
   const jobs = await prisma.jobPost.findMany({
     where: { company_id: companyId },
     include: {
-        categories: { select: { name: true } },
+        category: { select: { name: true } },
         tags: true,
         applications: true,
         company: { include: { account: true } },
@@ -50,7 +50,7 @@ export async function GET() {
         salary: { min: job.min_salary, max: job.max_salary },
         type: job.jobType.name,
         arrangement: job.jobArrangement.name,
-        category: job.categories.map((c) => c.name).join(", "),
+        category: job.category?.name ?? "",
         skills: job.tags.map((t) => t.name),
         deadline: job.deadline.toISOString(),
         status,

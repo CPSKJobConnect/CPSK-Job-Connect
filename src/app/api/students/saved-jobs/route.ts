@@ -205,7 +205,7 @@ export async function GET (req: Request) {
             },
             jobType: true,
             jobArrangement: true,
-            categories: true,
+            category: true,
             tags: true,
             applications: {
               where: { student_id: student.id },
@@ -230,7 +230,7 @@ export async function GET (req: Request) {
         companyBg: savedJob.jobPost.company.account.backgroundUrl || "/default-bg.png",
         title: savedJob.jobPost.jobName,
         companyName: savedJob.jobPost.company.name,
-        category: savedJob.jobPost.categories[0]?.name || "General",
+        category: savedJob.jobPost.category?.name || "General",
         location: savedJob.jobPost.location,
         posted: savedJob.jobPost.created_at.toISOString(),
         applied: savedJob.jobPost._count.applications,
