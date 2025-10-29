@@ -12,7 +12,7 @@ export async function GET() {
 
     // Check if user is admin (using session role)
     const userRole = (session.user as any).role?.toLowerCase();
-    console.log("🔍 User role:", userRole);
+    // console.log("🔍 User role:", userRole);
 
     if (userRole !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
