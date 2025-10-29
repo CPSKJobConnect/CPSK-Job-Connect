@@ -58,13 +58,27 @@ export async function POST(req: NextRequest) {
     const existingUser = await prisma.account.findUnique({
       where: {
         email: validatedData.data.email,
+      },
+      include: {
+        student: true,
+        company: true,
       }
     })
-    if (existingUser) {
-      return NextResponse.json(
+
+    // If account exists and has complete registration
+    if (existingUser && (existingUser.student || existingUser.company)) {
+      return NextResponse.json( 
         { error: "User already exists" },
         { status: 400 }
       );
+    }
+
+    // If account exists but is orphaned (no student/company record), clean it up
+    if (existingUser) {
+      console.log("Found orphaned account, cleaning up:", existingUser.id);
+      await prisma.account.delete({
+        where: { id: existingUser.id }
+      });
     }
 
     // Hash password
@@ -160,12 +174,39 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Registration error:", error)
     console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace')
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid data", details: error.issues },
         { status: 400 }
       );
     }
+
+    // Handle Prisma unique constraint errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as { code: string; meta?: { target?: string[] } };
+
+      if (prismaError.code === 'P2002') {
+        const target = prismaError.meta?.target;
+        console.error("Unique constraint violation on:", target);
+
+        return NextResponse.json(
+          {
+            error: "Registration failed due to duplicate data",
+            details: `A record with this ${target?.join(', ') || 'data'} already exists`
+          },
+          { status: 409 }
+        );
+      }
+
+      if (prismaError.code === 'P2003') {
+        return NextResponse.json(
+          { error: "Registration failed", details: "Invalid reference data" },
+          { status: 400 }
+        );
+      }
+    }
+
     return NextResponse.json(
       { error: "Internal server error", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
