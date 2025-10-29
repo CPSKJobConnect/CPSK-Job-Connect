@@ -1,11 +1,19 @@
 import { getDashboardStats } from "@/app/api/admin/dashboard/stats/stats.logic";
 import { prisma } from "@/lib/db";
 
-// Mock Prisma
+// Mock Prisma with all required methods
 jest.mock("@/lib/db", () => ({
   prisma: {
-    company: { count: jest.fn(), findMany: jest.fn() },
-    jobPost: { count: jest.fn(), aggregate: jest.fn() },
+    company: {
+      count: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+    },
+    jobPost: {
+      count: jest.fn(),
+      aggregate: jest.fn(),
+      groupBy: jest.fn(),
+    },
     student: { count: jest.fn() },
     report: { count: jest.fn(), findMany: jest.fn() },
     jobTag: { findMany: jest.fn() },
@@ -23,18 +31,32 @@ describe("getDashboardStats", () => {
     (prisma.company.count as jest.Mock)
       .mockResolvedValueOnce(2) // pendingCompanies
       .mockResolvedValueOnce(10); // totalCompanies
+
     (prisma.jobPost.count as jest.Mock).mockResolvedValue(15);
     (prisma.student.count as jest.Mock).mockResolvedValue(50);
     (prisma.report.count as jest.Mock).mockResolvedValue(3);
+
     (prisma.jobPost.aggregate as jest.Mock).mockResolvedValue({
       _avg: { min_salary: 20000, max_salary: 40000 },
     });
+
+    (prisma.jobPost.groupBy as jest.Mock).mockResolvedValue([
+      { company_id: 1, _count: { id: 5 } },
+    ]);
+
+    (prisma.company.findUnique as jest.Mock).mockResolvedValue({
+      id: 1,
+      name: "Tech Corp",
+    });
+
     (prisma.company.findMany as jest.Mock).mockResolvedValue([
       { id: 1, name: "Tech Corp", jobPosts: [{ applications: [] }] },
     ]);
+
     (prisma.jobTag.findMany as jest.Mock).mockResolvedValue([
       { name: "React", _count: { jobPosts: 5 } },
     ]);
+
     (prisma.report.findMany as jest.Mock).mockResolvedValue([
       {
         id: 1,
@@ -43,10 +65,13 @@ describe("getDashboardStats", () => {
         account: { email: "reporter@example.com" },
       },
     ]);
+
     (prisma.application.count as jest.Mock).mockResolvedValue(20);
 
+    // Run the function
     const stats = await getDashboardStats();
 
+    // Assertions
     expect(stats.totalStudents).toBe(50);
     expect(stats.totalJobPosts).toBe(15);
     expect(stats.averageSalary.overall).toBe(30000);
