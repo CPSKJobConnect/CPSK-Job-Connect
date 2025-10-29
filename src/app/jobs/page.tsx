@@ -26,6 +26,7 @@ export default function Page() {
   const [filterApplied, setFilterApplied] = useState(false);
   const selectedJob = selectedCardId !== null ? jobToShow[selectedCardId] : null;
   const [role, setRole] = useState<string | null>(null);
+  const [isCompanyView, setIsCompanyView] = useState(false);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -33,6 +34,7 @@ export default function Page() {
         const res = await fetch("/api/auth/session");
         const data = await res.json();
         setRole(data.user?.role || null);
+        setIsCompanyView(data.user?.role === 'company');
       } catch (err) {
         console.error("Error fetching user role:", err);
       }
@@ -130,7 +132,7 @@ export default function Page() {
                 setSelectedCardId(idx);
                 if (isSmallScreen) setDialogOpen(true);
               }}>
-                <JobCard size="md" info={job} />
+                <JobCard size="md" info={job} isCompanyView={isCompanyView}/>
               </div>
             ))}
           </div>

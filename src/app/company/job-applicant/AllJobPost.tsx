@@ -109,7 +109,7 @@ const AllJobPost = ({ info, onSelectCard }: AllJobPostProps) => {
         <div className="h-screen overflow-y-auto">
           {filteredJobPost.map((job) => (
             <div key={job.id} onClick={() => onSelectCard(Number(job.id))}>
-              <JobCard size="sm" info={job} />
+              <JobCard size="sm" info={job} isCompanyView={true}/>
             </div>
           ))}
         </div>

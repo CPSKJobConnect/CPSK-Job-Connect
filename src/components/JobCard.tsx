@@ -20,6 +20,7 @@ interface JobCardProps {
   info: JobInfo;
   size?: "sm" | "md" | "lg";
   onUnbookmark?: (jobId: string) => void;
+  isCompanyView: boolean
 }
 
 const typeColors: Record<string, string> = {
@@ -170,52 +171,56 @@ const JobCard = (job: JobCardProps) => {
             <p className="text-gray-600">{job.info.companyName}</p>
           </div>
         </div>
-        <div className="flex gap-3 p-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSaveToggle();
-            }}
-            disabled={isLoading || isCheckingStatus}
-            className="transition-colors disabled:opacity-50"
-            aria-label={isSaved ? "Unsave job" : "Save job"}
-            type="button"
-          >
-            {isCheckingStatus ? (
-              // Show outline star while checking status
-              <FaRegStar className="w-5 h-5 text-gray-400 animate-pulse" />
-            ) : isSaved ? (
-              // Show filled yellow star if saved
-              <FaStar className="w-5 h-5 text-yellow-500 hover:text-yellow-600" />
-            ) : (
-              // Show outline star if not saved
-              <FaRegStar className="w-5 h-5 hover:text-yellow-500" />
-            )}
-          </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                onClick={(e) => e.stopPropagation()}
-                aria-label="Share job"
-                type="button"
-                className="p-0"
-              >
-                <MdOutlineShare className="w-5 h-5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="start">
+
+        {!job.isCompanyView && (
+          <div className="flex gap-3 p-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSaveToggle();
+              }}
+              disabled={isLoading || isCheckingStatus}
+              className="transition-colors disabled:opacity-50"
+              aria-label={isSaved ? "Unsave job" : "Save job"}
+              type="button"
+            >
+              {isCheckingStatus ? (
+                // Show outline star while checking status
+                <FaRegStar className="w-5 h-5 text-gray-400 animate-pulse" />
+              ) : isSaved ? (
+                // Show filled yellow star if saved
+                <FaStar className="w-5 h-5 text-yellow-500 hover:text-yellow-600" />
+              ) : (
+                // Show outline star if not saved
+                <FaRegStar className="w-5 h-5 hover:text-yellow-500" />
+              )}
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="Share job"
+                  type="button"
+                  className="p-0"
+                >
+                  <MdOutlineShare className="w-5 h-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="start">
+                  <DropdownMenuItem>
+                    <MdOutlineLink/>
+                    <p>Copy Link</p>
+                  </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <MdOutlineLink/>
-                  <p>Copy Link</p>
-                </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <MdOutlineReportProblem className="text-red-600"/>
-                <p className="text-red-600">Report Post</p>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                  <MdOutlineReportProblem className="text-red-600"/>
+                  <p className="text-red-600">Report Post</p>
+                  </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>        
+        )}
+
       </div>
 
       <div className="flex gap-4 py-2">
