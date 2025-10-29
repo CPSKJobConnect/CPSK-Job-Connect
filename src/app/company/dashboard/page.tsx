@@ -8,7 +8,7 @@ import { RiDraftLine, RiUserSharedLine, RiUserHeartLine } from "react-icons/ri";
 import { PiHandshakeLight } from "react-icons/pi";
 import { HiOutlineUserGroup } from "react-icons/hi2";
 import StatCard from "@/components/StatCard";
-import { ApplicationTrendChartProps, StatusBreakdownChartProps, TopJobsCardProps, RecentApplicationsTableProps } from "@/types/companyStat";
+import { StatusBreakdownChartProps, TopJobsCardProps, RecentApplicationsTableProps } from "@/types/companyStat";
 import ApplicationTrendChart from "./ApplicationTrendChart";
 import StatusBreakdownChart from "./StatusBreakdownChart";
 import RecentApplicationsTable from "./RecentApplicationsTable";
@@ -90,32 +90,30 @@ const companyStatsConfig: Record<string, { icon: IconType; iconBg: string; iconC
 const CompanyDashboardPage = () => {
   const { data: session, status } = useSession()
   const [companyStat, setCompanyStat] = useState<{ title: string; value: number; icon: IconType; iconBg: string; iconColor: string }[]>([]);
-  const [applicationTrendData, setApplicationTrendData] = useState<ApplicationTrendChartProps['data']>([]);
   const [statusBreakdownData, setStatusBreakdownData] = useState<StatusBreakdownChartProps['data']>(null);
   const [recentApplicationsData, setRecentApplicationsData] = useState<RecentApplicationsTableProps['applications']>([]);
   const [topJobsData, setTopJobsData] = useState<TopJobsCardProps['jobs']>([]);
-
-  useEffect(() => {
-    async function parseJsonSafe(response: Response) {
-      const contentType = response.headers.get("content-type") || "";
-      if (!response.ok) {
-        const text = await response.text().catch(() => null);
-        console.error(`Fetch failed (${response.status}):`, text);
-        return null;
-      }
-      if (contentType.includes("application/json")) {
-        try {
-          return await response.json();
-        } catch (err) {
-          const text = await response.text().catch(() => null);
-          console.error("Failed to parse JSON response:", err, text);
-          return null;
-        }
-      }
+  async function parseJsonSafe(response: Response) {
+    const contentType = response.headers.get("content-type") || "";
+    if (!response.ok) {
       const text = await response.text().catch(() => null);
-      console.warn("Expected JSON but got different content-type:", contentType, text);
+      console.error(`Fetch failed (${response.status}):`, text);
       return null;
     }
+    if (contentType.includes("application/json")) {
+      try {
+        return await response.json();
+      } catch (err) {
+        const text = await response.text().catch(() => null);
+        console.error("Failed to parse JSON response:", err, text);
+        return null;
+      }
+    }
+    const text = await response.text().catch(() => null);
+    console.warn("Expected JSON but got different content-type:", contentType, text);
+    return null;
+  }
+
 
     const fetchCompanyStats = async () => {
       try {
@@ -140,20 +138,6 @@ const CompanyDashboardPage = () => {
       }
     };
 
-    const fetchApplicationTrend = async () => {
-      try {        
-        const response = await fetch('/api/company/analytics?type=trend&period=week');
-        const result = await parseJsonSafe(response);
-        console.log("Application Trend API response:", result);
-        if (result?.success) {
-          setApplicationTrendData(result.data?.trend ?? []);
-        } else {
-          console.error("Failed to fetch application trend data:", result.error);
-        }
-      } catch (error) {
-        console.error("Error fetching application trend data:", error);
-      }
-    };
 
     const fetchStatusBreakdown = async () => {
       try {        
@@ -200,12 +184,13 @@ const CompanyDashboardPage = () => {
       }
     };
     
+    useEffect(() => {
     fetchCompanyStats();
-    fetchApplicationTrend();
     fetchStatusBreakdown();
     fetchRecentApplications();
     fetchTopJobs();
   }, []);
+
 
   if (status === "loading") {
     return (
@@ -243,8 +228,12 @@ const CompanyDashboardPage = () => {
       </div>
       <div className="flex flex-col gap-5">
         <div className="flex flex-col md:flex-row gap-5">
-          <ApplicationTrendChart data={applicationTrendData} loading={false} />
-          <StatusBreakdownChart data={statusBreakdownData} loading={false} />
+          <div className="flex-1 min-w-0">
+            <ApplicationTrendChart />
+          </div>
+          <div className="flex-1 min-w-0">
+            <StatusBreakdownChart data={statusBreakdownData} loading={false} />
+          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-5 h-full items-stretch">
