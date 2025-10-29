@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getApiSession(request);
@@ -39,7 +39,8 @@ export async function PATCH(
       );
     }
 
-    const applicationId = parseInt(params.id);
+    const { id } = await params;
+    const applicationId = parseInt(id);
     if (isNaN(applicationId)) {
       return NextResponse.json(
         { error: "Invalid application ID." },
@@ -96,7 +97,7 @@ export async function PATCH(
 
     if (!applicationStatus) {
       return NextResponse.json(
-        { error: `Invalid status: ${status}. Valid statuses are: pending, reviewed, interviewed, accepted, rejected` },
+        { error: `Invalid status: ${status}. Valid statuses are: pending, reviewed, interview, offered, rejected` },
         { status: 400 }
       );
     }

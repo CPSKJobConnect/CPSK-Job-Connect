@@ -16,20 +16,20 @@ import { RecentApplicationsTableProps } from "@/types/companyStat";
 import { toast } from "sonner";
 
 
-type StatusType = "pending" | "reviewed" | "interviewed" | "accepted" | "rejected";
+type StatusType = "pending" | "reviewed" | "interview" | "offered" | "rejected";
 
 const statusColor: Record<string, string> = {
 	pending: "bg-yellow-100 text-yellow-800",
 	reviewed: "bg-blue-100 text-blue-800",
-	interviewed: "bg-indigo-100 text-indigo-800",
-	accepted: "bg-green-100 text-green-800",
+	interview: "bg-indigo-100 text-indigo-800",
+	offered: "bg-green-100 text-green-800",
 	rejected: "bg-red-100 text-red-800",
 };
 
 export default function RecentApplicationsTable({ applications, loading }: RecentApplicationsTableProps) {
   const items = Array.isArray(applications) ? applications : [];
 
-  const statusTypes: StatusType[] = ["pending", "reviewed", "interviewed", "accepted", "rejected"];
+  const statusTypes: StatusType[] = ["pending", "reviewed", "interview", "offered", "rejected"];
   const [statusMap, setStatusMap] = useState<Record<string, StatusType>>(
       () =>
         Object.fromEntries(
