@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 
 export async function getDashboardStats() {
-  // Get all statistics in parallel
+  // --- Basic counts and aggregates ---
   const [
     pendingCompanies,
     totalJobPosts,
@@ -9,128 +9,89 @@ export async function getDashboardStats() {
     totalCompanies,
     reportedPosts,
     averageSalary,
-    topHiringCompanies,
-    successRateByDepartment,
     topSkills,
-    recentReports
+    recentReports,
   ] = await Promise.all([
-    // Pending company verification
-    prisma.company.count({
-      where: { registration_status: "pending" }
-    }),
-
-    // Total job posts
+    prisma.company.count({ where: { registration_status: "pending" } }),
     prisma.jobPost.count(),
-
-    // Total students
     prisma.student.count(),
-
-    // Total companies
-    prisma.company.count({
-      where: { registration_status: "approved" }
-    }),
-
-    // Reported posts
+    prisma.company.count({ where: { registration_status: "approved" } }),
     prisma.report.count(),
-
-    // Average salary
     prisma.jobPost.aggregate({
-      _avg: {
-        min_salary: true,
-        max_salary: true
-      }
+      _avg: { min_salary: true, max_salary: true },
     }),
-
-    // Top hiring companies (Top 10)
-    prisma.company.findMany({
-      where: { registration_status: "approved" },
-      include: {
-        jobPosts: {
-          include: {
-            applications: true
-          }
-        }
-      },
-      orderBy: {
-        jobPosts: {
-          _count: "desc"
-        }
-      },
-      take: 10
-    }),
-
-    // Success rate by department - placeholder
-    Promise.resolve([]),
-
-    // Top skills demanded
     prisma.jobTag.findMany({
       select: {
         name: true,
-        _count: {
-          select: { jobPosts: true }
-        }
+        _count: { select: { jobPosts: true } },
       },
-      orderBy: {
-        jobPosts: {
-          _count: 'desc'
-        }
-      },
-      take: 10
+      orderBy: { jobPosts: { _count: "desc" } },
+      take: 10,
     }),
-
-    // Recent reports
     prisma.report.findMany({
-      include: {
-        account: true
-      },
-      orderBy: {
-        created_at: "desc"
-      },
-      take: 10
-    })
+      include: { account: true },
+      orderBy: { created_at: "desc" },
+      take: 10,
+    }),
   ]);
 
-  // Calculate success rate by department
-  const departmentSuccessRate = await Promise.all(
-    ["Software and Knowledge Engineering (SKE)", "Computer Engineering (CPE)"].map(async (faculty) => {
-      const totalStudents = await prisma.student.count({
-        where: { faculty }
+  // --- Top Hiring Companies ---
+  const topHiringData = await prisma.jobPost.groupBy({
+    by: ["company_id"],
+    _count: { id: true },
+    orderBy: { _count: { id: "desc" } },
+    take: 10,
+  });
+
+  const topHiringCompanies = await Promise.all(
+    topHiringData.map(async (entry) => {
+      const company = await prisma.company.findUnique({
+        where: { id: entry.company_id },
+        select: { id: true, name: true },
       });
 
+      const totalApplications = await prisma.application.count({
+        where: { jobPost: { company_id: entry.company_id } },
+      });
+
+      return {
+        id: company?.id ?? 0,
+        name: company?.name ?? "Unknown",
+        jobPostsCount: entry._count.id,
+        totalApplications,
+      };
+    })
+  );
+
+  // --- Success Rate by Department ---
+  const departmentSuccessRate = await Promise.all(
+    ["Software and Knowledge Engineering (SKE)", "Computer Engineering (CPE)"].map(async (faculty) => {
+      const totalStudents = await prisma.student.count({ where: { faculty } });
       const acceptedApplications = await prisma.application.count({
-        where: {
-          student: {
-            faculty
-          },
-          status: 3 // Accepted
-        }
+        where: { student: { faculty }, status: 3 },
       });
 
       return {
         faculty,
         totalStudents,
         acceptedApplications,
-        successRate: totalStudents > 0 ? (acceptedApplications / totalStudents) * 100 : 0
+        successRate:
+          totalStudents > 0
+            ? (acceptedApplications / totalStudents) * 100
+            : 0,
       };
     })
   );
 
-  // Process top hiring companies data
-  const processedTopCompanies = topHiringCompanies.map(company => ({
-    id: company.id,
-    name: company.name,
-    jobPostsCount: company.jobPosts.length,
-    totalApplications: company.jobPosts.reduce((sum, post) => sum + post.applications.length, 0)
-  }));
-
-  // Process recent reports
-  const processedRecentReports = recentReports.map(report => ({
+  // --- Process Recent Reports ---
+  const processedRecentReports = recentReports.map((report) => ({
     id: report.id,
     type: report.type,
     createdAt: report.created_at,
-    reporterEmail: report.account.email
+    reporterEmail: report.account.email,
   }));
 
+  // --- Final Return Object ---
   return {
     pendingCompanies,
     totalJobPosts,
@@ -140,14 +101,17 @@ export async function getDashboardStats() {
     averageSalary: {
       min: averageSalary._avg.min_salary || 0,
       max: averageSalary._avg.max_salary || 0,
-      overall: ((averageSalary._avg.min_salary || 0) + (averageSalary._avg.max_salary || 0)) / 2
+      overall:
+        ((averageSalary._avg.min_salary || 0) +
+          (averageSalary._avg.max_salary || 0)) /
+        2,
     },
-    topHiringCompanies: processedTopCompanies,
+    topHiringCompanies,
     successRateByDepartment: departmentSuccessRate,
-    topSkills: topSkills.map(skill => ({
+    topSkills: topSkills.map((skill) => ({
       name: skill.name,
-      count: (skill as any)._count?.jobPosts || 0
+      count: (skill as any)._count?.jobPosts || 0,
     })),
-    recentReports: processedRecentReports
+    recentReports: processedRecentReports,
   };
 }
