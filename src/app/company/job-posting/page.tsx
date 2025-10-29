@@ -12,8 +12,8 @@ import { validateForm, validateDetail, validateDescription } from "@/lib/validat
 
 interface CompanyProps {
   name: string;
-  profile_url: string;
-  bg_profile_url: string;
+  logoUrl: string;
+  backgroundUrl: string;
 }
 
 
@@ -51,8 +51,8 @@ export default function Page() {
   const previewJob = useMemo<JobInfo>(() => ({
     title: formData.title,
     companyName: company?.name || "Your Company",
-    companyLogo: company?.profile_url || "/assets/images/companyLogo.png",
-    companyBg: company?.bg_profile_url || "/assets/images/companyBg.jpg",
+    companyLogo: company?.logoUrl || "/assets/images/companyLogo.png",
+    companyBg: company?.backgroundUrl || "/assets/images/companyBg.jpg",
     category: formData.category,
     location: formData.location,
     arrangement: formData.arrangement,
