@@ -125,7 +125,6 @@ const JobCard = (job: JobCardProps) => {
         setIsSaved(!isSaved);
         // If this was an unbookmark (DELETE) and parent provided a callback, notify parent to remove the card
         if (method === "DELETE" && typeof (job as any).onUnbookmark === "function") {
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
           (job as any).onUnbookmark(job.info.id);
         }
       } else {

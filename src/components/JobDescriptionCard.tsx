@@ -203,9 +203,9 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
         </div>
         <div className="flex gap-1 items-center">
           <LiaMoneyCheckAltSolid />
-          <span>{job.salary.min}</span>
+          <span>฿{job.salary.min.toLocaleString()}</span>
           <span> - </span>
-          <span>{job.salary.max} bath</span>
+          <span>฿{job.salary.max.toLocaleString()} THB</span>
         </div>
         <div className="flex gap-1 items-center">
           <MdOutlinePeopleAlt />
