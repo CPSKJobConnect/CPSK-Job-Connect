@@ -125,12 +125,13 @@ model JobPost {
   is_Published       Boolean        @default(true)
   job_arrangement_id Int
   job_type_id        Int
+  job_category_id Int?
   applications       Application[]
   savedBy            SavedJob[]
   company            Company        @relation(fields: [company_id], references: [id], onDelete: Cascade)
   jobArrangement     JobArrangement @relation(fields: [job_arrangement_id], references: [id])
   jobType            JobType        @relation(fields: [job_type_id], references: [id])
-  categories         JobCategory[]  @relation("JobCategoriesOnPosts")
+  category        JobCategory? @relation(fields: [job_category_id], references: [id])
   tags               JobTag[]       @relation("JobTagesOnPosts")
 }
 
@@ -149,7 +150,7 @@ model JobArrangement {
 model JobCategory {
   id    Int       @id @default(autoincrement())
   name  String    @unique
-  posts JobPost[] @relation("JobCategoriesOnPosts")
+  posts JobPost[]
 }
 
 model JobTag {
