@@ -6,13 +6,13 @@ import { getDashboardStats } from "./stats.logic";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    console.log("🔍 Session debug:", session);
+    // console.log("🔍 Session debug:", session);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userRole = (session.user as any).role?.toLowerCase();
-    console.log("🔍 User role:", userRole);
+    // console.log("🔍 User role:", userRole);
     if (userRole !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
