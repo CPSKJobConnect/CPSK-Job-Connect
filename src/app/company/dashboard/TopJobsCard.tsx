@@ -1,17 +1,7 @@
 import React from "react";
+import { TopJobsCardProps } from "@/types/companyStat";
 
-interface TopJobsCardProps {
-  jobs: TopJob[];
-  loading: boolean;
-}
 
-interface TopJob {
-  id: string;
-  title: string;
-  applications: number;
-  status: string;
-}
-type StatusType = "active" | "draft" | "closed";
 const statusColor: Record<string, string> = {
     active: "bg-green-100 text-green-800",
     draft: "bg-yellow-100 text-yellow-800",

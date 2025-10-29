@@ -1,20 +1,7 @@
 import React from "react";
 import { PieChart } from "@mantine/charts";
 import { Card, Title, Group, Box, Text } from "@mantine/core";
-
-
-interface StatusBreakdownChartProps {
-  data: StatusBreakdown | null;
-  loading: boolean;
-}
-
-interface StatusBreakdown {
-  pending: number;
-  reviewed: number;
-  interviewed: number;
-  accepted: number;
-  rejected: number;
-}
+import { StatusBreakdownChartProps } from "@/types/companyStat";
 
 
 export default function StatusBreakdownChart({data, loading}: StatusBreakdownChartProps) {

@@ -2,17 +2,7 @@
 
 import { LineChart } from "@mantine/charts";
 import { Card, Title } from "@mantine/core";
-
-
-interface ApplicationTrendChartProps {
-  data: TrendDataPoint[];
-  loading: boolean;
-}
-
-interface TrendDataPoint {
-  date: string;
-  applications: number;
-}
+import { ApplicationTrendChartProps } from "@/types/companyStat";
 
 
 export default function ApplicantTrendChart({data, loading}: ApplicationTrendChartProps) {

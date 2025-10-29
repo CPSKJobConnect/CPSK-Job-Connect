@@ -8,7 +8,7 @@ import { RiDraftLine, RiUserSharedLine, RiUserHeartLine } from "react-icons/ri";
 import { PiHandshakeLight } from "react-icons/pi";
 import { HiOutlineUserGroup } from "react-icons/hi2";
 import StatCard from "@/components/StatCard";
-import { mockCompanyStat, mockApplicationTrendData, mockStatusBreakdown, mockApplications, mockTopJobs} from "../../../../public/data/mockCompanyStat";
+import { ApplicationTrendChartProps, StatusBreakdownChartProps, TopJobsCardProps, RecentApplicationsTableProps } from "@/types/companyStat";
 import ApplicationTrendChart from "./ApplicationTrendChart";
 import StatusBreakdownChart from "./StatusBreakdownChart";
 import RecentApplicationsTable from "./RecentApplicationsTable";
@@ -90,10 +90,10 @@ const companyStatsConfig: Record<string, { icon: IconType; iconBg: string; iconC
 const CompanyDashboardPage = () => {
   const { data: session, status } = useSession()
   const [companyStat, setCompanyStat] = useState<{ title: string; value: number; icon: IconType; iconBg: string; iconColor: string }[]>([]);
-  const [applicationTrendData, setApplicationTrendData] = useState<any[]>([]);
-  const [statusBreakdownData, setStatusBreakdownData] = useState<any>(null);
-  const [recentApplicationsData, setRecentApplicationsData] = useState<any[]>([]);
-  const [topJobsData, setTopJobsData] = useState<any[]>([]);
+  const [applicationTrendData, setApplicationTrendData] = useState<ApplicationTrendChartProps['data']>([]);
+  const [statusBreakdownData, setStatusBreakdownData] = useState<StatusBreakdownChartProps['data']>(null);
+  const [recentApplicationsData, setRecentApplicationsData] = useState<RecentApplicationsTableProps['applications']>([]);
+  const [topJobsData, setTopJobsData] = useState<TopJobsCardProps['jobs']>([]);
 
   useEffect(() => {
     const fetchCompanyStats = async () => {

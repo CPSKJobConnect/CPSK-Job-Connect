@@ -12,27 +12,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import StudentInfoModal from "@/components/StudentInfoModal";
-
-interface RecentApplicationsTableProps {
-	applications: Application[];
-	loading: boolean;
-}
-
-interface Application {
-	id: string;
-	applicant: {
-		id: string;
-    name: string;
-		email: string;
-		profile_url: string;
-	};
-	job: {
-		id: string;
-		title: string;
-	};
-	status: string;
-	applied_at: string;
-}
+import { RecentApplicationsTableProps } from "@/types/companyStat";
 
 
 type StatusType = "pending" | "reviewed" | "interviewed" | "accepted" | "rejected";
