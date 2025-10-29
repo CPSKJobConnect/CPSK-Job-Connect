@@ -16,7 +16,15 @@ export async function GET(req: Request) {
       studentId = student?.id ?? null;
     }
 
+    const today = new Date();
+
     const jobs = await prisma.jobPost.findMany({
+        where: {
+            is_Published: true,
+            deadline: {
+                gte: today,
+            },
+        },
       include: {
         category: true,
         tags: true,
