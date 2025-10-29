@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { postApproveCompany } from "./approve.logic";
 
 export async function POST(request: Request) {
   try {
@@ -19,31 +19,7 @@ export async function POST(request: Request) {
     }
 
     const { companyId, action, reason } = await request.json();
-
-    if (!companyId || !action || !["approved", "rejected"].includes(action)) {
-      return NextResponse.json({ error: "Invalid request data" }, { status: 400 });
-    }
-
-    // Update company registration status
-    const updatedCompany = await prisma.company.update({
-      where: { id: companyId },
-      data: {
-        registration_status: action === "approved" ? "approved" : "rejected"
-      },
-      include: {
-        account: true
-      }
-    });
-
-    // Create notification for the company
-    await prisma.notification.create({
-      data: {
-        account_id: updatedCompany.account_id,
-        message: action === "approved"
-          ? "Your company registration has been approved! You can now post jobs and manage applications."
-          : `Your company registration has been rejected. ${reason ? `Reason: ${reason}` : ""}`
-      }
-    });
+    const updatedCompany = await postApproveCompany(companyId, action, reason);
 
     return NextResponse.json({
       message: `Company ${action} successfully`,
