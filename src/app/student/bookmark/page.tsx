@@ -146,7 +146,7 @@ export default function Page() {
                 <Dialog key={item.job.id}>
                   <DialogTrigger asChild>
                     <div className="cursor-pointer">
-                      <JobCard size="lg" info={item.job} onUnbookmark={handleUnbookmark} isCompanyView={true}/>
+                      <JobCard size="lg" info={item.job} onUnbookmark={handleUnbookmark} isCompanyView={false}/>
                     </div>
                   </DialogTrigger>
 
@@ -180,7 +180,7 @@ export default function Page() {
           ) : (
             <div className="flex flex-col">
               {appliedJobs.map((item: BookmarkJobInfo) => (
-                <JobCard key={item.job.id} size="lg" info={item.job} onUnbookmark={handleUnbookmark} isCompanyView={true} />
+                <JobCard key={item.job.id} size="lg" info={item.job} onUnbookmark={handleUnbookmark} isCompanyView={false} />
               ))}
             </div>
           )}
