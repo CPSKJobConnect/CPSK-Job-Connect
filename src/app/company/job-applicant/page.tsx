@@ -42,19 +42,20 @@ export default function Page() {
   fetchFilters();
 }, []);
 
+  const fetchJobs = async () => {
+    try {
+      const res = await fetch("/api/company/jobs");
+      if (!res.ok) throw new Error("Failed to fetch jobs");
+      const data: JobInfo[] = await res.json();
+      setJobPost(data);
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const res = await fetch("/api/company/jobs");
-        if (!res.ok) throw new Error("Failed to fetch jobs");
-        const data: JobInfo[] = await res.json();
-        setJobPost(data);
-      } catch (error) {
-        console.error("Error fetching jobs:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchJobs();
   }, []);
 
@@ -83,6 +84,19 @@ export default function Page() {
 
   const handlePostJob = () => {
     router.push(`/company/job-posting`);
+  };
+
+  const handleJobUpdate = async () => {
+    // Refetch jobs data after update
+    await fetchJobs();
+    // If a job is selected, also refetch applicants
+    if (selectedCardId) {
+      const res = await fetch(`/api/jobs/${selectedCardId}/applicants`);
+      if (res.ok) {
+        const data = await res.json();
+        setApplicants(data.applicants || []);
+      }
+    }
   };
 
   if (loading) {
@@ -136,6 +150,7 @@ export default function Page() {
                     categoryList={filters.categories}
                     typeList={filters.types}
                     arrangementList={filters.arrangements}
+                    onUpdate={handleJobUpdate}
                   />
                   <ApplicationList
                     job_id={Number(selectedJob.id)}
