@@ -145,21 +145,23 @@ const JobCard = (job: JobCardProps) => {
     >
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
-          {job.info.companyLogo ? (
-            <Image
-              src={job.info.companyLogo}
-              alt={job.info.companyName || "Company logo"}
-              width={60}
-              height={60}
-              className="h-auto bg-white translate-y-1 shadow-md rounded-md"
-            />
-          ) : (
-            <div className="w-[60px] h-[60px] bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
-              {job.info.companyName ? job.info.companyName.charAt(0).toUpperCase() : "C"}
-            </div>
-          )}
-          <div className="p-2">
-            <p className="font-bold text-md">{job.info.title}</p>
+          <div className="flex-shrink-0">
+            {job.info.companyLogo ? (
+              <Image
+                src={job.info.companyLogo}
+                alt={job.info.companyName || "Company logo"}
+                width={60}
+                height={60}
+                className="w-[60px] h-[60px] object-cover bg-white translate-y-1 shadow-md rounded-md"
+              />
+            ) : (
+              <div className="w-[60px] h-[60px] bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+                {job.info.companyName ? job.info.companyName.charAt(0).toUpperCase() : "C"}
+              </div>
+            )}
+          </div>
+          <div className="p-2 flex-1 min-w-0">
+            <p className="font-bold text-md break-words">{job.info.title}</p>
             <p className="text-gray-600">{job.info.companyName}</p>
           </div>
         </div>
