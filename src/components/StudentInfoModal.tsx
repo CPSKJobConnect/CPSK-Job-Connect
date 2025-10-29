@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { MdOutlinePersonOutline, MdOutlineMailOutline } from "react-icons/md";
-import { LuPhone } from "react-icons/lu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { RiExternalLinkLine } from "react-icons/ri";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { LuPhone } from "react-icons/lu";
+import { MdOutlineMailOutline, MdOutlinePersonOutline } from "react-icons/md";
+import { RiExternalLinkLine } from "react-icons/ri";
 import { toast } from "sonner";
 
 interface ApplicantInfo {
