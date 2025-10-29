@@ -1,14 +1,13 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
-import Image from "next/image";
-import { Navbar01, Navbar01NavLink } from '@/components/ui/shadcn-io/navbar-01';
-import { usePathname } from 'next/navigation';
-import Link from "next/link";
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { useRouter } from "next/navigation";
-import { User, Bookmark, LogOut } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Navbar01, Navbar01NavLink } from '@/components/ui/shadcn-io/navbar-01';
+import { Bookmark, LogOut, User } from 'lucide-react';
+import { signOut, useSession } from "next-auth/react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function StudentNavbar() {
   const { data: session } = useSession();
@@ -93,7 +92,7 @@ export default function StudentNavbar() {
                   onClick={() => router.push('/student/bookmark')}
                 >
                   <Bookmark className="h-4 w-4" />
-                  <span>Bookmarks</span>
+                  <span>Bookmark</span>
                 </Button>
               )}
 
