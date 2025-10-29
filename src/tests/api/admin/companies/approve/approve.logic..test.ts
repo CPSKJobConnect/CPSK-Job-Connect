@@ -38,7 +38,7 @@ describe("postApproveCompany", () => {
       data: {
         account_id: 100,
         message:
-          "Your company registration has been approved! You can now post jobs and manage applications.",
+          "🎉 Your company registration has been approved! You can now post jobs and manage applications.",
       },
     });
 
@@ -67,7 +67,7 @@ describe("postApproveCompany", () => {
     expect(prisma.notification.create).toHaveBeenCalledWith({
       data: {
         account_id: 200,
-        message: "Your company registration has been rejected. Reason: Not meeting requirements",
+        message: "❌ Your company registration has been rejected. Reason: Not meeting requirements",
       },
     });
 
