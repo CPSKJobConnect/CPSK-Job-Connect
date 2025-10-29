@@ -159,12 +159,17 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags, categoryList: pro
   return (
     <div className={`${baseStyle} ${sizeStyle}`}>
       <div className="relative w-full h-40">
-        <Image
+        {job.companyBg ? (
+          <Image
           src={job.companyBg}
           alt="company background"
           fill
           className="object-cover"
         />
+      ) : (
+        <div className="w-full h-full bg-gray-100" /> // หรือ bg-white ถ้าอยากเป็นขาว
+      )}
+
         {onEdit && (
           <>
             {isEditing ? (
@@ -213,14 +218,20 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags, categoryList: pro
           </>
         )}
 
-        <div className="absolute -bottom-6 left-4 bg-white p-2 rounded-md shadow-md">
-          <Image
-            src={job.companyLogo}
-            alt="companyLogo"
-            width={60}
-            height={60}
-            className="h-auto w-auto"
-          />
+        <div className="absolute -bottom-6 left-4 w-[60px] h-[60px]">
+            {job.companyLogo ? (
+                <Image
+                    src={job.companyLogo}
+                    alt={job.companyName || "Company logo"}
+                    width={60}
+                    height={60}
+                    className="h-auto w-auto object-cover rounded-md shadow-md"
+                />
+            ) : (
+                <div className="w-[60px] h-[60px] bg-gray-100 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+                    {job.companyName ? job.companyName.charAt(0).toUpperCase() : "C"}
+                </div>
+            )}
         </div>
       </div>
 
