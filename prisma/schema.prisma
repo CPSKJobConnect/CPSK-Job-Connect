@@ -115,6 +115,7 @@ model JobPost {
   jobName            String
   location           String
   aboutRole          String
+  responsibilities   String?
   requirements       String[]
   qualifications     String[]
   min_salary         Int
