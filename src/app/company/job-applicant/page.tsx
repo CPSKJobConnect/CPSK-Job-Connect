@@ -8,6 +8,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { JobInfo } from "@/types/job";
 import ApplicationList from "./ApplicationList";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Page() {
   const router = useRouter();
@@ -15,33 +16,14 @@ export default function Page() {
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [applicants, setApplicants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<{
-  categories: string[],
-  types: string[],
-  arrangements: string[],
-  tags: string[],
-}>({ categories: [], types: [], arrangements: [], tags: [] });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [allDepartment, setAllDepartment] = useState<string[]>([]);
+  const [jobTypeList, setJobTypeList] = useState<string[]>([]);
+  const [arrangementList, setArrangementList] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
 
-  useEffect(() => {
-  const fetchFilters = async () => {
-    try {
-      const res = await fetch("/api/jobs/filter");
-      if (!res.ok) throw new Error("Failed to fetch filters");
-      const data = await res.json();
-      setFilters({
-        categories: data.categories || [],
-        types: data.types || [],
-        arrangements: data.arrangements || [],
-        tags: data.tags || [],
-      });
-    } catch (error) {
-      console.error("Error fetching filters:", error);
-    }
-  };
-
-  fetchFilters();
-}, []);
-
+  // Fetch jobs from API
   const fetchJobs = async () => {
     try {
       const res = await fetch("/api/company/jobs");
@@ -56,9 +38,45 @@ export default function Page() {
   };
 
   useEffect(() => {
+    const fetchFilters = async () => {
+        try {
+            const res = await fetch("/api/jobs/filter");
+            if (!res.ok) throw new Error("Failed to fetch filters");
+            const data = await res.json();
+            setAllDepartment(data.categories || []);
+            setJobTypeList(data.types || []);
+            setArrangementList(data.arrangements || []);
+            setAllTags(data.tags || []);
+        } catch (error) {
+            console.error("Error fetching job filters:", error);
+        }
+    };
+
+    fetchFilters();
+    }, []);
+
+  useEffect(() => {
     fetchJobs();
+
+    // Responsive dialog
+    const m = window.matchMedia("(max-width: 1024px)");
+    const handler = (e: MediaQueryListEvent | MediaQueryList) => setIsSmallScreen((e as any).matches);
+    setIsSmallScreen(m.matches);
+    if (typeof m.addEventListener === "function") {
+      m.addEventListener("change", handler as any);
+    } else if (typeof (m as any).addListener === "function") {
+      (m as any).addListener(handler as any);
+    }
+    return () => {
+      if (typeof m.removeEventListener === "function") {
+        m.removeEventListener("change", handler as any);
+      } else if (typeof (m as any).removeListener === "function") {
+        (m as any).removeListener(handler as any);
+      }
+    };
   }, []);
 
+  // Fetch applicants when selectedCardId changes
   useEffect(() => {
     if (!selectedCardId) {
       setApplicants([]);
@@ -79,24 +97,16 @@ export default function Page() {
     fetchApplicants();
   }, [selectedCardId]);
 
-  const selectedJob =
-    selectedCardId !== null ? jobPost.find((job) => Number(job.id) === selectedCardId) : null;
+  // Handle small screen dialog
+  useEffect(() => {
+    if (!isSmallScreen && dialogOpen) setDialogOpen(false);
+    if (isSmallScreen && selectedCardId !== null) setDialogOpen(true);
+  }, [isSmallScreen, selectedCardId]);
+
+  const selectedJob = selectedCardId !== null ? jobPost.find(job => Number(job.id) === selectedCardId) : null;
 
   const handlePostJob = () => {
     router.push(`/company/job-posting`);
-  };
-
-  const handleJobUpdate = async () => {
-    // Refetch jobs data after update
-    await fetchJobs();
-    // If a job is selected, also refetch applicants
-    if (selectedCardId) {
-      const res = await fetch(`/api/jobs/${selectedCardId}/applicants`);
-      if (res.ok) {
-        const data = await res.json();
-        setApplicants(data.applicants || []);
-      }
-    }
   };
 
   if (loading) {
@@ -110,7 +120,7 @@ export default function Page() {
   return (
     <div className="p-5 mb-3 max-h-screen overflow-y-auto">
       <div className="flex flex-col gap-5">
-        {/* Header Section */}
+        {/* Header */}
         <div className="flex flex-row justify-between">
           <div className="flex flex-col">
             <p className="px-4 text-xl font-bold text-gray-700">Jobs & Applications</p>
@@ -129,33 +139,27 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* Main */}
         <div className="flex md:flex-row sm:flex-col gap-8">
-          {/* Job List */}
           <div className="basis-1/5">
-            <AllJobPost info={jobPost} onSelectCard={(id) => setSelectedCardId(id)} allDepartment={filters.categories} />
+            <AllJobPost info={jobPost} onSelectCard={id => setSelectedCardId(id)} allDepartment={allDepartment} />
           </div>
 
-          {/* Job Detail */}
-          <div className="basis-4/5">
+          <div className="flex-1">
             <div className="flex flex-col rounded-md shadow-md p-3 max-h-[120vh]">
               {selectedJob ? (
                 <>
                   <JobDescriptionCard
-                    size="md"
-                    onApply={false}
-                    onEdit={true}
-                    job={selectedJob}
-                    tags={filters.tags}
-                    categoryList={filters.categories}
-                    typeList={filters.types}
-                    arrangementList={filters.arrangements}
-                    onUpdate={handleJobUpdate}
+                      size="md"
+                      onApply={false}
+                      onEdit={true}
+                      job={selectedJob}
+                      categories={allDepartment}
+                      types={jobTypeList}
+                      arrangements={arrangementList}
+                      tags={allTags}
                   />
-                  <ApplicationList
-                    job_id={Number(selectedJob.id)}
-                    applicants={applicants}
-                  />
+                  <ApplicationList job_id={Number(selectedJob.id)} applicants={applicants} />
                 </>
               ) : (
                 <div className="flex flex-col items-center gap-4 py-44">
@@ -176,6 +180,26 @@ export default function Page() {
             </div>
           </div>
         </div>
+
+        {/* Dialog for small screens */}
+        <Dialog open={dialogOpen} onOpenChange={open => {
+          setDialogOpen(open);
+          if (!open) setSelectedCardId(null);
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{selectedJob?.title || ""}</DialogTitle>
+            </DialogHeader>
+            <div className="max-h-[70vh] overflow-y-auto">
+              {selectedJob && (
+                <div className="space-y-4">
+                  <JobDescriptionCard size="md" onApply={false} onEdit={true} job={selectedJob} />
+                  <ApplicationList job_id={Number(selectedJob.id)} applicants={applicants} />
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

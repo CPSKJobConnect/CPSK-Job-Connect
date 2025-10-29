@@ -10,17 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import StudentInfoModal from "./StudentInfoModal";
+import StudentInfoModal from "@/components/StudentInfoModal";
 
 interface Applicant {
-  applicant_id: number;
+  applicant_id: string;
+  profile_url: string;
   name: string;
-  student_id: string;
-  status: number; // id ของ status
-  applied_at: string;
-  resume: string | null;
-  portfolio: string | null;
-  logoUrl: string | null;
+  email: string;
+  status: string;
+  applied_at: Date;
 }
 
 interface Status {
@@ -28,22 +26,22 @@ interface Status {
   name: string;
 }
 
-interface ApplicationListProps {
+interface ApplicantListProps {
   job_id: number | null;
   applicants: Applicant[];
 }
 
-type StatusType = "pending" | "reviewed" | "interview" | "offered" | "rejected";
+type StatusType = "Pending" | "Reviewed" | "Interview" | "Offered" | "Rejected";
 
 const statusColors: Record<StatusType, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  reviewed: "bg-blue-100 text-blue-800",
-  interview: "bg-purple-100 text-purple-800",
-  offered: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800",
+  Pending: "bg-yellow-100 text-yellow-800",
+  Reviewed: "bg-blue-100 text-blue-800",
+  Interview: "bg-purple-100 text-purple-800",
+  Offered: "bg-green-100 text-green-800",
+  Rejected: "bg-red-100 text-red-800",
 };
 
-const ApplicationList = ({ job_id, applicants }: ApplicationListProps) => {
+const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
   const [statusList, setStatusList] = useState<Status[]>([]);
   const [statusMap, setStatusMap] = useState<Record<number, { id: number; type: StatusType }>>({});
 
@@ -89,70 +87,77 @@ const ApplicationList = ({ job_id, applicants }: ApplicationListProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 bg-gray-50">
+    <div className="flex flex-col rounded-md shadow-md w-full gap-4 p-4 overflow-y-auto">
+      <p className="text-lg font-semibold text-gray-700">Student Applications</p>
       {applicants.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 text-gray-500">
-          <p className="text-center text-sm">No applicants yet</p>
-        </div>
-      ) : (
-        applicants.map((a) => {
-          const currentStatus = statusMap[a.applicant_id] || { id: a.status, type: "pending" };
+      <div className="flex flex-col items-center justify-center py-10 text-gray-500">
+        <p className="text-center text-sm">No applicants yet</p>
+      </div>
+    ) : (
+      <div className="flex flex-col gap-4">
+        {applicants.map((student) => {
+          const currentStatus = statusMap[student.applicant_id] || (student.status as StatusType);
+
           return (
             <div
-              key={a.applicant_id}
-              className="flex flex-col md:flex-row justify-between items-center border p-4 rounded-md shadow-md bg-white"
+              key={student.applicant_id}
+              className="flex flex-col shadow-md rounded-md p-2 border border-gray-200"
             >
-              <div className="flex gap-4 items-center w-full md:w-auto">
-                <Image
-                  src={a.logoUrl ?? "/assets/images/companyLogo.png"}
-                  alt="profile"
-                  width={60}
-                  height={60}
-                  className="rounded-full shadow-md"
-                />
-                <div className="flex flex-col">
-                  <p className="font-medium">{a.name}</p>
-                  <p className="text-gray-500 text-sm">
-                    {a.applied_at &&
-                      new Date(a.applied_at).toLocaleString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                  </p>
+              <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 md:gap-0">
+                <div className="flex flex-row gap-4 items-center min-w-0">
+                  <Image
+                    src={student.profile_url}
+                    alt="studentProfile"
+                    width={60}
+                    height={60}
+                    className="rounded-full shadow-md"
+                  />
+                  <div className="flex flex-col">
+                    <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                      <p className="font-medium">{student.name}</p>
+                    </div>
+                    <p className="text-sm text-gray-500 truncate max-w-full sm:max-w-[200px] md:max-w-none">{student.email}</p>
+                  </div>
                 </div>
-              </div>
+                <div className="flex flex-row items-center gap-3 w-full md:w-auto mt-2 md:mt-0 justify-end md:justify-start">
+                  <div className="w-32 flex-shrink-0">
+                    <Select
+                      value={currentStatus}
+                      onValueChange={(val) =>
+                        handleStatusChange(student.applicant_id, Number(val))
+                      }
+                    >
+                      <SelectTrigger
+                        className={`rounded-full w-full text-sm p-1 transition-all duration-200 border-none p-3 ${statusColors[currentStatus]}`}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Status</SelectLabel>
+                          {statusList.map((status) => (
+                            <SelectItem
+                                key={status.id}
+                                value={String(status.id)}
+                              >
+                                {status.name}
+                              </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="flex gap-4 items-center mt-4 md:mt-0">
-                <Select
-                  value={currentStatus.id.toString()}
-                  onValueChange={(val) => handleStatusChange(a.applicant_id, Number(val))}
-                >
-                  <SelectTrigger
-                    className={`rounded-full w-40 text-sm p-2 border-none ${statusColors[currentStatus.type]}`}
-                  >
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Status</SelectLabel>
-                      {statusList.map((s) => (
-                        <SelectItem key={s.id} value={s.id.toString()}>
-                          {s.name.charAt(0).toUpperCase() + s.name.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-
-                <StudentInfoModal applicant_id={a.applicant_id.toString()} selectedJobId={job_id!} />
+                  <div className="flex-shrink-0">
+                    <StudentInfoModal applicant_id={student.applicant_id.toString()} selectedJobId={job_id!} />
+                  </div>
+                </div>
               </div>
             </div>
           );
-        })
-      )}
+        })}
+      </div>
+    )}
     </div>
   );
 };

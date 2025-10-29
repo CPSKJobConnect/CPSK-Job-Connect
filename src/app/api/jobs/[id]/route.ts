@@ -51,7 +51,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         requirement: job.requirements.join("\n"),
         qualification: job.qualifications.join("\n"),
       },
-      skills: job.tags.map((tag) => tag.name),
+      skills: job.tags.map((tag: { name: string }) => tag.name),
       arrangement: job.jobArrangement.name,
       deadline: job.deadline.toISOString(),
       status,
