@@ -5,7 +5,10 @@ import { prisma } from "@/lib/db";
 import { createClient } from "@supabase/supabase-js";
 
 export async function uploadDocument(file: File, userId: string, docTypeId: number) {
-  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!);
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   let suffix = "file";
   if (docTypeId === 1) suffix = "resume";
