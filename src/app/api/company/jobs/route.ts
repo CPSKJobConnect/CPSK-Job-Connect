@@ -56,7 +56,7 @@ export async function GET() {
         status,
         description: {
             overview: job.aboutRole ?? "",
-            responsibility: job.aboutRole ?? "",
+            responsibility: job.responsibilities ?? "-",
             requirement: job.requirements.join("\n"),
             qualification: job.qualifications.join("\n"),
         },

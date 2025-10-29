@@ -47,7 +47,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       type: job.jobType.name,
       description: {
         overview: job.aboutRole ?? "",
-        responsibility: job.aboutRole ?? "",
+        responsibility: job.responsibilities ?? "-",
         requirement: job.requirements.join("\n"),
         qualification: job.qualifications.join("\n"),
       },
@@ -149,6 +149,7 @@ export async function PATCH(
         min_salary: body.min_salary ?? existingJob.min_salary,
         max_salary: body.max_salary ?? existingJob.max_salary,
         aboutRole: body.aboutRole ?? existingJob.aboutRole,
+        responsibilities: body.responsibilities ?? existingJob.responsibilities,
         requirements: body.requirements ?? existingJob.requirements,
         qualifications: body.qualifications ?? existingJob.qualifications,
         tags: tagIds.length ? { set: tagIds.map(tag => ({ id: tag.id })) } : undefined,

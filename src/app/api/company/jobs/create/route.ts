@@ -61,6 +61,7 @@ export async function POST(req: Request) {
         jobName: body.title,
         location: body.location,
         aboutRole: body.description?.overview || "",
+        responsibilities: body.description?.responsibility || "-",
         requirements: body.description?.requirement
           ? body.description.requirement.split(",").map((s: string) => s.trim())
           : [],

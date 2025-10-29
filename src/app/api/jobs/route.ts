@@ -76,7 +76,7 @@ export async function GET(req: Request) {
         type: job.jobType.name,
         description: {
           overview: job.aboutRole ?? "",
-          responsibility: job.aboutRole ?? "",
+          responsibility: job.responsibilities ?? "-",
           requirement: job.requirements.join("\n"),
           qualification: job.qualifications.join("\n"),
         },
