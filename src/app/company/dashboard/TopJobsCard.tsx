@@ -19,6 +19,10 @@ const statusColor: Record<string, string> = {
 };
 
 export default function TopJobCard({ jobs, loading }: TopJobsCardProps) {
+    console.log("TopJobsCard received jobs:", jobs);
+
+    // Ensure we always operate on an array to avoid runtime errors
+    const items = Array.isArray(jobs) ? jobs : [];
 
     return (
     <div className="flex flex-col rounded-md shadow-lg w-full gap-4 p-4 overflow-y-auto">
@@ -26,13 +30,13 @@ export default function TopJobCard({ jobs, loading }: TopJobsCardProps) {
             <p className="text-lg font-semibold text-gray-700">Top 5 Job Posts</p>
             <p className="text-sm text-gray-400">Jobs with the highest number of applications</p>
         </div>
-      {jobs?.length === 0 ? (
+      {items.length === 0 ? (
       <div className="flex flex-col items-center justify-center py-10 text-gray-500">
         <p className="text-center text-sm">No job posts yet</p>
       </div>
     ) : (
       <div className="flex flex-col gap-3">
-        {jobs?.map((job) => (
+        {items.map((job) => (
           <div key={job.id} className="flex items-center justify-between p-3 bg-white rounded-md shadow-sm">
             <div className="flex flex-row gap-2">
               <p className="font-medium text-gray-800">{job.title}</p>

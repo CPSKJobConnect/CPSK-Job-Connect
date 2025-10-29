@@ -23,11 +23,11 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({
-      categories: categories.map((c) => c.name),
-      types: types.map((t) => t.name),
-      arrangements: arrangements.map((a) => a.name),
+      categories: categories.map((c: { name: string }) => c.name),
+      types: types.map((t: { name: string }) => t.name),
+      arrangements: arrangements.map((a: { name: string }) => a.name),
       salaryRanges,
-      tags: tags.map((t) => t.name),
+      tags: tags.map((t: { name: string }) => t.name),
     });
   } catch (error) {
     console.error("Error fetching job filters:", error);

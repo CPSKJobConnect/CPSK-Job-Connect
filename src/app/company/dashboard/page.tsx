@@ -90,17 +90,100 @@ const companyStatsConfig: Record<string, { icon: IconType; iconBg: string; iconC
 const CompanyDashboardPage = () => {
   const { data: session, status } = useSession()
   const [companyStat, setCompanyStat] = useState<{ title: string; value: number; icon: IconType; iconBg: string; iconColor: string }[]>([]);
+  const [applicationTrendData, setApplicationTrendData] = useState<any[]>([]);
+  const [statusBreakdownData, setStatusBreakdownData] = useState<any>(null);
+  const [recentApplicationsData, setRecentApplicationsData] = useState<any[]>([]);
+  const [topJobsData, setTopJobsData] = useState<any[]>([]);
 
   useEffect(() => {
-    const stats = Object.entries(companyStatsConfig).map(([title, data]) => ({
-      title,
-      value: mockCompanyStat[data.key as keyof typeof mockCompanyStat],
-      icon: data.icon,
-      iconBg: data.iconBg,
-      iconColor: data.iconColor,
-    }));
+    const fetchCompanyStats = async () => {
+      try {
+        const response = await fetch('/api/company/stats');
+        const result = await response.json();
+        console.log("Company Stats API response:", result);
+        if (result.success) {
+          const statsData = result.data;
+          const stats = Object.entries(companyStatsConfig).map(([title, data]) => ({
+            title,
+            value: statsData[data.key as keyof typeof statsData],
+            icon: data.icon,
+            iconBg: data.iconBg,
+            iconColor: data.iconColor,
+          }));
+          setCompanyStat(stats);
+        } else {
+          console.error("Failed to fetch company stats:", result.error);
+        }
+      } catch (error) {
+        console.error("Error fetching company stats:", error);
+      }
+    };
 
-    setCompanyStat(stats);
+    const fetchApplicationTrend = async () => {
+      try {        
+        const response = await fetch('/api/company/analytics?type=trend&period=week');
+        const result = await response.json();
+        console.log("Application Trend API response:", result);
+        if (result.success) {
+          setApplicationTrendData(result.data?.trend ?? []);
+        } else {
+          console.error("Failed to fetch application trend data:", result.error);
+        }
+      } catch (error) {
+        console.error("Error fetching application trend data:", error);
+      }
+    };
+
+    const fetchStatusBreakdown = async () => {
+      try {        
+        const response = await fetch('/api/company/analytics?type=status');
+        const result = await response.json();
+        console.log("Status Breakdown API response:", result);
+        if (result.success) {
+          setStatusBreakdownData(result.data);
+        } else {
+          console.error("Failed to fetch status breakdown data:", result.error);
+        }
+      } catch (error) {
+        console.error("Error fetching status breakdown data:", error);
+      }
+    };
+
+    const fetchRecentApplications = async () => {
+      try {
+        const response = await fetch('/api/company/applications?limit=5');
+        const result = await response.json();
+        console.log("Recent Applications API response:", result);
+        if (result.success) {
+          setRecentApplicationsData(result.data);
+        } else {
+          console.error("Failed to fetch recent applications:", result.error);
+        }
+      } catch (error) {
+        console.error("Error fetching recent applications data:", error);
+      }
+    };
+
+    const fetchTopJobs = async () => {
+      try {
+        const response = await fetch('/api/company/top-jobs?limit=5');
+        const result = await response.json();
+        console.log("Top Jobs API response:", result);
+        if (result.success) {
+          setTopJobsData(result.data?.jobs ?? []);
+        } else {
+          console.error("Failed to fetch top jobs:", result.error);
+        }
+      } catch (error) {
+        console.error("Error fetching top jobs data:", error);
+      }
+    };
+    
+    fetchCompanyStats();
+    fetchApplicationTrend();
+    fetchStatusBreakdown();
+    fetchRecentApplications();
+    fetchTopJobs();
   }, []);
 
   if (status === "loading") {
@@ -127,28 +210,28 @@ const CompanyDashboardPage = () => {
           const iconData = companyStatsConfig[stat.title];
           return (
             <StatCard
-              key={idx}
+              key={stat.title || idx}
               title={stat.title}
-              value={stat.value.toString()}
-              icon={iconData.icon}
-              iconBg={iconData.iconBg}
-              iconColor={iconData.iconColor}
+              value={String(stat.value ?? 0)}
+              icon={iconData?.icon}
+              iconBg={iconData?.iconBg}
+              iconColor={iconData?.iconColor}
             />
           );
         })}
       </div>
       <div className="flex flex-col gap-5">
         <div className="flex flex-col md:flex-row gap-5">
-          <ApplicationTrendChart data={mockApplicationTrendData} loading={false} />
-          <StatusBreakdownChart data={mockStatusBreakdown} loading={false} />
+          <ApplicationTrendChart data={applicationTrendData} loading={false} />
+          <StatusBreakdownChart data={statusBreakdownData} loading={false} />
         </div>
 
         <div className="flex flex-col lg:flex-row gap-5 h-full items-stretch">
           <div className="basis-3/5 h-full min-h-0">
-            <RecentApplicationsTable applications={mockApplications} loading={false} />
+            <RecentApplicationsTable applications={recentApplicationsData} loading={false} />
           </div>
           <div className="basis-2/5 h-full min-h-0">
-            <TopJobCard jobs={mockTopJobs} loading={false} />
+            <TopJobCard jobs={topJobsData} loading={false} />
           </div>
         </div>
       </div>
