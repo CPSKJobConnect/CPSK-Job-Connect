@@ -9,13 +9,10 @@ const statusColor: Record<string, string> = {
 };
 
 export default function TopJobCard({ jobs, loading }: TopJobsCardProps) {
-    console.log("TopJobsCard received jobs:", jobs);
-
-    // Ensure we always operate on an array to avoid runtime errors
     const items = Array.isArray(jobs) ? jobs : [];
 
     return (
-    <div className="flex flex-col rounded-md shadow-lg w-full gap-4 p-4 overflow-y-auto">
+    <div className="flex flex-col rounded-md shadow-lg w-full gap-4 p-4 overflow-y-auto h-[500px]">
         <div className="flex flex-col gap-1">
             <p className="text-lg font-semibold text-gray-700">Top 5 Job Posts</p>
             <p className="text-sm text-gray-400">Jobs with the highest number of applications</p>

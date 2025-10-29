@@ -172,13 +172,13 @@ const CompanyDashboardPage = () => {
 
     const fetchRecentApplications = async () => {
       try {
-        const response = await fetch('/api/company/applications?limit=5');
-        const result = await response.json();
+        const response = await fetch('/api/company/recent-applications?limit=5');
+        const result = await parseJsonSafe(response);
         console.log("Recent Applications API response:", result);
-        if (result.success) {
-          setRecentApplicationsData(result.data);
+        if (result?.success) {
+          setRecentApplicationsData(result.data?.applications ?? []);
         } else {
-          console.error("Failed to fetch recent applications:", result.error);
+          console.error("Failed to fetch recent applications:", result?.error);
         }
       } catch (error) {
         console.error("Error fetching recent applications data:", error);
