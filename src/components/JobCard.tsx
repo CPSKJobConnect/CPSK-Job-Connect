@@ -85,7 +85,7 @@ const JobCard = (job: JobCardProps) => {
     checkIfSaved();
   }, [session?.user?.id, job.info.id, job.info.isSaved]);
   const baseStyle =
-    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-200/70 cursor-not-allowed" : "bg-white hover:bg-[#F3FEFA]"} p-4 flex flex-col gap-2 transition mb-5 transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg`;
+    `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-200/70" : "bg-white hover:bg-[#F3FEFA]"} p-4 flex flex-col gap-2 transition mb-5 transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg`;
 
     const sizeStyle = {
       sm: "w-full sm:w-[400px] min-h-[140px]",
@@ -143,13 +143,7 @@ const JobCard = (job: JobCardProps) => {
   };
 
   return (
-    <div
-      className={`${baseStyle} ${sizeStyle}`}
-      onClick={(e) => {
-        if (isClosed) e.stopPropagation();
-      }}
-      aria-disabled={isClosed}
-    >
+    <div className={`${baseStyle} ${sizeStyle}`}>
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
           {job.info.companyLogo ? (
