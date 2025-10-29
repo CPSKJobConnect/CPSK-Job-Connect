@@ -1,45 +1,63 @@
 import { uploadDocument } from "@/lib/uploadDocument";
-import {prisma} from "@/lib/db";
+import { prisma } from "@/lib/db";
+import { getApiSession } from "@/lib/api-auth";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
-  const formData = await req.formData();
-  const userId = formData.get("userId") as string;
-  const jobId = Number(formData.get("jobId"));
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getApiSession(request);
 
-  const resumeFile = formData.get("resume") as File | null;
-  const resumeId = formData.get("resumeId") as string | null;
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const portfolioFile = formData.get("portfolio") as File | null;
-  const portfolioId = formData.get("portfolioId") as string | null;
+    const formData = await request.formData();
+    const jobId = Number(formData.get("jobId"));
 
-  let resumeDoc, portfolioDoc;
+    const resumeFile = formData.get("resume") as File | null;
+    const resumeId = formData.get("resumeId") as string | null;
 
-  if (resumeFile) {
-    resumeDoc = await uploadDocument(resumeFile, userId, 1);
-  } else if (resumeId) {
-    resumeDoc = { id: Number(resumeId) };
-  }
+    const portfolioFile = formData.get("portfolio") as File | null;
+    const portfolioId = formData.get("portfolioId") as string | null;
 
-  if (portfolioFile) {
-    portfolioDoc = await uploadDocument(portfolioFile, userId, 3);
-  } else if (portfolioId) {
-    portfolioDoc = { id: Number(portfolioId) };
-  }
+    let resumeDoc, portfolioDoc;
 
-  const student = await prisma.student.findUnique({
-    where: { account_id: Number(userId) }
+    if (resumeFile) {
+      resumeDoc = await uploadDocument(resumeFile, session.user.id, 1);
+    } else if (resumeId) {
+      resumeDoc = { id: Number(resumeId) };
+    }
+
+    if (portfolioFile) {
+      portfolioDoc = await uploadDocument(portfolioFile, session.user.id, 3);
+    } else if (portfolioId) {
+      portfolioDoc = { id: Number(portfolioId) };
+    }
+
+    const student = await prisma.student.findUnique({
+      where: { account_id: parseInt(session.user.id) }
     });
-    if (!student) throw new Error("Student not found");
 
-  const application = await prisma.application.create({
-    data: {
-      student_id: student.id,
-      job_post_id: jobId,
-      status: 1,
-      resume_id: resumeDoc?.id,
-      portfolio_id: portfolioDoc?.id,
-    },
-  });
+    if (!student) {
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    }
 
-  return new Response(JSON.stringify({ application }), { status: 200 });
+    const application = await prisma.application.create({
+      data: {
+        student_id: student.id,
+        job_post_id: jobId,
+        status: 1,
+        resume_id: resumeDoc?.id,
+        portfolio_id: portfolioDoc?.id,
+      },
+    });
+
+    return NextResponse.json({ application }, { status: 200 });
+  } catch (error) {
+    console.error("Error applying to job:", error);
+    return NextResponse.json(
+      { error: "Failed to apply to job" },
+      { status: 500 }
+    );
+  }
 }

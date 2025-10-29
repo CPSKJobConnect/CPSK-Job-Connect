@@ -5,8 +5,7 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefi
 export const prisma =
 globalForPrisma.prisma ??
 new PrismaClient({
-  datasourceUrl: process.env.DIRECT_URL,
-  log: 
+  log:
     process.env.NODE_ENV === "development"
       ? ["error", "warn"]
       : ["error"],

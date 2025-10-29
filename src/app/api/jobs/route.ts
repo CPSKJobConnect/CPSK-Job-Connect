@@ -39,7 +39,28 @@ export async function GET(req: Request) {
     });
 
 
-    const mappedData = jobs.map((job) => {
+    type JobWithRelations = {
+      id: number;
+      is_Published: boolean;
+      deadline: Date;
+      savedBy: unknown;
+      jobName: string;
+      company: { name: string; account: { logoUrl: string | null; backgroundUrl: string | null } | null };
+      categories: { name: string }[];
+      location: string;
+      created_at: Date;
+      applications: unknown[];
+      min_salary: number | bigint;
+      max_salary: number | bigint;
+      jobType: { name: string };
+      aboutRole: string | null;
+      requirements: string[];
+      qualifications: string[];
+      tags: { name: string }[];
+      jobArrangement: { name: string };
+    };
+
+    const mappedData = jobs.map((job: JobWithRelations) => {
       // Derive status from is_Published and deadline
       let status = "active";
       if (!job.is_Published) {
@@ -57,7 +78,7 @@ export async function GET(req: Request) {
         companyBg: job.company.account?.backgroundUrl ?? "",
         title: job.jobName,
         companyName: job.company.name,
-        category: job.categories.map((c) => c.name).join(", "),
+        category: job.categories.map((c: { name: string }) => c.name).join(", "),
         location: job.location,
         posted: job.created_at.toISOString(),
         applied: job.applications.length,
@@ -72,7 +93,7 @@ export async function GET(req: Request) {
           requirement: job.requirements.join("\n"),
           qualification: job.qualifications.join("\n"),
         },
-        skills: job.tags.map((tag) => tag.name),
+        skills: job.tags.map((tag: { name: string }) => tag.name),
         arrangement: job.jobArrangement.name,
         deadline: job.deadline.toISOString(),
         status,
