@@ -62,10 +62,10 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
           <div className="w-24">Profile</div>
         </div>
         {items.map((student) => {
-          const currentStatus = statusMap[student.applicant.id] || (student.status as StatusType);
+          const currentStatus = statusMap[student.id] || (student.status as StatusType);
           return (
             <div
-              key={student.applicant.id}
+              key={student.id}
               className="flex flex-row items-center justify-between px-2 py-3 hover:bg-gray-50 border-b"
             >
               <div className="flex items-center gap-4 w-1/4 min-w-0">
