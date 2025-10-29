@@ -26,11 +26,13 @@ const statusColor: Record<string, string> = {
 };
 
 export default function RecentApplicationsTable({ applications, loading }: RecentApplicationsTableProps) {
+  const items = Array.isArray(applications) ? applications : [];
+
   const statusTypes: StatusType[] = ["pending", "reviewed", "interviewed", "accepted", "rejected"];
   const [statusMap, setStatusMap] = useState<Record<string, StatusType>>(
       () =>
         Object.fromEntries(
-          applications.map((a) => [a.applicant.id, a.status as StatusType])
+          items.map((a) => [a.applicant.id, a.status as StatusType])
         )
   );
 
@@ -44,7 +46,7 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
 	return (
     <div className="flex flex-col rounded-md shadow-lg w-full gap-4 p-4 overflow-y-auto">
       <p className="text-lg font-semibold text-gray-700">Recent Applications</p>
-      {applications.length === 0 ? (
+      {items.length === 0 ? (
       <div className="flex flex-col items-center justify-center py-10 text-gray-500">
         <p className="text-center text-sm">No applicants yet</p>
       </div>
@@ -59,7 +61,7 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
           <div className="w-32">Status</div>
           <div className="w-24">Profile</div>
         </div>
-        {applications.map((student) => {
+        {items.map((student) => {
           const currentStatus = statusMap[student.applicant.id] || (student.status as StatusType);
           return (
             <div

@@ -96,12 +96,33 @@ const CompanyDashboardPage = () => {
   const [topJobsData, setTopJobsData] = useState<TopJobsCardProps['jobs']>([]);
 
   useEffect(() => {
+    async function parseJsonSafe(response: Response) {
+      const contentType = response.headers.get("content-type") || "";
+      if (!response.ok) {
+        const text = await response.text().catch(() => null);
+        console.error(`Fetch failed (${response.status}):`, text);
+        return null;
+      }
+      if (contentType.includes("application/json")) {
+        try {
+          return await response.json();
+        } catch (err) {
+          const text = await response.text().catch(() => null);
+          console.error("Failed to parse JSON response:", err, text);
+          return null;
+        }
+      }
+      const text = await response.text().catch(() => null);
+      console.warn("Expected JSON but got different content-type:", contentType, text);
+      return null;
+    }
+
     const fetchCompanyStats = async () => {
       try {
         const response = await fetch('/api/company/stats');
-        const result = await response.json();
+        const result = await parseJsonSafe(response);
         console.log("Company Stats API response:", result);
-        if (result.success) {
+        if (result?.success) {
           const statsData = result.data;
           const stats = Object.entries(companyStatsConfig).map(([title, data]) => ({
             title,
@@ -122,9 +143,9 @@ const CompanyDashboardPage = () => {
     const fetchApplicationTrend = async () => {
       try {        
         const response = await fetch('/api/company/analytics?type=trend&period=week');
-        const result = await response.json();
+        const result = await parseJsonSafe(response);
         console.log("Application Trend API response:", result);
-        if (result.success) {
+        if (result?.success) {
           setApplicationTrendData(result.data?.trend ?? []);
         } else {
           console.error("Failed to fetch application trend data:", result.error);
@@ -137,9 +158,9 @@ const CompanyDashboardPage = () => {
     const fetchStatusBreakdown = async () => {
       try {        
         const response = await fetch('/api/company/analytics?type=status');
-        const result = await response.json();
+        const result = await parseJsonSafe(response);
         console.log("Status Breakdown API response:", result);
-        if (result.success) {
+        if (result?.success) {
           setStatusBreakdownData(result.data);
         } else {
           console.error("Failed to fetch status breakdown data:", result.error);
@@ -167,9 +188,9 @@ const CompanyDashboardPage = () => {
     const fetchTopJobs = async () => {
       try {
         const response = await fetch('/api/company/top-jobs?limit=5');
-        const result = await response.json();
+        const result = await parseJsonSafe(response);
         console.log("Top Jobs API response:", result);
-        if (result.success) {
+        if (result?.success) {
           setTopJobsData(result.data?.jobs ?? []);
         } else {
           console.error("Failed to fetch top jobs:", result.error);
