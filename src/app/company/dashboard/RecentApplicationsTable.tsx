@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import StudentInfoModal from "@/components/StudentInfoModal";
 import { RecentApplicationsTableProps } from "@/types/companyStat";
+import { toast } from "sonner";
 
 
 type StatusType = "pending" | "reviewed" | "interviewed" | "accepted" | "rejected";
@@ -32,15 +33,49 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
   const [statusMap, setStatusMap] = useState<Record<string, StatusType>>(
       () =>
         Object.fromEntries(
-          items.map((a) => [a.applicant.id, a.status as StatusType])
+          items.map((a) => [a.id, a.status as StatusType])
         )
   );
 
-  const handleStatus = (applicant_id: string, newStatus: StatusType) => {
-    setStatusMap((prev) => ({ ...prev, [applicant_id]: newStatus }));
-    setTimeout(() => {
-      console.log(`(mock POST) updated applicant ${applicant_id} to "${newStatus}"`);
-    }, 500);
+  const handleStatus = async (application_id: string, newStatus: StatusType) => {
+    // Optimistically update UI
+    const previousStatus = statusMap[application_id];
+    setStatusMap((prev) => ({ ...prev, [application_id]: newStatus }));
+
+    try {
+      const response = await fetch(`/api/company/applications/${application_id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: newStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("Failed to update application status:", error);
+        // Revert to previous status on error
+        setStatusMap((prev) => ({ ...prev, [application_id]: previousStatus }));
+        toast.error("Failed to update status", {
+          description: error.error || "Unknown error occurred"
+        });
+      } else {
+        const result = await response.json();
+        console.log("Application status updated successfully:", result);
+        toast.success("Status updated", {
+          description: `Application status changed to ${newStatus}`
+        });
+      }
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      // Revert to previous status on error
+      setStatusMap((prev) => ({ ...prev, [application_id]: previousStatus }));
+      toast.error("Error updating status", {
+        description: "An error occurred. Please try again."
+      });
+    }
   };
 
 	return (
@@ -97,11 +132,11 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
                   <Select
                     value={currentStatus}
                     onValueChange={(val) =>
-                      handleStatus(student.applicant.id, val as StatusType)
+                      handleStatus(student.id, val as StatusType)
                     }
                   >
                     <SelectTrigger
-                      className={`rounded-full w-full text-sm p-1 transition-all duration-200 border-none p-2 h-[20px] w-[110px] ${statusColor[currentStatus]}`}
+                      className={`rounded-full text-sm transition-all duration-200 border-none p-2 h-5 w-[110px] ${statusColor[currentStatus]}`}
                     >
                       <SelectValue />
                     </SelectTrigger>
