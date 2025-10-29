@@ -34,19 +34,19 @@ interface JobDescriptionProps {
   categoryList?: string[];
   typeList?: string[];
   arrangementList?: string[];
+  onUpdate?: () => void;
 }
 
 const typeColors: Record<string, string> = {
   fulltime: "bg-pink-200 text-gray-800",
-  parttime: "bg-blue-200 text-gray-800",
+  "part-time": "bg-blue-200 text-gray-800",
   internship: "bg-orange-100 text-gray-800",
-  contract: "bg-yellow-200 text-gray-800",
-  hybrid: "bg-purple-200 text-gray-800"
+  freelance: "bg-yellow-200 text-gray-800",
 };
 
 
 
-const JobDescriptionCard = ({job, size, onApply, onEdit, tags, categoryList: propCategoryList, typeList: propTypeList, arrangementList: propArrangementList }: JobDescriptionProps) => {
+const JobDescriptionCard = ({job, size, onApply, onEdit, tags, categoryList: propCategoryList, typeList: propTypeList, arrangementList: propArrangementList, onUpdate }: JobDescriptionProps) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [formData, setFormData] = useState<JobPostFormData>({
@@ -124,7 +124,11 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags, categoryList: pro
 
     alert("Job updated successfully!");
     setIsEditing(false);
-    router.push("/company/job-applicant");
+
+    // Call the onUpdate callback to refresh data in parent component
+    if (onUpdate) {
+      onUpdate();
+    }
   } catch (error) {
     console.error("Save error:", error);
     alert("Something went wrong while saving the job.");
