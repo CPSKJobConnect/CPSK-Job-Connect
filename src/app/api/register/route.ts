@@ -89,55 +89,70 @@ export async function POST(req: NextRequest) {
       roleId = roleRecord.id;
     }
 
-    // Create account
-    const account = await prisma.account.create({
-      data: {
-        email: validatedData.data.email,
-        password: hashedPassword,
-        role: roleId,
-        username: role === "student" ? (validatedData.data as StudentData).name : (validatedData.data as CompanyData).companyName,
-      }
-    })
-
     // Handle file upload for transcript
     let transcriptPath: string | null = null
     if (role === "student") {
       const transcriptFile = formData.get("transcript") as File;
       if (transcriptFile && transcriptFile.size > 0) {
         // File upload on cloud AWS S3, Cloudinary
-        transcriptPath = `transcripts/${account.id}_${transcriptFile.name}`;
+        // Generate path with temporary ID - will be updated with actual account ID in transaction
+        transcriptPath = `transcripts/temp_${transcriptFile.name}`;
         // TODO: file upload logic
       }
     }
-  
-    // Create role-specific record
-    if (role === "student") {
-      await prisma.student.create({
+
+    // Use transaction to ensure atomic account + role-specific record creation
+    await prisma.$transaction(async (tx) => {
+      // Create account
+      const account = await tx.account.create({
         data: {
-          account_id: account.id,
-          student_id: (validatedData.data as StudentData).studentId,
-          name: (validatedData.data as StudentData).name,
-          faculty: (validatedData.data as StudentData).faculty,
-          year: (validatedData.data as StudentData).year.toString(),
-          phone: (validatedData.data as StudentData).phone,
-          transcript: transcriptPath,
+          email: validatedData.data.email,
+          password: hashedPassword,
+          role: roleId,
+          username: role === "student" ? (validatedData.data as StudentData).name : (validatedData.data as CompanyData).companyName,
         }
       })
-    } else {
-      await prisma.company.create({
-        data: {
-          account_id: account.id,
-          name: (validatedData.data as CompanyData).companyName,
-          address: (validatedData.data as CompanyData).address,
-          // year: (validatedData.data as CompanyData).year, // Removed from schema
-          phone: (validatedData.data as CompanyData).phone,
-          description: (validatedData.data as CompanyData).description,
-          website: (validatedData.data as CompanyData).website || null,
-          register_day: new Date(),
-          registration_status: "pending",
-        }
-      })
-    }
+
+      // Update transcript path with actual account ID if needed
+      if (transcriptPath) {
+        transcriptPath = `transcripts/${account.id}_${(formData.get("transcript") as File).name}`;
+      }
+
+      // Create role-specific record
+      if (role === "student") {
+        await tx.student.create({
+          data: {
+            account_id: account.id,
+            student_id: (validatedData.data as StudentData).studentId,
+            name: (validatedData.data as StudentData).name,
+            faculty: (validatedData.data as StudentData).faculty,
+            year: (validatedData.data as StudentData).year.toString(),
+            phone: (validatedData.data as StudentData).phone,
+            transcript: transcriptPath,
+          }
+        })
+      } else {
+        await tx.company.create({
+          data: {
+            account_id: account.id,
+            name: (validatedData.data as CompanyData).companyName,
+            address: (validatedData.data as CompanyData).address,
+            // year: (validatedData.data as CompanyData).year, // Removed from schema
+            phone: (validatedData.data as CompanyData).phone,
+            description: (validatedData.data as CompanyData).description,
+            website: (validatedData.data as CompanyData).website || null,
+            register_day: new Date(),
+            registration_status: "pending",
+          }
+        })
+      }
+
+      return account;
+    }, {
+      maxWait: 5000, // Maximum time to wait for a transaction slot (ms)
+      timeout: 10000, // Maximum time the transaction can run (ms)
+    })
+
     return NextResponse.json({
       message: "Account created successfully",
       redirectTo: `/${role}/dashboard`
