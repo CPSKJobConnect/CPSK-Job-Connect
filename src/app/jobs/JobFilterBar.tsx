@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import LocationCombobox from "@/components/LocationCombobox";
 import { JobFilterInfo } from "@/types/filter";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BiCategory } from "react-icons/bi";
 import { IoLocationOutline } from "react-icons/io5";
 import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
@@ -61,10 +61,6 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
 
   const [filters, setFilters] = useState<JobFilters>(defaultFilters);
 
-  useEffect(() => {
-    console.log(filters);
-  }, [filters]);
-
   const updateFilter = (field: string, value: string) => {
     setFilters((prev) => ({...prev, [field]: value}))
   };
@@ -72,6 +68,16 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
   const handleClearAll = () => {
     setFilters(defaultFilters);
     if (onSearch) onSearch(defaultFilters);
+  };
+
+  const handleSearch = () => {
+    if (onSearch) onSearch(filters);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   return (
@@ -92,6 +98,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                     placeholder="Job title or keyword"
                     value={filters.keyword}
                     onChange={(e) => updateFilter("keyword", e.target.value)}
+                    onKeyDown={handleKeyDown}
                     className="pl-10 pr-3 py-3 rounded-full border-none shadow-none focus:ring-0 focus:outline-none text-sm"
                 />
             </div>
@@ -106,7 +113,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
             </div>
 
             <button
-                onClick={() => {if (onSearch) onSearch(filters);}}
+                onClick={handleSearch}
                 className="ml-auto bg-[#2BA17C] text-white font-semibold rounded-full px-6 py-2 shadow-lg hover:brightness-95 transition"
             >
                 <p className="text-white text-sm font-bold">Search</p>
@@ -251,7 +258,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
 
                             <SheetClose asChild>
                                 <button
-                                onClick={() => { if (onSearch) onSearch(filters); }}
+                                onClick={handleSearch}
                                 className="px-5 py-2 rounded-full w-full bg-[#2BA17C] text-white font-semibold shadow-md hover:brightness-95 transition"
                                 >
                                 Apply Filters
