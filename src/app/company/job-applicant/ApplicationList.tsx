@@ -31,14 +31,14 @@ interface ApplicantListProps {
   applicants: Applicant[];
 }
 
-type StatusType = "Pending" | "Reviewed" | "Interview" | "Offered" | "Rejected";
+type StatusType = "pending" | "reviewed" | "interview" | "offered" | "rejected";
 
 const statusColors: Record<StatusType, string> = {
-  Pending: "bg-yellow-100 text-yellow-800",
-  Reviewed: "bg-blue-100 text-blue-800",
-  Interview: "bg-purple-100 text-purple-800",
-  Offered: "bg-green-100 text-green-800",
-  Rejected: "bg-red-100 text-red-800",
+  pending: "bg-yellow-100 text-yellow-800",
+  reviewed: "bg-blue-100 text-blue-800",
+  interview: "bg-purple-100 text-purple-800",
+  offered: "bg-green-100 text-green-800",
+  rejected: "bg-red-100 text-red-800",
 };
 
 const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
@@ -96,7 +96,10 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
     ) : (
       <div className="flex flex-col gap-4">
         {applicants.map((student) => {
-          const currentStatus = statusMap[student.applicant_id] || (student.status as StatusType);
+          const currentStatus = statusMap[student.applicant_id] || {
+            id: student.status,
+            type: statusList.find(s => s.id === student.status)?.name.toLowerCase() as StatusType || 'pending'
+            };
 
           return (
             <div
@@ -105,13 +108,19 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
             >
               <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 md:gap-0">
                 <div className="flex flex-row gap-4 items-center min-w-0">
+                    {student.profile_url ? (
                   <Image
-                    src={student.profile_url}
+                    src={student.profile_url ?? "/assets/images/companyLogo.png"}
                     alt="studentProfile"
                     width={60}
                     height={60}
-                    className="rounded-full shadow-md"
+                    className="h-auto bg-white translate-y-1 shadow-md rounded-md"
                   />
+                ) : (
+                  <div className="w-15 h-15 bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+                    {student.name ? student.name.charAt(0).toUpperCase() : "C"}
+                  </div>
+                )}
                   <div className="flex flex-col">
                     <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
                       <p className="font-medium">{student.name}</p>
@@ -122,15 +131,17 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
                 <div className="flex flex-row items-center gap-3 w-full md:w-auto mt-2 md:mt-0 justify-end md:justify-start">
                   <div className="w-32 flex-shrink-0">
                     <Select
-                      value={currentStatus}
+                      value={currentStatus.id}
                       onValueChange={(val) =>
                         handleStatusChange(student.applicant_id, Number(val))
                       }
                     >
                       <SelectTrigger
-                        className={`rounded-full w-full text-sm p-1 transition-all duration-200 border-none p-3 ${statusColors[currentStatus]}`}
+                        className={`rounded-full w-full text-sm p-1 transition-all duration-200 border-none p-3 ${statusColors[currentStatus.type]}`}
                       >
-                        <SelectValue />
+                        <SelectValue placeholder="Select status">
+                            {statusList.find((st) => st.id === currentStatus.id)?.name || "Pending"}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
@@ -138,9 +149,9 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
                           {statusList.map((status) => (
                             <SelectItem
                                 key={status.id}
-                                value={String(status.id)}
+                                value={status.id.toString()}
                               >
-                                {status.name}
+                                {status.name.charAt(0).toUpperCase() + status.name.slice(1)}
                               </SelectItem>
                           ))}
                         </SelectGroup>
