@@ -1,27 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { MdOutlinePersonOutline, MdOutlineMailOutline } from "react-icons/md";
-import { LuPhone } from "react-icons/lu";
-import { mockApplicantInfo } from "public/data/mockApplicantInfo";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { RiExternalLinkLine } from "react-icons/ri";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { LuPhone } from "react-icons/lu";
+import { MdOutlineMailOutline, MdOutlinePersonOutline } from "react-icons/md";
+import { RiExternalLinkLine } from "react-icons/ri";
+import { toast } from "sonner";
 
 interface ApplicantInfo {
+  applicant_id: string;
   profile_url: string;
   firstname: string;
   lastname: string;
   email: string;
   phone_number: string;
+  faculty?: string;
+  year?: string;
+  student_id?: string;
   documents: {
-    resume_url: string;
-    portfolio_url: string;
+    resume_url: string | null;
+    resume_name?: string | null;
+    portfolio_url: string | null;
+    portfolio_name?: string | null;
   };
   applied_position: string;
-  applied_at: Date;
+  applied_at: Date | string;
   work_experience: {
     position: string;
     company: string;
@@ -33,11 +39,40 @@ interface ApplicantInfo {
 
 const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string, size?: string }) => {
   const [applicantInfo, setApplicantInfo] = useState<ApplicantInfo | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!applicant_id) return;
-    const found = mockApplicantInfo.find((app: any) => app.applicant_id === applicant_id);
-    if (found) setApplicantInfo(found);
+
+    const fetchApplicantInfo = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/company/applicants/${applicant_id}`);
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error("Failed to fetch applicant info:", error);
+          toast.error("Failed to load applicant profile", {
+            description: error.error || "Unable to fetch applicant data"
+          });
+          return;
+        }
+
+        const result = await response.json();
+        if (result.success) {
+          setApplicantInfo(result.data);
+        }
+      } catch (error) {
+        console.error("Error fetching applicant info:", error);
+        toast.error("Error loading profile", {
+          description: "An unexpected error occurred"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplicantInfo();
   }, [applicant_id]);
 
   const baseStyle = "flex flex-row gap-1 bg-[#FD873E] text-white rounded-xl shadow-md hover:bg-[#FF9A50] hover:shadow-lg";
@@ -61,17 +96,25 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string, size?:
           </DialogTitle>
         </DialogHeader>
 
-        {applicantInfo ? (
+        {loading ? (
+          <p className="text-center text-gray-500">Loading applicant info...</p>
+        ) : applicantInfo ? (
           <div className="flex flex-col gap-6">
             <div className="flex flex-row gap-6">
               <div className="flex-shrink-0">
-                <Image
-                  src={applicantInfo.profile_url}
-                  alt="applicantProfile"
-                  width={70}
-                  height={70}
-                  className="rounded-lg shadow-md"
-                />
+                {applicantInfo.profile_url ? (
+                  <Image
+                    src={applicantInfo.profile_url}
+                    alt="applicantProfile"
+                    width={70}
+                    height={70}
+                    className="rounded-lg shadow-md object-cover"
+                  />
+                ) : (
+                  <div className="w-[70px] h-[70px] bg-gray-100 rounded-lg shadow-md flex items-center justify-center text-2xl font-semibold text-gray-700">
+                    {applicantInfo.firstname.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col justify-between gap-3 flex-1">
@@ -90,6 +133,13 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string, size?:
                     <p className="text-sm">{applicantInfo.phone_number}</p>
                   </div>
                 </div>
+
+                {(applicantInfo.faculty || applicantInfo.year) && (
+                  <div className="flex flex-row gap-6 text-gray-600 text-sm">
+                    {applicantInfo.faculty && <p>Faculty: {applicantInfo.faculty}</p>}
+                    {applicantInfo.year && <p>Year: {applicantInfo.year}</p>}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -109,52 +159,64 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string, size?:
               </div>
             </div>
 
-            <Separator />
-
-            <div className="flex flex-col gap-3">
-              <p className="text-md font-bold text-gray-800">Work Experience</p>
-              {applicantInfo.work_experience.map((exp, index) => (
-                <div key={index} className="border p-3 rounded-md shadow-sm bg-gray-50">
-                  <p className="font-medium">{exp.position} at {exp.company}</p>
-                  <p className="text-sm text-gray-500">{exp.period}</p>
-                  <p className="text-sm">{exp.responsibility}</p>
+            {applicantInfo.work_experience.length > 0 && (
+              <>
+                <Separator />
+                <div className="flex flex-col gap-3">
+                  <p className="text-md font-bold text-gray-800">Work Experience</p>
+                  {applicantInfo.work_experience.map((exp, index) => (
+                    <div key={index} className="border p-3 rounded-md shadow-sm bg-gray-50">
+                      <p className="font-medium">{exp.position} at {exp.company}</p>
+                      <p className="text-sm text-gray-500">{exp.period}</p>
+                      <p className="text-sm">{exp.responsibility}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
 
-            <Separator />
-
-            <div className="flex flex-col gap-2">
-              <p className="text-md font-bold text-gray-800">Certifications</p>
-              <ul className="list-disc list-inside">
-                {applicantInfo.certification.map((cert, index) => (
-                  <li key={index}>{cert}</li>
-                ))}
-              </ul>
-            </div>
+            {applicantInfo.certification.length > 0 && (
+              <>
+                <Separator />
+                <div className="flex flex-col gap-2">
+                  <p className="text-md font-bold text-gray-800">Certifications</p>
+                  <ul className="list-disc list-inside">
+                    {applicantInfo.certification.map((cert, index) => (
+                      <li key={index}>{cert}</li>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            )}
 
             <Separator />
 
             <div className="flex flex-col gap-2">
               <p className="text-md font-bold text-gray-800">Documents</p>
               <div className="flex flex-row gap-6">
-                <a href={applicantInfo.documents.resume_url} target="_blank">
-                    <div className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm">
-                        <RiExternalLinkLine className="w-5 h-5 mt1"/>
-                        <p>Resume</p>
+                {applicantInfo.documents.resume_url ? (
+                  <a href={applicantInfo.documents.resume_url} target="_blank" rel="noopener noreferrer">
+                    <div className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F]">
+                      <RiExternalLinkLine className="w-5 h-5 mt-1"/>
+                      <p>Resume</p>
                     </div>
-                </a>
-                <a href={applicantInfo.documents.portfolio_url} target="_blank">
-                    <div className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm">
-                        <RiExternalLinkLine className="w-5 h-5 mt1"/>
-                        <p>Portfolio</p>
+                  </a>
+                ) : (
+                  <div className="text-sm text-gray-500">No resume uploaded</div>
+                )}
+                {applicantInfo.documents.portfolio_url ? (
+                  <a href={applicantInfo.documents.portfolio_url} target="_blank" rel="noopener noreferrer">
+                    <div className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F]">
+                      <RiExternalLinkLine className="w-5 h-5 mt-1"/>
+                      <p>Portfolio</p>
                     </div>
-                </a>
+                  </a>
+                ) : null}
               </div>
             </div>
           </div>
         ) : (
-          <p className="text-center text-gray-500">Loading applicant info...</p>
+          <p className="text-center text-gray-500">No applicant information available</p>
         )}
       </DialogContent>
     </Dialog>

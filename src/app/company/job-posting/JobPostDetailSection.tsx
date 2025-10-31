@@ -100,34 +100,42 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
 
             <div className="flex flex-row gap-6">
               <div className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-semibold text-gray-800">Min Salary</p>
-                <Input
-                  type="number"
-                  name="minSalary"
-                  value={formData.salary.min}
-                  onChange={(e) => setFormData({ ...formData, 
-                    salary: {
-                      ...formData.salary,
-                      min: Number(e.target.value)
-                  }})}
-                  required={true}
-                  placeholder="30000"
-                />
+                <p className="text-sm font-semibold text-gray-800">Min Salary (THB)</p>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">฿</span>
+                  <Input
+                    type="number"
+                    name="minSalary"
+                    value={formData.salary.min || ""}
+                    onChange={(e) => setFormData({ ...formData,
+                      salary: {
+                        ...formData.salary,
+                        min: e.target.value === "" ? 0 : Number(e.target.value)
+                    }})}
+                    required={true}
+                    placeholder="30000"
+                    className="pl-8"
+                  />
+                </div>
               </div>
               <div className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-semibold text-gray-800">Max Salary</p>
-                <Input
-                  type="number"
-                  name="maxSalary"
-                  value={formData.salary.max}
-                  onChange={(e) => setFormData({ ...formData, 
-                    salary: {
-                      ...formData.salary,
-                      max: Number(e.target.value)
-                  }})}
-                  required={true}
-                  placeholder="60000"
-                />
+                <p className="text-sm font-semibold text-gray-800">Max Salary (THB)</p>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">฿</span>
+                  <Input
+                    type="number"
+                    name="maxSalary"
+                    value={formData.salary.max || ""}
+                    onChange={(e) => setFormData({ ...formData,
+                      salary: {
+                        ...formData.salary,
+                        max: e.target.value === "" ? 0 : Number(e.target.value)
+                    }})}
+                    required={true}
+                    placeholder="60000"
+                    className="pl-8"
+                  />
+                </div>
               </div>
             </div>
 

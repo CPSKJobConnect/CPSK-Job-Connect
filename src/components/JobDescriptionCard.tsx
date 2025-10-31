@@ -26,10 +26,9 @@ interface JobDescriptionProps {
 
 const typeColors: Record<string, string> = {
   fulltime: "bg-pink-200 text-gray-800",
-  parttime: "bg-blue-200 text-gray-800",
+  "part-time": "bg-blue-200 text-gray-800",
   internship: "bg-orange-100 text-gray-800",
-  contract: "bg-yellow-200 text-gray-800",
-  hybrid: "bg-purple-200 text-gray-800"
+  freelance: "bg-yellow-200 text-gray-800",
 };
 
 
@@ -204,9 +203,9 @@ const JobDescriptionCard = ({job, size, onApply, onEdit}: JobDescriptionProps) =
         </div>
         <div className="flex gap-1 items-center">
           <LiaMoneyCheckAltSolid />
-          <span>{job.salary.min}</span>
+          <span>฿{job.salary.min.toLocaleString()}</span>
           <span> - </span>
-          <span>{job.salary.max} bath</span>
+          <span>฿{job.salary.max.toLocaleString()} THB</span>
         </div>
         <div className="flex gap-1 items-center">
           <MdOutlinePeopleAlt />
