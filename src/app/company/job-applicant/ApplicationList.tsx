@@ -53,9 +53,9 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
 
         const initialMap: Record<number, { id: number; type: StatusType }> = {};
         applicants.forEach((a) => {
-          const s = data.statuses.find((st: Status) => st.id === a.status);
-          initialMap[a.applicant_id] = {
-            id: a.status,
+          const s = data.statuses.find((st: Status) => String(st.id) === a.status);
+          initialMap[Number(a.applicant_id)] = {
+            id: Number(a.status),
             type: (s?.name.toLowerCase() as StatusType) || "pending",
           };
         });
@@ -96,7 +96,7 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
     ) : (
       <div className="flex flex-col gap-4">
         {applicants.map((student) => {
-          const currentStatus = statusMap[student.applicant_id] || {
+          const currentStatus = statusMap[Number(student.applicant_id)] || {
             id: student.status,
             type: statusList.find(s => s.id === student.status)?.name.toLowerCase() as StatusType || 'pending'
             };
@@ -131,13 +131,13 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
                 <div className="flex flex-row items-center gap-3 w-full md:w-auto mt-2 md:mt-0 justify-end md:justify-start">
                   <div className="w-32 flex-shrink-0">
                     <Select
-                      value={currentStatus.id}
+                      value={String(currentStatus.id)}
                       onValueChange={(val) =>
-                        handleStatusChange(student.applicant_id, Number(val))
+                        handleStatusChange(Number(student.applicant_id), Number(val))
                       }
                     >
                       <SelectTrigger
-                        className={`rounded-full w-full text-sm p-1 transition-all duration-200 border-none p-3 ${statusColors[currentStatus.type]}`}
+                        className={`rounded-full w-full text-sm p-1 transition-all duration-200 border-none p-3 ${statusColors[currentStatus.type as StatusType]}`}
                       >
                         <SelectValue placeholder="Select status">
                             {statusList.find((st) => st.id === currentStatus.id)?.name || "Pending"}

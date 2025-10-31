@@ -120,7 +120,7 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
               </div>
 
               <div className="w-24 text-right">
-                <StudentInfoModal applicant_id={student.applicant.id} size="sm" />
+                <StudentInfoModal applicant_id={student.applicant.id} size="sm" selectedJobId={student.job.id} />
               </div>
             </div>
           );

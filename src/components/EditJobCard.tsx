@@ -25,7 +25,6 @@ interface EditJobCardProps {
   categories: string[];
   jobTypes: string[];
   arrangements: string[];
-  locations: string[];
   tags: string[];
 }
 

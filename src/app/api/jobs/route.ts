@@ -54,7 +54,7 @@ export async function GET(req: Request) {
       savedBy: unknown;
       jobName: string;
       company: { name: string; account: { logoUrl: string | null; backgroundUrl: string | null } | null };
-      categories: { name: string }[];
+      category: { id: number; name: string } | null;
       location: string;
       created_at: Date;
       applications: unknown[];
@@ -62,6 +62,7 @@ export async function GET(req: Request) {
       max_salary: number | bigint;
       jobType: { name: string };
       aboutRole: string | null;
+      responsibilities: string | null,
       requirements: string[];
       qualifications: string[];
       tags: { name: string }[];

@@ -73,17 +73,15 @@ const JobDescriptionCard = ({
   };
 
   const handleEdit = async () => {
-    console.log(formData);
     const validationErrors = validateForm(formData);
-    console.log(validationErrors);
 
     if (validationErrors.length > 0) {
       validationErrors.forEach((err) => toast.error(err, { duration: 4000 }));
-      return;
+      return false;
     }
 
     const confirmed = window.confirm("Are you sure you want to save these changes?");
-    if (!confirmed) return;
+    if (!confirmed) return false;
 
     try {
       const body = {
@@ -93,6 +91,7 @@ const JobDescriptionCard = ({
         min_salary: formData.salary.min,
         max_salary: formData.salary.max,
         aboutRole: formData.description.overview,
+        responsibilities: formData.description.responsibility,
         requirements: formData.description.requirement.split("\n"),
         qualifications: formData.description.qualification.split("\n"),
         tags: formData.skills,
@@ -108,16 +107,17 @@ const JobDescriptionCard = ({
       if (!res.ok) {
         const data = await res.json();
         toast.error(data.error || "Failed to update job");
-        return;
+        return false;
       }
 
       toast.success("Job updated successfully!");
       setIsEditing(false);
 
       if (onUpdate) onUpdate();
+      return true;
     } catch (error) {
-      console.error("Save error:", error);
       toast.error("Something went wrong while saving the job.");
+      return false;
     }
   };
 
@@ -129,18 +129,15 @@ const JobDescriptionCard = ({
       const res = await fetch(`/api/jobs/${job.id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Job deleted successfully!");
-        router.refresh();
       } else {
         const data = await res.json();
         toast.error(data.error || "Failed to delete job.");
       }
     } catch (error) {
-      console.error("Delete error:", error);
       toast.error("Something went wrong while deleting the job.");
     }
-  }; // ✅ ปิดฟังก์ชัน handleDelete ที่นี่
+  };
 
-  // ✅ ส่วนนี้จะไม่อยู่ใน handleDelete แล้ว
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [responsibilityOpen, setResponsibilityOpen] = useState(false);
   const [requirementOpen, setRequirementOpen] = useState(false);
