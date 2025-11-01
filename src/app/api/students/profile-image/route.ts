@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     // Upload to Supabase storage
     const supabase = createClient(
       process.env.SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
     const filePath = `profile-images/${account.id}/${Date.now()}_${file.name}`;

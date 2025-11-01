@@ -156,7 +156,7 @@ export default function LocationCombobox({ value, onChange, showIcon = false, cl
             </div>
           )}
 
-          <ul className="max-h-[400px] overflow-auto mt-1 border bg-white">
+          <ul className="max-h-[250px] overflow-auto mt-1 border bg-white">
             {!selectedProvince &&
               provinces
                 .filter((p) => p.provinceNameEn.toLowerCase().includes(searchTerm.toLowerCase()))

@@ -42,6 +42,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
+    // Check if student has already applied to this job
+    const existingApplication = await prisma.application.findFirst({
+      where: {
+        student_id: student.id,
+        job_post_id: jobId
+      }
+    });
+
+    if (existingApplication) {
+      return NextResponse.json(
+        { error: "You have already applied to this job" },
+        { status: 400 }
+      );
+    }
+
     const application = await prisma.application.create({
       data: {
         student_id: student.id,

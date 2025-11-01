@@ -25,7 +25,7 @@ interface JobCardProps {
 
 const typeColors: Record<string, string> = {
   fulltime: "bg-pink-200 text-gray-800",
-  parttime: "bg-blue-200 text-gray-800",
+  "part-time": "bg-blue-200 text-gray-800",
   internship: "bg-orange-100 text-gray-800",
   freelance: "bg-yellow-200 text-gray-800",
 };
@@ -126,7 +126,6 @@ const JobCard = (job: JobCardProps) => {
         setIsSaved(!isSaved);
         // If this was an unbookmark (DELETE) and parent provided a callback, notify parent to remove the card
         if (method === "DELETE" && typeof (job as any).onUnbookmark === "function") {
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
           (job as any).onUnbookmark(job.info.id);
         }
       } else {

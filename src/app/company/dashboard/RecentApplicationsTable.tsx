@@ -1,46 +1,81 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import StudentInfoModal from "@/components/StudentInfoModal";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RecentApplicationsTableProps } from "@/types/companyStat";
+import Image from "next/image";
+import { useState } from "react";
+import { toast } from "sonner";
 
 
-type StatusType = "pending" | "reviewed" | "interviewed" | "accepted" | "rejected";
+type StatusType = "pending" | "reviewed" | "interview" | "offered" | "rejected";
 
 const statusColor: Record<string, string> = {
 	pending: "bg-yellow-100 text-yellow-800",
 	reviewed: "bg-blue-100 text-blue-800",
-	interviewed: "bg-indigo-100 text-indigo-800",
-	accepted: "bg-green-100 text-green-800",
+	interview: "bg-indigo-100 text-indigo-800",
+	offered: "bg-green-100 text-green-800",
 	rejected: "bg-red-100 text-red-800",
 };
 
 export default function RecentApplicationsTable({ applications, loading }: RecentApplicationsTableProps) {
   const items = Array.isArray(applications) ? applications : [];
 
-  const statusTypes: StatusType[] = ["pending", "reviewed", "interviewed", "accepted", "rejected"];
+  const statusTypes: StatusType[] = ["pending", "reviewed", "interview", "offered", "rejected"];
   const [statusMap, setStatusMap] = useState<Record<string, StatusType>>(
       () =>
         Object.fromEntries(
-          items.map((a) => [a.applicant.id, a.status as StatusType])
+          items.map((a) => [a.id, a.status as StatusType])
         )
   );
 
-  const handleStatus = (applicant_id: string, newStatus: StatusType) => {
-    setStatusMap((prev) => ({ ...prev, [applicant_id]: newStatus }));
-    setTimeout(() => {
-      console.log(`(mock POST) updated applicant ${applicant_id} to "${newStatus}"`);
-    }, 500);
+  const handleStatus = async (application_id: string, newStatus: StatusType) => {
+    // Optimistically update UI
+    const previousStatus = statusMap[application_id];
+    setStatusMap((prev) => ({ ...prev, [application_id]: newStatus }));
+
+    try {
+      const response = await fetch(`/api/company/applications/${application_id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: newStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("Failed to update application status:", error);
+        // Revert to previous status on error
+        setStatusMap((prev) => ({ ...prev, [application_id]: previousStatus }));
+        toast.error("Failed to update status", {
+          description: error.error || "Unknown error occurred"
+        });
+      } else {
+        const result = await response.json();
+        console.log("Application status updated successfully:", result);
+        toast.success("Status updated", {
+          description: `Application status changed to ${newStatus}`
+        });
+      }
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      // Revert to previous status on error
+      setStatusMap((prev) => ({ ...prev, [application_id]: previousStatus }));
+      toast.error("Error updating status", {
+        description: "An error occurred. Please try again."
+      });
+    }
   };
 
 	return (
@@ -62,10 +97,10 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
           <div className="w-24">Profile</div>
         </div>
         {items.map((student) => {
-          const currentStatus = statusMap[student.applicant.id] || (student.status as StatusType);
+          const currentStatus = statusMap[student.id] || (student.status as StatusType);
           return (
             <div
-              key={student.applicant.id}
+              key={student.id}
               className="flex flex-row items-center justify-between px-2 py-3 hover:bg-gray-50 border-b"
             >
               <div className="flex items-center gap-4 w-1/4 min-w-0">
@@ -97,11 +132,11 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
                   <Select
                     value={currentStatus}
                     onValueChange={(val) =>
-                      handleStatus(student.applicant.id, val as StatusType)
+                      handleStatus(student.id, val as StatusType)
                     }
                   >
                     <SelectTrigger
-                      className={`rounded-full w-full text-sm p-1 transition-all duration-200 border-none p-2 h-[20px] w-[110px] ${statusColor[currentStatus]}`}
+                      className={`rounded-full text-sm transition-all duration-200 border-none p-2 h-5 w-[110px] ${statusColor[currentStatus]}`}
                     >
                       <SelectValue />
                     </SelectTrigger>
