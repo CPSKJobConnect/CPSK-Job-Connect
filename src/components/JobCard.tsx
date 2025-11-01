@@ -43,6 +43,12 @@ const JobCard = (job: JobCardProps) => {
   // This ensures the star icon reflects the current saved status
   useEffect(() => {
     const checkIfSaved = async () => {
+      // Skip bookmark check for company views - companies don't bookmark jobs
+      if (job.isCompanyView) {
+        setIsSaved(false);
+        return;
+      }
+
       // Only check if user is logged in
       if (!session?.user?.id) {
         setIsSaved(false);
@@ -83,7 +89,7 @@ const JobCard = (job: JobCardProps) => {
     };
 
     checkIfSaved();
-  }, [session?.user?.id, job.info.id, job.info.isSaved]);
+  }, [session?.user?.id, job.info.id, job.info.isSaved, job.isCompanyView]);
   const baseStyle =
     `rounded-xl shadow-md border border-gray-100 ${isClosed ? "bg-gray-200/70" : "bg-white hover:bg-[#F3FEFA]"} p-4 flex flex-col gap-2 transition mb-5 transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg`;
 
@@ -210,7 +216,7 @@ const JobCard = (job: JobCardProps) => {
                   </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>        
+          </div>
         )}
 
       </div>

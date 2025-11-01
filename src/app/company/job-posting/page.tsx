@@ -8,7 +8,7 @@ import { JobInfo, JobPostFormData } from "@/types/job";
 import { defaultJobPostForm } from "@/types/job";
 import { toast } from "@/lib/toastTemplate";
 import { validateForm, validateDetail, validateDescription } from "@/lib/validateJobForm";
-
+import { useRouter } from "next/navigation";
 
 interface CompanyProps {
   name: string;
@@ -25,6 +25,7 @@ export default function Page() {
   const [types, setTypes] = useState<string[]>([]);
   const [arrangements, setArrangements] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
+  const router = useRouter();
   const [company, setCompany] = useState<CompanyProps | null>(null);
 
   useEffect(() => {
@@ -89,6 +90,7 @@ export default function Page() {
       if (res.ok) {
         const data = await res.json();
         toast.success("Job posted successfully!", "Your job has been published.");
+        router.push("/company/job-applicant");
       } else {
         const err = await res.json();
         toast.error("Failed to post job", err.error || "Unknown error");

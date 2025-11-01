@@ -37,7 +37,7 @@ interface ApplicantInfo {
   certification: string[];
 }
 
-const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string, size?: string }) => {
+const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?: string }) => {
   const [applicantInfo, setApplicantInfo] = useState<ApplicantInfo | null>(null);
   const [loading, setLoading] = useState(false);
 

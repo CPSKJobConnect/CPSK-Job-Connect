@@ -27,4 +27,3 @@ if (typeof window === "undefined") {
     await prisma.$disconnect();
   });
 }
-

@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import StudentInfoModal from "@/components/StudentInfoModal";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RecentApplicationsTableProps } from "@/types/companyStat";
+import Image from "next/image";
+import { useState } from "react";
 import { toast } from "sonner";
 
 
@@ -155,7 +155,7 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
               </div>
 
               <div className="w-24 text-right">
-                <StudentInfoModal applicant_id={student.id} size="sm" />
+                <StudentInfoModal applicant_id={student.applicant.id} size="sm" />
               </div>
             </div>
           );
