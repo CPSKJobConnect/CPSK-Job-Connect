@@ -9,7 +9,7 @@ export default withAuth(
     const role = token?.role?.toLowerCase()
 
     // Public routes
-    const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/jobs"]
+    const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/jobs", "/student/verify-email"]
     const isPublicRoute = publicRoutes.some(route =>
       pathname === route || pathname.startsWith(`${route}/`)
     )
@@ -63,8 +63,8 @@ export default withAuth(
 
       // Redirect authenticated users from auth pages and homepage to their dashboard
       if (isPublicRoute && role && !pathname.startsWith("/api")) {
-        if (pathname === "/jobs") {
-          return NextResponse.next() // allow access to public jobs page for authenticated users
+        if (pathname === "/jobs" || pathname === "/student/verify-email") {
+          return NextResponse.next() // allow access to public jobs page and verify-email page
         }
         return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
       }
