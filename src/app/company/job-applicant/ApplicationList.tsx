@@ -27,7 +27,6 @@ interface Status {
 }
 
 interface ApplicantListProps {
-  job_id: number | null;
   applicants: Applicant[];
 }
 
@@ -41,7 +40,7 @@ const statusColors: Record<StatusType, string> = {
   rejected: "bg-red-100 text-red-800",
 };
 
-const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
+const ApplicationList = ({ applicants }: ApplicantListProps) => {
   const [statusList, setStatusList] = useState<Status[]>([]);
   const [statusMap, setStatusMap] = useState<Record<number, { id: number; type: StatusType }>>({});
 
@@ -97,8 +96,8 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
       <div className="flex flex-col gap-4">
         {applicants.map((student) => {
           const currentStatus = statusMap[Number(student.applicant_id)] || {
-            id: student.status,
-            type: statusList.find(s => s.id === student.status)?.name.toLowerCase() as StatusType || 'pending'
+            id: Number(student.status),
+            type: statusList.find(s => s.id === Number(student.status))?.name.toLowerCase() as StatusType || 'pending'
             };
 
           return (
@@ -137,7 +136,7 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
                       }
                     >
                       <SelectTrigger
-                        className={`rounded-full w-full text-sm p-1 transition-all duration-200 border-none p-3 ${statusColors[currentStatus.type as StatusType]}`}
+                        className={`rounded-full w-full text-sm transition-all duration-200 border-none p-3 ${statusColors[currentStatus.type as StatusType]}`}
                       >
                         <SelectValue placeholder="Select status">
                             {statusList.find((st) => st.id === currentStatus.id)?.name || "Pending"}
@@ -160,7 +159,7 @@ const ApplicationList = ({ job_id, applicants }: ApplicantListProps) => {
                   </div>
 
                   <div className="flex-shrink-0">
-                    <StudentInfoModal applicant_id={student.applicant_id.toString()} selectedJobId={job_id!} />
+                    <StudentInfoModal applicant_id={student.applicant_id.toString()} />
                   </div>
                 </div>
               </div>
