@@ -27,6 +27,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
   const [error, setError] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [awaitingSession, setAwaitingSession] = useState(false)
+  const [studentStatus, setStudentStatus] = useState<"CURRENT" | "ALUMNI">("CURRENT")
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session } = useSession()
@@ -44,9 +45,12 @@ export function AuthForm({ role, mode }: AuthFormProps) {
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm<AuthFormData>({
     resolver: zodResolver(schema),
   })
+
+  const emailValue = watch("email")
 
 
   // Handle session-based redirection after login
@@ -75,6 +79,24 @@ export function AuthForm({ role, mode }: AuthFormProps) {
     setError("")
 
     try {
+      // Validate KU email for current students
+      if (mode === "register" && role === "student" && studentStatus === "CURRENT") {
+        if (!data.email.toLowerCase().endsWith("@ku.th")) {
+          setError("Current students must use a KU email address (@ku.th)")
+          setIsLoading(false)
+          return
+        }
+      }
+
+      // Validate transcript for alumni
+      if (mode === "register" && role === "student" && studentStatus === "ALUMNI") {
+        if (!selectedFile) {
+          setError("Alumni must upload a transcript")
+          setIsLoading(false)
+          return
+        }
+      }
+
       if (mode === "login") {
         const result = await signIn("credentials", {
           email: data.email,
@@ -103,7 +125,8 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           formData.append("faculty", data.faculty!)
           formData.append("year", data.year!.toString())
           formData.append("phone", data.phone!)
-          
+          formData.append("studentStatus", studentStatus)
+
           if (selectedFile) {
             formData.append("transcript", selectedFile)
           }
@@ -137,17 +160,22 @@ export function AuthForm({ role, mode }: AuthFormProps) {
         if (!response.ok) {
           setError(result.error || "Registration failed")
         } else {
-          // Auto-login after registration
-          const loginResult = await signIn("credentials", {
-            email: data.email,
-            password: data.password,
-            redirect: false,
-          })
-
-          if (loginResult?.error) {
-            setError("Registration successful but login failed. Please try logging in.")
+          // For current students, redirect to email verification
+          if (role === "student" && studentStatus === "CURRENT") {
+            router.push(`/student/verify-email?email=${encodeURIComponent(data.email)}&name=${encodeURIComponent(data.name || "")}`)
           } else {
-            router.push(result.redirectTo)
+            // Auto-login after registration for alumni and companies
+            const loginResult = await signIn("credentials", {
+              email: data.email,
+              password: data.password,
+              redirect: false,
+            })
+
+            if (loginResult?.error) {
+              setError("Registration successful but login failed. Please try logging in.")
+            } else {
+              router.push(result.redirectTo)
+            }
           }
         }
       }
@@ -202,15 +230,30 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           setError("Please fix the form errors before submitting")
         })} className="space-y-4">
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">
+              Email
+              {mode === "register" && role === "student" && studentStatus === "CURRENT" && (
+                <span className="text-xs text-gray-500 ml-2">(Must be KU email: @ku.th)</span>
+              )}
+            </Label>
             <Input
               id="email"
               type="email"
               {...register("email")}
               className="mt-1 bg-gray-50"
+              placeholder={
+                mode === "register" && role === "student" && studentStatus === "CURRENT"
+                  ? "yourname@ku.th"
+                  : "Enter your email"
+              }
             />
             {errors.email && (
               <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
+            )}
+            {mode === "register" && role === "student" && studentStatus === "CURRENT" && emailValue && !emailValue.toLowerCase().endsWith("@ku.th") && (
+              <p className="text-sm text-amber-600 mt-1">
+                ⚠️ Current students must use a KU email address (@ku.th)
+              </p>
             )}
           </div>
 
@@ -244,6 +287,45 @@ export function AuthForm({ role, mode }: AuthFormProps) {
 
               {role === "student" ? (
                 <>
+                  {/* Student Status Selection */}
+                  <div className="space-y-3">
+                    <Label>I am a</Label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="studentStatus"
+                          value="CURRENT"
+                          checked={studentStatus === "CURRENT"}
+                          onChange={(e) => setStudentStatus(e.target.value as "CURRENT" | "ALUMNI")}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <span className="text-sm font-medium">Current KU Student</span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="studentStatus"
+                          value="ALUMNI"
+                          checked={studentStatus === "ALUMNI"}
+                          onChange={(e) => setStudentStatus(e.target.value as "CURRENT" | "ALUMNI")}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <span className="text-sm font-medium">KU Alumni</span>
+                      </label>
+                    </div>
+                    {studentStatus === "CURRENT" && (
+                      <p className="text-xs text-gray-600 mt-1">
+                        You&apos;ll need to verify your KU email (@ku.th) after registration
+                      </p>
+                    )}
+                    {studentStatus === "ALUMNI" && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        Your account will need admin approval. Please upload your transcript.
+                      </p>
+                    )}
+                  </div>
+
                   <div>
                     <Label htmlFor="studentId">Student ID</Label>
                     <Input
@@ -323,7 +405,9 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                   </div>
 
                   <div>
-                    <Label htmlFor="transcript">Transcript (Optional)</Label>
+                    <Label htmlFor="transcript">
+                      Transcript {studentStatus === "ALUMNI" ? "(Required)" : "(Optional)"}
+                    </Label>
                     <div className="mt-1 flex items-center space-x-2 bg-gray-50">
                       <Input
                         id="transcript"
@@ -332,14 +416,21 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                         onChange={handleFileChange}
                         className="hidden"
                       />
-                      <Label 
-                        htmlFor="transcript" 
-                        className="flex items-center justify-center w-full h-10 px-3 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+                      <Label
+                        htmlFor="transcript"
+                        className={`flex items-center justify-center w-full h-10 px-3 py-2 border ${
+                          studentStatus === "ALUMNI" && !selectedFile
+                            ? "border-red-300"
+                            : "border-gray-300"
+                        } rounded-md cursor-pointer hover:bg-gray-50`}
                       >
                         <Upload className="w-4 h-4 mr-2" />
                         {selectedFile ? selectedFile.name : "Choose file"}
                       </Label>
                     </div>
+                    {studentStatus === "ALUMNI" && !selectedFile && (
+                      <p className="text-sm text-red-600 mt-1">Alumni must upload a transcript</p>
+                    )}
                   </div>
                 </>
               ) : (
