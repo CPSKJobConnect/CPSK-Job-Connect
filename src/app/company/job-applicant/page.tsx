@@ -159,7 +159,7 @@ export default function Page() {
                       arrangements={arrangementList}
                       tags={allTags}
                   />
-                  <ApplicationList job_id={Number(selectedJob.id)} applicants={applicants} />
+                  <ApplicationList applicants={applicants} />
                 </>
               ) : (
                 <div className="flex flex-col items-center gap-4 py-44">
@@ -194,7 +194,7 @@ export default function Page() {
               {selectedJob && (
                 <div className="space-y-4">
                   <JobDescriptionCard size="md" onApply={false} onEdit={true} job={selectedJob} />
-                  <ApplicationList job_id={Number(selectedJob.id)} applicants={applicants} />
+                  <ApplicationList applicants={applicants} />
                 </div>
               )}
             </div>
