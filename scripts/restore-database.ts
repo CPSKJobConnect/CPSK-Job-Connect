@@ -187,8 +187,8 @@ async function restoreDatabase() {
           await prisma.jobPost.update({
             where: { id: postData.id },
             data: {
-              category: {
-                connect: { id: categories[0].id }
+              categories: {
+                set: categories.map((cat: { id: number }) => ({ id: cat.id })),
               },
             },
           });

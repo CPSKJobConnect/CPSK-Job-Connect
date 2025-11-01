@@ -147,7 +147,6 @@ export default function Page() {
         toast.error("Failed to submit application.", "Please try again later.");
         return;
       }
-
       toast.success("Application submitted!", "Your job application has been sent successfully.");
       router.push("/student/profile");
     } catch (err) {
@@ -289,7 +288,7 @@ export default function Page() {
                     </div>
                   </div>
                 </section>
-
+                
                 <section className="shadow-md border border-gray-100 rounded-md p-4">
                   <section className="mb-4">
                     <h3 className="text-sm font-semibold text-gray-700">Student Info</h3>

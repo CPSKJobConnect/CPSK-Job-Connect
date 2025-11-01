@@ -115,7 +115,6 @@ model JobPost {
   jobName            String
   location           String
   aboutRole          String
-  responsibilities   String?
   requirements       String[]
   qualifications     String[]
   min_salary         Int
@@ -126,13 +125,12 @@ model JobPost {
   is_Published       Boolean        @default(true)
   job_arrangement_id Int
   job_type_id        Int
-  job_category_id Int?
   applications       Application[]
   savedBy            SavedJob[]
   company            Company        @relation(fields: [company_id], references: [id], onDelete: Cascade)
   jobArrangement     JobArrangement @relation(fields: [job_arrangement_id], references: [id])
   jobType            JobType        @relation(fields: [job_type_id], references: [id])
-  category        JobCategory? @relation(fields: [job_category_id], references: [id])
+  categories         JobCategory[]  @relation("JobCategoriesOnPosts")
   tags               JobTag[]       @relation("JobTagesOnPosts")
 }
 
@@ -151,7 +149,7 @@ model JobArrangement {
 model JobCategory {
   id    Int       @id @default(autoincrement())
   name  String    @unique
-  posts JobPost[]
+  posts JobPost[] @relation("JobCategoriesOnPosts")
 }
 
 model JobTag {
@@ -169,7 +167,7 @@ model Application {
   updated_at        DateTime          @updatedAt
   portfolio_id      Int?
   resume_id         Int?
-  jobPost           JobPost           @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
+  jobPost           JobPost           @relation(fields: [job_post_id], references: [id])
   portfolioDocument Document?         @relation("PortfolioDocument", fields: [portfolio_id], references: [id])
   resumeDocument    Document?         @relation("ResumeDocument", fields: [resume_id], references: [id])
   applicationStatus ApplicationStatus @relation(fields: [status], references: [id])

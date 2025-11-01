@@ -7,7 +7,7 @@ import { JobPostFormData, JobInfo } from "@/types/job";
 import { useEffect, useState, useMemo } from "react";
 import JobDescriptionCard from "./JobDescriptionCard";
 import SkillCombobox from "./SkillCombobox";
-import LocationCombobox from "./LocationCombobox";
+import { mockCategory, mockJobType, mockJobArrangement } from "public/data/fakeFilterInfo";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   Select,
@@ -16,16 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { mockCompanies } from "public/data/mockCompany";
 
 interface EditJobCardProps {
   job: JobInfo;
   formData: JobPostFormData;
   setFormData: (data: JobPostFormData) => void;
   handleEdit?: () => Promise<boolean> | boolean;
-  categories: string[];
-  jobTypes: string[];
-  arrangements: string[];
-  tags: string[];
 }
 
 interface CompanyProps {
@@ -34,28 +31,21 @@ interface CompanyProps {
   bg_profile_url: string;
 }
 
-export default function EditJobCard({ job,
-                                        formData,
-                                        setFormData,
-                                        handleEdit,
-                                        categories,
-                                        jobTypes,
-                                        arrangements,
-                                        tags
-}: EditJobCardProps) {
+export default function EditJobCard({ job, formData, setFormData, handleEdit}: EditJobCardProps) {
   const [open, setOpen] = useState(false);
+  const [locationList, setLocationmentList] = useState<string[]>([]);
   const [categoryList, setCategoryList] = useState<string[]>([]);
   const [jobTypeList, setJobTypeList] = useState<string[]>([]);
   const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
   const [preview, setPreview] = useState<boolean>(false);
   const [company, setCompany] = useState<CompanyProps | null>(null);
-  const [skillOptions, setSkillOptions] = useState<string[]>([]);
 
   useEffect(() => {
-    setCategoryList(categories);
-    setJobTypeList(jobTypes);
-    setJobArrangementList(arrangements);
-    setSkillOptions(tags)
+    const initial = [...new Set(mockCompanies[0].address)];
+    setLocationmentList(initial);
+    setCategoryList(mockCategory);
+    setJobTypeList(mockJobType);
+    setJobArrangementList(mockJobArrangement);
 
     const fetchCompany = async () => {
       const res = await fetch("/api/auth/session");
@@ -64,7 +54,7 @@ export default function EditJobCard({ job,
       setCompany(data.user || null)
     };
     fetchCompany();
-  }, [categories, jobTypes, arrangements]);
+  }, []);
 
   useEffect(() => {
     console.log("edit form data: ", formData);
@@ -155,11 +145,21 @@ export default function EditJobCard({ job,
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col">
                 <label className="text-sm text-gray-700 mb-1">Location</label>
-                <LocationCombobox
-                    value={formData.location}
-                    onChange={(loc) => setFormData({ ...formData, location: loc })}
-                    className="w-[300px]"
-                />
+                <Select
+                  value={formData.location} 
+                  onValueChange={(value) => setFormData({ ...formData, location: value })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locationList.map((loc) => (
+                      <SelectItem key={loc} value={loc}>
+                        {loc}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex flex-col">
@@ -247,7 +247,6 @@ export default function EditJobCard({ job,
                   <SkillCombobox
                       selectedSkill={formData.skills}
                       setSelectedSkill={(skills) => setFormData({ ...formData, skills })}
-                      existingSkills={skillOptions}
                   />
               </div>
 

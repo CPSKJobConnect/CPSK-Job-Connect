@@ -44,46 +44,38 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
 
-    let categoryId: number | null = null;
-    if (body.category) {
-      const category = await prisma.jobCategory.findUnique({
-        where: { name: body.category },
-      });
-      if (!category) {
-        return NextResponse.json({ error: "Category not found" }, { status: 400 });
-      }
-      categoryId = category.id;
-    }
-
     const newJob = await prisma.jobPost.create({
-      data: {
-        company_id: account.company.id,
-        jobName: body.title,
-        location: body.location,
-        aboutRole: body.description?.overview || "",
-        responsibilities: body.description?.responsibility || "-",
-        requirements: body.description?.requirement
-          ? body.description.requirement.split(",").map((s: string) => s.trim())
-          : [],
-        qualifications: body.description?.qualification
-          ? body.description.qualification.split(",").map((s: string) => s.trim())
-          : [],
-        min_salary: Number(body.salary?.min) || 0,
-        max_salary: Number(body.salary?.max) || 0,
-        deadline: new Date(body.deadline),
-        is_Published: body.is_published ?? true,
+  data: {
+    company_id: account.company.id,
+    jobName: body.title,
+    location: body.location,
+    aboutRole: body.description?.overview || "",
+    requirements: body.description?.requirement
+      ? body.description.requirement.split(",").map((s:string) => s.trim())
+      : [],
+    qualifications: body.description?.qualification
+      ? body.description.qualification.split(",").map((s:string) => s.trim())
+      : [],
+    min_salary: Number(body.salary?.min) || 0,
+    max_salary: Number(body.salary?.max) || 0,
+    deadline: new Date(body.deadline),
+    is_Published: body.is_published ?? true,
 
-        job_type_id: jobType.id,
-        job_arrangement_id: jobArrangement.id,
-        job_category_id: categoryId,
+    job_type_id: jobType.id,
+    job_arrangement_id: jobArrangement.id,
 
-        tags: tagIds.length
-          ? {
-              connect: tagIds.map(tag => ({ id: tag.id })),
-            }
-          : undefined,
-      },
-    });
+    categories: body.categories
+      ? {
+          connect: body.categories.map((id: number) => ({ id })),
+        }
+      : undefined,
+    tags: tagIds.length
+      ? {
+          connect: tagIds.map((tag: { id: number }) => ({ id: tag.id })),
+        }
+      : undefined,
+  },
+});
 
     return NextResponse.json(newJob, { status: 201 });
   } catch (error) {
