@@ -34,6 +34,12 @@ export async function POST(req: NextRequest) {
         }
       }
     }
+
+    // Handle studentStatus from form
+    const studentStatus = formData.get("studentStatus") as string | null;
+    if (studentStatus) {
+      data.studentStatus = studentStatus;
+    }
     // Validate data base on role
     // console.log("Data to validate:", data);
     let validatedData: z.ZodSafeParseResult<StudentData | CompanyData>;
@@ -134,15 +140,22 @@ export async function POST(req: NextRequest) {
 
       // Create role-specific record
       if (role === "student") {
+        const studentData = validatedData.data as StudentData;
+        const isAlumni = studentData.studentStatus === "ALUMNI";
+
         await tx.student.create({
           data: {
             account_id: account.id,
-            student_id: (validatedData.data as StudentData).studentId,
-            name: (validatedData.data as StudentData).name,
-            faculty: (validatedData.data as StudentData).faculty,
-            year: (validatedData.data as StudentData).year.toString(),
-            phone: (validatedData.data as StudentData).phone,
+            student_id: studentData.studentId,
+            name: studentData.name,
+            faculty: studentData.faculty,
+            year: studentData.year.toString(),
+            phone: studentData.phone,
             transcript: transcriptPath,
+            student_status: isAlumni ? "ALUMNI" : "CURRENT",
+            // Alumni need admin approval, current students just need email verification
+            verification_status: isAlumni ? "PENDING" : "APPROVED",
+            email_verified: false,
           }
         })
       } else {
