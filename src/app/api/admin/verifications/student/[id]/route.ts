@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getApiSession } from '@/lib/api-auth';
-import { sendAlumniStatusEmail } from '@/lib/email';
+import { sendAlumniStatusEmail, sendVerificationEmail } from '@/lib/email';
+import { generateVerificationCode, getVerificationExpiry } from '@/lib/email-validation';
 import { StudentStatus, VerificationStatus } from '@prisma/client';
 
 /**
@@ -108,6 +109,29 @@ export async function PATCH(
         status === 'APPROVED',
         notes
       );
+
+      // If approved, also send email verification code
+      if (status === 'APPROVED') {
+        const verificationCode = generateVerificationCode();
+
+        // Store verification token in database
+        await prisma.emailVerificationToken.create({
+          data: {
+            email: student.account.email,
+            token: verificationCode,
+            expires: getVerificationExpiry(),
+          },
+        });
+
+        // Send verification email
+        await sendVerificationEmail(
+          student.account.email,
+          verificationCode,
+          student.name
+        );
+
+        console.log(`✅ Sent verification email to approved alumni: ${student.account.email}`);
+      }
     } catch (emailError) {
       console.error('Failed to send status email:', emailError);
       // Don't fail the request if email fails
