@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { fetchJobPost } from "./fetch.logic";
 
 // GET - Fetch single job post
 export async function GET(
@@ -22,37 +23,7 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const jobPost = await prisma.jobPost.findUnique({
-      where: { id: parseInt(params.id) },
-      include: {
-        company: {
-          include: {
-            account: {
-              select: {
-                email: true
-              }
-            }
-          }
-        },
-        jobType: true,
-        jobArrangement: true,
-        categories: true,
-        tags: true,
-        applications: {
-          include: {
-            student: {
-              include: {
-                account: {
-                  select: {
-                    email: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    });
+    const jobPost = await fetchJobPost({ id: params.id });
 
     if (!jobPost) {
       return NextResponse.json({ error: "Job post not found" }, { status: 404 });
