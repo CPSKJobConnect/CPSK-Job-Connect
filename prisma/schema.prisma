@@ -30,6 +30,7 @@ model Account {
   student           Student?
   verifiedStudents  Student[]      @relation("VerifiedStudents")
   sessions          Session[]
+  verifiedStudents  Student[]      @relation("VerifiedStudents")
 
   @@unique([provider, providerAccountId])
   @@index([email])
@@ -40,6 +41,17 @@ model AccountRole {
   id       Int       @id @default(autoincrement())
   name     String
   accounts Account[]
+}
+
+enum StudentStatus {
+  CURRENT
+  ALUMNI
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Student {
@@ -241,15 +253,4 @@ model EmailVerificationToken {
   @@index([email])
   @@index([token])
   @@map("email_verification_tokens")
-}
-
-enum StudentStatus {
-  CURRENT
-  ALUMNI
-}
-
-enum VerificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
 }
