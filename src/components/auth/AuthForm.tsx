@@ -193,7 +193,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
       
       <CardContent>
         {error && (
-          <Alert className="mb-4" variant="destructive">
+          <Alert className="mb-4" variant="destructive" data-testid="auth-form-error-card">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -223,7 +223,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
               className="mt-1 bg-gray-50"
             />
             {errors.password && (
-              <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
+              <p id="password-error" className="text-sm text-red-600 mt-1">{errors.password.message}</p>
             )}
           </div>
 
@@ -238,7 +238,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                   className="mt-1 bg-gray-50"
                 />
                 {errors.confirmPassword && (
-                  <p className="text-sm text-red-600 mt-1">{errors.confirmPassword.message}</p>
+                  <p id="confirm-password-error" className="text-sm text-red-600 mt-1">{errors.confirmPassword.message}</p>
                 )}
               </div>
 
@@ -271,7 +271,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                   <div>
                     <Label htmlFor="faculty">Faculty</Label>
                     <Select onValueChange={(value) => setValue("faculty", value)}>
-                      <SelectTrigger className="mt-1 bg-gray-50">
+                      <SelectTrigger data-testid="faculty-select-trigger" className="mt-1 bg-gray-50">
                         <SelectValue placeholder="Select faculty" />
                       </SelectTrigger>
                       <SelectContent>
@@ -291,7 +291,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                   <div>
                     <Label htmlFor="year">Year</Label>
                     <Select onValueChange={(value) => setValue("year", value === "Alumni" ? value : parseInt(value))}>
-                      <SelectTrigger className="mt-1 bg-gray-50">
+                      <SelectTrigger data-testid="year-select-trigger" className="mt-1 bg-gray-50">
                         <SelectValue placeholder="Select year" />
                       </SelectTrigger>
                       <SelectContent>
@@ -332,7 +332,8 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                         onChange={handleFileChange}
                         className="hidden"
                       />
-                      <Label 
+                      <Label
+                        data-testid="auth-transcript"
                         htmlFor="transcript" 
                         className="flex items-center justify-center w-full h-10 px-3 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
                       >
@@ -393,7 +394,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                       placeholder="Describe your company..."
                     />
                     {errors.description && (
-                      <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>
+                      <p id="description-error" className="text-sm text-red-600 mt-1">{errors.description.message}</p>
                     )}
                   </div>
 
@@ -405,24 +406,9 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                       className="mt-1 bg-gray-50"
                     />
                     {errors.phone && (
-                      <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
+                      <p id="phone-error" className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
                     )}
                   </div>
-
-                  {/* <div>
-                    <Label htmlFor="year">Founded Year</Label>
-                    <Input
-                      id="year"
-                      type="number"
-                      {...register("year", { valueAsNumber: true })}
-                      className="mt-1 bg-gray-50"
-                      min="1900"
-                      max={new Date().getFullYear()}
-                    />
-                    {errors.year && (
-                      <p className="text-sm text-red-600 mt-1">{errors.year.message}</p>
-                    )}
-                  </div> */}
                 </>
               )}
             </>
@@ -430,6 +416,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
 
           <Button
             type="submit"
+            data-testid="auth-submit"
             className={`w-full ${roleConfig.primaryColor} cursor-pointer`}
             disabled={isLoading}
           >
@@ -486,6 +473,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
               Don&apos;t have an account?{" "}
               <a
                 href={`/register/${role}`}
+                data-testid="auth-signup"
                 className={`${roleConfig.secondaryColor.split(' ').slice(1, 3).join(' ')} hover:opacity-80 font-medium`}
               >
                 Sign up
@@ -496,6 +484,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
               Already have an account?{" "}
               <a
                 href={`/login/${role}`}
+                data-testid="auth-login"
                 className={`${roleConfig.secondaryColor.split(' ').slice(1, 3).join(' ')} hover:opacity-80 font-medium`}
               >
                 Sign in

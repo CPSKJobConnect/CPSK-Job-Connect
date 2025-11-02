@@ -46,7 +46,7 @@ const JobDescriptionCard = ({
 }: JobDescriptionProps) => {
   const router = useRouter();
   const isClosed = job.status === "expire";
-  const [isEditing, setIsEditing] = useState(false); // ✅ เพิ่ม state ที่ขาด
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<JobPostFormData>(() => ({
     title: job.title,
     category: job.category,
@@ -225,6 +225,7 @@ const JobDescriptionCard = ({
             </div>
 
             <Button
+              data-testid="delete-job-button"
               onClick={handleDelete}
               className="absolute flex right-4 top-2 w-10 h-8 bg-gradient-to-b from-[#FF755D] to-[#F3573C]
               shadow-lg hover:bg-[#F9664C] transition"

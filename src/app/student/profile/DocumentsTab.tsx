@@ -148,6 +148,7 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
       </CardHeader>
       <CardContent className="space-y-8">
         <DocumentSection
+          data-testid="student-upload-resume-section"
           title="Resume"
           documents={student.documents.resume}
           docTypeId={1}
@@ -158,6 +159,7 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
 
         <div className="border-t pt-8">
           <DocumentSection
+            data-testid="student-upload-cv-section"
             title="CV"
             documents={student.documents.cv}
             docTypeId={2}
@@ -169,6 +171,7 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
 
         <div className="border-t pt-8">
           <DocumentSection
+            data-testid="student-upload-portfolio-section"
             title="Portfolio"
             documents={student.documents.portfolio}
             docTypeId={3}
@@ -180,6 +183,7 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
 
         <div className="border-t pt-8">
           <DocumentSection
+            data-testid="student-upload-transcript-section"
             title="Transcript"
             documents={student.documents.transcript || []}
             docTypeId={4}

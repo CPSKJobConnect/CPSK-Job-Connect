@@ -85,6 +85,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          data-testid="select-skill-trigger"
           variant="outline"
           role="combobox"
           aria-expanded={open}
@@ -126,6 +127,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
                 <CommandItem
                   key={idx}
                   value={skill}
+                  data-testid={`skill-option-${skill.replace(/\s/g, '-')}`}
                   onSelect={handleSelectSkill}
                 >
                   {skill}

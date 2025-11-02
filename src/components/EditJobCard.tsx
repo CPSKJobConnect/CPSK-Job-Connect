@@ -34,15 +34,8 @@ interface CompanyProps {
   bg_profile_url: string;
 }
 
-export default function EditJobCard({ job,
-                                        formData,
-                                        setFormData,
-                                        handleEdit,
-                                        categories,
-                                        jobTypes,
-                                        arrangements,
-                                        tags
-}: EditJobCardProps) {
+export default function EditJobCard({ job,formData, setFormData, handleEdit, 
+  categories, jobTypes, arrangements,tags}: EditJobCardProps) {
   const [open, setOpen] = useState(false);
   const [categoryList, setCategoryList] = useState<string[]>([]);
   const [jobTypeList, setJobTypeList] = useState<string[]>([]);
@@ -130,7 +123,9 @@ export default function EditJobCard({ job,
   return (
     <Dialog>
         <DialogTrigger asChild>
-            <Button className="lg:w-20 h-8 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition" onClick={() => setOpen(true)}>
+            <Button className="lg:w-20 h-8 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition" 
+            onClick={() => setOpen(true)}
+            data-testid="edit-job-button">
                 <div className="flex gap-2 items-center">
                     <FiEdit />
                     <p>Edit</p>

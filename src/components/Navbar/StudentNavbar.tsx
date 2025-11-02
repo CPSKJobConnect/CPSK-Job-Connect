@@ -42,6 +42,7 @@ export default function StudentNavbar() {
           <PopoverTrigger asChild>
             <div 
               role="button"
+              data-testid="profile-menu-popover"
               tabIndex={0}
               aria-haspopup="menu"
               className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center"
@@ -74,6 +75,7 @@ export default function StudentNavbar() {
 
               {/* Profile Button */}
               <Button
+                data-testid="profile-menu-profile-btn"
                 variant="ghost"
                 size="sm"
                 className="w-full justify-start gap-2 hover:bg-gray-100 text-gray-700 hover:text-gray-900 font-normal"
@@ -86,6 +88,7 @@ export default function StudentNavbar() {
               {/* Bookmark for Student Button */}
               {session.user?.role === 'student' && (
                 <Button
+                  data-testid="profile-menu-bookmark-btn"
                   variant="ghost"
                   size="sm"
                   className="w-full justify-start gap-2 hover:bg-gray-100 text-gray-700 hover:text-gray-900 font-normal"

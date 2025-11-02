@@ -50,6 +50,7 @@ const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder, 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            data-testid="category-combobox"
             variant="outline"
             role="combobox"
             aria-expanded={open}

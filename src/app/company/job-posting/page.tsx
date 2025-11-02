@@ -190,7 +190,9 @@ export default function Page() {
 
             <div className="flex gap-3">
               {step < 3 ? (
-                <Button onClick={() => {
+                <Button 
+                data-testid="next-step-button"
+                onClick={() => {
                   if (step === 1) {
                     const errors = validateDetail(formData);
                     if (errors.length > 0) {
@@ -212,6 +214,7 @@ export default function Page() {
               ) : (
                 <>
                   <Button
+                    data-testid="publish-job-button"
                     className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold"
                     onClick={() => {
                       const errors = validateForm(formData);
@@ -226,6 +229,7 @@ export default function Page() {
                   </Button>
 
                   <Button
+                    data-testid="draft-job-button"
                     className="bg-gray-200 text-gray-700 hover:bg-gray-300 font-semibold"
                     onClick={() => {
                       const errors = validateForm(formData);

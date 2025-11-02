@@ -71,7 +71,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
                     <p className="text-sm font-semibold text-gray-800">Type</p>
                     <Select onValueChange={(value) => handleSelect("type", value)}>
                         <SelectTrigger className="w-full">
-                            <SelectValue placeholder={formData.type || "Select Type"} />
+                            <SelectValue data-testid="select-type-trigger" placeholder={formData.type || "Select Type"} />
                         </SelectTrigger>
                         <SelectContent>
                             {types.map((type) => (
@@ -86,7 +86,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
               <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Arrangement</p>
                 <Select onValueChange={(value) => handleSelect("arrangement", value)}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger data-testid="select-arrangement-trigger" className="w-full">
                     <SelectValue placeholder={formData.arrangement || "Select Arrangement"} />
                   </SelectTrigger>
                   <SelectContent>

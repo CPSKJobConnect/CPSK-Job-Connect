@@ -108,6 +108,7 @@ export default function LocationCombobox({ value, onChange, showIcon = false, cl
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          data-testid="location-combobox"
           variant="outline"
           role="combobox"
           aria-expanded={open}
@@ -163,6 +164,7 @@ export default function LocationCombobox({ value, onChange, showIcon = false, cl
                 .map((province) => (
                   <li
                     key={province.provinceCode}
+                    data-testid={`province-option-${province.provinceNameEn}`}
                     className="px-2 py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
                     onClick={() => handleSelectProvince(province)}
                   >
@@ -177,6 +179,7 @@ export default function LocationCombobox({ value, onChange, showIcon = false, cl
                 .map((district) => (
                   <li
                     key={district.districtCode}
+                    data-testid={`district-option-${district.districtNameEn}`}
                     className="px-2 py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
                     onClick={() => handleSelectDistrict(district)}
                   >
@@ -193,6 +196,7 @@ export default function LocationCombobox({ value, onChange, showIcon = false, cl
                 .map((sub) => (
                   <li
                     key={sub.subdistrictCode}
+                    data-testid={`subdistrict-option-${sub.subdistrictNameEn}`}
                     className="px-2 py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
                     onClick={() => handleSelectSubdistrict(sub)}
                   >

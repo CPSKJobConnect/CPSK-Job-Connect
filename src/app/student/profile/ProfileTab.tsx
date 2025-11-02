@@ -134,10 +134,10 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Software and Knowledge Engineering (SKE)">
+                  <SelectItem data-testid="ske" value="Software and Knowledge Engineering (SKE)">
                     Software and Knowledge Engineering (SKE)
                   </SelectItem>
-                  <SelectItem value="Computer Engineering (CPE)">
+                  <SelectItem data-testid="cpe" value="Computer Engineering (CPE)">
                     Computer Engineering (CPE)
                   </SelectItem>
                 </SelectContent>
@@ -179,7 +179,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
 
           {isEditing && (
             <div className="flex gap-3">
-              <Button type="submit" disabled={loading}>
+              <Button data-testid="student-save-edit-profile-btn" type="submit" disabled={loading}>
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
               <Button type="button" variant="outline" onClick={handleCancel} disabled={loading}>
