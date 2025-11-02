@@ -14,13 +14,11 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin
-    const account = await prisma.account.findUnique({
-      where: { email: session.user.email },
-      include: { accountRole: true }
-    });
+    // Check if user is admin (using session role)
+    const userRole = (session.user as any).role?.toLowerCase();
+    console.log("🔍 User role:", userRole);
 
-    if (!account || account.accountRole?.name !== "Admin") {
+    if (userRole !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -79,13 +77,11 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin
-    const account = await prisma.account.findUnique({
-      where: { email: session.user.email },
-      include: { accountRole: true }
-    });
+    // Check if user is admin (using session role)
+    const userRole = (session.user as any).role?.toLowerCase();
+    console.log("🔍 User role:", userRole);
 
-    if (!account || account.accountRole?.name !== "Admin") {
+    if (userRole !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -168,13 +164,11 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin
-    const account = await prisma.account.findUnique({
-      where: { email: session.user.email },
-      include: { accountRole: true }
-    });
+    // Check if user is admin (using session role)
+    const userRole = (session.user as any).role?.toLowerCase();
+    console.log("🔍 User role:", userRole);
 
-    if (!account || account.accountRole?.name !== "Admin") {
+    if (userRole !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
