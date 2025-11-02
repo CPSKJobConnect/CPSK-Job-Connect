@@ -32,7 +32,6 @@ import {
   XCircle,
   Eye,
   FileText,
-  Calendar,
   MapPin,
   Phone,
   Globe,
@@ -190,11 +189,23 @@ export default function ApproveAccountsPage() {
     return filename.split('.').pop()?.toUpperCase() || 'FILE';
   };
 
-  const downloadFile = async (filePath: string, fileName: string) => {
+  const viewDocument = async (documentId: number, fileName: string) => {
     try {
-      toast.info(`Downloading ${fileName}`);
+      const response = await fetch(`/api/admin/documents/view/${documentId}`);
+
+      if (!response.ok) {
+        toast.error("Failed to get document URL");
+        return;
+      }
+
+      const data = await response.json();
+
+      // Open the signed URL in a new tab
+      window.open(data.url, '_blank');
+      toast.success(`Opening ${fileName}`);
     } catch (error) {
-      toast.error("Failed to download file");
+      console.error("Error viewing document:", error);
+      toast.error("Failed to view document");
     }
   };
 
@@ -398,7 +409,7 @@ export default function ApproveAccountsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => downloadFile(doc.file_path, doc.file_name)}
+                            onClick={() => viewDocument(doc.id, doc.file_name)}
                           >
                             <Eye className="w-4 h-4 mr-1" />
                             View
