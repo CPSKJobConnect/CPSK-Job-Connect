@@ -1,6 +1,6 @@
 /**
  * Email Service
- * Handles sending emails using Resend
+ * Handles sending emails using SMTP (Gmail) or Resend
  */
 
 import { Resend } from 'resend';
@@ -18,29 +18,77 @@ interface EmailOptions {
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
- * Send an email using Resend
+ * Send an email using SMTP or Resend
+ * Priority: SMTP → Resend → Console Logging
  * @param options - Email options (to, subject, html, text)
  * @returns Promise that resolves when email is sent
  */
 export async function sendEmail(options: EmailOptions): Promise<void> {
   try {
-    if (!process.env.RESEND_API_KEY) {
-      console.error('RESEND_API_KEY is not configured');
-      throw new Error('Email service is not configured');
+    // 1. SMTP (Gmail/Mailtrap) - HIGHEST PRIORITY
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      console.log(`📧 Sending email via SMTP to ${options.to}...`);
+
+      // Dynamic import to work around Turbopack module resolution
+      const nodemailer = await import('nodemailer');
+      const transporter = nodemailer.default.createTransport({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: process.env.SMTP_SECURE === 'true', // true for 465, false for 587
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || `CPSK Job Connect <${process.env.SMTP_USER}>`,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+      });
+
+      console.log(`✅ Email sent via SMTP to ${options.to}`);
+      return;
     }
 
-    await resend.emails.send({
-      from: 'CPSK Job Connect <onboarding@resend.dev>',
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      text: options.text,
-    });
+    // 2. Resend (if configured and has verified domain)
+    if (process.env.RESEND_API_KEY && process.env.EMAIL_DEV_MODE !== 'true') {
+      console.log(`📧 Sending email via Resend to ${options.to}...`);
 
-    console.log(`Email sent successfully to ${options.to}`);
+      await resend.emails.send({
+        from: 'CPSK Job Connect <onboarding@resend.dev>',
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+      });
+
+      console.log(`✅ Email sent via Resend to ${options.to}`);
+      return;
+    }
+
+    // 3. Console Logging (Development fallback)
+    if (process.env.EMAIL_DEV_MODE === 'true') {
+      console.log('\n' + '='.repeat(80));
+      console.log('📧 EMAIL (Console Mode - Not Actually Sent)');
+      console.log('='.repeat(80));
+      console.log(`To: ${options.to}`);
+      console.log(`Subject: ${options.subject}`);
+      console.log('-'.repeat(80));
+      console.log(options.text || 'No text content');
+      console.log('='.repeat(80) + '\n');
+      return;
+    }
+
+    // No email service configured
+    console.error('⚠️ No email service configured!');
+    console.log('Configure SMTP_HOST or RESEND_API_KEY, or set EMAIL_DEV_MODE=true');
+    throw new Error('Email service is not configured');
   } catch (error) {
-    console.error('Error sending email:', error);
-    throw new Error('Failed to send email');
+    console.error('❌ Error sending email:', error);
+    throw new Error(`Failed to send email: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -190,7 +238,7 @@ export function generateAlumniApprovalEmailHTML(studentName: string, approved: b
   const status = approved ? 'Approved' : 'Rejected';
   const emoji = approved ? '✅' : '❌';
   const message = approved
-    ? 'Your alumni verification has been approved! You can now browse and apply for jobs on CPSK Job Connect.'
+    ? 'Your alumni verification has been approved! To complete your registration and start applying for jobs, please verify your email address. You will receive a separate email with a 6-digit verification code.'
     : 'Unfortunately, your alumni verification has been rejected. Please contact support if you believe this is an error.';
 
   return `
