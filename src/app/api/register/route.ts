@@ -136,9 +136,15 @@ export async function POST(req: NextRequest) {
 
       // Handle file uploads after account creation
       if (transcriptFile && transcriptFile.size > 0) {
-        // File upload on cloud AWS S3, Cloudinary
-        transcriptPath = `transcripts/${account.id}_${transcriptFile.name}`;
-        // TODO: file upload logic
+        // Upload transcript file using the uploadDocument utility
+        try {
+          const { uploadDocument } = await import("@/lib/uploadDocument");
+          const document = await uploadDocument(transcriptFile, String(account.id), 4); // 4 = Student Transcript
+          transcriptPath = document.file_path;
+        } catch (error) {
+          console.error("Error uploading transcript file:", error);
+          // Continue with registration even if file upload fails
+        }
       }
 
       let evidencePath: string | null = null;
