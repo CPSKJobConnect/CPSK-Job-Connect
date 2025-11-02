@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
         // Upload evidence file using the uploadDocument utility
         try {
           const { uploadDocument } = await import("@/lib/uploadDocument");
-          const document = await uploadDocument(evidenceFile, String(account.id), 5); // 5 = Company Evidence
+          const document = await uploadDocument(evidenceFile, String(account.id), 7); // 7 = Company Evidence
           evidencePath = document.file_path;
         } catch (error) {
           console.error("Error uploading evidence file:", error);

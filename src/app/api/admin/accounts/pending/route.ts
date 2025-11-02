@@ -60,7 +60,7 @@ export async function GET(request: Request) {
               documents: {
                 where: {
                   documentType: {
-                    name: "Student Transcript"
+                    name: "Transcript"
                   }
                 },
                 include: {
