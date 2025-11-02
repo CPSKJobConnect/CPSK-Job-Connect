@@ -3,11 +3,11 @@ import { prisma } from "@/lib/db";
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const params = await context.params;
-    const accountId = Number(params.id);
+    const { id } = await context.params;
+    const accountId = Number(id);
 
     if (isNaN(accountId)) {
       return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });

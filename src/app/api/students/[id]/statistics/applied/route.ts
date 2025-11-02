@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { format } from "date-fns";
 
-export async function GET(request: Request, context: { params: { id: string } }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const params = await context.params;
-    const accountId = Number(params.id);
+    const { id } = await context.params;
+    const accountId = Number(id);
 
     if (isNaN(accountId)) {
       return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });
