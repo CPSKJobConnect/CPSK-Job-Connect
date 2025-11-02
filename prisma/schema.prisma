@@ -21,7 +21,6 @@ model Account {
   providerAccountId String?
   backgroundUrl     String?
   logoUrl           String?
-  isActive          Boolean        @default(true)
   accountRole       AccountRole?   @relation(fields: [role], references: [id])
   company           Company?
   documents         Document[]
@@ -30,7 +29,6 @@ model Account {
   student           Student?
   verifiedStudents  Student[]      @relation("VerifiedStudents")
   sessions          Session[]
-  verifiedStudents  Student[]      @relation("VerifiedStudents")
 
   @@unique([provider, providerAccountId])
   @@index([email])
