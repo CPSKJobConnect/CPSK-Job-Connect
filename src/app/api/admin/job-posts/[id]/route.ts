@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { fetchJobPost } from "./fetch.logic";
+import { updateJobPost } from "./update.logic";
 
 // GET - Fetch single job post
 export async function GET(
@@ -57,64 +58,11 @@ export async function PUT(
     }
 
     const data = await request.json();
-    const {
-      jobName,
-      location,
-      aboutRole,
-      requirements,
-      qualifications,
-      minSalary,
-      maxSalary,
-      deadline,
-      isPublished,
-      jobTypeId,
-      jobArrangementId,
-      categoryIds,
-      tagIds
-    } = data;
+    const jobPost = await updateJobPost({ id: params.id }, data);
 
-    // First, disconnect existing categories and tags
-    await prisma.jobPost.update({
-      where: { id: parseInt(params.id) },
-      data: {
-        categories: {
-          set: []
-        },
-        tags: {
-          set: []
-        }
-      }
-    });
-
-    const jobPost = await prisma.jobPost.update({
-      where: { id: parseInt(params.id) },
-      data: {
-        jobName,
-        location,
-        aboutRole,
-        requirements,
-        qualifications,
-        min_salary: minSalary,
-        max_salary: maxSalary,
-        deadline: new Date(deadline),
-        is_Published: isPublished,
-        job_arrangement_id: jobArrangementId,
-        job_type_id: jobTypeId,
-        categories: {
-          connect: categoryIds.map((id: number) => ({ id }))
-        },
-        tags: {
-          connect: tagIds.map((id: number) => ({ id }))
-        }
-      },
-      include: {
-        company: true,
-        jobType: true,
-        jobArrangement: true,
-        categories: true,
-        tags: true
-      }
-    });
+    if (!jobPost) {
+      return NextResponse.json({ error: "Job post not found" }, { status: 404 });
+    }
 
     return NextResponse.json(jobPost, { status: 200 });
 
