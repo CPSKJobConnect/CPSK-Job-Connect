@@ -40,6 +40,14 @@ export async function POST(req: NextRequest) {
     if (studentStatus) {
       data.studentStatus = studentStatus;
     }
+
+    // Add transcript file to data for validation
+    if (role === "student") {
+      const transcriptFile = formData.get("transcript") as File | null;
+      if (transcriptFile && transcriptFile.size > 0) {
+        data.transcript = transcriptFile;
+      }
+    }
     // Validate data base on role
     // console.log("Data to validate:", data);
     let validatedData: z.ZodSafeParseResult<StudentData | CompanyData>;
