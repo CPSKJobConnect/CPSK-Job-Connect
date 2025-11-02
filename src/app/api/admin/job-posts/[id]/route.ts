@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { fetchJobPost } from "./fetch.logic";
 import { updateJobPost } from "./update.logic";
+import { deleteJobPost } from "./delete.logic";
 
 // GET - Fetch single job post
 export async function GET(
@@ -91,11 +92,9 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await prisma.jobPost.delete({
-      where: { id: parseInt(params.id) }
-    });
+    const deleted = await deleteJobPost({ id: params.id });
 
-    return NextResponse.json({ message: "Job post deleted successfully" }, { status: 200 });
+    return NextResponse.json({ message: "Successfully deleted", deleted }, { status: 200 });
 
   } catch (error) {
     console.error("API error:", error);
