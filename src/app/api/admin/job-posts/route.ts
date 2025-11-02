@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       include: { accountRole: true }
     });
 
-    if (!account || account.accountRole?.name !== "Admin") {
+    if (!account || account.accountRole?.name?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
           },
           jobType: true,
           jobArrangement: true,
-          categories: true,
+          category: true,
           tags: true,
           applications: {
             select: {
@@ -102,10 +102,10 @@ export async function GET(request: Request) {
       updatedAt: post.updated_at,
       jobType: post.jobType.name,
       jobArrangement: post.jobArrangement.name,
-      categories: post.categories.map(cat => cat.name),
-      tags: post.tags.map(tag => tag.name),
+      category: post.category?.name || null,
+      tags: post.tags.map((tag: { name: string }) => tag.name),
       applicationsCount: post.applications.length,
-      acceptedApplications: post.applications.filter(app => app.status === 3).length
+      acceptedApplications: post.applications.filter((app: { status: number }) => app.status === 3).length
     }));
 
     return NextResponse.json({
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
       include: { accountRole: true }
     });
 
-    if (!account || account.accountRole?.name !== "Admin") {
+    if (!account || account.accountRole?.name?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
       deadline,
       jobTypeId,
       jobArrangementId,
-      categoryIds,
+      categoryId,
       tagIds
     } = data;
 
@@ -172,9 +172,7 @@ export async function POST(request: Request) {
         deadline: new Date(deadline),
         job_arrangement_id: jobArrangementId,
         job_type_id: jobTypeId,
-        categories: {
-          connect: categoryIds.map((id: number) => ({ id }))
-        },
+        job_category_id: categoryId,
         tags: {
           connect: tagIds.map((id: number) => ({ id }))
         }
@@ -183,7 +181,7 @@ export async function POST(request: Request) {
         company: true,
         jobType: true,
         jobArrangement: true,
-        categories: true,
+        category: true,
         tags: true
       }
     });

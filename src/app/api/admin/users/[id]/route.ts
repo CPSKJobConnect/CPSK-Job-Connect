@@ -1,12 +1,12 @@
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 // PATCH - Toggle user active/inactive status
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -20,11 +20,12 @@ export async function PATCH(
       include: { accountRole: true }
     });
 
-    if (!adminAccount || adminAccount.accountRole?.name !== "Admin") {
+    if (!adminAccount || adminAccount.accountRole?.name?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const userId = parseInt(params.id);
+    const { id } = await params;
+    const userId = parseInt(id);
     const { isActive } = await request.json();
 
     // Prevent admin from deactivating themselves
@@ -94,7 +95,7 @@ export async function PATCH(
 // DELETE - Delete user account
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -108,11 +109,12 @@ export async function DELETE(
       include: { accountRole: true }
     });
 
-    if (!adminAccount || adminAccount.accountRole?.name !== "Admin") {
+    if (!adminAccount || adminAccount.accountRole?.name?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const userId = parseInt(params.id);
+    const { id } = await params;
+    const userId = parseInt(id);
 
     // Prevent admin from deleting themselves
     if (userId === adminAccount.id) {

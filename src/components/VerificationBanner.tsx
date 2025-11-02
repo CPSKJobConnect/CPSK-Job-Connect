@@ -71,6 +71,28 @@ export function VerificationBanner({
     );
   }
 
+  // Alumni approved but email not verified
+  if (studentStatus === "ALUMNI" && verificationStatus === "APPROVED" && !emailVerified) {
+    return (
+      <Alert className="mb-6 border-amber-300 bg-amber-50">
+        <Mail className="h-4 w-4 text-amber-600" />
+        <AlertDescription className="flex items-center justify-between">
+          <div>
+            <strong className="text-amber-900">Email Verification Required</strong>
+            <p className="text-amber-800 mt-1">
+              Your alumni status has been approved! Please verify your KU email to complete registration and start applying for jobs.
+            </p>
+          </div>
+          <Link href={`/student/verify-email?email=${encodeURIComponent(email || "")}`}>
+            <Button variant="outline" size="sm" className="ml-4">
+              Verify Now
+            </Button>
+          </Link>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   // All verified - show success message (optional)
   if (emailVerified && verificationStatus === "APPROVED") {
     return (
@@ -103,7 +125,7 @@ export function JobApplicationBlocker({
   // Check if student can apply
   const canApply =
     (studentStatus === "CURRENT" && emailVerified) ||
-    (studentStatus === "ALUMNI" && verificationStatus === "APPROVED");
+    (studentStatus === "ALUMNI" && verificationStatus === "APPROVED" && emailVerified);
 
   if (canApply) {
     return null;
@@ -116,6 +138,8 @@ export function JobApplicationBlocker({
     message = "You cannot apply for jobs until an admin approves your alumni verification.";
   } else if (studentStatus === "ALUMNI" && verificationStatus === "REJECTED") {
     message = "Your verification was rejected. Please contact support.";
+  } else if (studentStatus === "ALUMNI" && verificationStatus === "APPROVED" && !emailVerified) {
+    message = "You must verify your KU email before applying for jobs.";
   }
 
   return (

@@ -56,20 +56,34 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if alumni has been approved by admin
-    if (student.student_status === "ALUMNI" && student.verification_status !== "APPROVED") {
-      let message = "Your account is pending admin approval";
-      if (student.verification_status === "REJECTED") {
-        message = "Your alumni verification was rejected. Please contact support.";
+    if (student.student_status === "ALUMNI") {
+      if (student.verification_status !== "APPROVED") {
+        let message = "Your account is pending admin approval";
+        if (student.verification_status === "REJECTED") {
+          message = "Your alumni verification was rejected. Please contact support.";
+        }
+
+        return NextResponse.json(
+          {
+            error: "Verification required",
+            message,
+            verificationStatus: student.verification_status,
+          },
+          { status: 403 }
+        );
       }
 
-      return NextResponse.json(
-        {
-          error: "Verification required",
-          message,
-          verificationStatus: student.verification_status,
-        },
-        { status: 403 }
-      );
+      // Alumni must also verify their email after admin approval
+      if (!student.email_verified) {
+        return NextResponse.json(
+          {
+            error: "Email verification required",
+            message: "Please verify your KU email before applying for jobs",
+            requiresVerification: true,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Check if student has already applied to this job

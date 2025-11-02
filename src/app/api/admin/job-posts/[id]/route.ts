@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 // GET - Fetch single job post
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -20,12 +20,13 @@ export async function GET(
       include: { accountRole: true }
     });
 
-    if (!account || account.accountRole?.name !== "Admin") {
+    if (!account || account.accountRole?.name?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { id } = await params;
     const jobPost = await prisma.jobPost.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       include: {
         company: {
           include: {
@@ -38,7 +39,7 @@ export async function GET(
         },
         jobType: true,
         jobArrangement: true,
-        categories: true,
+        category: true,
         tags: true,
         applications: {
           include: {
@@ -71,7 +72,7 @@ export async function GET(
 // PUT - Update job post
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -85,10 +86,11 @@ export async function PUT(
       include: { accountRole: true }
     });
 
-    if (!account || account.accountRole?.name !== "Admin") {
+    if (!account || account.accountRole?.name?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { id } = await params;
     const data = await request.json();
     const {
       jobName,
@@ -102,17 +104,14 @@ export async function PUT(
       isPublished,
       jobTypeId,
       jobArrangementId,
-      categoryIds,
+      categoryId,
       tagIds
     } = data;
 
-    // First, disconnect existing categories and tags
+    // First, disconnect existing tags
     await prisma.jobPost.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
-        categories: {
-          set: []
-        },
         tags: {
           set: []
         }
@@ -120,7 +119,7 @@ export async function PUT(
     });
 
     const jobPost = await prisma.jobPost.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
         jobName,
         location,
@@ -133,9 +132,7 @@ export async function PUT(
         is_Published: isPublished,
         job_arrangement_id: jobArrangementId,
         job_type_id: jobTypeId,
-        categories: {
-          connect: categoryIds.map((id: number) => ({ id }))
-        },
+        job_category_id: categoryId,
         tags: {
           connect: tagIds.map((id: number) => ({ id }))
         }
@@ -144,7 +141,7 @@ export async function PUT(
         company: true,
         jobType: true,
         jobArrangement: true,
-        categories: true,
+        category: true,
         tags: true
       }
     });
@@ -160,7 +157,7 @@ export async function PUT(
 // DELETE - Delete job post
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -174,12 +171,13 @@ export async function DELETE(
       include: { accountRole: true }
     });
 
-    if (!account || account.accountRole?.name !== "Admin") {
+    if (!account || account.accountRole?.name?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { id } = await params;
     await prisma.jobPost.delete({
-      where: { id: parseInt(params.id) }
+      where: { id: parseInt(id) }
     });
 
     return NextResponse.json({ message: "Job post deleted successfully" }, { status: 200 });
