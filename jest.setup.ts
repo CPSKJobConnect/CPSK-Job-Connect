@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import 'whatwg-fetch';
 import { TextEncoder, TextDecoder } from 'util';
 
 // Polyfill for libraries like next-auth/jose
