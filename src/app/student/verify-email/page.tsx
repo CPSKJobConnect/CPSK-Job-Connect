@@ -8,10 +8,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Mail, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, update } = useSession();
   const email = searchParams.get("email");
   const name = searchParams.get("name");
 
@@ -95,9 +97,21 @@ export default function VerifyEmailPage() {
         setError(data.message || data.error || "Verification failed");
       } else {
         setSuccess(true);
-        // Redirect to login after 2 seconds
+
+        // Update the session to reflect the new verification status
+        await update({
+          ...session,
+          user: {
+            ...session?.user,
+            emailVerified: true,
+            verificationStatus: "APPROVED"
+          }
+        });
+
+        // Redirect to dashboard after session update
         setTimeout(() => {
-          router.push("/login/student?verified=true");
+          router.push("/student/dashboard");
+          router.refresh(); // Force a refresh to reload middleware checks
         }, 2000);
       }
     } catch (err) {
@@ -145,7 +159,7 @@ export default function VerifyEmailPage() {
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <CardTitle>Email Verified!</CardTitle>
             <CardDescription>
-              Your KU email has been successfully verified. Redirecting to login...
+              Your KU email has been successfully verified. Redirecting to your dashboard...
             </CardDescription>
           </CardHeader>
         </Card>
