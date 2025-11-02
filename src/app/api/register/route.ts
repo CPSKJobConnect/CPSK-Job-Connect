@@ -109,42 +109,10 @@ export async function POST(req: NextRequest) {
       roleId = roleRecord.id;
     }
 
-    // Create account
-    const account = await prisma.account.create({
-      data: {
-        email: validatedData.data.email,
-        password: hashedPassword,
-        role: roleId,
-        username: role === "student" ? (validatedData.data as StudentData).name : (validatedData.data as CompanyData).companyName,
-      }
-    })
-
     // Handle file upload for transcript and evidence
     let transcriptPath: string | null = null
-    let evidencePath: string | null = null
-
-    if (role === "student") {
-      const transcriptFile = formData.get("transcript") as File;
-      if (transcriptFile && transcriptFile.size > 0) {
-        // File upload on cloud AWS S3, Cloudinary
-        // Generate path with temporary ID - will be updated with actual account ID in transaction
-        transcriptPath = `transcripts/temp_${transcriptFile.name}`;
-        // TODO: file upload logic
-      }
-    } else if (role === "company") {
-      const evidenceFile = formData.get("evidence") as File;
-      if (evidenceFile && evidenceFile.size > 0) {
-        // Upload evidence file using the uploadDocument utility
-        try {
-          const { uploadDocument } = await import("@/lib/uploadDocument");
-          const document = await uploadDocument(evidenceFile, String(account.id), 5); // 5 = Company Evidence
-          evidencePath = document.file_path;
-        } catch (error) {
-          console.error("Error uploading evidence file:", error);
-          // Continue with registration even if file upload fails
-        }
-      }
-    }
+    const transcriptFile = role === "student" ? formData.get("transcript") as File : null;
+    const evidenceFile = role === "company" ? formData.get("evidence") as File : null;
 
     // Use transaction to ensure atomic account + role-specific record creation
     await prisma.$transaction(async (tx) => {
@@ -158,9 +126,24 @@ export async function POST(req: NextRequest) {
         }
       })
 
-      // Update transcript path with actual account ID if needed
-      if (transcriptPath) {
-        transcriptPath = `transcripts/${account.id}_${(formData.get("transcript") as File).name}`;
+      // Handle file uploads after account creation
+      if (transcriptFile && transcriptFile.size > 0) {
+        // File upload on cloud AWS S3, Cloudinary
+        transcriptPath = `transcripts/${account.id}_${transcriptFile.name}`;
+        // TODO: file upload logic
+      }
+
+      let evidencePath: string | null = null;
+      if (evidenceFile && evidenceFile.size > 0) {
+        // Upload evidence file using the uploadDocument utility
+        try {
+          const { uploadDocument } = await import("@/lib/uploadDocument");
+          const document = await uploadDocument(evidenceFile, String(account.id), 5); // 5 = Company Evidence
+          evidencePath = document.file_path;
+        } catch (error) {
+          console.error("Error uploading evidence file:", error);
+          // Continue with registration even if file upload fails
+        }
       }
 
       // Create role-specific record
