@@ -146,7 +146,7 @@ export default function Page() {
           </div>
 
           <div className="flex-1">
-            <div className="flex flex-col rounded-md shadow-md p-3 max-h-[120vh]">
+            <div className="flex flex-col rounded-md shadow-md p-3 h-[1000px] max-h-[150vh]">
               {selectedJob ? (
                 <>
                   <JobDescriptionCard

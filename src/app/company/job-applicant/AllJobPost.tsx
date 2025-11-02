@@ -54,7 +54,7 @@ const AllJobPost = ({ info, onSelectCard, allDepartment = [] }: AllJobPostProps)
   
 
   return (
-    <div className="flex flex-col rounded-md shadow-md w-full gap-2 p-4 overflow-y-hidden max-h-[120vh]">
+    <div className="flex flex-col rounded-md shadow-md w-full gap-2 p-4 overflow-y-hidden min-h-[1000px] max-h-[150vh]">
       <p className="text-md font-semibold text-gray-700">Job Posts ({filteredJobPost.length})</p>
 
       <div className="flex flex-col gap-3 flex-1">
