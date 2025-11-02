@@ -13,6 +13,7 @@ import ApplicantBarChart from "./ApplicantLineChart";
 import StatusPieChart from "./StatusPieChart";
 import CategoryBarChart from "./CategoryBarChart";
 import InterviewConversionCard from "./InterviewConversionCard";
+import { VerificationBanner } from "@/components/VerificationBanner";
 
 
 const statIconMap: Record<string, { icon: IconType; iconBg: string; iconColor: string; key: string }> = {
@@ -58,6 +59,18 @@ const StudentDashboardPage = () => {
 
   return (
     <div className="flex flex-col gap-5 p-5">
+      {/* Verification Banner */}
+      {session.user.emailVerified !== undefined &&
+       session.user.studentStatus &&
+       session.user.verificationStatus && (
+        <VerificationBanner
+          emailVerified={session.user.emailVerified}
+          studentStatus={session.user.studentStatus}
+          verificationStatus={session.user.verificationStatus}
+          email={session.user.email || ""}
+        />
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {studentStat.map((stat, idx) => {
           const iconData = statIconMap[stat.title];
