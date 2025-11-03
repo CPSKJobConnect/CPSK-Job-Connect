@@ -104,7 +104,7 @@ model Document {
   file_name             String
   portfolioApplications Application[] @relation("PortfolioDocument")
   resumeApplications    Application[] @relation("ResumeDocument")
-  account               Account       @relation(fields: [account_id], references: [id])
+  account               Account       @relation(fields: [account_id], references: [id], onDelete: Cascade)
   documentType          DocumentType  @relation(fields: [doc_type_id], references: [id])
 }
 
@@ -196,7 +196,7 @@ model Application {
   portfolioDocument Document?         @relation("PortfolioDocument", fields: [portfolio_id], references: [id])
   resumeDocument    Document?         @relation("ResumeDocument", fields: [resume_id], references: [id])
   applicationStatus ApplicationStatus @relation(fields: [status], references: [id])
-  student           Student           @relation(fields: [student_id], references: [id])
+  student           Student           @relation(fields: [student_id], references: [id], onDelete: Cascade)
 
   @@unique([student_id, job_post_id])
   @@index([job_post_id])
