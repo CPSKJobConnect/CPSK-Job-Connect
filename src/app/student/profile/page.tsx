@@ -4,11 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Student } from "@/types/user";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { IoCallOutline, IoCameraOutline, IoIdCardOutline, IoMailOutline, IoPersonCircleOutline, IoSchoolOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
-import ApplicationsTab from "./ApplicationsTab";
 import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
 
@@ -196,10 +194,9 @@ export default function StudentProfilePage() {
 
       {/* Tabs */}
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-8">
+        <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="applications">Applications</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -210,9 +207,6 @@ export default function StudentProfilePage() {
           <DocumentsTab student={student} onUpdate={fetchStudentProfile} />
         </TabsContent>
 
-        <TabsContent value="applications">
-          <ApplicationsTab studentId={student.id} />
-        </TabsContent>
       </Tabs>
     </div>
   );

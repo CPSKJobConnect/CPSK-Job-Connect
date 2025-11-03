@@ -93,7 +93,7 @@ export default function Page() {
   return (
     <div className="mx-auto px-6 py-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
+        <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold text-gray-900">Bookmarks</h1>
           <p className="text-sm text-gray-600">Manage your saved job opportunities</p>
         </div>

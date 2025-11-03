@@ -103,6 +103,7 @@ export default function Page() {
 
     checkApplication();
   }, [student, job]);
+
     const handleSubmit = async () => {
     if (!uploadedResume && !selectedResume) {
       toast.error("Resume Missing", "Please select or upload your Resume before submitting.");
@@ -149,7 +150,19 @@ export default function Page() {
       }
 
       toast.success("Application submitted!", "Your job application has been sent successfully.");
-      router.push("/student/profile");
+      // Save a recently applied marker to localStorage so the application list can highlight it
+      try {
+        const marker = {
+          jobId: job.id,
+          appliedAt: Date.now(),
+        };
+        localStorage.setItem("recentlyApplied", JSON.stringify(marker));
+      } catch (err) {
+        // ignore localStorage errors
+        console.warn("Could not write recentlyApplied marker", err);
+      }
+
+      router.push("/student/my-application");
     } catch (err) {
       toast.error("An error occurred while submitting your application.", "Please try again later.");
     }
