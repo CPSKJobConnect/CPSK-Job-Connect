@@ -108,10 +108,9 @@ export default function VerifyEmailPage() {
           }
         });
 
-        // Redirect to dashboard after session update
+        // Use window.location.href for hard redirect to ensure session is fully propagated
         setTimeout(() => {
-          router.push("/student/dashboard");
-          router.refresh(); // Force a refresh to reload middleware checks
+          window.location.href = "/student/dashboard";
         }, 2000);
       }
     } catch (err) {
