@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage",
     "db:backup": "ts-node --project tsconfig.node.json scripts/backup-database.ts",
     "db:restore": "ts-node --project tsconfig.node.json scripts/restore-database.ts",
-    "db:seed": "ts-node --project tsconfig.node.json prisma/seed.ts"
+    "db:seed": "ts-node --project tsconfig.node.json prisma/seed.ts",
+    "storage:reset": "ts-node --project tsconfig.node.json scripts/reset-supabase-storage.ts"
   },
   "prisma": {
     "seed": "ts-node --project tsconfig.node.json prisma/seed.ts"
