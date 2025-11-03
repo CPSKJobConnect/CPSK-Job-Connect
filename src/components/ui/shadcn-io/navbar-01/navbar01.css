@@ -1,15 +1,18 @@
 html, body {
-  height: 100%;       /* make html & body span full viewport */
+  height: 100%; /* keep default sizing */
   margin: 0;
 }
 
-html {
-  background: linear-gradient(to bottom, #006C67, #d0f0fa); /* gradient for overscroll */
-}
+/* NOTE
+   This file previously applied a gradient to the global <html> background
+   which made the whole app appear green. The navbar should only style the
+   header itself (see the header element in the navbar component). Remove any
+   global html/body background here to avoid coloring every page.
+*/
 
 body {
-  min-height: 100%;       /* ensures body is full height */
-  background: transparent; /* let html gradient show through */
+  min-height: 100%;
+  background: transparent;
   overscroll-behavior-y: contain;
 }
 

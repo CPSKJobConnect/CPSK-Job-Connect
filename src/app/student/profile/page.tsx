@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Student } from "@/types/user";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { IoCallOutline, IoCameraOutline, IoIdCardOutline, IoMailOutline, IoPersonCircleOutline, IoSchoolOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -112,6 +113,7 @@ export default function StudentProfilePage() {
       </div>
     );
   }
+
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">

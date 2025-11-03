@@ -21,7 +21,7 @@ export function filterByKeyword(jobs: JobInfo[], keyword?: string) {
 
 export function filterByCategory(jobs: JobInfo[], category?: string) {
   if (!category) return jobs;
-  return jobs.filter(job => job.category.includes(category));
+  return jobs.filter(job => job.category == category);
 }
 
 export function filterByLocation(jobs: JobInfo[], location?: string) {

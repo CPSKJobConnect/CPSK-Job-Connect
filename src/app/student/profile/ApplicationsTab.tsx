@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
-import { IoLocationOutline, IoBriefcaseOutline } from "react-icons/io5";
-import { MdOutlineTimer } from "react-icons/md";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { IoBriefcaseOutline, IoLocationOutline } from "react-icons/io5";
+import { MdOutlineTimer } from "react-icons/md";
+import { toast } from "sonner";
+import { date } from "zod";
 
 interface Application {
   id: number;
@@ -46,10 +47,11 @@ interface ApplicationsTabProps {
 }
 
 const statusColors: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  accepted: "bg-green-100 text-green-800 border-green-200",
-  rejected: "bg-red-100 text-red-800 border-red-200",
-  reviewing: "bg-blue-100 text-blue-800 border-blue-200",
+  Pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  Reviewed: "bg-blue-100 text-blue-800 border-blue-200",
+  Interview: "bg-purple-100 text-purple-800 border-purple-200",
+  Offered: "bg-green-100 text-green-800 border-green-200",
+  Rejected: "bg-red-100 text-red-800 border-red-200",
 };
 
 export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
@@ -136,7 +138,7 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
                       </div>
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                          statusColors[application.status.toLowerCase()] || "bg-gray-100 text-gray-800"
+                          statusColors[application.status] || "bg-gray-100 text-gray-800 border-gray-200"
                         }`}
                       >
                         {application.status}

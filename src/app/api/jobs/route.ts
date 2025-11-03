@@ -16,9 +16,17 @@ export async function GET(req: Request) {
       studentId = student?.id ?? null;
     }
 
+    const today = new Date();
+
     const jobs = await prisma.jobPost.findMany({
+        where: {
+            is_Published: true,
+            deadline: {
+                gte: today,
+            },
+        },
       include: {
-        categories: true,
+        category: true,
         tags: true,
         applications: true,
         company: {
@@ -39,7 +47,29 @@ export async function GET(req: Request) {
     });
 
 
-    const mappedData = jobs.map((job) => {
+    type JobWithRelations = {
+      id: number;
+      is_Published: boolean;
+      deadline: Date;
+      savedBy: unknown;
+      jobName: string;
+      company: { name: string; account: { logoUrl: string | null; backgroundUrl: string | null } | null };
+      category: { id: number; name: string } | null;
+      location: string;
+      created_at: Date;
+      applications: unknown[];
+      min_salary: number | bigint;
+      max_salary: number | bigint;
+      jobType: { name: string };
+      aboutRole: string | null;
+      responsibilities: string | null,
+      requirements: string[];
+      qualifications: string[];
+      tags: { name: string }[];
+      jobArrangement: { name: string };
+    };
+
+    const mappedData = jobs.map((job: JobWithRelations) => {
       // Derive status from is_Published and deadline
       let status = "active";
       if (!job.is_Published) {
@@ -57,7 +87,7 @@ export async function GET(req: Request) {
         companyBg: job.company.account?.backgroundUrl ?? "",
         title: job.jobName,
         companyName: job.company.name,
-        category: job.categories.map((c) => c.name).join(", "),
+        category: job.category ? job.category.name : "",
         location: job.location,
         posted: job.created_at.toISOString(),
         applied: job.applications.length,
@@ -68,11 +98,11 @@ export async function GET(req: Request) {
         type: job.jobType.name,
         description: {
           overview: job.aboutRole ?? "",
-          responsibility: job.aboutRole ?? "",
+          responsibility: job.responsibilities ?? "-",
           requirement: job.requirements.join("\n"),
           qualification: job.qualifications.join("\n"),
         },
-        skills: job.tags.map((tag) => tag.name),
+        skills: job.tags.map((tag: { name: string }) => tag.name),
         arrangement: job.jobArrangement.name,
         deadline: job.deadline.toISOString(),
         status,

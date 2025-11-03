@@ -6,25 +6,13 @@ import { useRouter } from "next/navigation";
 import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlinePeopleAlt } from "react-icons/md";
 import { LiaMoneyCheckAltSolid } from "react-icons/lia";
-import { FiEdit } from "react-icons/fi";
 import { RiDeleteBinFill } from "react-icons/ri";
 import { HiOutlineOfficeBuilding } from "react-icons/hi";
-import { JobInfo } from "@/types/job";
-import { useState, useEffect } from "react";
-import { Input } from "./ui/input";
-import { JobPostFormData } from "@/types/job";
-import SkillCombobox from "./SkillCombobox";
-import CategoryCombobox from "./CategoryCombobox";
-import { mockCategory, mockJobType, mockJobArrangement } from "public/data/fakeFilterInfo";
-import { mockCompanies } from "public/data/mockCompany";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
+import { JobInfo, JobPostFormData } from "@/types/job";
+import { useState, useRef, useEffect } from "react";
+import EditJobCard from "./EditJobCard";
+import { validateForm } from "@/lib/validateJobForm";
+import { toast } from "sonner";
 
 interface JobDescriptionProps {
   job: JobInfo;
@@ -32,22 +20,34 @@ interface JobDescriptionProps {
   onApply: boolean;
   onEdit: boolean;
   tags?: string[];
+  onUpdate?: () => void;
+  categories?: string[];
+  types?: string[];
+  arrangements?: string[];
 }
 
 const typeColors: Record<string, string> = {
   fulltime: "bg-pink-200 text-gray-800",
-  parttime: "bg-blue-200 text-gray-800",
+  "part-time": "bg-blue-200 text-gray-800",
   internship: "bg-orange-100 text-gray-800",
-  contract: "bg-yellow-200 text-gray-800",
-  hybrid: "bg-purple-200 text-gray-800"
+  freelance: "bg-yellow-200 text-gray-800",
 };
 
-
-
-const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionProps) => {
+const JobDescriptionCard = ({
+  job,
+  size,
+  onApply,
+  onEdit,
+  tags,
+  onUpdate,
+  categories = [],
+  types = [],
+  arrangements = [],
+}: JobDescriptionProps) => {
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [formData, setFormData] = useState<JobPostFormData>({
+  const isClosed = job.status === "expire";
+  const [isEditing, setIsEditing] = useState(false); // ✅ เพิ่ม state ที่ขาด
+  const [formData, setFormData] = useState<JobPostFormData>(() => ({
     title: job.title,
     category: job.category,
     location: job.location,
@@ -57,24 +57,8 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
     posted: job.posted,
     deadline: job.deadline,
     skills: job.skills,
-    description: {
-      overview: job.description.overview,
-      responsibility: job.description.responsibility,
-      requirement: job.description.requirement,
-      qualification: job.description.qualification,
-    },
-  });
-  const [locationList, setLocationmentList] = useState<string[]>([]);
-  const [categoryList, setCategoryList] = useState<string[]>([]);
-  const [jobTypeList, setJobTypeList] = useState<string[]>([]);
-  const [jobArrangementList, setJobArrangementList] = useState<string[]>([]);
-    
-  useEffect(() => {
-    setLocationmentList(mockCompanies[0].address);
-    setCategoryList(mockCategory);
-    setJobTypeList(mockJobType);
-    setJobArrangementList(mockJobArrangement);
-  }, [])
+    description: { ...job.description },
+  }));
 
   const baseStyle =
     "rounded-xl shadow-md border border-gray-100 bg-white flex flex-col gap-2 transition mb-5";
@@ -88,85 +72,182 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
     router.push(`/student/job-apply/${job.id}`);
   };
 
-  const handleSave = () => {
-    
+  const handleEdit = async () => {
+    const validationErrors = validateForm(formData);
+
+    if (validationErrors.length > 0) {
+      validationErrors.forEach((err) => toast.error(err, { duration: 4000 }));
+      return false;
+    }
+
+    const confirmed = window.confirm("Are you sure you want to save these changes?");
+    if (!confirmed) return false;
+
+    try {
+      const body = {
+        location: formData.location,
+        arrangement: formData.arrangement,
+        type: formData.type,
+        min_salary: formData.salary.min,
+        max_salary: formData.salary.max,
+        aboutRole: formData.description.overview,
+        responsibilities: formData.description.responsibility,
+        requirements: formData.description.requirement.split("\n"),
+        qualifications: formData.description.qualification.split("\n"),
+        tags: formData.skills,
+        category: formData.category,
+      };
+
+      const res = await fetch(`/api/jobs/${job.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error || "Failed to update job");
+        return false;
+      }
+
+      toast.success("Job updated successfully!");
+      setIsEditing(false);
+
+      if (onUpdate) onUpdate();
+      return true;
+    } catch (error) {
+      toast.error("Something went wrong while saving the job.");
+      return false;
+    }
   };
 
-  const handleEdit = () => {
-    console.log(formData);
-    setIsEditing(false);
-    
+  const handleDelete = async () => {
+    const confirmed = window.confirm("Are you sure you want to delete this job post?");
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`/api/jobs/${job.id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Job deleted successfully!");
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to delete job.");
+      }
+    } catch (error) {
+      toast.error("Something went wrong while deleting the job.");
+    }
   };
 
-  const handleDelete = () => {
-    
+  const [overviewOpen, setOverviewOpen] = useState(false);
+  const [responsibilityOpen, setResponsibilityOpen] = useState(false);
+  const [requirementOpen, setRequirementOpen] = useState(false);
+  const [qualificationOpen, setQualificationOpen] = useState(false);
+
+  const Section: React.FC<{
+    title: string;
+    text: string;
+    open: boolean;
+    setOpen: (v: boolean) => void;
+  }> = ({ title, text, open, setOpen }) => {
+    const ref = useRef<HTMLDivElement | null>(null);
+    const [isOverflowing, setIsOverflowing] = useState(false);
+    const COLLAPSED_MAX_PX = 112;
+
+    const checkOverflow = () => {
+      const el = ref.current;
+      if (!el) return setIsOverflowing(false);
+      setIsOverflowing(el.scrollHeight > COLLAPSED_MAX_PX + 1);
+    };
+
+    useEffect(() => {
+      checkOverflow();
+      window.addEventListener("resize", checkOverflow);
+      return () => window.removeEventListener("resize", checkOverflow);
+    }, [text]);
+
+    return (
+      <div>
+        <p className="font-bold">{title}</p>
+        <div
+          ref={ref}
+          className={`text-sm text-gray-700 mt-2 whitespace-pre-wrap break-words break-all ${
+            open ? "max-h-[40vh] overflow-auto" : "max-h-28 overflow-hidden"
+          }`}
+        >
+          {text}
+        </div>
+
+        {isOverflowing && (
+          <div className="mt-2">
+            <button
+              className="text-sm text-[#2BA17C] hover:underline"
+              onClick={() => setOpen(!open)}
+              type="button"
+              aria-expanded={open}
+            >
+              {open ? "Show less" : "More"}
+            </button>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
     <div className={`${baseStyle} ${sizeStyle}`}>
       <div className="relative w-full h-40">
-        <Image
-          src={job.companyBg}
-          alt="company background"
-          fill
-          className="object-cover"
-        />
+        {job.companyBg ? (
+          <Image
+            src={job.companyBg}
+            alt={job.companyName || "companyBg"}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gray-100 rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+            {job.companyName ? job.companyName.charAt(0).toUpperCase() : "C"}
+          </div>
+        )}
+
         {onEdit && (
           <>
-            {isEditing ? (
-              <>
-                <div className="absolute flex right-16 top-2">
-                  <Button
-                    className="lg:w-20 h-8 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition"
-                    onClick={handleEdit}
-                  >
-                    <div className="flex gap-2 items-center">
-                      <p>Save</p>
-                    </div>
-                  </Button>
-                </div>
+            <div className="absolute flex right-16 top-2">
+              <EditJobCard
+                job={job}
+                formData={formData}
+                setFormData={setFormData}
+                handleEdit={handleEdit}
+                categories={categories || []}
+                jobTypes={types || []}
+                arrangements={arrangements || []}
+                tags={tags || []}
+              />
+            </div>
 
-                <Button
-                  onClick={() => setIsEditing(false)}
-                  className="absolute flex right-4 top-2 w-10 h-8 bg-gray-100/80 text-gray-800 shadow-lg hover:bg-gray-100 transition"
-                >
-                  <p>×</p>
-                </Button>
-              </>
-            ) : (
-              <>
-                <div className="absolute flex right-16 top-2">
-                  <Button
-                    className="lg:w-20 h-8 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <div className="flex gap-2 items-center">
-                      <FiEdit />
-                      <p>Edit</p>
-                    </div>
-                  </Button>
-                </div>
-
-                <Button
-                  onClick={handleDelete}
-                  className="absolute flex right-4 top-2 w-10 h-8 bg-gradient-to-b from-[#FF755D] to-[#F3573C] 
-                  shadow-lg hover:bg-[#F9664C] transition"
-                >
-                  <RiDeleteBinFill />
-                </Button>
-              </>
-            )}
+            <Button
+              onClick={handleDelete}
+              className="absolute flex right-4 top-2 w-10 h-8 bg-gradient-to-b from-[#FF755D] to-[#F3573C]
+              shadow-lg hover:bg-[#F9664C] transition"
+            >
+              <RiDeleteBinFill />
+            </Button>
           </>
         )}
 
         <div className="absolute -bottom-6 left-4 bg-white p-2 rounded-md shadow-md">
-          <Image
-            src={job.companyLogo}
-            alt="companyLogo"
-            width={60}
-            height={60}
-            className="h-auto w-auto"
-          />
+          {job.companyLogo ? (
+            <Image
+              src={job.companyLogo}
+              alt={job.companyName || "companyLogo"}
+              width={60}
+              height={60}
+              className="h-auto w-auto"
+            />
+          ) : (
+            <div className="h-[60px] w-[60px] bg-gray-100 rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+              {job.companyName ? job.companyName.charAt(0).toUpperCase() : "C"}
+            </div>
+          )}
         </div>
       </div>
 
@@ -178,75 +259,17 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
       <div className="flex gap-4 px-4 py-2 text-sm text-gray-600">
         <div className="flex gap-1 items-center">
           <IoLocationOutline />
-          {isEditing ? (
-            <Select 
-            value={formData.location} 
-            onValueChange={(value) => setFormData({ ...formData, location: value })}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select location" />
-              </SelectTrigger>
-              <SelectContent>
-                {locationList.map((loc) => (
-                  <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <span>{job.location}</span>
-          )}
+          <span>{job.location}</span>
         </div>
         <div className="flex gap-1 items-center">
           <HiOutlineOfficeBuilding />
-          {isEditing ? (
-            <Select 
-            value={formData.arrangement} 
-            onValueChange={(value) => setFormData({ ...formData, arrangement: value })}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select job arrangement" />
-              </SelectTrigger>
-              <SelectContent>
-                {jobArrangementList.map((arr) => (
-                  <SelectItem key={arr} value={arr}>{arr}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <span>{job.arrangement}</span>
-          )}
+          <span>{job.arrangement}</span>
         </div>
         <div className="flex gap-1 items-center">
           <LiaMoneyCheckAltSolid />
-          {isEditing ? (
-            <Input
-              className="w-auto max-w-[100px] text-sm h-6 px-2 py-1"
-              value={formData.salary.min}
-              onChange={(e) => setFormData({ ...formData, 
-                  salary: {
-                      ...formData.salary,
-                      min: Number(e.target.value)
-                  }
-              })}
-              placeholder={(job.salary.min).toString()}
-            />
-          ) : (
-            <span>{job.salary.min}</span>
-          )}
+          <span>฿{job.salary.min.toLocaleString()}</span>
           <span> - </span>
-          {isEditing ? (
-            <Input
-              className="w-auto max-w-[100px] text-sm h-6 px-2 py-1"
-              value={formData.salary.max}
-              onChange={(e) => setFormData({ ...formData, 
-                  salary: {
-                      ...formData.salary,
-                      max: Number(e.target.value)
-                  }
-              })}
-              placeholder={(job.salary.max).toString()}
-            />
-          ) : (
-            <span>{job.salary.max} bath</span>
-          )}
+          <span>฿{job.salary.max.toLocaleString()} THB</span>
         </div>
         <div className="flex gap-1 items-center">
           <MdOutlinePeopleAlt />
@@ -255,147 +278,44 @@ const JobDescriptionCard = ({job, size, onApply, onEdit, tags}: JobDescriptionPr
       </div>
 
       <div className="flex flex-wrap gap-2 px-4 mt-2">
-        {isEditing ? (
-            <Select 
-            value={formData.type} 
-            onValueChange={(value) => setFormData({ ...formData, type: value })}>
-              <SelectTrigger className="max-w-[100px] mt-8">
-                <SelectValue placeholder="Select job type" />
-              </SelectTrigger>
-              <SelectContent>
-                {jobTypeList.map((type) => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <span
-              className={`px-2 py-1 rounded-md text-sm shadow-md ${
-                typeColors[job.type] || "bg-white text-gray-800"
-              }`}
-            >
-              {job.type}
-            </span>
-          )}
+        <span
+          className={`px-2 py-1 rounded-md text-sm shadow-md ${
+            typeColors[job.type] || "bg-white text-gray-800"
+          }`}
+        >
+          {job.type}
+        </span>
 
-        {isEditing ? (
-            <SkillCombobox
-              selectedSkill={formData.skills}
-              setSelectedSkill={(skills) => setFormData({ ...formData, skills })}
-              existingSkills={tags || []}
-            />
-        ) : (
-          job.skills.map((tag, idx) => (
-            <span
-              key={idx}
-              className="bg-white text-grey-800 shadow-md px-2 py-1 rounded-md text-sm"
-            >
-              {tag}
-            </span>
-          ))
-        )}
+        {job.skills.map((tag, idx) => (
+          <span
+            key={tag ?? idx}
+            className="bg-white text-gray-800 shadow-md px-2 py-1 rounded-md text-sm"
+          >
+            {tag}
+          </span>
+        ))}
       </div>
 
-      {isEditing && 
-      <div className="flex flex-col gap-2 px-4 mt-5">
-          <p className="text-sm text-gray-800">Job Category</p>
-          <CategoryCombobox
-          selectedCategory={formData.category}
-          setSelectedCategory={(category) => setFormData({ ...formData, category })}
-          placeholder={formData.category}
-          categoryList={categoryList}
-          />
-      </div>
-      }
       <div className="flex-1 overflow-y-auto px-4">
-      <div className="flex flex-col gap-6 px-5 mt-5">
-        <div>
-          <p className="font-bold">About Role</p>
-          {isEditing ? (
-            <Input
-              value={formData.description.overview}
-              onChange={(e) => setFormData({ ...formData, 
-                  description: {
-                      ...formData.description,
-                      overview: e.target.value
-                  }
-              })}
-              placeholder={job.description.overview}
-            />
-          ) : (
-            <p>{job.description.overview}</p>
-          )}
+        <div className="flex flex-col gap-6 px-5 mt-5">
+          <Section title="About Role" text={job.description.overview || ""} open={overviewOpen} setOpen={setOverviewOpen} />
+          <Section title="Responsibilities" text={job.description.responsibility || ""} open={responsibilityOpen} setOpen={setResponsibilityOpen} />
+          <Section title="Requirements" text={job.description.requirement || ""} open={requirementOpen} setOpen={setRequirementOpen} />
+          <Section title="Qualifications" text={job.description.qualification || ""} open={qualificationOpen} setOpen={setQualificationOpen} />
         </div>
-
-        <div>
-          <p className="font-bold">Responsibilities</p>
-          {isEditing ? (
-            <Input
-              value={formData.description.responsibility}
-              onChange={(e) => setFormData({ ...formData, 
-                  description: {
-                      ...formData.description,
-                      responsibility: e.target.value
-                  }
-              })}
-              placeholder={job.description.responsibility}
-            />
-          ) : (
-            <p>{job.description.responsibility}</p>
-          )}
-        </div>
-
-        <div>
-          <p className="font-bold">Requirements</p>
-          {isEditing ? (
-            <Input
-              value={formData.description.requirement}
-              onChange={(e) => setFormData({ ...formData, 
-                  description: {
-                      ...formData.description,
-                      requirement: e.target.value
-                  }
-              })}
-              placeholder={job.description.requirement}
-            />
-          ) : (
-            <p>{job.description.requirement}</p>
-          )}
-        </div>
-
-        <div>
-          <p className="font-bold">Qualifications</p>
-          {isEditing ? (
-            <Input
-              value={formData.description.qualification}
-              onChange={(e) => setFormData({ ...formData, 
-                  description: {
-                      ...formData.description,
-                      qualification: e.target.value
-                  }
-              })}
-              placeholder={job.description.qualification}
-            />
-          ) : (
-            <p>{job.description.qualification}</p>
-          )}
-        </div>
-      </div>
       </div>
 
       <div className="px-4 py-4 flex justify-start gap-3 mt-auto">
-        {onApply && (
-          <>
-            <Button onClick={handleApply}
-              className="lg:w-40 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition">
+        {onApply &&
+          (isClosed ? (
+            <Button disabled className="lg:w-40 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition">
+              Expired
+            </Button>
+          ) : (
+            <Button onClick={handleApply} className="lg:w-40 h-10 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition">
               Quick Apply
             </Button>
-            <Button onClick={handleSave}
-            className="h-10 bg-[#67C3A6] shadow-lg hover:bg-[#27946F] transition">
-            Save
-            </Button>
-          </>
-        )}
+          ))}
       </div>
     </div>
   );

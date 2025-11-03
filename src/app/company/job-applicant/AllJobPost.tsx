@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import JobCard from "@/components/JobCard";
-import { mockDepartmentData } from "public/data/mockDepartment";
 import { JobInfo } from "@/types/job";
 import { filterByCategory } from "@/lib/jobFilter";
 import {
@@ -18,25 +17,20 @@ import { Button } from "@/components/ui/button";
 interface AllJobPostProps {
   info: JobInfo[];
   onSelectCard: (id: number) => void;
+  allDepartment: string[];
 }
 
 type PostType = "All Posts" | "Active" | "Draft" | "Close";
 
-const AllJobPost = ({ info, onSelectCard }: AllJobPostProps) => {
+const AllJobPost = ({ info, onSelectCard, allDepartment = [] }: AllJobPostProps) => {
   const postTypes: PostType[] = ["All Posts", "Active", "Draft", "Close"];
   const [selectedType, setSelectedType] = useState<PostType>("All Posts");
   const [jobPost, setJobPost] = useState<JobInfo[]>([]);
   const [filteredJobPost, setFilteredJobPost] = useState<JobInfo[]>([]);
-  const [allDepartment, setAllDepartment] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>();
 
   useEffect(() => {
-    setJobPost(info);
-    setAllDepartment(mockDepartmentData.departments);
-  }, [jobPost, allDepartment]);
-
-  useEffect(() => {
-    let result = [...jobPost];
+    let result = [...info];
 
     result = result.filter((job) => {
       if (selectedType === "All Posts") return true;
@@ -65,9 +59,9 @@ const AllJobPost = ({ info, onSelectCard }: AllJobPostProps) => {
 
       <div className="flex flex-col gap-3 flex-1">
         <div className="flex flex-row gap-2">
-          {postTypes.map((type, idx) => (
+          {postTypes.map((type) => (
             <Button
-              key={idx}
+              key={type}
               onClick={() => setSelectedType(type)}
               className={`px-4 rounded-full shadow-md transition-all duration-200 ease-in-out
               ${
@@ -89,9 +83,9 @@ const AllJobPost = ({ info, onSelectCard }: AllJobPostProps) => {
             <SelectContent>
                 <SelectGroup>
                 <SelectLabel>Departments</SelectLabel>
-                {allDepartment.map((d, idx) => (
-                    <SelectItem key={idx} value={d}>
-                    {d}
+                {allDepartment.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
                     </SelectItem>
                 ))}
                 </SelectGroup>
@@ -107,9 +101,9 @@ const AllJobPost = ({ info, onSelectCard }: AllJobPostProps) => {
         </div>
 
         <div className="h-screen overflow-y-auto">
-          {filteredJobPost.map((job, idx) => (
+          {filteredJobPost.map((job) => (
             <div key={job.id} onClick={() => onSelectCard(Number(job.id))}>
-              <JobCard size="sm" info={job} />
+              <JobCard size="sm" info={job} isCompanyView={true}/>
             </div>
           ))}
         </div>

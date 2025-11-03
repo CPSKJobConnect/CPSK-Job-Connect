@@ -43,16 +43,16 @@ const DocumentUploadSection = ({
     }
 
     return (
-      <div className="shadow-md w-full h-full rounded-md border border-gray-100/70">
+      <div className="shadow-md w-[420px] h-full rounded-md border border-gray-100/70">
       <div className="px-10 mt-3">
         <p className="text-sm font-semibold text-gray-800">{title}</p>
         <p className="text-gray-600">{description}</p>
       </div>
       <div className="px-10 py-3">
       {(selectedFile || uploadedFile) && (
-        <div className="flex flex-col justify-center w-full bg-[#F3FEFA] rounded-md p-2">
+        <div className="flex flex-col justify-center bg-[#F3FEFA] rounded-md p-2">
           <div className="flex flex-row justify-between items-center">
-            <p className="text-sm text-gray-700 max-w-[90%] truncate">
+            <p className="text-sm text-gray-700 max-w-[80%] truncate">
               Selected: <span className="font-medium">{selectedFile ? selectedFile.name : uploadedFile?.name}</span>
             </p>
             <IoMdClose

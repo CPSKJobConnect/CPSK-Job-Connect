@@ -31,10 +31,10 @@ export default function RootLayout({
         className={`${poppins.variable} font-poppins antialiased`}
       >
         <MantineProvider>
+        <Toaster richColors closeButton position="top-right" />
         <AuthProvider>
           {children}
         </AuthProvider>
-        <Toaster richColors closeButton />
         </MantineProvider>
       </body>
     </html>

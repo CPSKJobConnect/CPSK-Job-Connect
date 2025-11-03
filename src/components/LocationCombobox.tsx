@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { Check, ChevronsUpDown, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { IoLocationOutline } from "react-icons/io5";
 
 interface Province {
   provinceCode: number;
@@ -28,9 +27,10 @@ interface LocationComboboxProps {
   value: string;
   onChange: (val: string) => void;
   showIcon?: boolean;
+  className?: string;
 }
 
-export default function LocationCombobox({ value, onChange, showIcon = false }: LocationComboboxProps) {
+export default function LocationCombobox({ value, onChange, showIcon = false, className }: LocationComboboxProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -111,19 +111,20 @@ export default function LocationCombobox({ value, onChange, showIcon = false }: 
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="md:w-[500px] justify-between text-gray-700"
+          className={
+            className
+              ? className
+              : "w-full pl-0 pr-3 py-1 rounded-md border-none shadow-none focus:ring-0 focus:outline-none text-sm justify-between text-gray-700 md:w-[500px]"
+          }
         >
-          {showIcon && (
-            <IoLocationOutline className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-          )}
-        <span
+          <span
             className={`
                 ${value ? "text-gray-700" : "text-gray-400"}
                 ${showIcon ? "pl-6" : ""}
         `}
-        >
+          >
             {value || "Select location"}
-        </span>
+          </span>
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -155,7 +156,7 @@ export default function LocationCombobox({ value, onChange, showIcon = false }: 
             </div>
           )}
 
-          <ul className="max-h-[400px] overflow-auto mt-1 border bg-white">
+          <ul className="max-h-[250px] overflow-auto mt-1 border bg-white">
             {!selectedProvince &&
               provinces
                 .filter((p) => p.provinceNameEn.toLowerCase().includes(searchTerm.toLowerCase()))

@@ -58,13 +58,27 @@ export async function POST(req: NextRequest) {
     const existingUser = await prisma.account.findUnique({
       where: {
         email: validatedData.data.email,
+      },
+      include: {
+        student: true,
+        company: true,
       }
     })
-    if (existingUser) {
-      return NextResponse.json(
+
+    // If account exists and has complete registration
+    if (existingUser && (existingUser.student || existingUser.company)) {
+      return NextResponse.json( 
         { error: "User already exists" },
         { status: 400 }
       );
+    }
+
+    // If account exists but is orphaned (no student/company record), clean it up
+    if (existingUser) {
+      console.log("Found orphaned account, cleaning up:", existingUser.id);
+      await prisma.account.delete({
+        where: { id: existingUser.id }
+      });
     }
 
     // Hash password
@@ -107,7 +121,8 @@ export async function POST(req: NextRequest) {
       const transcriptFile = formData.get("transcript") as File;
       if (transcriptFile && transcriptFile.size > 0) {
         // File upload on cloud AWS S3, Cloudinary
-        transcriptPath = `transcripts/${account.id}_${transcriptFile.name}`;
+        // Generate path with temporary ID - will be updated with actual account ID in transaction
+        transcriptPath = `transcripts/temp_${transcriptFile.name}`;
         // TODO: file upload logic
       }
     } else if (role === "company") {
@@ -141,18 +156,53 @@ export async function POST(req: NextRequest) {
     } else {
       await prisma.company.create({
         data: {
-          account_id: account.id,
-          name: (validatedData.data as CompanyData).companyName,
-          address: (validatedData.data as CompanyData).address,
-          // year: (validatedData.data as CompanyData).year, // Removed from schema
-          phone: (validatedData.data as CompanyData).phone,
-          description: (validatedData.data as CompanyData).description,
-          website: (validatedData.data as CompanyData).website || null,
-          register_day: new Date(),
-          registration_status: "pending",
+          email: validatedData.data.email,
+          password: hashedPassword,
+          role: roleId,
+          username: role === "student" ? (validatedData.data as StudentData).name : (validatedData.data as CompanyData).companyName,
         }
       })
-    }
+
+      // Update transcript path with actual account ID if needed
+      if (transcriptPath) {
+        transcriptPath = `transcripts/${account.id}_${(formData.get("transcript") as File).name}`;
+      }
+
+      // Create role-specific record
+      if (role === "student") {
+        await tx.student.create({
+          data: {
+            account_id: account.id,
+            student_id: (validatedData.data as StudentData).studentId,
+            name: (validatedData.data as StudentData).name,
+            faculty: (validatedData.data as StudentData).faculty,
+            year: (validatedData.data as StudentData).year.toString(),
+            phone: (validatedData.data as StudentData).phone,
+            transcript: transcriptPath,
+          }
+        })
+      } else {
+        await tx.company.create({
+          data: {
+            account_id: account.id,
+            name: (validatedData.data as CompanyData).companyName,
+            address: (validatedData.data as CompanyData).address,
+            // year: (validatedData.data as CompanyData).year, // Removed from schema
+            phone: (validatedData.data as CompanyData).phone,
+            description: (validatedData.data as CompanyData).description,
+            website: (validatedData.data as CompanyData).website || null,
+            register_day: new Date(),
+            registration_status: "pending",
+          }
+        })
+      }
+
+      return account;
+    }, {
+      maxWait: 5000, // Maximum time to wait for a transaction slot (ms)
+      timeout: 10000, // Maximum time the transaction can run (ms)
+    })
+
     return NextResponse.json({
       message: "Account created successfully",
       redirectTo: `/${role}/dashboard`
@@ -160,12 +210,39 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Registration error:", error)
     console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace')
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid data", details: error.issues },
         { status: 400 }
       );
     }
+
+    // Handle Prisma unique constraint errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as { code: string; meta?: { target?: string[] } };
+
+      if (prismaError.code === 'P2002') {
+        const target = prismaError.meta?.target;
+        console.error("Unique constraint violation on:", target);
+
+        return NextResponse.json(
+          {
+            error: "Registration failed due to duplicate data",
+            details: `A record with this ${target?.join(', ') || 'data'} already exists`
+          },
+          { status: 409 }
+        );
+      }
+
+      if (prismaError.code === 'P2003') {
+        return NextResponse.json(
+          { error: "Registration failed", details: "Invalid reference data" },
+          { status: 400 }
+        );
+      }
+    }
+
     return NextResponse.json(
       { error: "Internal server error", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }

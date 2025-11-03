@@ -11,14 +11,25 @@ import DocumentUploadSection from "../DocumentUploadSection";
 import StudentInfoCard from "../StudentInfoCard";
 import { Button } from "@/components/ui/button";
 import { Student } from "@/types/user";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { toast } from "@/lib/toastTemplate";
 
 
 const typeColors: Record<string, string> = {
   fulltime: "bg-pink-200 text-gray-800",
-  parttime: "bg-blue-200 text-gray-800",
+  "part-time": "bg-blue-200 text-gray-800",
   internship: "bg-green-100 text-gray-800",
-  contract: "bg-yellow-200 text-gray-800",
-  hybrid: "bg-purple-200 text-gray-800"
+  freelance: "bg-yellow-200 text-gray-800",
 };
 
 export default function Page() {
@@ -94,16 +105,16 @@ export default function Page() {
   }, [student, job]);
     const handleSubmit = async () => {
     if (!uploadedResume && !selectedResume) {
-      alert("Please select or upload your Resume before submitting.");
+      toast.error("Resume Missing", "Please select or upload your Resume before submitting.");
       return;
     }
     if (!uploadedPortfolio && !selectedPortfolio) {
-      alert("Please select or upload your Portfolio before submitting.");
+      toast.error("Portfolio Missing", "Please select or upload your Portfolio before submitting.");
       return;
     }
 
     if (!student || !job) {
-      alert("Student or Job data is missing.");
+      toast.error("Data Missing", "Student or Job data is missing.");
       return;
     }
 
@@ -133,15 +144,14 @@ export default function Page() {
 
       if (!res.ok) {
         console.error(data);
-        alert("Failed to submit application.");
+        toast.error("Failed to submit application.", "Please try again later.");
         return;
       }
 
-      alert("Application submitted successfully!");
-      console.log("Application response:", data);
+      toast.success("Application submitted!", "Your job application has been sent successfully.");
+      router.push("/student/profile");
     } catch (err) {
-      console.error(err);
-      alert("Error submitting application.");
+      toast.error("An error occurred while submitting your application.", "Please try again later.");
     }
   };
 
@@ -151,17 +161,23 @@ export default function Page() {
 
     return (
       <>
-        <div className="flex flex-row">
-          <div className="py-14 ml-10">
-            <Image
-              src={job.companyLogo}
-              alt="companyLogo"
-              width={120}
-              height={120}
-              className="h-auto w-auto border border-gray-100"
-            />
+        <div className="flex flex-col md:flex-row items-start md:items-center">
+          <div className="py-6 md:py-14 md:ml-10 flex justify-center md:justify-start w-full md:w-auto">
+            {job.companyLogo ? (
+              <Image
+                src={job.companyLogo}
+                alt={job.companyName || "companyLogo"}
+                width={120}
+                height={120}
+                className="h-auto bg-white translate-y-1 shadow-md rounded-md"
+              />
+             ) : (
+              <div className="h-[120px] w-[120px] bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+                {job.companyName ? job.companyName.charAt(0).toUpperCase() : "C"}
+            </div>
+            )}
           </div>
-          <div className="flex flex-col p-5 mb-3">
+          <div className="flex flex-col p-5 mb-3 w-full md:flex-1">
             <p className="px-4 text-md text-gray-700">Apply For</p>
             <div className="mt-1 px-4">
               <p className="font-bold text-lg">{job.title}</p>
@@ -183,7 +199,7 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 px-4 mt-2">
+            <div className="flex flex-wrap gap-2 px-4 mt-2 p-2 overflow-x-auto">
             <span
               className={`px-2 py-1 rounded-md text-sm shadow-md ${
                 typeColors[job.type] || "bg-white text-gray-800"
@@ -193,8 +209,8 @@ export default function Page() {
             </span>
             {job?.skills?.map((tag, idx) => (
               <span
-                key={idx}
-                className="bg-white text-gray-800 shadow-md px-2 py-1 rounded-md text-sm"
+                key={tag ?? idx}
+                className="bg-white text-gray-800 shadow-md px-2 py-1 rounded-md text-sm whitespace-nowrap"
               >
                 {tag}
               </span>
@@ -202,8 +218,8 @@ export default function Page() {
             </div>
           </div>
         </div>
-        <div className="flex flex-row gap-5 px-10 items-stretch">
-          <div className="basis-1/4">
+        <div className="flex flex-col md:flex-row gap-5 px-4 md:px-10 items-stretch">
+          <div className="w-full md:basis-1/4">
             <StudentInfoCard
               firstname={student.firstname}
               lastname={student.lastname}
@@ -212,14 +228,13 @@ export default function Page() {
               faculty={student.faculty}
             />
           </div>
-
-          <div className="basis-3/4 flex flex-col gap-5 p-3 rounded-md shadow-md border border-gray-100 w-full max-w-[75%] h-full">
+          <div className="w-full md:basis-3/4 flex flex-col gap-5 p-3 rounded-md shadow-md border border-gray-100">
             <div className="flex flex-row gap-2">
                 <IoDocumentTextOutline  className="w-7 h-7" />
                 <p className="text-lg font-semibold text-gray-800">Documents</p>
             </div>
-            <div className="flex md:flex-row sm:flex-col px-10 py-3 gap-10">
-              <div className="flex-1 min-w-0">
+            <div className="flex flex-col md:flex-row gap-6 px-2 md:px-6 py-3">
+              <div className="w-full md:w-1/2 min-w-0">
                 <DocumentUploadSection
                   title="Resume"
                   description="Upload your most recent resume or select from previously uploaded files"
@@ -231,7 +246,7 @@ export default function Page() {
                 />
               </div>
 
-              <div className="flex-1 min-w-0">
+              <div className="w-full md:w-1/2 min-w-0">
                 <DocumentUploadSection
                   title="Portfolio"
                   description="Upload your portfolio or select from previously uploaded files"
@@ -245,10 +260,73 @@ export default function Page() {
             </div>
           </div>
         </div>
-        <div className="px-10 py-5">
-        <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white font-md px-10" onClick={handleSubmit} disabled={alreadyApplied}>
-          {alreadyApplied ? "Already Applied" : "Submit"}
-        </Button>
+        <div className="px-4 md:px-10 py-5 flex justify-center md:justify-start">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white font-md px-8 py-3 w-full md:w-auto" disabled={alreadyApplied}>
+                {alreadyApplied ? "Already Applied" : "Submit"}
+              </Button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Your Application</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You are about to submit your application. Please preview the form and verify that all information is accurate before proceeding.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div className="max-h-[60vh] overflow-y-auto px-4 py-2">
+                <section className="mb-4 shadow-md border border-gray-100 rounded-md p-4">
+                  <h3 className="text-sm font-semibold text-gray-700">Job</h3>
+                  <div className="mt-2 text-sm text-gray-600">
+                    <p className="font-medium">{job.title} — {job.companyName}</p>
+                    <p className="text-xs">{job.location} • {job.type} • {job.arrangement}</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {job.skills?.map((s, i) => (
+                        <span key={s ?? i} className="text-xs bg-white px-2 py-1 rounded-md shadow-sm">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+
+                <section className="shadow-md border border-gray-100 rounded-md p-4">
+                  <section className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-700">Student Info</h3>
+                    <div className="mt-2 text-sm text-gray-600">
+                      <p className="font-medium">{student.firstname} {student.lastname}</p>
+                      <p className="text-xs">Email: {student.email}</p>
+                      <p className="text-xs">Phone: {student.phone}</p>
+                      <p className="text-xs">Faculty: {student.faculty}</p>
+                    </div>
+                  </section>
+
+                  <section className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-700">Documents</h3>
+                    <div className="mt-2 text-sm text-gray-600 space-y-1">
+                      <div>
+                        <p className="text-xs font-medium">Resume</p>
+                        <p className="text-xs">{uploadedResume ? uploadedResume.name : selectedResume ? selectedResume.name || `File #${selectedResume.id}` : "(none)"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium">Portfolio</p>
+                        <p className="text-xs">{uploadedPortfolio ? uploadedPortfolio.name : selectedPortfolio ? selectedPortfolio.name || `File #${selectedPortfolio.id}` : "(none)"}</p>
+                      </div>
+                    </div>
+                  </section>
+                </section>
+              </div>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction asChild>
+                  <Button onClick={handleSubmit} className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold rounded-md shadow-md text-white px-6 py-2">
+                    Apply
+                  </Button>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </>
     );
