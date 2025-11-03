@@ -15,8 +15,8 @@ export async function GET(request: Request) {
     const userRole = (session.user as any).role?.toLowerCase();
     console.log("🔍 User role:", userRole);
 
-    if (!account || account.accountRole?.name?.toLowerCase() !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (userRole !== "admin") {
+      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -136,8 +136,8 @@ export async function POST(request: Request) {
       include: { accountRole: true }
     });
 
-    if (!account || account.accountRole?.name?.toLowerCase() !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (userRole !== "admin") {
+      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 
     const data = await request.json();

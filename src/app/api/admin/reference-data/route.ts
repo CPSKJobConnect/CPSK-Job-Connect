@@ -14,8 +14,8 @@ export async function GET() {
     const userRole = (session.user as any).role?.toLowerCase();
     console.log("🔍 User role:", userRole);
 
-    if (!account || account.accountRole?.name?.toLowerCase() !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (userRole !== "admin") {
+      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 
     // Get all reference data in parallel

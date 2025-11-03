@@ -20,8 +20,8 @@ export async function GET(
       include: { accountRole: true }
     });
 
-    if (!account || account.accountRole?.name?.toLowerCase() !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (userRole !== "admin") {
+      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 
     const { id } = await params;
@@ -86,8 +86,8 @@ export async function PUT(
       include: { accountRole: true }
     });
 
-    if (!account || account.accountRole?.name?.toLowerCase() !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (userRole !== "admin") {
+      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 
     const { id } = await params;
@@ -171,8 +171,8 @@ export async function DELETE(
       include: { accountRole: true }
     });
 
-    if (!account || account.accountRole?.name?.toLowerCase() !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (userRole !== "admin") {
+      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 
     const { id } = await params;
