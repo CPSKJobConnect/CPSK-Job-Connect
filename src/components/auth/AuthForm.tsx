@@ -51,7 +51,14 @@ export function AuthForm({ role, mode }: AuthFormProps) {
   })
 
   const emailValue = watch("email")
+  const yearValue = watch("year")
 
+  // Auto-select "Alumni" year when student status is ALUMNI
+  useEffect(() => {
+    if (mode === "register" && role === "student" && studentStatus === "ALUMNI") {
+      setValue("year", "Alumni")
+    }
+  }, [studentStatus, mode, role, setValue])
 
   // Handle session-based redirection after login
   useEffect(() => {
@@ -376,7 +383,11 @@ export function AuthForm({ role, mode }: AuthFormProps) {
 
                   <div>
                     <Label htmlFor="year">Year</Label>
-                    <Select onValueChange={(value) => setValue("year", value === "Alumni" ? value : parseInt(value))}>
+                    <Select
+                      onValueChange={(value) => setValue("year", value === "Alumni" ? value : parseInt(value))}
+                      disabled={studentStatus === "ALUMNI"}
+                      value={yearValue?.toString()}
+                    >
                       <SelectTrigger className="mt-1 bg-gray-50">
                         <SelectValue placeholder="Select year" />
                       </SelectTrigger>
