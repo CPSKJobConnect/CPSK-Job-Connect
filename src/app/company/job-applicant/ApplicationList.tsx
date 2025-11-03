@@ -68,6 +68,7 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
   const handleStatusChange = async (applicant_id: number, newStatusId: number) => {
     const s = statusList.find((st) => st.id === newStatusId);
     if (!s) return;
+    const previous = statusMap[applicant_id];
 
     setStatusMap((prev) => ({
       ...prev,
@@ -75,17 +76,37 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
     }));
 
     try {
-      await fetch(`/api/applications/${applicant_id}/status`, {
+      const response = await fetch(`/api/applications/${applicant_id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status_id: newStatusId }),
       });
-      toast.success("Application status updated");
+
+      let result: any = null;
+      try {
+        result = await response.json();
+      } catch (e) {
+        // ignore parse errors
+      }
+
+      if (!response.ok) {
+        console.error("Failed to update status:", result || response.statusText);
+        toast.error("Failed to update status", {
+          description: result?.error || "Please try again.",
+        });
+        // revert optimistic update
+        setStatusMap((prev) => ({ ...prev, [applicant_id]: previous }));
+        return;
+      }
+
+      console.log("Application status updated successfully:", result);
+      toast.success("Status updated", {
+        description: `Application status changed to ${s.name}`,
+      });
     } catch (error) {
       console.error("Failed to update status:", error);
       toast.error("Failed to update application status");
-      const original = statusMap[applicant_id];
-      setStatusMap((prev) => ({ ...prev, [applicant_id]: original }));
+      setStatusMap((prev) => ({ ...prev, [applicant_id]: previous }));
     }
   };
 
