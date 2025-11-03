@@ -24,6 +24,7 @@ it('should register successfully and redirect to dashboard', function() {
     cy.get('label.w-full').click();
     cy.get('#transcript').selectFile('cypress/fixtures/transcript.pdf', { force: true });
     cy.get('[data-testid="auth-submit"]').click();
+    cy.wait('@register');
     cy.location('pathname', { timeout: 10000 }).should('include', '/student/dashboard');
 });
 
@@ -90,33 +91,3 @@ it('should upload transcript successfully', function() {
   cy.get('[data-testid="auth-transcript"]').contains('transcript.pdf').should('be.visible');
 });
 
-// it('should register successfully and redirect to dashboard', function() {
-//     const email = `student_test+${Date.now()}@ku.th`;
-
-//     cy.visit('http://localhost:3000/')
-//     cy.get('#role-selection div.hover\\:bg-green-100 img.w-full').click();
-//     cy.get('[data-testid="auth-signup"]', { timeout: 10000 }).click();
-
-//     cy.get('[name="email"]').type(email);
-//     cy.get('[name="password"]').type('test1234');
-//     cy.get('[name="confirmPassword"]').type('test1234');
-//     cy.get('[name="studentId"]').type('6610545555');
-//     cy.get('[name="name"]').type('Student Test');
-//     cy.get('[name="phone"]').type('0955320987');
-
-//     cy.get('[data-testid="faculty-select-trigger"]').click({ force: true });
-//     cy.get('[role="listbox"]').contains('Software and Knowledge Engineering (SKE)').click({ force: true });
-
-//     cy.get('[data-testid="year-select-trigger"]').click({ force: true });
-//     cy.get('[role="listbox"]').contains('Year 3').click({ force: true });
-
-//     cy.get('label.w-full').click();
-//     cy.get('#transcript').selectFile('cypress/fixtures/transcript.pdf', { force: true });
-
-//     cy.get('[data-testid="auth-submit"]').click();
-
-//     cy.location('pathname', { timeout: 10000 }).should('include', '/student/dashboard');
-
-//     // cleanup: delete user
-//     cy.request('POST', '/api/test/delete-user', { email });
-// });
