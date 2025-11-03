@@ -162,39 +162,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
           <div className="container mx-auto flex h-16 max-w-screen-2xl items-center justify-between gap-4">
             {/* Left side */}
             <div className="flex items-center">
-              {/* Mobile menu trigger */}
-              {isMobile && (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      className="group h-9 w-9 hover:bg-accent hover:text-accent-foreground"
-                      variant="ghost"
-                      size="icon"
-                    >
-                      <HamburgerIcon />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="start" className="w-48 p-2">
-                    <NavigationMenu className="max-w-none">
-                      <NavigationMenuList className="flex-col items-start gap-1">
-                        {navigationLinks.map((link, index) => (
-                          <NavigationMenuItem key={index} className="w-full">
-                            <button
-                              onClick={(e) => e.preventDefault()}
-                              className={cn(
-                                "flex w-full items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer no-underline",
-                                link.active ? "bg-accent text-accent-foreground" : "text-foreground/80"
-                              )}
-                            >
-                              {link.label}
-                            </button>
-                          </NavigationMenuItem>
-                        ))}
-                      </NavigationMenuList>
-                    </NavigationMenu>
-                  </PopoverContent>
-                </Popover>
-              )}
+              {/* Mobile: don't render any navigation on the left - we show a single hamburger on the right */}
 
               {/* Main nav */}
 
@@ -235,61 +203,182 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
 
             {/* Right side */}
             <div className="flex items-center gap-3">
-              {rightContent ? (
-                // Use custom rightContent if provided
-                rightContent
-              ) : session ? (
-                // Logged in (default template)
+              {isMobile ? (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <div
-                     role="button"
-                     tabIndex={0}
-                     aria-haspopup="menu"
-                     className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center"
-                    >
-                      {session.user?.logoUrl ? (
-                        <Image
-                          src={session.user.logoUrl}
-                          alt="Profile"
-                          width={40}
-                          height={40}
-                          className="object-cover"
-                        />
-                      ) : (
-                        <span className="text-gray-600 font-semibold text-sm">
-                          {session.user?.name?.charAt(0)?.toUpperCase() || "U"}
-                        </span>
-                      )}
-                    </div>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-50 text-center">
-                    <p className="text-sm font-medium">{session.user?.name}</p>
                     <Button
+                      className="group h-9 w-9 hover:bg-accent hover:text-accent-foreground"
                       variant="ghost"
-                      size="sm"
-                      className="w-full text-red-500 hover:text-red-600"
-                      onClick={() => signOut({ callbackUrl: "/" })}
+                      size="icon"
+                      aria-label="Open menu"
                     >
-                      Sign out
+                      <HamburgerIcon />
                     </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-64 p-2">
+                    <div className="flex flex-col gap-2">
+                      {/* Use a plain vertical list for mobile to avoid upstream NavigationMenu layout overrides */}
+                      <div className="flex flex-col items-start gap-1">
+                        {navigationLinks.map((link, index) => (
+                          <div key={index} className="w-full">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (link.href.startsWith('http')) window.open(link.href, '_blank');
+                                else router.push(link.href);
+                              }}
+                              className={cn(
+                                "w-full text-left rounded-md px-3 py-3 text-sm font-medium transition-colors",
+                                link.active ? "bg-accent text-accent-foreground" : "text-black hover:bg-accent hover:text-accent-foreground"
+                              )}
+                            >
+                              {link.label}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="border-t" />
+
+                      {/* Render action items (Profile / Bookmarks / Sign out) as individual mobile menu entries
+                          instead of dumping the entire rightContent node which may render horizontally. */}
+                      <div className="flex flex-col gap-2 pt-2">
+                        {session ? (
+                          <>
+                            <button
+                              onClick={() => router.push(`/${session.user?.role || 'student'}/profile`)}
+                              className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                            >
+                              Profile
+                            </button>
+
+                            <button
+                              onClick={() => router.push('/jobs')}
+                              className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                            >
+                              Browse Jobs
+                            </button>
+
+                            <button
+                              onClick={() => router.push(`/${session.user?.role || 'student'}/dashboard`)}
+                              className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                            >
+                              Dashboard
+                            </button>
+
+                            {session.user?.role === 'company' && (
+                              <button
+                                onClick={() => router.push('/company/job-posting')}
+                                className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                              >
+                                Job Posting
+                              </button>
+                            )}
+
+                            {session.user?.role === 'company' && (
+                              <button
+                                onClick={() => router.push('/company/job-applicant')}
+                                className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                              >
+                                Job Applicant
+                              </button>
+                            )}
+
+                            {session.user?.role === 'student' && (
+                              <button
+                                onClick={() => router.push('/student/bookmark')}
+                                className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                              >
+                                Bookmark
+                              </button>
+                            )}
+
+                            {session.user?.role === 'student' && (
+                              <button
+                                onClick={() => router.push('/student/my-application')}
+                                className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                              >
+                                My Applications
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => signOut({ callbackUrl: '/' })}
+                              className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-red-50 hover:text-red-600"
+                            >
+                              Sign out
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              const section = document.getElementById('role-selection');
+                              if (section) section.scrollIntoView({ behavior: 'smooth' });
+                              else window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                            }}
+                            className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                          >
+                            Sign In
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </PopoverContent>
                 </Popover>
               ) : (
-                // Logged out (default template)
-                <Button
-                  id="signin-btn"
-                  size="sm"
-                  className="text-sm font-medium px-4 h-9 rounded-md"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const section = document.getElementById("role-selection");
-                    if (section) section.scrollIntoView({ behavior: "smooth" });
-                    else window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-                  }}
-                >
-                  Sign In
-                </Button>
+                // Desktop/tablet: show rightContent as-is (avatar, buttons, etc.)
+                (rightContent ? rightContent : session ? (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div
+                       role="button"
+                       tabIndex={0}
+                       aria-haspopup="menu"
+                       className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center"
+                      >
+                        {session.user?.logoUrl ? (
+                          <Image
+                            src={session.user.logoUrl}
+                            alt="Profile"
+                            width={40}
+                            height={40}
+                            className="object-cover"
+                          />
+                        ) : (
+                          <span className="text-gray-600 font-semibold text-sm">
+                            {session.user?.name?.charAt(0)?.toUpperCase() || "U"}
+                          </span>
+                        )}
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-50 text-center">
+                      <p className="text-sm font-medium">{session.user?.name}</p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-red-500 hover:text-red-600"
+                        onClick={() => signOut({ callbackUrl: "/" })}
+                      >
+                        Sign out
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <Button
+                    id="signin-btn"
+                    size="sm"
+                    className="text-sm font-medium px-4 h-9 rounded-md"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const section = document.getElementById("role-selection");
+                      if (section) section.scrollIntoView({ behavior: "smooth" });
+                      else window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+                    }}
+                  >
+                    Sign In
+                  </Button>
+                ))
               )}
             </div>
 
