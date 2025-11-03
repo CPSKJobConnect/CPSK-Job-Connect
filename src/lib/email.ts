@@ -238,7 +238,7 @@ export function generateAlumniApprovalEmailHTML(studentName: string, approved: b
   const status = approved ? 'Approved' : 'Rejected';
   const emoji = approved ? '✅' : '❌';
   const message = approved
-    ? 'Your alumni verification has been approved! To complete your registration and start applying for jobs, please verify your email address. You will receive a separate email with a 6-digit verification code.'
+    ? 'Your alumni verification has been approved! Please log in to your dashboard and click on the "Account Pending Admin Approval" badge to verify your KU email address. You can browse jobs now, but you\'ll need to complete email verification before applying.'
     : 'Unfortunately, your alumni verification has been rejected. Please contact support if you believe this is an error.';
 
   return `
@@ -289,14 +289,12 @@ export function generateAlumniApprovalEmailHTML(studentName: string, approved: b
       padding-top: 20px;
       border-top: 1px solid #ddd;
     }
-    .button {
-      display: inline-block;
-      padding: 12px 30px;
-      background-color: #2c5aa0;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      margin-top: 20px;
+    .info-box {
+      background-color: #e7f3ff;
+      border-left: 4px solid #2c5aa0;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
     }
   </style>
 </head>
@@ -312,7 +310,7 @@ export function generateAlumniApprovalEmailHTML(studentName: string, approved: b
 
     <p>${message}</p>
 
-    ${approved ? '<a href="' + (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/student/dashboard" class="button">Go to Dashboard</a>' : ''}
+    ${approved ? '<div class="info-box"><strong>Next Steps:</strong><br>1. Log in to your dashboard<br>2. Click on the "Account Pending Admin Approval" badge at the top<br>3. Verify your KU email to complete registration</div>' : ''}
 
     <div class="footer">
       <p>CPSK Job Connect - Kasetsart University</p>
@@ -348,7 +346,7 @@ Your alumni verification has been ${approved ? 'approved' : 'rejected'}.
   }
 
   if (approved) {
-    textContent += '\n\nYou can now browse and apply for jobs on CPSK Job Connect.';
+    textContent += '\n\nTo complete your registration, please verify your KU email address. You will receive a separate email with a 6-digit verification code.';
   }
 
   await sendEmail({
@@ -356,5 +354,267 @@ Your alumni verification has been ${approved ? 'approved' : 'rejected'}.
     subject: `Alumni Verification ${status} - CPSK Job Connect`,
     html: generateAlumniApprovalEmailHTML(studentName, approved),
     text: textContent.trim(),
+  });
+}
+
+/**
+ * Generate HTML template for company approval notification
+ */
+export function generateCompanyApprovalEmailHTML(companyName: string, approved: boolean, notes?: string): string {
+  const status = approved ? 'Approved' : 'Rejected';
+  const emoji = approved ? '✅' : '❌';
+  const message = approved
+    ? 'Your company registration has been approved! You can now post job openings and manage applications.'
+    : `Unfortunately, your company registration has been rejected.${notes ? ` Reason: ${notes}` : ' Please contact support if you believe this is an error.'}`;
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Company Registration ${status}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      background-color: #f4f4f4;
+      border-radius: 10px;
+      padding: 30px;
+      margin: 20px 0;
+    }
+    .header {
+      text-align: center;
+      color: #2c5aa0;
+      margin-bottom: 20px;
+    }
+    .status {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin: 20px 0;
+      border: 2px solid ${approved ? '#28a745' : '#dc3545'};
+    }
+    .status-text {
+      font-size: 24px;
+      font-weight: bold;
+      color: ${approved ? '#28a745' : '#dc3545'};
+    }
+    .footer {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 30px;
+      background-color: #2c5aa0;
+      color: white !important;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="header">🏢 CPSK Job Connect</h1>
+
+    <p>Hello ${companyName},</p>
+
+    <div class="status">
+      <div class="status-text">${emoji} Registration ${status}</div>
+    </div>
+
+    <p>${message}</p>
+
+    ${approved ? '<a href="' + (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/company/dashboard" class="button">Go to Dashboard</a>' : ''}
+
+    <div class="footer">
+      <p>CPSK Job Connect - Kasetsart University</p>
+      <p>Connecting KU students with career opportunities</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+/**
+ * Send company registration status email
+ */
+export async function sendCompanyStatusEmail(
+  email: string,
+  companyName: string,
+  approved: boolean,
+  notes?: string
+): Promise<void> {
+  const status = approved ? 'Approved' : 'Rejected';
+
+  let textContent = `
+CPSK Job Connect - Company Registration ${status}
+
+Hello ${companyName},
+
+Your company registration has been ${approved ? 'approved' : 'rejected'}.
+`;
+
+  if (notes) {
+    textContent += `\n\nAdmin notes: ${notes}`;
+  }
+
+  if (approved) {
+    textContent += '\n\nYou can now post job openings and manage applications on CPSK Job Connect.';
+  }
+
+  await sendEmail({
+    to: email,
+    subject: `Company Registration ${status} - CPSK Job Connect`,
+    html: generateCompanyApprovalEmailHTML(companyName, approved, notes),
+    text: textContent.trim(),
+  });
+}
+
+/**
+ * Send alumni registration confirmation email
+ */
+export async function sendAlumniRegistrationEmail(
+  email: string,
+  studentName: string
+): Promise<void> {
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registration Received - CPSK Job Connect</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      background-color: #f4f4f4;
+      border-radius: 10px;
+      padding: 30px;
+      margin: 20px 0;
+    }
+    .header {
+      text-align: center;
+      color: #2c5aa0;
+      margin-bottom: 20px;
+    }
+    .status {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin: 20px 0;
+      border: 2px solid #2c5aa0;
+    }
+    .status-text {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2c5aa0;
+    }
+    .footer {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+    .info-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="header">🎓 CPSK Job Connect</h1>
+
+    <p>Hello ${studentName},</p>
+
+    <div class="status">
+      <div class="status-text">📝 Registration Received</div>
+    </div>
+
+    <p>Thank you for registering with CPSK Job Connect as an alumni!</p>
+
+    <div class="info-box">
+      <strong>⏳ What happens next?</strong><br><br>
+      1. Our admin team will review your transcript<br>
+      2. You'll receive an email once your application is reviewed<br>
+      3. If approved, you'll need to verify your email to complete registration<br>
+      4. Once verified, you can start applying for jobs!
+    </div>
+
+    <p><strong>In the meantime:</strong></p>
+    <ul>
+      <li>You can log in and browse available job opportunities</li>
+      <li>Applications will be enabled once your account is approved and verified</li>
+    </ul>
+
+    <p>We typically review applications within 1-2 business days.</p>
+
+    <div class="footer">
+      <p>CPSK Job Connect - Kasetsart University</p>
+      <p>Connecting KU students with career opportunities</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const textContent = `
+CPSK Job Connect - Alumni Registration Received
+
+Hello ${studentName},
+
+Thank you for registering with CPSK Job Connect as an alumni!
+
+What happens next?
+1. Our admin team will review your transcript
+2. You'll receive an email once your application is reviewed
+3. If approved, you'll need to verify your email to complete registration
+4. Once verified, you can start applying for jobs!
+
+In the meantime:
+- You can log in and browse available job opportunities
+- Applications will be enabled once your account is approved and verified
+
+We typically review applications within 1-2 business days.
+
+---
+CPSK Job Connect - Kasetsart University
+Connecting KU students with career opportunities
+  `.trim();
+
+  await sendEmail({
+    to: email,
+    subject: 'Alumni Registration Received - CPSK Job Connect',
+    html,
+    text: textContent,
   });
 }

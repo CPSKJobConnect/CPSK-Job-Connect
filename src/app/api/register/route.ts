@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
     const evidenceFile = role === "company" ? formData.get("evidence") as File : null;
 
     // Use transaction to ensure atomic account + role-specific record creation
-    await prisma.$transaction(async (tx) => {
+    const account = await prisma.$transaction(async (tx) => {
       // Create account
       const account = await tx.account.create({
         data: {
@@ -134,33 +134,7 @@ export async function POST(req: NextRequest) {
         }
       })
 
-      // Handle file uploads after account creation
-      if (transcriptFile && transcriptFile.size > 0) {
-        // Upload transcript file using the uploadDocument utility
-        try {
-          const { uploadDocument } = await import("@/lib/uploadDocument");
-          const document = await uploadDocument(transcriptFile, String(account.id), 4); // 4 = Student Transcript
-          transcriptPath = document.file_path;
-        } catch (error) {
-          console.error("Error uploading transcript file:", error);
-          // Continue with registration even if file upload fails
-        }
-      }
-
-      let evidencePath: string | null = null;
-      if (evidenceFile && evidenceFile.size > 0) {
-        // Upload evidence file using the uploadDocument utility
-        try {
-          const { uploadDocument } = await import("@/lib/uploadDocument");
-          const document = await uploadDocument(evidenceFile, String(account.id), 7); // 7 = Company Evidence
-          evidencePath = document.file_path;
-        } catch (error) {
-          console.error("Error uploading evidence file:", error);
-          // Continue with registration even if file upload fails
-        }
-      }
-
-      // Create role-specific record
+      // Create role-specific record (without file paths initially)
       if (role === "student") {
         const studentData = validatedData.data as StudentData;
         const isAlumni = studentData.studentStatus === "ALUMNI";
@@ -173,7 +147,7 @@ export async function POST(req: NextRequest) {
             faculty: studentData.faculty,
             year: studentData.year.toString(),
             phone: studentData.phone,
-            transcript: transcriptPath,
+            transcript: null, // Will be updated after file upload
             student_status: isAlumni ? "ALUMNI" : "CURRENT",
             // Alumni need admin approval, current students just need email verification
             verification_status: isAlumni ? "PENDING" : "APPROVED",
@@ -201,6 +175,55 @@ export async function POST(req: NextRequest) {
       maxWait: 5000, // Maximum time to wait for a transaction slot (ms)
       timeout: 10000, // Maximum time the transaction can run (ms)
     })
+
+    // Handle file uploads AFTER transaction completes
+    if (transcriptFile && transcriptFile.size > 0) {
+      try {
+        const { uploadDocument } = await import("@/lib/uploadDocument");
+        const document = await uploadDocument(transcriptFile, String(account.id), 4); // 4 = Transcript
+        transcriptPath = document.file_path;
+
+        // Update student record with transcript path
+        await prisma.student.update({
+          where: { account_id: account.id },
+          data: { transcript: transcriptPath }
+        });
+      } catch (error) {
+        console.error("Error uploading transcript file:", error);
+        // Continue with registration even if file upload fails
+      }
+    }
+
+    // Send registration confirmation email to alumni
+    if (role === "student") {
+      const studentData = validatedData.data as StudentData;
+      const isAlumni = studentData.studentStatus === "ALUMNI";
+
+      if (isAlumni) {
+        try {
+          const { sendAlumniRegistrationEmail } = await import("@/lib/email");
+          await sendAlumniRegistrationEmail(
+            validatedData.data.email,
+            studentData.name
+          );
+          console.log(`✅ Registration confirmation email sent to ${validatedData.data.email}`);
+        } catch (emailError) {
+          console.error(`❌ Failed to send registration email to ${validatedData.data.email}:`, emailError);
+          // Continue with registration even if email fails
+        }
+      }
+    }
+
+    if (evidenceFile && evidenceFile.size > 0) {
+      try {
+        const { uploadDocument } = await import("@/lib/uploadDocument");
+        await uploadDocument(evidenceFile, String(account.id), 7); // 7 = Company Evidence
+        // Evidence is stored in Document table, no need to update Company record
+      } catch (error) {
+        console.error("Error uploading evidence file:", error);
+        // Continue with registration even if file upload fails
+      }
+    }
 
     return NextResponse.json({
       message: "Account created successfully",

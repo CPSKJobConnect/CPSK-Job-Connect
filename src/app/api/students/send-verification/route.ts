@@ -28,10 +28,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify it's a valid KU email
-    if (!isValidKUEmail(email)) {
+    // Check if the student is an alumni
+    const student = await prisma.student.findFirst({
+      where: {
+        account: {
+          email: email
+        }
+      },
+      select: {
+        student_status: true
+      }
+    });
+
+    // Only require KU email for current students, alumni can use any email
+    if (student?.student_status === 'CURRENT' && !isValidKUEmail(email)) {
       return NextResponse.json(
-        { error: 'Please use a valid KU email address (@ku.th)' },
+        { error: 'Current students must use a valid KU email address (@ku.th)' },
         { status: 400 }
       );
     }

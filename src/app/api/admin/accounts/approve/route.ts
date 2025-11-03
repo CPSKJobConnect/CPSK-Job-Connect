@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { sendAlumniStatusEmail, sendCompanyStatusEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -34,9 +35,16 @@ export async function POST(request: Request) {
     let notificationMessage = "";
 
     if (accountType === "student") {
-      // Get the student to access the account_id
+      // Get the student to access the account_id and account email
       const student = await prisma.student.findFirst({
-        where: { id: accountId }
+        where: { id: accountId },
+        include: {
+          account: {
+            select: {
+              email: true
+            }
+          }
+        }
       });
 
       if (!student) {
@@ -66,12 +74,33 @@ export async function POST(request: Request) {
         }
       });
 
+      // Send email notification
+      try {
+        await sendAlumniStatusEmail(
+          student.account.email,
+          student.name,
+          action === "approve",
+          reason
+        );
+        console.log(`✅ Email sent to ${student.account.email}`);
+      } catch (emailError) {
+        console.error(`❌ Failed to send email to ${student.account.email}:`, emailError);
+        // Continue even if email fails - notification is still created
+      }
+
       message = `Student ${action === "approve" ? "approved" : "rejected"} successfully`;
 
     } else if (accountType === "company") {
-      // Get the company to access the account_id
+      // Get the company to access the account_id and account email
       const company = await prisma.company.findFirst({
-        where: { id: accountId }
+        where: { id: accountId },
+        include: {
+          account: {
+            select: {
+              email: true
+            }
+          }
+        }
       });
 
       if (!company) {
@@ -97,6 +126,20 @@ export async function POST(request: Request) {
           message: notificationMessage
         }
       });
+
+      // Send email notification
+      try {
+        await sendCompanyStatusEmail(
+          company.account.email,
+          company.name,
+          action === "approve",
+          reason
+        );
+        console.log(`✅ Email sent to ${company.account.email}`);
+      } catch (emailError) {
+        console.error(`❌ Failed to send email to ${company.account.email}:`, emailError);
+        // Continue even if email fails - notification is still created
+      }
 
       message = `Company ${action === "approve" ? "approved" : "rejected"} successfully`;
     }
