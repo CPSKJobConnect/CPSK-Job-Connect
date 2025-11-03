@@ -14,6 +14,7 @@ declare global {
       login(role: 'student' | 'company', email: string, password: string): Chainable<void>
       fillJobPostDetail(): Chainable<void>
       fillJobPostDescription(): Chainable<void>
+      postJob(options?: { draft?: boolean; message?: string }): Chainable<void>;
     }
   }
 }
@@ -96,5 +97,34 @@ Cypress.Commands.add('fillJobPostDescription', () => {
   cy.get('[name="qualifications"]').click();
   cy.get('[name="qualifications"]').type('Bachelor’s in Design or related field.');
 })
+
+Cypress.Commands.add('postJob', (options = {}) => {
+  const {
+    draft = false,
+    message = draft
+      ? 'Job drafted successfully!'
+      : 'Job posted successfully!',
+  } = options;
+
+  cy.intercept('POST', '/api/company/jobs/create', {
+    statusCode: 200,
+    body: { message },
+  }).as('jobPosting');
+
+
+  cy.fillJobPostDetail();
+  cy.get('[data-testid="next-step-button"]').click();
+  cy.fillJobPostDescription();
+  cy.get('[data-testid="next-step-button"]').click();
+
+  if (draft) {
+    cy.get('[data-testid="draft-job-button"]').click();
+  } else {
+    cy.get('[data-testid="publish-job-button"]').click();
+  }
+
+  cy.wait('@jobPosting');
+});
+
 
 export {}
