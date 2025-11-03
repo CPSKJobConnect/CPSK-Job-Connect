@@ -49,7 +49,7 @@ export function VerificationBanner({
           <strong className="text-blue-900">⏳ Account Pending Admin Approval</strong>
           <p className="text-blue-800 mt-1">
             Your alumni verification is under review. You&apos;ll receive an email once an admin
-            reviews your transcript. Job applications are disabled until approval.
+            reviews your transcript. You can browse jobs, but applications are disabled until approval.
           </p>
         </AlertDescription>
       </Alert>
@@ -74,18 +74,20 @@ export function VerificationBanner({
   // Alumni approved but email not verified
   if (studentStatus === "ALUMNI" && verificationStatus === "APPROVED" && !emailVerified) {
     return (
-      <Alert className="mb-6 border-amber-300 bg-amber-50">
-        <Mail className="h-4 w-4 text-amber-600" />
+      <Alert className="mb-6 border-green-300 bg-green-50">
+        <CheckCircle className="h-4 w-4 text-green-600" />
         <AlertDescription className="flex items-center justify-between">
           <div>
-            <strong className="text-amber-900">Email Verification Required</strong>
-            <p className="text-amber-800 mt-1">
-              Your alumni status has been approved! Please verify your KU email to complete registration and start applying for jobs.
+            <Link href={`/student/verify-email?email=${encodeURIComponent(email || "")}`} className="hover:underline">
+              <strong className="text-green-900 cursor-pointer">✅ Verification Approved - Email Verification Required</strong>
+            </Link>
+            <p className="text-green-800 mt-1">
+              Your alumni status has been approved! Click "Verify Email" to receive a verification code and complete registration.
             </p>
           </div>
           <Link href={`/student/verify-email?email=${encodeURIComponent(email || "")}`}>
-            <Button variant="outline" size="sm" className="ml-4">
-              Verify Now
+            <Button className="ml-4 bg-green-600 hover:bg-green-700">
+              Verify Email
             </Button>
           </Link>
         </AlertDescription>
