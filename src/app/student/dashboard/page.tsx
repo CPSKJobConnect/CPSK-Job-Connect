@@ -25,7 +25,7 @@ const statIconMap: Record<string, { icon: IconType; iconBg: string; iconColor: s
 
 
 const StudentDashboardPage = () => {
-  const { data: session, status } = useSession()
+  const { data: session, status, update } = useSession()
   const [studentStat, setStudentStat] = useState<{ title: string; value: number; icon: IconType; iconBg: string; iconColor: string }[]>([]);
 
   useEffect(() => {
@@ -39,6 +39,41 @@ const StudentDashboardPage = () => {
 
     setStudentStat(stats);
   }, []);
+
+  // Check for verification status updates
+  useEffect(() => {
+    const checkVerificationStatus = async () => {
+      if (!session?.user?.id) return;
+
+      try {
+        const response = await fetch('/api/students/verification-status');
+        if (response.ok) {
+          const data = await response.json();
+
+          // If verification status changed, update the session
+          if (data.verificationStatus !== session.user.verificationStatus) {
+            await update({
+              ...session,
+              user: {
+                ...session.user,
+                verificationStatus: data.verificationStatus,
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error checking verification status:', error);
+      }
+    };
+
+    // Check on mount
+    checkVerificationStatus();
+
+    // Check every 30 seconds
+    const interval = setInterval(checkVerificationStatus, 30000);
+
+    return () => clearInterval(interval);
+  }, [session, update]);
 
   if (status === "loading") {
     return (
