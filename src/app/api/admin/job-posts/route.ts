@@ -11,11 +11,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin
-    const account = await prisma.account.findUnique({
-      where: { email: session.user.email },
-      include: { accountRole: true }
-    });
+    // Check if user is admin (using session role)
+    const userRole = (session.user as any).role?.toLowerCase();
+    console.log("🔍 User role:", userRole);
 
     if (!account || account.accountRole?.name?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
