@@ -4,7 +4,7 @@ import { Card, Title, Group, Box, Text } from "@mantine/core";
 import { StatusBreakdownChartProps } from "@/types/companyStat";
 
 
-export default function StatusBreakdownChart({data, loading}: StatusBreakdownChartProps) {
+export default function StatusBreakdownChart({data}: StatusBreakdownChartProps) {
   const statusColors: Record<string, string> = {
     Pending: "#FFF4CC",
     Reviewed: "#FFD6E0",

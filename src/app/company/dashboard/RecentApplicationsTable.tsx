@@ -26,7 +26,7 @@ const statusColor: Record<string, string> = {
 	rejected: "bg-red-100 text-red-800",
 };
 
-export default function RecentApplicationsTable({ applications, loading }: RecentApplicationsTableProps) {
+export default function RecentApplicationsTable({ applications }: RecentApplicationsTableProps) {
   const items = Array.isArray(applications) ? applications : [];
 
   const statusTypes: StatusType[] = ["pending", "reviewed", "interview", "offered", "rejected"];
