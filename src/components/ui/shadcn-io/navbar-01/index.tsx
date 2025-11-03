@@ -28,9 +28,10 @@ import {
 const Logo = ({ className, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
   return (
     <img
-      src="/assets/icons/logo.png" // same logo as StudentNavbar
+      src="/assets/icons/logo.png"
       alt="Logo"
-      className={cn("block h-30 mt-1 w-auto", className)}
+      // constrain logo to navbar height: small on mobile, slightly larger on md+
+      className={cn("block h-8 md:h-10 w-auto object-contain", className)}
       {...props}
     />
   );
@@ -81,9 +82,9 @@ export interface Navbar01NavLink2 {
 }
 
 // Default navigation links
-const defaultNavigationLinks: Navbar01NavLink[] = [
-  { href: 'https://github.com/CPSKJobConnect/CPSK-Job-Connect/wiki', label: 'About' },
-];
+// const defaultNavigationLinks: Navbar01NavLink[] = [
+//   { href: 'https://github.com/CPSKJobConnect/CPSK-Job-Connect/wiki', label: 'About' },
+// ];
 
 export interface Navbar01Props extends React.HTMLAttributes<HTMLElement> {
   logo?: React.ReactNode;
@@ -104,7 +105,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
       className,
       logo = <Logo />,
       logoHref = '#',
-      navigationLinks = defaultNavigationLinks,
+      // navigationLinks = defaultNavigationLinks,
       rightContent, // destructure so it doesn't go to header
       signInText = 'Sign In',
       signInHref = '#signin',
@@ -177,7 +178,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                 </button>
 
                 {/* Left side */}
-                {!isMobile && (
+                {/* {!isMobile && (
                   <NavigationMenu className="flex">
                     <NavigationMenuList className="gap-1">
                       {navigationLinks.map((link, index) => (
@@ -197,7 +198,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                       ))}
                     </NavigationMenuList>
                   </NavigationMenu>
-                )}
+                )} */}
               </div>
             </div>
 
@@ -219,7 +220,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                     <div className="flex flex-col gap-2">
                       {/* Use a plain vertical list for mobile to avoid upstream NavigationMenu layout overrides */}
                       <div className="flex flex-col items-start gap-1">
-                        {navigationLinks.map((link, index) => (
+                        {/* {navigationLinks.map((link, index) => (
                           <div key={index} className="w-full">
                             <button
                               onClick={(e) => {
@@ -235,7 +236,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                               {link.label}
                             </button>
                           </div>
-                        ))}
+                        ))} */}
                       </div>
 
                       <div className="border-t" />
