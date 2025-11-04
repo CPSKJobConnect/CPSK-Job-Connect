@@ -1,6 +1,7 @@
 describe('Company Job Posting Flow', () => {
 
   beforeEach(() => {
+    cy.viewport(1280, 800);
     cy.loginAsCompany();
     cy.get('a[href="/company/job-posting"]').click();
     cy.wait(5000);
@@ -47,42 +48,68 @@ describe('Company Job Posting Flow', () => {
     cy.contains('Preview').should('be.visible');
   });
 
-  it('should post and delete job successfully', function() {
-    cy.intercept('DELETE', '/api/jobs/*', {
-      statusCode: 200,
-      body: { message: 'Job deleted successfully!' }
-    }).as('jobDeleting');
-
-    cy.intercept('GET', '/api/company/jobs', {
-      statusCode: 200,
-      body: [
-        {
-          id: 1,
-          title: 'Graphic Designer',
-          slug: 'graphic-designer-bangkok',
-          location: 'Bangkok, Thailand',
-          status: 'active',
-          salary: { min: 15000, max: 30000 },
-          overview: 'Create visually appealing designs for marketing materials and social media.',
-          description: 'We are looking for a creative Graphic Designer to produce high-quality visuals for marketing and product materials.',
-          responsibilities: [
-            'Create marketing and promotional materials',
-            'Collaborate with product and marketing teams',
-            'Deliver final assets in required formats'
-          ],
-          skills: ['Adobe Photoshop', 'Illustrator', 'Figma', 'Communication'],
-          company: { id: 42, name: 'Acme Co', logoUrl: '/assets/icons/company-placeholder.png' },
-          createdAt: '2025-10-28T12:00:00.000Z',
-          applied: 1,
-          applicantsCount: 1,
-          employmentType: 'part-time',
-          category: 'Design',
-        },
-      ],
-    }).as('getJobs');
-
+  it('should post and edit job successfully', function() {
+    cy.editJob();
+    cy.getJobs();
+    cy.getFilters();
     cy.postJob();
+    cy.wait(5000);
+    cy.get('a[href="/company/job-applicant"]').click();
+    cy.wait('@getJobs');
+    cy.wait(5000);
+    cy.get('[data-testid^="job-card-"]', { timeout: 10000 })
+      .should('have.length.at.least', 1)
+      .first()
+      .as('firstJobCard')
+      .click();
 
+    cy.on('window:confirm', () => true);
+
+    cy.get('[data-testid="edit-job-button"]', { timeout: 10000 })
+      .first()
+      .click({ force: true });
+
+    cy.wait('@getFilters');
+
+    cy.get('[data-testid="location-combobox"]', { timeout: 10000 }).click();
+    cy.get('[data-testid="province-option-Bangkok"]', { timeout: 10000 }).click();
+    cy.get('[data-testid="district-option-Dusit"]', { timeout: 10000 }).click();
+    cy.get('[data-testid="subdistrict-option-Dusit"]', { timeout: 10000 }).click();
+
+    cy.get('[data-testid="edit-job-arrangement"]', { timeout: 5000 }).click();
+    cy.get('[data-slot="select-content"]', { timeout: 5000 }).contains('onsite').click();
+
+    cy.get('[data-testid="edit-job-type"]', { timeout: 5000 }).click();
+    cy.get('[data-slot="select-content"]', { timeout: 5000 }).contains('internship').click();
+
+    cy.get('[data-testid="edit-job-category"]', { timeout: 5000 }).click();
+    cy.get('[data-slot="select-content"]', { timeout: 5000 }).contains('Design').click();
+
+    cy.get('[data-testid="select-skill-trigger"]', { timeout: 5000 }).click();
+    cy.get('[data-testid="skill-option-Adobe-XD"]', { timeout: 5000 }).click();
+    cy.get('[data-testid="select-skill-trigger"]', { timeout: 5000 }).click();
+    cy.get('[data-testid="skill-option-Social-Media"]', { timeout: 5000 }).click();
+
+    cy.get('[data-testid="edit-job-salary-min"]', { timeout: 5000 }).clear().type('35000');
+    cy.get('[data-testid="edit-job-salary-max"]', { timeout: 5000 }).clear().type('70000');
+
+    cy.get('[data-testid="edit-job-overview"]', { timeout: 10000 }).clear().type('Updated overview for Senior Graphic Designer');
+    cy.get('[data-testid="edit-job-responsibility"]', { timeout: 5000 }).clear().type('Updated responsibilities');
+    cy.get('[data-testid="edit-job-requirement"]', { timeout: 5000 }).clear().type('Updated requirements');
+    cy.get('[data-testid="edit-job-qualification"]', { timeout: 5000 }).clear().type('Updated qualifications');
+
+    cy.get('[data-testid="save-edit-job-btn-2"]', { timeout: 5000 })
+      .first()
+      .click({ force: true });
+
+    cy.wait('@jobEditing').its('response.statusCode').should('eq', 200);
+    cy.contains('Job updated successfully!', { timeout: 10000 }).should('be.visible');
+  });
+
+  it('should post and delete job successfully', function() {
+    cy.deleteJob();
+    cy.getJobs();
+    cy.postJob();
     cy.get('a[href="/company/job-applicant"]').click();
     cy.wait('@getJobs');
     cy.get('[data-testid^="job-card-"]', { timeout: 10000 })
@@ -93,15 +120,14 @@ describe('Company Job Posting Flow', () => {
 
     cy.on('window:confirm', () => true);
 
-    cy.get('[data-testid="delete-job-button"]', { timeout: 5000 })
-      .filter(':visible')
-      .first()
-      .click();
+    cy.wait(5000);
+    cy.get('[data-testid="delete-job-button"]', { timeout: 5000 }).first().click();
 
     cy.wait('@jobDeleting');
     cy.reload();
     cy.intercept('GET', '/api/company/jobs', { statusCode: 200, body: [] });
     cy.wait(500);
+    cy.reload();
     cy.get('[data-testid^="job-card-"]').should('have.length', 0);
   });
 });
