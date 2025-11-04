@@ -5,20 +5,40 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   try {
     const { id } = await context.params;
     const appId = Number(id);
-    if (isNaN(appId)) return NextResponse.json({ error: "Invalid application ID" }, { status: 400 });
+    if (isNaN(appId))
+      return NextResponse.json({ error: "Invalid application ID" }, { status: 400 });
 
     const { status_id } = await req.json();
-    if (!status_id) return NextResponse.json({ error: "status_id is required" }, { status: 400 });
+    if (!status_id)
+      return NextResponse.json({ error: "status_id is required" }, { status: 400 });
 
+    // ✅ อัปเดตสถานะ
     const updated = await prisma.application.update({
       where: { id: appId },
       data: { status: status_id },
-      include: { applicationStatus: true },
+      include: {
+        applicationStatus: true,
+        jobPost: { select: { jobName: true } },
+        student: {
+          include: { account: true }
+        }
+      },
+    });
+
+    // ✅ สร้างข้อความ Notification
+    const message = `Your application for "${updated.jobPost.jobName}" has been updated to "${updated.applicationStatus.name}".`;
+
+    // ✅ สร้าง Notification ไปหานักเรียน (student)
+    await prisma.notification.create({
+      data: {
+        account_id: updated.student.account_id, // ผู้รับคือ student
+        message,
+      },
     });
 
     return NextResponse.json({ application: updated });
   } catch (error) {
-    console.error(error);
+    console.error("Error updating application status:", error);
     return NextResponse.json({ error: "Failed to update status" }, { status: 500 });
   }
 }
