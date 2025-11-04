@@ -10,6 +10,7 @@ interface VerificationBannerProps {
   studentStatus: "CURRENT" | "ALUMNI";
   verificationStatus: "PENDING" | "APPROVED" | "REJECTED";
   email?: string;
+  rejectionReason?: string | null;
 }
 
 export function VerificationBanner({
@@ -17,22 +18,23 @@ export function VerificationBanner({
   studentStatus,
   verificationStatus,
   email,
+  rejectionReason,
 }: VerificationBannerProps) {
   // Current students who haven't verified email
   if (studentStatus === "CURRENT" && !emailVerified) {
     return (
-      <Alert className="mb-6 border-amber-300 bg-amber-50">
-        <Mail className="h-4 w-4 text-amber-600" />
+      <Alert className="mb-6 border-blue-300 bg-blue-50">
+        <Mail className="h-4 w-4 text-blue-600" />
         <AlertDescription className="flex items-center justify-between">
           <div>
-            <strong className="text-amber-900">Email Verification Required</strong>
-            <p className="text-amber-800 mt-1">
-              Please verify your KU email to apply for jobs and access all features.
+            <strong className="text-blue-900">📧 Email Verification Needed</strong>
+            <p className="text-blue-800 mt-1">
+              Verify your KU email to unlock job applications. You can browse jobs while waiting!
             </p>
           </div>
           <Link href={`/student/verify-email?email=${encodeURIComponent(email || "")}`}>
-            <Button variant="outline" size="sm" className="ml-4">
-              Verify Now
+            <Button className="ml-4 bg-blue-600 hover:bg-blue-700">
+              Verify Email
             </Button>
           </Link>
         </AlertDescription>
@@ -62,10 +64,23 @@ export function VerificationBanner({
       <Alert variant="destructive" className="mb-6">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          <strong>❌ Verification Rejected</strong>
-          <p className="mt-1">
-            Your alumni verification was rejected. Please contact support for assistance.
-          </p>
+          <div>
+            <strong>❌ Verification Rejected</strong>
+            {rejectionReason && (
+              <div className="mt-2 p-3 bg-red-100 border-l-4 border-red-600 rounded">
+                <p className="text-sm font-medium text-red-900">Reason:</p>
+                <p className="text-sm text-red-800 mt-1">{rejectionReason}</p>
+              </div>
+            )}
+            <p className="mt-3 mb-3">
+              Please upload a new transcript addressing the issues mentioned above to re-apply for verification.
+            </p>
+            <Link href="/student/profile">
+              <Button variant="outline" size="sm" className="border-red-600 text-red-600 hover:bg-red-50">
+                Upload New Transcript
+              </Button>
+            </Link>
+          </div>
         </AlertDescription>
       </Alert>
     );

@@ -27,6 +27,7 @@ const statIconMap: Record<string, { icon: IconType; iconBg: string; iconColor: s
 const StudentDashboardPage = () => {
   const { data: session, status, update } = useSession()
   const [studentStat, setStudentStat] = useState<{ title: string; value: number; icon: IconType; iconBg: string; iconColor: string }[]>([]);
+  const [verificationNotes, setVerificationNotes] = useState<string | null>(null);
 
   useEffect(() => {
     const stats = Object.entries(statIconMap).map(([title, data]) => ({
@@ -49,6 +50,9 @@ const StudentDashboardPage = () => {
         const response = await fetch('/api/students/verification-status');
         if (response.ok) {
           const data = await response.json();
+
+          // Store verification notes for display in banner
+          setVerificationNotes(data.verificationNotes);
 
           // If verification status changed, update the session
           if (data.verificationStatus !== session.user.verificationStatus) {
@@ -103,6 +107,7 @@ const StudentDashboardPage = () => {
           studentStatus={session.user.studentStatus}
           verificationStatus={session.user.verificationStatus}
           email={session.user.email || ""}
+          rejectionReason={verificationNotes}
         />
       )}
 
