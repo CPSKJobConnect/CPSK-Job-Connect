@@ -129,7 +129,7 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
             return (
               <div
                 key={student.applicant_id}
-                className="group flex flex-col shadow-sm rounded-lg p-3 border border-gray-100 hover:shadow-lg hover:bg-gray-50 hover:-translate-y-1 transform transition-shadow transition-transform duration-200 ease-in-out"
+                className="group flex flex-col shadow-sm rounded-lg p-3 border border-gray-100 transition transition-transform duration-300 hover:-translate-y-1 hover:shadow-md bg-white hover:bg-[#F3FEFA]"
               >
                 <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 md:gap-0">
                   <div className="flex flex-row gap-4 items-center min-w-0">

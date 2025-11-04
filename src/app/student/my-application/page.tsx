@@ -85,7 +85,6 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
     setFilteredApplications(applications);
   }, [applications]);
 
-  // Read recently applied marker from localStorage and expire it after 24 hours
   useEffect(() => {
     let timeoutId: number | undefined;
     try {
@@ -95,8 +94,8 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
       if (!parsed || !parsed.jobId || !parsed.appliedAt) return;
 
       const age = Date.now() - parsed.appliedAt;
-      const ONE_DAY = 24 * 60 * 60 * 1000;
-      if (age >= ONE_DAY) {
+      const ONE_HOUR = 60 * 60 * 1000;
+      if (age >= ONE_HOUR) {
         localStorage.removeItem("recentlyApplied");
         setRecentApplied(null);
         return;
@@ -104,11 +103,10 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
 
       setRecentApplied({ jobId: parsed.jobId, appliedAt: parsed.appliedAt });
 
-      // schedule removal when it expires
       timeoutId = window.setTimeout(() => {
         localStorage.removeItem("recentlyApplied");
         setRecentApplied(null);
-      }, ONE_DAY - age);
+      }, ONE_HOUR - age);
     } catch (err) {
       console.warn("Failed to read recentlyApplied marker", err);
     }
@@ -149,8 +147,9 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
         </div>
           {filteredApplications.map((application) => {
             const isRecent = Boolean(
-              recentApplied && application.job?.id === recentApplied.jobId && Date.now() - recentApplied.appliedAt < 24 * 60 * 60 * 1000
+              recentApplied && application.job?.id === recentApplied.jobId && Date.now() - recentApplied.appliedAt < 60 * 60 * 1000
             );
+            const recentMinutes = isRecent && recentApplied ? Math.floor((Date.now() - recentApplied.appliedAt) / 60000) : null;
 
             return (
             <div
@@ -181,6 +180,11 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
                           {application.job.jobName}
                         </h3>
                         <p className="text-gray-600">{application.job.company.name}</p>
+                        {isRecent && recentMinutes !== null && (
+                          <p className="text-xs text-green-700 mt-1">
+                            You applied {recentMinutes <= 1 ? "just now" : `${recentMinutes} minutes ago`}
+                          </p>
+                        )}
                       </div>
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium border ${
@@ -218,14 +222,14 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
 
                     <div className="mt-3 pt-3 border-t border-gray-100">
                       <p className="text-xs text-gray-500 mb-2">Submitted documents:</p>
-                      <div className="flex gap-2 text-xs">
+                      <div className="flex flex-col md:flex-row gap-2 text-xs">
                         {application.documents.resume && (
-                          <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                          <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal">
                             Resume: {application.documents.resume.file_name}
                           </span>
                         )}
                         {application.documents.portfolio && (
-                          <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded">
+                          <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal">
                             Portfolio: {application.documents.portfolio.file_name}
                           </span>
                         )}
