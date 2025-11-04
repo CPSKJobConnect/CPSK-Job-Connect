@@ -13,6 +13,11 @@ export async function PATCH(
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    // Check if user is admin
+    const adminAccount = await prisma.account.findUnique({
+      where: { email: session.user.email },
+      include: { accountRole: true }
+    });
 
     // Check if user is admin (using session role)
     const userRole = (session.user as any).role?.toLowerCase();
@@ -103,8 +108,14 @@ export async function DELETE(
 
     // Check if user is admin (using session role)
     const userRole = (session.user as any).role?.toLowerCase();
-    console.log("🔍 User role:", userRole);
+    // console.log("🔍 User role:", userRole);
 
+    // Check if user is admin
+        const adminAccount = await prisma.account.findUnique({
+          where: { email: session.user.email },
+          include: { accountRole: true }
+        });
+    
     if (!adminAccount || adminAccount.accountRole?.name?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
