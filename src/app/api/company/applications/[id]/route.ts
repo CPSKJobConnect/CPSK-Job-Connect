@@ -2,17 +2,6 @@ import { getApiSession } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * PATCH /api/company/applications/[id]
- *
- * Updates the status of a specific application
- *
- * Request Body:
- * - status: string (pending, reviewed, interviewed, accepted, rejected)
- *
- * Example: PATCH /api/company/applications/123
- * Body: { "status": "reviewed" }
- */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -48,7 +37,6 @@ export async function PATCH(
       );
     }
 
-    // Parse request body
     const body = await request.json();
     const { status } = body;
 
@@ -59,23 +47,16 @@ export async function PATCH(
       );
     }
 
-    // Validate that the application belongs to this company
     const application = await prisma.application.findUnique({
       where: { id: applicationId },
       include: {
-        jobPost: {
-          select: {
-            company_id: true
-          }
-        }
-      }
+        jobPost: { select: { jobName: true, company_id: true } },
+        student: { include: { account: true } },
+      },
     });
 
     if (!application) {
-      return NextResponse.json(
-        { error: "Application not found." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Application not found." }, { status: 404 });
     }
 
     if (application.jobPost.company_id !== company.id) {
@@ -85,36 +66,35 @@ export async function PATCH(
       );
     }
 
-    // Get the status ID from the status name
     const applicationStatus = await prisma.applicationStatus.findFirst({
-      where: {
-        name: {
-          equals: status,
-          mode: "insensitive"
-        }
-      }
+      where: { name: { equals: status, mode: "insensitive" } },
     });
 
     if (!applicationStatus) {
       return NextResponse.json(
-        { error: `Invalid status: ${status}. Valid statuses are: pending, reviewed, interview, offered, rejected` },
+        { error: `Invalid status: ${status}` },
         { status: 400 }
       );
     }
 
-    // Update the application status
     const updatedApplication = await prisma.application.update({
       where: { id: applicationId },
-      data: {
-        status: applicationStatus.id
-      },
+      data: { status: applicationStatus.id },
       include: {
-        applicationStatus: {
-          select: {
-            name: true
-          }
-        }
-      }
+        applicationStatus: { select: { name: true } },
+        jobPost: { select: { jobName: true } },
+        student: { include: { account: true } },
+      },
+    });
+
+    // ✅ หลังจากอัปเดตสำเร็จ → สร้าง Notification ไปหา student
+    const message = `Your application for "${updatedApplication.jobPost.jobName}" has been updated to "${updatedApplication.applicationStatus.name}".`;
+
+    await prisma.notification.create({
+      data: {
+        account_id: updatedApplication.student.account.id,
+        message,
+      },
     });
 
     return NextResponse.json({
@@ -122,15 +102,12 @@ export async function PATCH(
       data: {
         id: updatedApplication.id,
         status: updatedApplication.applicationStatus.name.toLowerCase(),
-        updated_at: updatedApplication.updated_at.toISOString()
-      }
+        updated_at: updatedApplication.updated_at.toISOString(),
+      },
     });
 
   } catch (error) {
     console.error("Error updating application status:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
