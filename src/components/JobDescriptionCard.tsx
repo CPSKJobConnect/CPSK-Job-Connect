@@ -13,6 +13,7 @@ import { useState, useRef, useEffect } from "react";
 import EditJobCard from "./EditJobCard";
 import { validateForm } from "@/lib/validateJobForm";
 import { toast } from "sonner";
+import { de } from "zod/v4/locales";
 
 interface JobDescriptionProps {
   job: JobInfo;
@@ -96,6 +97,7 @@ const JobDescriptionCard = ({
         qualifications: formData.description.qualification.split("\n"),
         tags: formData.skills,
         category: formData.category,
+        deadline: formData.deadline,
       };
 
       const res = await fetch(`/api/jobs/${job.id}`, {

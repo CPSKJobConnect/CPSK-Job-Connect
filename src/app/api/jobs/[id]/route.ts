@@ -154,6 +154,7 @@ export async function PATCH(
         qualifications: body.qualifications ?? existingJob.qualifications,
         tags: tagIds.length ? { set: tagIds.map(tag => ({ id: tag.id })) } : undefined,
         job_category_id: categoryId,
+        deadline: body.deadline ? new Date(body.deadline) : existingJob.deadline,
       },
     });
 

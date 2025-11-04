@@ -34,15 +34,8 @@ interface CompanyProps {
   bg_profile_url: string;
 }
 
-export default function EditJobCard({ job,
-                                        formData,
-                                        setFormData,
-                                        handleEdit,
-                                        categories,
-                                        jobTypes,
-                                        arrangements,
-                                        tags
-}: EditJobCardProps) {
+export default function EditJobCard({ job,formData, setFormData, handleEdit, 
+  categories, jobTypes, arrangements,tags}: EditJobCardProps) {
   const [open, setOpen] = useState(false);
   const [categoryList, setCategoryList] = useState<string[]>([]);
   const [jobTypeList, setJobTypeList] = useState<string[]>([]);
@@ -127,10 +120,35 @@ export default function EditJobCard({ job,
       status: "",
     }), [formData]);
 
+    const initialDeadline = useMemo(() => {
+      if (!job?.deadline) return "";
+      try {
+        const d = new Date(job.deadline);
+        if (Number.isNaN(d.getTime())) return "";
+        return d.toISOString().slice(0, 10);
+      } catch (e) {
+        return "";
+      }
+    }, [job?.deadline]);
+
+    const displayedDeadline = useMemo(() => {
+      const fd = formData?.deadline;
+      if (!fd) return initialDeadline;
+      try {
+        const d = new Date(fd);
+        if (Number.isNaN(d.getTime())) return initialDeadline;
+        return d.toISOString().slice(0, 10);
+      } catch (e) {
+        return initialDeadline;
+      }
+    }, [formData?.deadline, initialDeadline]);
+
   return (
     <Dialog>
         <DialogTrigger asChild>
-            <Button className="lg:w-20 h-8 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition" onClick={() => setOpen(true)}>
+            <Button className="lg:w-20 h-8 bg-[#2BA17C] shadow-lg hover:bg-[#27946F] transition" 
+            onClick={() => setOpen(true)}
+            data-testid="edit-job-button">
                 <div className="flex gap-2 items-center">
                     <FiEdit />
                     <p>Edit</p>
@@ -156,6 +174,7 @@ export default function EditJobCard({ job,
               <div className="flex flex-col">
                 <label className="text-sm text-gray-700 mb-1">Location</label>
                 <LocationCombobox
+                    data-testid="edit-job-location-combobox"
                     value={formData.location}
                     onChange={(loc) => setFormData({ ...formData, location: loc })}
                     className="w-[300px]"
@@ -168,7 +187,7 @@ export default function EditJobCard({ job,
                   value={formData.arrangement} 
                   onValueChange={(value) => setFormData({ ...formData, arrangement: value })}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger data-testid="edit-job-arrangement" className="w-full">
                     <SelectValue placeholder="Select arrangement" />
                   </SelectTrigger>
                   <SelectContent>
@@ -187,7 +206,7 @@ export default function EditJobCard({ job,
                   value={formData.type} 
                   onValueChange={(value) => setFormData({ ...formData, type: value })}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger data-testid="edit-job-type" className="w-full">
                     <SelectValue placeholder="Select job type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -201,8 +220,27 @@ export default function EditJobCard({ job,
               </div>
 
               <div className="flex flex-col">
+                <label className="text-sm text-gray-700 mb-1">Deadline</label>
+                <Input
+                  data-testid="edit-job-deadline"
+                  className="w-full"
+                  type="date"
+                  value={displayedDeadline}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({
+                      ...formData,
+                      deadline: value,
+                    });
+                  }}
+                  placeholder={initialDeadline}
+                />
+              </div>
+
+              <div className="flex flex-col">
                 <label className="text-sm text-gray-700 mb-1">Salary (min)</label>
                 <Input
+                  data-testid="edit-job-salary-min"
                   className="w-full"
                   value={formData.salary.min?.toString() ?? ""}
                   onChange={(e) => {
@@ -224,6 +262,7 @@ export default function EditJobCard({ job,
               <div className="flex flex-col">
                   <label className="text-sm text-gray-700 mb-1">Salary (max)</label>
                   <Input
+                      data-testid="edit-job-salary-max"
                       className="w-full"
                       value={formData.salary.max?.toString() ?? ""}
                       onChange={(e) => {
@@ -245,6 +284,7 @@ export default function EditJobCard({ job,
               <div className="flex flex-col md:col-span-2">
                   <label className="text-sm text-gray-700 mb-1">Skills</label>
                   <SkillCombobox
+                      data-testid="edit-job-skills-combobox"
                       selectedSkill={formData.skills}
                       setSelectedSkill={(skills) => setFormData({ ...formData, skills })}
                       existingSkills={skillOptions}
@@ -257,7 +297,7 @@ export default function EditJobCard({ job,
                       value={formData.category} 
                       onValueChange={(value) => setFormData({ ...formData, category: value })}
                   >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger data-testid="edit-job-category" className="w-full">
                       <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -273,6 +313,7 @@ export default function EditJobCard({ job,
               <div className="flex flex-col md:col-span-2">
                 <label className="text-sm text-gray-700 mb-1">Overview</label>
                   <Input
+                  data-testid="edit-job-overview"
                   value={formData.description.overview}
                   onChange={(e) => setFormData({ ...formData, 
                       description: {
@@ -287,6 +328,7 @@ export default function EditJobCard({ job,
               <div className="flex flex-col md:col-span-2">
                 <label className="text-sm text-gray-700 mb-1">Responsibility</label>
                   <Input
+                  data-testid="edit-job-responsibility"
                   value={formData.description.responsibility}
                   onChange={(e) => setFormData({ ...formData, 
                       description: {
@@ -301,6 +343,7 @@ export default function EditJobCard({ job,
               <div className="flex flex-col md:col-span-2">
                 <label className="text-sm text-gray-700 mb-1">Requirement</label>
                   <Input
+                  data-testid="edit-job-requirement"
                   value={formData.description.requirement}
                   onChange={(e) => setFormData({ ...formData, 
                       description: {
@@ -315,6 +358,7 @@ export default function EditJobCard({ job,
               <div className="flex flex-col md:col-span-2">
                 <label className="text-sm text-gray-700 mb-1">Qualification</label>
                   <Input
+                  data-testid="edit-job-qualification"
                   value={formData.description.qualification}
                   onChange={(e) => setFormData({ ...formData, 
                       description: {
@@ -338,16 +382,16 @@ export default function EditJobCard({ job,
               <Button onClick={() => setPreview(false)} variant="ghost" className="h-10">
                 Back to Edit
               </Button>
-              <Button onClick={onSave} className="h-10 bg-[#2BA17C] hover:bg-[#27946F]">
+              <Button data-testid="save-edit-job-btn-1" onClick={onSave} className="h-10 bg-[#2BA17C] hover:bg-[#27946F]">
                 Save
               </Button>
             </>
           ) : (
             <>
-              <Button onClick={() => setPreview(true)} className="h-10 bg-gray-200 text-gray-700 hover:bg-gray-300">
+              <Button data-testid="preview-edit-job-btn" onClick={() => setPreview(true)} className="h-10 bg-gray-200 text-gray-700 hover:bg-gray-300">
                 Preview
               </Button>
-              <Button onClick={onSave} className="h-10 bg-[#2BA17C] hover:bg-[#27946F]">
+              <Button data-testid="save-edit-job-btn-2" onClick={onSave} className="h-10 bg-[#2BA17C] hover:bg-[#27946F]">
                 Save
               </Button>
             </>
