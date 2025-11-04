@@ -89,10 +89,11 @@ export default function ApproveAccountsPage() {
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | "student" | "company">("all");
+  const [statusFilter, setStatusFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
 
   useEffect(() => {
     fetchPendingAccounts();
-  }, []);
+  }, [statusFilter]);
 
   useEffect(() => {
     applyFilters();
@@ -100,10 +101,12 @@ export default function ApproveAccountsPage() {
 
   const fetchPendingAccounts = async () => {
     try {
+      setLoading(true);
       const params = new URLSearchParams();
       if (typeFilter !== "all") {
         params.append("type", typeFilter);
       }
+      params.append("status", statusFilter);
 
       const response = await fetch(`/api/admin/accounts/pending?${params.toString()}`);
       if (response.ok) {
@@ -258,6 +261,19 @@ export default function ApproveAccountsPage() {
                   <SelectItem value="all">All Accounts</SelectItem>
                   <SelectItem value="student">Students Only</SelectItem>
                   <SelectItem value="company">Companies Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-full md:w-48">
+              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as "pending" | "approved" | "rejected" | "all")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">⏳ Pending</SelectItem>
+                  <SelectItem value="approved">✅ Approved</SelectItem>
+                  <SelectItem value="rejected">❌ Rejected</SelectItem>
+                  <SelectItem value="all">All Status</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -58,7 +58,9 @@ export async function POST(request: Request) {
           verification_status: action === "approve" ? "APPROVED" : "REJECTED",
           verified_at: action === "approve" ? new Date() : null,
           verified_by: action === "approve" ? adminAccount.id : null,
-          verification_notes: reason || null
+          verification_notes: reason || null,
+          // Reset email verification if rejecting (they need to re-upload and re-verify)
+          email_verified: action === "reject" ? false : undefined
         }
       });
 

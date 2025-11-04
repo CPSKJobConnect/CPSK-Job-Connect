@@ -26,7 +26,8 @@ export async function GET() {
       select: {
         verification_status: true,
         email_verified: true,
-        student_status: true
+        student_status: true,
+        verification_notes: true
       }
     });
 
@@ -40,7 +41,8 @@ export async function GET() {
     return NextResponse.json({
       verificationStatus: student.verification_status,
       emailVerified: student.email_verified,
-      studentStatus: student.student_status
+      studentStatus: student.student_status,
+      verificationNotes: student.verification_notes
     });
 
   } catch (error) {
