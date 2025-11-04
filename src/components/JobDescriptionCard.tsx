@@ -96,6 +96,7 @@ const JobDescriptionCard = ({
         qualifications: formData.description.qualification.split("\n"),
         tags: formData.skills,
         category: formData.category,
+        deadline: formData.deadline,
       };
 
       const res = await fetch(`/api/jobs/${job.id}`, {

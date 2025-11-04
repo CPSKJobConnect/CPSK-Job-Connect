@@ -94,7 +94,7 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
       </div>
     ) : (
       <div className="flex flex-col gap-4">
-        {applicants.map((student) => {
+  {applicants.map((student) => {
           const currentStatus = statusMap[Number(student.applicant_id)] || {
             id: Number(student.status),
             type: statusList.find(s => s.id === Number(student.status))?.name.toLowerCase() as StatusType || 'pending'
@@ -103,6 +103,7 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
           return (
             <div
               key={student.applicant_id}
+              data-testid={`applicant-card-${student.applicant_id}`}
               className="flex flex-col shadow-md rounded-md p-2 border border-gray-200"
             >
               <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 md:gap-0">
@@ -136,6 +137,7 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
                       }
                     >
                       <SelectTrigger
+                        data-testid={`status-select-${student.applicant_id}`}
                         className={`rounded-full w-full text-sm transition-all duration-200 border-none p-3 ${statusColors[currentStatus.type as StatusType]}`}
                       >
                         <SelectValue placeholder="Select status">
@@ -149,6 +151,7 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
                             <SelectItem
                                 key={status.id}
                                 value={status.id.toString()}
+                                data-testid={`status-item-${status.id}`}
                               >
                                 {status.name.charAt(0).toUpperCase() + status.name.slice(1)}
                               </SelectItem>
