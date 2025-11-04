@@ -24,11 +24,12 @@ model Account {
   accountRole       AccountRole?   @relation(fields: [role], references: [id])
   company           Company?
   documents         Document[]
-  notifications     Notification[]
   reports           Report[]
   student           Student?
   verifiedStudents  Student[]      @relation("VerifiedStudents")
   sessions          Session[]
+  sentNotifications        Notification[]   @relation("NotificationSender")
+  receivedNotifications    Notification[]   @relation("NotificationReceiver")
 
   @@unique([provider, providerAccountId])
   @@index([email])
@@ -115,13 +116,19 @@ model DocumentType {
 }
 
 model Notification {
-  id         Int      @id @default(autoincrement())
-  account_id Int
-  message    String
-    is_read     Boolean   @default(false)
-  created_at DateTime @default(now())
-  account    Account  @relation(fields: [account_id], references: [id], onDelete: Cascade)
+  id          Int       @id @default(autoincrement())
+  sender_id   Int?
+  account_id  Int
+  message     String
+  is_read     Boolean   @default(false)
+  created_at  DateTime  @default(now())
+
+  sender      Account?   @relation("NotificationSender", fields: [sender_id], references: [id])
+  account     Account   @relation("NotificationReceiver", fields: [account_id], references: [id], onDelete: Cascade)
+
+   @@index([account_id, sender_id, is_read])
 }
+
 
 model Report {
   id         Int      @id @default(autoincrement())
