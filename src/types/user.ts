@@ -17,7 +17,7 @@ export interface BaseUser {
     firstname: string;
     lastname: string;
     faculty: string;
-    year: number;
+    year: number | "Alumni"; // Can be 1-8 or "Alumni"
     phone: string;
     documents: {
       resume: FileMeta[];

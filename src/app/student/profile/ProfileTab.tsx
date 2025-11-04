@@ -34,7 +34,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/students/[id]", {
+      const res = await fetch("/api/students/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -46,7 +46,9 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
       });
 
       if (!res.ok) {
-        toast.error("Failed to update profile");
+        const errorData = await res.json();
+        console.error("❌ Update failed:", errorData);
+        toast.error(errorData.error || "Failed to update profile");
         return;
       }
 
