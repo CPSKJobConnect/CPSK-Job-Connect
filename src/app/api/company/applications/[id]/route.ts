@@ -87,13 +87,13 @@ export async function PATCH(
       },
     });
 
-    // ✅ หลังจากอัปเดตสำเร็จ → สร้าง Notification ไปหา student
     const message = `Your application for "${updatedApplication.jobPost.jobName}" has been updated to "${updatedApplication.applicationStatus.name}".`;
 
     await prisma.notification.create({
       data: {
         account_id: updatedApplication.student.account.id,
         message,
+        sender_id: Number(session.user.id),
       },
     });
 

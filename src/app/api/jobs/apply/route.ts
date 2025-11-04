@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       data: {
         account_id: application.jobPost.company.account_id,
         message: `${student.name} has applied for your job post "${application.jobPost.jobName}".`,
-        is_read: false,
+        sender_id: Number(session.user.id),
       },
     });
 
