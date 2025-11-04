@@ -20,6 +20,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const accountType = searchParams.get("type") || "all"; // "all", "student", "company"
+    const statusFilter = searchParams.get("status") || "pending"; // "pending", "approved", "rejected", "all"
 
     // Build where clauses for search
     const searchConditions = search ? {
@@ -41,12 +42,17 @@ export async function GET(request: Request) {
       details: any;
     }[] = [];
 
-    // Fetch pending students (alumni with PENDING verification status)
+    // Build verification status filter for students
+    const studentStatusFilter = statusFilter === "all"
+      ? {}
+      : { verification_status: statusFilter.toUpperCase() as "PENDING" | "APPROVED" | "REJECTED" };
+
+    // Fetch students (alumni with filtered verification status)
     if (accountType === "all" || accountType === "student") {
       const pendingStudents = await prisma.student.findMany({
         where: {
           student_status: "ALUMNI",
-          verification_status: "PENDING",
+          ...studentStatusFilter,
           account: searchConditions
         },
         include: {
@@ -93,11 +99,16 @@ export async function GET(request: Request) {
       });
     }
 
-    // Fetch pending companies
+    // Build registration status filter for companies
+    const companyStatusFilter = statusFilter === "all"
+      ? {}
+      : { registration_status: statusFilter === "pending" ? "pending" : statusFilter };
+
+    // Fetch companies with filtered registration status
     if (accountType === "all" || accountType === "company") {
       const pendingCompanies = await prisma.company.findMany({
         where: {
-          registration_status: "pending",
+          ...companyStatusFilter,
           account: searchConditions
         },
         include: {
