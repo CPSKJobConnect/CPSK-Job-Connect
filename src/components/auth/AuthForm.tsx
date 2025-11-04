@@ -171,22 +171,17 @@ export function AuthForm({ role, mode }: AuthFormProps) {
         if (!response.ok) {
           setError(result.error || "Registration failed")
         } else {
-          // For current students, redirect to email verification
-          if (role === "student" && studentStatus === "CURRENT") {
-            router.push(`/student/verify-email?email=${encodeURIComponent(data.email)}&name=${encodeURIComponent(data.name || "")}`)
-          } else {
-            // Auto-login after registration for alumni and companies
-            const loginResult = await signIn("credentials", {
-              email: data.email,
-              password: data.password,
-              redirect: false,
-            })
+          // Auto-login after registration for all users
+          const loginResult = await signIn("credentials", {
+            email: data.email,
+            password: data.password,
+            redirect: false,
+          })
 
-            if (loginResult?.error) {
-              setError("Registration successful but login failed. Please try logging in.")
-            } else {
-              router.push(result.redirectTo)
-            }
+          if (loginResult?.error) {
+            setError("Registration successful but login failed. Please try logging in.")
+          } else {
+            router.push(result.redirectTo)
           }
         }
       }
@@ -392,14 +387,19 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                         <SelectValue placeholder="Select year" />
                       </SelectTrigger>
                       <SelectContent>
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((year) => (
-                          <SelectItem key={year} value={year.toString()}>
-                            Year {year}
+                        {studentStatus === "CURRENT" ? (
+                          // Current students: Only show year 1-8
+                          [1, 2, 3, 4, 5, 6, 7, 8].map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              Year {year}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          // Alumni: Only show "Alumni" option
+                          <SelectItem value="Alumni">
+                            Alumni
                           </SelectItem>
-                        ))}
-                        <SelectItem value="Alumni">
-                          Alumni
-                        </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                     {errors.year && (
