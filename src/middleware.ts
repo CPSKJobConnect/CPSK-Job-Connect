@@ -48,28 +48,35 @@ export default withAuth(
         return NextResponse.redirect(new URL("/register/complete", req.url))
       }
 
-      // Check if student needs email verification
-      if (role === "student" && !pathname.startsWith("/student/verify-email")) {
+      // Check if student needs email verification for job application
+      if (role === "student" && pathname.startsWith("/student/job-apply/")) {
         const emailVerified = token.emailVerified;
         const studentStatus = token.studentStatus;
         const verificationStatus = token.verificationStatus;
 
-        // Current students must verify their email
+        // Current students must verify email before applying for jobs
         if (studentStatus === "CURRENT" && !emailVerified) {
           const verifyUrl = new URL("/student/verify-email", req.url);
           verifyUrl.searchParams.set("email", token.email || "");
           return NextResponse.redirect(verifyUrl);
         }
 
-        // Alumni who are approved must verify their email before applying
+        // Alumni who are approved must verify email before applying for jobs
         if (studentStatus === "ALUMNI" && verificationStatus === "APPROVED" && !emailVerified) {
           const verifyUrl = new URL("/student/verify-email", req.url);
           verifyUrl.searchParams.set("email", token.email || "");
           return NextResponse.redirect(verifyUrl);
         }
 
-        // Alumni with PENDING status can access dashboard but cannot apply (handled at API level)
-        // Alumni with REJECTED status can access dashboard to see rejection message
+        // Alumni with PENDING status cannot apply (redirect to dashboard)
+        if (studentStatus === "ALUMNI" && verificationStatus === "PENDING") {
+          return NextResponse.redirect(new URL("/student/dashboard", req.url));
+        }
+
+        // Alumni with REJECTED status cannot apply (redirect to dashboard)
+        if (studentStatus === "ALUMNI" && verificationStatus === "REJECTED") {
+          return NextResponse.redirect(new URL("/student/dashboard", req.url));
+        }
       }
 
       // Student trying to access company or admin routes
