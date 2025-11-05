@@ -115,6 +115,7 @@ export default function Page() {
       if (res.ok) {
         const data = await res.json();
         toast.success("Job drafted successfully!", "Your job has been saved as a draft.");
+        router.push("/company/job-applicant");
       } else {
         const err = await res.json();
         toast.error("Failed to draft job", err.error || "Unknown error");
