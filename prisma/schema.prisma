@@ -9,27 +9,27 @@ datasource db {
 }
 
 model Account {
-  id                Int            @id @default(autoincrement())
-  username          String?        @unique
-  email             String         @unique
-  password          String?
-  role              Int?
-  created_at        DateTime       @default(now())
-  updated_at        DateTime       @updatedAt
-  emailVerified     DateTime?
-  provider          String?
-  providerAccountId String?
-  backgroundUrl     String?
-  logoUrl           String?
-  accountRole       AccountRole?   @relation(fields: [role], references: [id])
-  company           Company?
-  documents         Document[]
-  reports           Report[]
-  student           Student?
-  verifiedStudents  Student[]      @relation("VerifiedStudents")
-  sessions          Session[]
-  sentNotifications        Notification[]   @relation("NotificationSender")
-  receivedNotifications    Notification[]   @relation("NotificationReceiver")
+  id                    Int            @id @default(autoincrement())
+  username              String?        @unique
+  email                 String         @unique
+  password              String?
+  role                  Int?
+  created_at            DateTime       @default(now())
+  updated_at            DateTime       @updatedAt
+  emailVerified         DateTime?
+  provider              String?
+  providerAccountId     String?
+  backgroundUrl         String?
+  logoUrl               String?
+  accountRole           AccountRole?   @relation(fields: [role], references: [id])
+  company               Company?
+  documents             Document[]
+  receivedNotifications Notification[] @relation("NotificationReceiver")
+  sentNotifications     Notification[] @relation("NotificationSender")
+  reports               Report[]
+  student               Student?
+  verifiedStudents      Student[]      @relation("VerifiedStudents")
+  sessions              Session[]
 
   @@unique([provider, providerAccountId])
   @@index([email])
@@ -40,17 +40,6 @@ model AccountRole {
   id       Int       @id @default(autoincrement())
   name     String
   accounts Account[]
-}
-
-enum StudentStatus {
-  CURRENT
-  ALUMNI
-}
-
-enum VerificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
 }
 
 model Student {
@@ -116,19 +105,15 @@ model DocumentType {
 }
 
 model Notification {
-  id          Int       @id @default(autoincrement())
-  sender_id   Int?
-  account_id  Int
-  message     String
-  is_read     Boolean   @default(false)
-  created_at  DateTime  @default(now())
-
-  sender      Account?   @relation("NotificationSender", fields: [sender_id], references: [id])
-  account     Account   @relation("NotificationReceiver", fields: [account_id], references: [id], onDelete: Cascade)
-
-   @@index([account_id, sender_id, is_read])
+  id         Int      @id @default(autoincrement())
+  account_id Int
+  message    String
+  created_at DateTime @default(now())
+  is_read    Boolean  @default(false)
+  sender_id  Int?
+  account    Account  @relation("NotificationReceiver", fields: [account_id], references: [id], onDelete: Cascade)
+  sender     Account? @relation("NotificationSender", fields: [sender_id], references: [id])
 }
-
 
 model Report {
   id         Int      @id @default(autoincrement())
@@ -259,4 +244,15 @@ model EmailVerificationToken {
   @@index([email])
   @@index([token])
   @@map("email_verification_tokens")
+}
+
+enum StudentStatus {
+  CURRENT
+  ALUMNI
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
