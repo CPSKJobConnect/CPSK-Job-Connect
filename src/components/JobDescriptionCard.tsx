@@ -130,6 +130,13 @@ const JobDescriptionCard = ({
       const res = await fetch(`/api/jobs/${job.id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Job deleted successfully!");
+        if (onUpdate) {
+          try { onUpdate(); } catch (e) { 
+            /* ignore */ 
+          }
+        } else {
+          router.refresh();
+        }
       } else {
         const data = await res.json();
         toast.error(data.error || "Failed to delete job.");

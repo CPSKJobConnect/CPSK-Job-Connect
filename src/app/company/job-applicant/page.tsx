@@ -97,13 +97,18 @@ export default function Page() {
     fetchApplicants();
   }, [selectedCardId]);
 
-  // Handle small screen dialog
   useEffect(() => {
     if (!isSmallScreen && dialogOpen) setDialogOpen(false);
     if (isSmallScreen && selectedCardId !== null) setDialogOpen(true);
   }, [isSmallScreen, selectedCardId]);
 
   const selectedJob = selectedCardId !== null ? jobPost.find(job => Number(job.id) === selectedCardId) : null;
+
+  useEffect(() => {
+    if (selectedCardId !== null && !selectedJob) {
+      setSelectedCardId(null);
+    }
+  }, [selectedCardId, selectedJob]);
 
   const handlePostJob = () => {
     router.push(`/company/job-posting`);
@@ -153,7 +158,8 @@ export default function Page() {
                       size="md"
                       onApply={false}
                       onEdit={true}
-                      job={selectedJob}
+            job={selectedJob}
+            onUpdate={fetchJobs}
                       categories={allDepartment}
                       types={jobTypeList}
                       arrangements={arrangementList}
@@ -191,9 +197,9 @@ export default function Page() {
               <DialogTitle>{selectedJob?.title || ""}</DialogTitle>
             </DialogHeader>
             <div className="max-h-[70vh] overflow-y-auto">
-              {selectedJob && (
+                  {selectedJob && (
                 <div className="space-y-4">
-                  <JobDescriptionCard size="md" onApply={false} onEdit={true} job={selectedJob} />
+                  <JobDescriptionCard size="md" onApply={false} onEdit={true} job={selectedJob} onUpdate={fetchJobs} />
                   <ApplicationList applicants={applicants} />
                 </div>
               )}
