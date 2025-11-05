@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { companyRegisterSchema, studentRegisterSchema } from "@/lib/validations";
+import { notifyAdminsNewAlumni, notifyAdminsNewCompany } from "@/lib/notifyAdmins";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -194,7 +195,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Send registration confirmation email to alumni
+    // Send registration confirmation email to alumni and notify admins
     if (role === "student") {
       const studentData = validatedData.data as StudentData;
       const isAlumni = studentData.studentStatus === "ALUMNI";
@@ -211,6 +212,18 @@ export async function POST(req: NextRequest) {
           console.error(`❌ Failed to send registration email to ${validatedData.data.email}:`, emailError);
           // Continue with registration even if email fails
         }
+
+        // Notify all admins about new alumni registration
+        try {
+          await notifyAdminsNewAlumni(
+            studentData.name,
+            studentData.studentId,
+            account.id
+          );
+        } catch (notificationError) {
+          console.error("❌ Failed to notify admins about new alumni:", notificationError);
+          // Continue with registration even if notification fails
+        }
       }
     }
 
@@ -222,6 +235,20 @@ export async function POST(req: NextRequest) {
       } catch (error) {
         console.error("Error uploading evidence file:", error);
         // Continue with registration even if file upload fails
+      }
+    }
+
+    // Notify admins about new company registration
+    if (role === "company") {
+      try {
+        const companyData = validatedData.data as CompanyData;
+        await notifyAdminsNewCompany(
+          companyData.companyName,
+          account.id
+        );
+      } catch (notificationError) {
+        console.error("❌ Failed to notify admins about new company:", notificationError);
+        // Continue with registration even if notification fails
       }
     }
 

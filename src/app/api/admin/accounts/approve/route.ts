@@ -68,10 +68,11 @@ export async function POST(request: Request) {
         ? "Your alumni status has been approved! Please verify your KU email to complete registration and start applying for jobs."
         : `Your alumni verification has been rejected. ${reason ? `Reason: ${reason}` : ""}`;
 
-      // Create notification for the student
+      // Create notification for the student with admin as sender
       await prisma.notification.create({
         data: {
           account_id: student.account_id,
+          sender_id: adminAccount.id,
           message: notificationMessage
         }
       });
@@ -121,10 +122,11 @@ export async function POST(request: Request) {
         ? "Your company registration has been approved! You can now post jobs and manage applications."
         : `Your company registration has been rejected. ${reason ? `Reason: ${reason}` : ""}`;
 
-      // Create notification for the company
+      // Create notification for the company with admin as sender
       await prisma.notification.create({
         data: {
           account_id: company.account_id,
+          sender_id: adminAccount.id,
           message: notificationMessage
         }
       });

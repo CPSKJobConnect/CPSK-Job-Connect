@@ -137,10 +137,11 @@ export async function PATCH(
       // Don't fail the request if email fails
     }
 
-    // Create a notification
+    // Create a notification with admin as sender
     await prisma.notification.create({
       data: {
         account_id: student.account_id,
+        sender_id: adminAccount.id,
         message:
           status === 'APPROVED'
             ? 'Your alumni verification has been approved! You can now apply for jobs.'

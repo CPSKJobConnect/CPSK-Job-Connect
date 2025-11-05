@@ -12,7 +12,9 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const accountId = Number(session.user.id);
-  const senderIdNum = Number(senderId);
+
+  // Handle "system" or "null" as null sender_id
+  const senderIdNum = (senderId === "system" || senderId === "null") ? null : Number(senderId);
 
   const messages = await prisma.notification.findMany({
     where: { account_id: accountId, sender_id: senderIdNum },
