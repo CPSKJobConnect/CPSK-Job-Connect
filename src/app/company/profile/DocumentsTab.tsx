@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Student } from "@/types/user";
+import { Company } from "@/types/user";
 import { FileMeta } from "@/types/file";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,20 +10,31 @@ import { IoDocumentTextOutline, IoTrashOutline } from "react-icons/io5";
 import FileUpload from "@/components/FileUpload";
 
 interface DocumentsTabProps {
-  student: Student;
+  company: Company;
   onUpdate: () => void;
 }
 
 interface DocumentSectionProps {
   title: string;
+  description: string;
   documents: FileMeta[];
   docTypeId: number;
   onUpload: (file: File, docTypeId: number) => void;
   onDelete: (docId: number) => void;
   uploading: boolean;
+  showReapplicationWarning?: boolean;
 }
 
-function DocumentSection({ title, documents, docTypeId, onUpload, onDelete, uploading }: DocumentSectionProps) {
+function DocumentSection({
+  title,
+  description,
+  documents,
+  docTypeId,
+  onUpload,
+  onDelete,
+  uploading,
+  showReapplicationWarning
+}: DocumentSectionProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Auto-upload when file is selected
@@ -36,7 +47,19 @@ function DocumentSection({ title, documents, docTypeId, onUpload, onDelete, uplo
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <p className="text-sm text-gray-600 mt-1">{description}</p>
+      </div>
+
+      {showReapplicationWarning && (
+        <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
+          <p className="text-sm font-semibold text-orange-900">Re-application Required</p>
+          <p className="text-sm text-orange-800 mt-1">
+            Upload new company evidence to re-apply for verification. Your status will be reset to PENDING and admins will be notified.
+          </p>
+        </div>
+      )}
 
       {/* Upload Section using FileUpload component */}
       <FileUpload
@@ -87,26 +110,23 @@ function DocumentSection({ title, documents, docTypeId, onUpload, onDelete, uplo
   );
 }
 
-export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
+export default function DocumentsTab({ company, onUpdate }: DocumentsTabProps) {
   const [uploading, setUploading] = useState(false);
 
   const handleUpload = async (file: File, docTypeId: number) => {
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("docTypeId", String(docTypeId));
 
     try {
-      // For rejected alumni uploading transcript (docTypeId 4), use re-application endpoint
-      const isTranscript = docTypeId === 4;
-      const isRejectedAlumni = student.student_status === "ALUMNI" && student.verification_status === "REJECTED";
+      // For rejected companies uploading evidence (docTypeId 7), use re-application endpoint
+      const isEvidence = docTypeId === 7;
+      const isRejected = company.registration_status === "REJECTED";
 
-      if (isTranscript && isRejectedAlumni) {
+      if (isEvidence && isRejected) {
         // Use special re-application endpoint
         const reapplyFormData = new FormData();
-        reapplyFormData.append("transcript", file);
+        reapplyFormData.append("evidence", file);
 
-        const res = await fetch("/api/students/reapply-verification", {
+        const res = await fetch("/api/company/reapply-verification", {
           method: "POST",
           body: reapplyFormData,
         });
@@ -121,13 +141,18 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
         onUpdate();
       } else {
         // Regular document upload
-        const res = await fetch("/api/students/documents", {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("docTypeId", String(docTypeId));
+
+        const res = await fetch("/api/company/documents", {
           method: "POST",
           body: formData,
         });
 
         if (!res.ok) {
-          toast.error("Failed to upload document");
+          const error = await res.json();
+          toast.error(error.error || "Failed to upload document");
           return;
         }
 
@@ -148,12 +173,13 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
     }
 
     try {
-      const res = await fetch(`/api/students/documents/${docId}`, {
+      const res = await fetch(`/api/company/documents/${docId}`, {
         method: "DELETE",
       });
 
       if (!res.ok) {
-        toast.error("Failed to delete document");
+        const error = await res.json();
+        toast.error(error.error || "Failed to delete document");
         return;
       }
 
@@ -168,59 +194,20 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>My Documents</CardTitle>
-        <CardDescription>Upload and manage your resumes, CVs, portfolios, and transcripts</CardDescription>
+        <CardTitle>Company Documents</CardTitle>
+        <CardDescription>Upload and manage your company verification evidence</CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
         <DocumentSection
-          title="Resume"
-          documents={student.documents.resume}
-          docTypeId={1}
+          title="Company Evidence"
+          description="Upload official documents proving your company registration (e.g., business license, incorporation certificate)"
+          documents={company.documents.evidence}
+          docTypeId={7}
           onUpload={handleUpload}
           onDelete={handleDelete}
           uploading={uploading}
+          showReapplicationWarning={company.registration_status === "REJECTED"}
         />
-
-        <div className="border-t pt-8">
-          <DocumentSection
-            title="CV"
-            documents={student.documents.cv}
-            docTypeId={2}
-            onUpload={handleUpload}
-            onDelete={handleDelete}
-            uploading={uploading}
-          />
-        </div>
-
-        <div className="border-t pt-8">
-          <DocumentSection
-            title="Portfolio"
-            documents={student.documents.portfolio}
-            docTypeId={3}
-            onUpload={handleUpload}
-            onDelete={handleDelete}
-            uploading={uploading}
-          />
-        </div>
-
-        <div className="border-t pt-8">
-          {student.student_status === "ALUMNI" && student.verification_status === "REJECTED" && (
-            <div className="mb-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
-              <p className="text-sm font-semibold text-orange-900">Re-application Required</p>
-              <p className="text-sm text-orange-800 mt-1">
-                Upload a new transcript to re-apply for verification. Your status will be reset to PENDING and admins will be notified.
-              </p>
-            </div>
-          )}
-          <DocumentSection
-            title="Transcript"
-            documents={student.documents.transcript || []}
-            docTypeId={4}
-            onUpload={handleUpload}
-            onDelete={handleDelete}
-            uploading={uploading}
-          />
-        </div>
       </CardContent>
     </Card>
   );
