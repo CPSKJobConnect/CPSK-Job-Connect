@@ -91,3 +91,16 @@ export async function notifyAdminsNewCompany(
     accountId
   );
 }
+
+/**
+ * Notify all admins about a company re-application
+ */
+export async function notifyAdminsCompanyReapplication(
+  companyName: string,
+  accountId: number
+): Promise<void> {
+  await notifyAdmins(
+    `📄 Company "${companyName}" has re-uploaded their evidence for review.`,
+    accountId
+  );
+}
