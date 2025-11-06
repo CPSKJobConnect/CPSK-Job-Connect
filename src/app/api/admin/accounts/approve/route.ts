@@ -110,11 +110,14 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Company not found" }, { status: 404 });
       }
 
-      // Update company registration status
+      // Update company registration status with tracking
       await prisma.company.update({
         where: { id: accountId },
         data: {
-          registration_status: action === "approve" ? "approved" : "rejected"
+          registration_status: action === "approve" ? "APPROVED" : "REJECTED",
+          verified_at: new Date(),
+          verified_by: adminAccount.id,
+          verification_notes: action === "reject" ? reason : null
         }
       });
 
