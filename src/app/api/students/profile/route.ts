@@ -48,6 +48,8 @@ export async function GET(request: NextRequest) {
       faculty: student.faculty,
       year: yearValue,
       phone: student.phone,
+      student_status: student.student_status,
+      verification_status: student.verification_status,
       documents: {
         resume: student.account.documents
           .filter((d: { doc_type_id: number }) => d.doc_type_id === 1)
@@ -155,6 +157,8 @@ export async function PUT(request: NextRequest) {
       faculty: updatedStudent.faculty,
       year: yearValueUpdated,
       phone: updatedStudent.phone,
+      student_status: updatedStudent.student_status,
+      verification_status: updatedStudent.verification_status,
       documents: {
         resume: updatedStudent.account.documents
           .filter((d: { doc_type_id: number }) => d.doc_type_id === 1)

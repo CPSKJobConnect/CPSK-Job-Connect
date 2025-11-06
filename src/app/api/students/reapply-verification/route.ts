@@ -56,11 +56,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upload the new transcript (docTypeId: 2 for transcript)
+    // Upload the new transcript (docTypeId: 4 for transcript)
     const transcriptDoc = await uploadDocument(
       transcriptFile,
       session.user.id,
-      2
+      4
     );
 
     // Reset verification status to PENDING

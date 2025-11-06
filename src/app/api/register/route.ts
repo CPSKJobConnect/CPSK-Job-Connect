@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
             description: (validatedData.data as CompanyData).description,
             website: (validatedData.data as CompanyData).website || null,
             register_day: new Date(),
-            registration_status: "pending",
+            registration_status: "PENDING",
           }
         })
       }
