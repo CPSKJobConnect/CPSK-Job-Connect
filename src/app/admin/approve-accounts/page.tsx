@@ -67,6 +67,7 @@ interface PendingAccount {
     year?: string;
     phone?: string;
     transcript?: string;
+    isReapplication?: boolean;
     // Company details
     address?: string;
     description?: string;
@@ -318,6 +319,11 @@ export default function ApproveAccountsPage() {
                         }`}>
                           {account.type === "student" ? "Alumni" : "Company"}
                         </span>
+                        {account.details.isReapplication && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 font-semibold">
+                            Re-application
+                          </span>
+                        )}
                       </div>
                       <CardDescription className="mt-1">
                         Registered on {formatDate(account.createdAt)}
