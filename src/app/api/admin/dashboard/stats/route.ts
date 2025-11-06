@@ -85,11 +85,11 @@ export async function GET() {
         select: {
           name: true,
           _count: {
-            select: { jobPosts: true }
+            select: { posts: true }
           }
         },
         orderBy: {
-          jobPosts: {
+          posts: {
             _count: 'desc'
           }
         },

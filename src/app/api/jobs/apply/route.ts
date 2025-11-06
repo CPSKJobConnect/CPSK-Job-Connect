@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
         status: 1, // pending หรือ waiting
         resume_id: resumeDoc?.id,
         portfolio_id: portfolioDoc?.id,
+        updated_at: new Date(),
       },
       include: {
         jobPost: {

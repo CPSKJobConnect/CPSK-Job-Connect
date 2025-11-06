@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const normalizedToken = token.trim();
 
     // Find verification token in database
-    const verificationToken = await prisma.emailVerificationToken.findFirst({
+    const verificationToken = await prisma.email_verification_tokens.findFirst({
       where: {
         email: normalizedEmail,
         token: normalizedToken,
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     // Check if token has expired
     if (isVerificationExpired(verificationToken.expires)) {
       // Delete expired token
-      await prisma.emailVerificationToken.delete({
+      await prisma.email_verification_tokens.delete({
         where: { id: verificationToken.id },
       });
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     if (!account || !account.student) {
       // Delete the token
-      await prisma.emailVerificationToken.delete({
+      await prisma.email_verification_tokens.delete({
         where: { id: verificationToken.id },
       });
 
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Delete the used verification token
-    await prisma.emailVerificationToken.delete({
+    await prisma.email_verification_tokens.delete({
       where: { id: verificationToken.id },
     });
 

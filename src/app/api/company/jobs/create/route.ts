@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
         max_salary: Number(body.salary?.max) || 0,
         deadline: new Date(body.deadline),
         is_Published: body.is_published ?? true,
+        updated_at: new Date(),
 
         job_type_id: jobType.id,
         job_arrangement_id: jobArrangement.id,

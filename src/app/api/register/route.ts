@@ -153,6 +153,7 @@ export async function POST(req: NextRequest) {
             // Alumni need admin approval, current students just need email verification
             verification_status: isAlumni ? "PENDING" : "APPROVED",
             email_verified: false,
+            updated_at: new Date(),
           }
         })
       } else {

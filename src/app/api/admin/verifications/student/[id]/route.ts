@@ -115,7 +115,7 @@ export async function PATCH(
         const verificationCode = generateVerificationCode();
 
         // Store verification token in database
-        await prisma.emailVerificationToken.create({
+        await prisma.email_verification_tokens.create({
           data: {
             email: student.account.email,
             token: verificationCode,

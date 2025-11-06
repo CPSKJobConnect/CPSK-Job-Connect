@@ -46,13 +46,13 @@ async function backupDatabase() {
       jobTags: await prisma.jobTag.findMany(),
       jobPosts: await prisma.jobPost.findMany({
         include: {
-          JobCategory: true,
-          JobTag: true,
+          category: true,
+          tags: true,
         },
       }),
       applicationStatuses: await prisma.applicationStatus.findMany(),
       applications: await prisma.application.findMany(),
-      sessions: await prisma.sessions.findMany(),
+      sessions: await prisma.session.findMany(),
       verificationTokens: await prisma.verification_tokens.findMany(),
       emailVerificationTokens: await prisma.email_verification_tokens.findMany(),
     };
