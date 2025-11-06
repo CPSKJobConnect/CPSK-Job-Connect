@@ -13,7 +13,8 @@ import {
 import StudentInfoModal from "@/components/StudentInfoModal";
 
 interface Applicant {
-  applicant_id: string;
+  application_id: number;
+  applicant_id: number;
   profile_url: string;
   name: string;
   email: string;
@@ -53,7 +54,7 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
         const initialMap: Record<number, { id: number; type: StatusType }> = {};
         applicants.forEach((a) => {
           const s = data.statuses.find((st: Status) => String(st.id) === a.status);
-          initialMap[Number(a.applicant_id)] = {
+          initialMap[Number(a.application_id)] = {
             id: Number(a.status),
             type: (s?.name.toLowerCase() as StatusType) || "pending",
           };
@@ -63,25 +64,25 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
       .catch(console.error);
   }, [applicants]);
 
-  const handleStatusChange = async (applicant_id: number, newStatusId: number) => {
+  const handleStatusChange = async (application_id: number, newStatusId: number) => {
     const s = statusList.find((st) => st.id === newStatusId);
     if (!s) return;
 
     setStatusMap((prev) => ({
       ...prev,
-      [applicant_id]: { id: newStatusId, type: s.name.toLowerCase() as StatusType },
+      [application_id]: { id: newStatusId, type: s.name.toLowerCase() as StatusType },
     }));
 
     try {
-      await fetch(`/api/applications/${applicant_id}/status`, {
+      await fetch(`/api/applications/${application_id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status_id: newStatusId }),
       });
     } catch (error) {
       console.error("Failed to update status:", error);
-      const original = statusMap[applicant_id];
-      setStatusMap((prev) => ({ ...prev, [applicant_id]: original }));
+      const original = statusMap[application_id];
+      setStatusMap((prev) => ({ ...prev, [application_id]: original }));
     }
   };
 
@@ -95,14 +96,14 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
     ) : (
       <div className="flex flex-col gap-4">
         {applicants.map((student) => {
-          const currentStatus = statusMap[Number(student.applicant_id)] || {
+          const currentStatus = statusMap[Number(student.application_id)] || {
             id: Number(student.status),
             type: statusList.find(s => s.id === Number(student.status))?.name.toLowerCase() as StatusType || 'pending'
             };
 
           return (
             <div
-              key={student.applicant_id}
+              key={student.application_id}
               className="flex flex-col shadow-md rounded-md p-2 border border-gray-200"
             >
               <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 md:gap-0">
@@ -132,7 +133,7 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
                     <Select
                       value={String(currentStatus.id)}
                       onValueChange={(val) =>
-                        handleStatusChange(Number(student.applicant_id), Number(val))
+                        handleStatusChange(Number(student.application_id), Number(val))
                       }
                     >
                       <SelectTrigger
@@ -159,7 +160,7 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
                   </div>
 
                   <div className="flex-shrink-0">
-                    <StudentInfoModal applicant_id={student.applicant_id.toString()} />
+                    <StudentInfoModal applicant_id={student.application_id.toString()} />
                   </div>
                 </div>
               </div>
