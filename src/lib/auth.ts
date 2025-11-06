@@ -57,6 +57,11 @@ export const authOptions: NextAuthOptions = {
                 student_status: true,
                 verification_status: true
               }
+            },
+            company: {
+              select: {
+                registration_status: true
+              }
             }
           }
         });
@@ -79,6 +84,7 @@ export const authOptions: NextAuthOptions = {
           emailVerified: user.student?.email_verified,
           studentStatus: user.student?.student_status,
           verificationStatus: user.student?.verification_status,
+          companyRegistrationStatus: user.company?.registration_status,
         } as User
       },
     }),
@@ -88,13 +94,14 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         // `authorize` returns `name` (username) and `role` on first sign-in.
         // Map those to token fields so subsequent requests have them available.
-        token.role = (user as any).role;
-        token.username = (user as any).name || (user as any).username;
+        token.role = (user as User & { role?: string }).role;
+        token.username = (user as User & { name?: string; username?: string }).name || (user as User & { username?: string }).username;
         token.logoUrl = user.logoUrl;
         token.backgroundUrl = user.backgroundUrl;
         token.emailVerified = typeof user.emailVerified === 'boolean' ? user.emailVerified : undefined;
         token.studentStatus = user.studentStatus;
         token.verificationStatus = user.verificationStatus;
+        token.companyRegistrationStatus = user.companyRegistrationStatus;
       }
 
       // Handle session update (when profile image is changed or verification status changes)
@@ -107,6 +114,9 @@ export const authOptions: NextAuthOptions = {
         }
         if (session?.user?.verificationStatus) {
           token.verificationStatus = session.user.verificationStatus;
+        }
+        if (session?.user?.companyRegistrationStatus) {
+          token.companyRegistrationStatus = session.user.companyRegistrationStatus;
         }
       }
 
@@ -168,6 +178,7 @@ export const authOptions: NextAuthOptions = {
         session.user.emailVerified = token.emailVerified
         session.user.studentStatus = token.studentStatus
         session.user.verificationStatus = token.verificationStatus
+        session.user.companyRegistrationStatus = token.companyRegistrationStatus
       }
       return session;
     },
