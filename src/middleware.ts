@@ -79,6 +79,16 @@ export default withAuth(
         }
       }
 
+      // Check if company is verified for job posting
+      if (role === "company" && pathname.startsWith("/company/jobs/create")) {
+        const companyRegistrationStatus = token.companyRegistrationStatus;
+
+        // Only APPROVED companies can create jobs
+        if (companyRegistrationStatus !== "APPROVED") {
+          return NextResponse.redirect(new URL("/company/dashboard", req.url));
+        }
+      }
+
       // Student trying to access company or admin routes
       if (role === "student" && (pathname.startsWith("/company") || pathname.startsWith("/admin"))) {
         return NextResponse.redirect(new URL("/student/dashboard", req.url))
