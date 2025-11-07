@@ -32,6 +32,10 @@ const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder, 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [existingCategories, setExistingCategories] = useState<string[]>(categoryList);
 
+  React.useEffect(() => {
+    setExistingCategories(categoryList || []);
+  }, [categoryList]);
+
   const handleAddCategory = () => {
     if (searchTerm && !existingCategories.includes(searchTerm)) {
       setExistingCategories((prev) => [...prev, searchTerm]);
@@ -78,40 +82,72 @@ const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder, 
               onValueChange={setSearchTerm}
             />
             <CommandList>
-              <CommandEmpty>
-                <div className="flex flex-col gap-3 items-center p-3">
-                   <p className="text-gray-600 text-sm text-center max-w-[150px]">
-                      No results found. Add <span className="font-semibold text-gray-800 truncate block">{searchTerm}</span> as a new category?
-                  </p>
-                  <Button
-                    onClick={handleAddCategory}
-                    className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-auto max-h-[30px] max-w-[400px]"
-                  >
-                    <IoIosAdd className="w-5 h-5 flex-shrink-0" />
-                    <span className="truncate max-w-[200px]">
-                      Add new category: {searchTerm}
-                    </span>
-                  </Button>
-                </div>
-              </CommandEmpty>
+              {(() => {
+                const term = searchTerm.trim().toLowerCase();
+                const filtered = term
+                  ? existingCategories.filter((c) => c.toLowerCase().includes(term))
+                  : existingCategories;
+                const hasExact = term && existingCategories.some((c) => c.toLowerCase() === term);
 
-              <CommandGroup>
-                {categoryList.map((cat, idx) => (
-                  <CommandItem
-                    key={idx}
-                    value={cat}
-                    onSelect={() => handleSelectCategory(cat)}
-                  >
-                    {cat}
-                    <Check
-                      className={cn(
-                        "ml-auto",
-                        selectedCategory === cat ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+                if (filtered.length === 0) {
+                  return (
+                    <>
+                      <CommandEmpty>
+                        <div className="flex flex-col gap-3 items-center p-3">
+                          <p className="text-gray-600 text-sm text-center max-w-[150px]">
+                            No results found. Add <span className="font-semibold text-gray-800 truncate block">{searchTerm}</span> as a new category?
+                          </p>
+                          {!hasExact && (
+                            <Button
+                              onClick={handleAddCategory}
+                              className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-auto max-h-[30px] max-w-[400px]"
+                            >
+                              <IoIosAdd className="w-5 h-5 flex-shrink-0" />
+                              <span className="truncate max-w-[200px]">
+                                Add new category: {searchTerm}
+                              </span>
+                            </Button>
+                          )}
+                        </div>
+                      </CommandEmpty>
+                    </>
+                  );
+                }
+
+                return (
+                  <>
+                    <CommandGroup>
+                      {filtered.map((cat, idx) => (
+                        <CommandItem
+                          key={idx}
+                          value={cat}
+                          onSelect={() => handleSelectCategory(cat)}
+                        >
+                          {cat}
+                          <Check
+                            className={cn(
+                              "ml-auto",
+                              selectedCategory === cat ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+
+                    {searchTerm.trim() !== "" && !hasExact && (
+                      <div className="px-3 py-2">
+                        <Button
+                          onClick={handleAddCategory}
+                          className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-full"
+                        >
+                          <IoIosAdd className="w-5 h-5 flex-shrink-0" />
+                          <span className="truncate">Add new category: {searchTerm.trim()}</span>
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </CommandList>
           </Command>
         </PopoverContent>

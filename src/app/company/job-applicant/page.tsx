@@ -97,13 +97,18 @@ export default function Page() {
     fetchApplicants();
   }, [selectedCardId]);
 
-  // Handle small screen dialog
   useEffect(() => {
     if (!isSmallScreen && dialogOpen) setDialogOpen(false);
     if (isSmallScreen && selectedCardId !== null) setDialogOpen(true);
   }, [isSmallScreen, selectedCardId]);
 
   const selectedJob = selectedCardId !== null ? jobPost.find(job => Number(job.id) === selectedCardId) : null;
+
+  useEffect(() => {
+    if (selectedCardId !== null && !selectedJob) {
+      setSelectedCardId(null);
+    }
+  }, [selectedCardId, selectedJob]);
 
   const handlePostJob = () => {
     router.push(`/company/job-posting`);
@@ -146,14 +151,15 @@ export default function Page() {
           </div>
 
           <div className="flex-1">
-            <div className="flex flex-col rounded-md shadow-md p-3 max-h-[120vh]">
+            <div className="flex flex-col rounded-md shadow-md p-3 h-[1000px] max-h-[150vh]">
               {selectedJob ? (
                 <>
                   <JobDescriptionCard
                       size="md"
                       onApply={false}
                       onEdit={true}
-                      job={selectedJob}
+            job={selectedJob}
+            onUpdate={fetchJobs}
                       categories={allDepartment}
                       types={jobTypeList}
                       arrangements={arrangementList}
@@ -191,9 +197,9 @@ export default function Page() {
               <DialogTitle>{selectedJob?.title || ""}</DialogTitle>
             </DialogHeader>
             <div className="max-h-[70vh] overflow-y-auto">
-              {selectedJob && (
+                  {selectedJob && (
                 <div className="space-y-4">
-                  <JobDescriptionCard size="md" onApply={false} onEdit={true} job={selectedJob} />
+                  <JobDescriptionCard size="md" onApply={false} onEdit={true} job={selectedJob} onUpdate={fetchJobs} />
                   <ApplicationList applicants={applicants} />
                 </div>
               )}

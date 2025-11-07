@@ -120,7 +120,6 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
       status: "",
     }), [formData]);
 
-    // Format job.deadline into yyyy-MM-dd for use with <input type="date">.
     const initialDeadline = useMemo(() => {
       if (!job?.deadline) return "";
       try {
@@ -132,9 +131,6 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
       }
     }, [job?.deadline]);
 
-    // Ensure any formData.deadline (which may include a time or different format)
-    // is converted to yyyy-MM-dd for the date input. If formData.deadline is
-    // empty/invalid, fall back to the job's initialDeadline.
     const displayedDeadline = useMemo(() => {
       const fd = formData?.deadline;
       if (!fd) return initialDeadline;
@@ -229,8 +225,6 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
                   data-testid="edit-job-deadline"
                   className="w-full"
                   type="date"
-                  // If the form already has a value use it, otherwise show the current job deadline as the value
-                  // (date inputs generally don't render placeholder text reliably across browsers)
                   value={displayedDeadline}
                   onChange={(e) => {
                     const value = e.target.value;

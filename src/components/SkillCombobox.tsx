@@ -39,18 +39,19 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
   }, [selectedSkill])
 
   const handleSkillAdded = () => {
-    if (searchTerm) {
-        if (!skillList.includes(searchTerm)) {
-            setSkillList((prev) => [...prev, searchTerm]);
-        }
+    const term = searchTerm.trim();
+    if (!term) return;
 
-        if (!selectedSkill.includes(searchTerm)) {
-            setSelectedSkill([...selectedSkill, searchTerm]);
-        }
-
-        setValue(searchTerm);
-        setSearchTerm("");
+    if (!skillList.some((s) => s.toLowerCase() === term.toLowerCase())) {
+      setSkillList((prev) => [...prev, term]);
     }
+
+    if (!selectedSkill.includes(term)) {
+      setSelectedSkill([...selectedSkill, term]);
+    }
+
+    setValue(term);
+    setSearchTerm("");
   };
 
   const handleSelectSkill = (skillName: string) => {
@@ -106,40 +107,74 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
           onValueChange={setSearchTerm} 
           />
           <CommandList>
-            <CommandEmpty>
-            <div className="flex flex-col gap-3 items-center">
-                <p className="text-gray-600 text-sm text-center max-w-[150px]">
-                    No results found. Add <span className="font-semibold text-gray-800 truncate block">{searchTerm}</span> as a new skill?
-                </p>
-                <Button
-                    onClick={handleSkillAdded}
-                    className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-auto max-h-[30px] max-w-[200px]"
-                >
-                    <IoIosAdd className="w-5 h-5 flex-shrink-0" />
-                    <span className="truncate max-w-[150px]">
-                        Add new skill: {searchTerm}
-                    </span>
-                </Button>
-            </div>
-            </CommandEmpty>
-            <CommandGroup>
-              {skillList.map((skill, idx) => (
-                <CommandItem
-                  key={idx}
-                  value={skill}
-                  data-testid={`skill-option-${skill.replace(/\s/g, '-')}`}
-                  onSelect={handleSelectSkill}
-                >
-                  {skill}
-                  <Check
-                    className={cn(
-                      "ml-auto",
-                      value === skill ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {/* compute filtered skills and exact match */}
+            {(() => {
+              const term = searchTerm.trim().toLowerCase();
+              const filteredSkills = term
+                ? skillList.filter((s) => s.toLowerCase().includes(term))
+                : skillList;
+              const hasExact = term && skillList.some((s) => s.toLowerCase() === term);
+
+              if (filteredSkills.length === 0) {
+                return (
+                  <>
+                    <CommandEmpty>
+                      <div className="flex flex-col gap-3 items-center">
+                        <p className="text-gray-600 text-sm text-center max-w-[150px]">
+                          No results found. Add <span className="font-semibold text-gray-800 truncate block">{searchTerm}</span> as a new skill?
+                        </p>
+                        {!hasExact && (
+                          <Button
+                            onClick={handleSkillAdded}
+                            className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-auto max-h-[30px] max-w-[200px]"
+                          >
+                            <IoIosAdd className="w-5 h-5 flex-shrink-0" />
+                            <span className="truncate max-w-[150px]">
+                              Add new skill: {searchTerm}
+                            </span>
+                          </Button>
+                        )}
+                      </div>
+                    </CommandEmpty>
+                  </>
+                );
+              }
+
+              return (
+                <>
+                  <CommandGroup>
+                    {filteredSkills.map((skill, idx) => (
+                      <CommandItem
+                        key={idx}
+                        value={skill}
+                        onSelect={handleSelectSkill}
+                      >
+                        {skill}
+                        <Check
+                          className={cn(
+                            "ml-auto",
+                            value === skill ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+
+                  {/* If the search term doesn't exactly match an existing skill, allow adding it */}
+                  {searchTerm.trim() !== "" && !hasExact && (
+                    <div className="px-3 py-2">
+                      <Button
+                        onClick={handleSkillAdded}
+                        className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-full"
+                      >
+                        <IoIosAdd className="w-5 h-5 flex-shrink-0" />
+                        <span className="truncate">Add new skill: {searchTerm.trim()}</span>
+                      </Button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </CommandList>
         </Command>
       </PopoverContent>

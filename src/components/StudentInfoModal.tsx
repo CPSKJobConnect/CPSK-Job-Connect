@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 interface ApplicantInfo {
   applicant_id: string;
-  profile_url: string;
+  profile_url: string | null;
   firstname: string;
   lastname: string;
   email: string;
@@ -59,8 +59,13 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
         }
 
         const result = await response.json();
+        console.log("Fetched applicant info:", result);
         if (result.success) {
-          setApplicantInfo(result.data);
+          const data = result.data;
+          if (data && (data.profile_url === "" || data.profile_url === "/default-avatar.png" || data.profile_url === "null")) {
+            data.profile_url = null;
+          }
+          setApplicantInfo(data);
         }
       } catch (error) {
         console.error("Error fetching applicant info:", error);
@@ -102,19 +107,23 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
           <div className="flex flex-col gap-6">
             <div className="flex flex-row gap-6">
               <div className="flex-shrink-0">
-                {applicantInfo.profile_url ? (
-                  <Image
-                    src={applicantInfo.profile_url}
-                    alt="applicantProfile"
-                    width={70}
-                    height={70}
-                    className="rounded-lg shadow-md object-cover"
-                  />
-                ) : (
-                  <div className="w-[70px] h-[70px] bg-gray-100 rounded-lg shadow-md flex items-center justify-center text-2xl font-semibold text-gray-700">
-                    {applicantInfo.firstname.charAt(0).toUpperCase()}
-                  </div>
-                )}
+                {(() => {
+                  const url = applicantInfo.profile_url;
+                  const hasImage = typeof url === "string" && url.trim() !== "" && url !== "/default-avatar.png" && url !== "null";
+                  return hasImage ? (
+                    <Image
+                      src={url as string}
+                      alt="applicantProfile"
+                      width={70}
+                      height={70}
+                      className="rounded-lg shadow-md object-cover"
+                    />
+                  ) : (
+                    <div className="w-[70px] h-[70px] bg-gray-100 rounded-lg shadow-md flex items-center justify-center text-2xl font-semibold text-gray-700">
+                      {applicantInfo.firstname.charAt(0).toUpperCase()}
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="flex flex-col justify-between gap-3 flex-1">

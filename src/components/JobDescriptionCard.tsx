@@ -46,7 +46,7 @@ const JobDescriptionCard = ({
 }: JobDescriptionProps) => {
   const router = useRouter();
   const isClosed = job.status === "expire";
-  const [isEditing, setIsEditing] = useState(false);
+  // const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<JobPostFormData>(() => ({
     title: job.title,
     category: job.category,
@@ -65,7 +65,7 @@ const JobDescriptionCard = ({
 
   const sizeStyle = {
     sm: "w-full sm:w-[400px]",
-    md: "w-full h-auto",
+    md: "w-full h-[600px]",
   }[size];
 
   const handleApply = () => {
@@ -112,7 +112,6 @@ const JobDescriptionCard = ({
       }
 
       toast.success("Job updated successfully!");
-      setIsEditing(false);
 
       if (onUpdate) onUpdate();
       return true;
@@ -130,6 +129,13 @@ const JobDescriptionCard = ({
       const res = await fetch(`/api/jobs/${job.id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Job deleted successfully!");
+        if (onUpdate) {
+          try { onUpdate(); } catch (e) { 
+            /* ignore */ 
+          }
+        } else {
+          router.refresh();
+        }
       } else {
         const data = await res.json();
         toast.error(data.error || "Failed to delete job.");
@@ -143,6 +149,8 @@ const JobDescriptionCard = ({
   const [responsibilityOpen, setResponsibilityOpen] = useState(false);
   const [requirementOpen, setRequirementOpen] = useState(false);
   const [qualificationOpen, setQualificationOpen] = useState(false);
+  const [hasBgError, setHasBgError] = useState(false);
+  const [hasLogoError, setHasLogoError] = useState(false);
 
   const Section: React.FC<{
     title: string;
@@ -197,12 +205,13 @@ const JobDescriptionCard = ({
   return (
     <div className={`${baseStyle} ${sizeStyle}`}>
       <div className="relative w-full h-40">
-        {job.companyBg ? (
+        {job.companyBg && !hasBgError ? (
           <Image
             src={job.companyBg}
             alt={job.companyName || "companyBg"}
             fill
             className="object-cover"
+            onError={() => setHasBgError(true)}
           />
         ) : (
           <div className="absolute inset-0 bg-gray-100 rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
@@ -237,13 +246,14 @@ const JobDescriptionCard = ({
         )}
 
         <div className="absolute -bottom-6 left-4 bg-white p-2 rounded-md shadow-md">
-          {job.companyLogo ? (
+          {job.companyLogo && !hasLogoError ? (
             <Image
               src={job.companyLogo}
               alt={job.companyName || "companyLogo"}
               width={60}
               height={60}
               className="h-auto w-auto"
+              onError={() => setHasLogoError(true)}
             />
           ) : (
             <div className="h-[60px] w-[60px] bg-gray-100 rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
