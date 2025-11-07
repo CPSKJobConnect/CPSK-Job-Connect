@@ -63,10 +63,10 @@ Cypress.Commands.add('postJob', (options = {}) => {
       : 'Job posted successfully!',
   } = options;
 
-  cy.intercept('POST', '/api/company/jobs/create', {
-    statusCode: 200,
-    body: { message },
-  }).as('jobPosting');
+  // cy.intercept('POST', '/api/company/jobs/create', {
+  //   statusCode: 200,
+  //   body: { message },
+  // }).as('jobPosting');
 
 
   cy.fillJobPostDetail();
@@ -80,7 +80,7 @@ Cypress.Commands.add('postJob', (options = {}) => {
     cy.get('[data-testid="publish-job-button"]').click();
   }
 
-  cy.wait('@jobPosting');
+  // cy.wait('@jobPosting');
 });
 
 export {}

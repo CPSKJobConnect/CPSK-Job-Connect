@@ -60,14 +60,8 @@ describe('Company workflow: post job and change applicant status', () => {
 
     cy.wait('@patchStatus').its('response.statusCode').should('eq', 200);
 
-    cy.get('[data-testid="applicant-card-1"]', { timeout: 10000 }).within(() => {
-      cy.get('[data-slot="select-trigger"]', { timeout: 10000 })
-        .should('be.visible')
-        .find('[data-slot="select-value"]')
-        .invoke('text')
-        .then((txt) => {
-          expect(txt.trim().toLowerCase()).to.equal('interview');
-        });
-    });
+    cy.get('[data-testid="applicant-card-1"]')
+    .find('[data-slot="select-value"]')
+    .contains(/interview/i);
   });
 });

@@ -1,9 +1,4 @@
 it('should update student profile and show success toast', function () {
-  cy.intercept('PUT', '/api/students/[id]', {
-    statusCode: 200,
-    body: { message: 'Profile updated successfully!' }
-  }).as('updateProfile');
-
   cy.loginAsStudent('student1@ku.th', 'mim1234');
   cy.get('[data-testid="profile-menu-popover"]').click(); 
   cy.get('[data-testid="profile-menu-profile-btn"]').click();
@@ -17,7 +12,7 @@ it('should update student profile and show success toast', function () {
   cy.get('#year').click();
   cy.contains('Year 3').click({ force: true });
   cy.get('[data-testid="student-save-edit-profile-btn"]').click();
-  cy.wait('@updateProfile');
+  cy.wait(2000);
   cy.contains('Profile updated successfully', { timeout: 10000 }).should('be.visible')
 });
 

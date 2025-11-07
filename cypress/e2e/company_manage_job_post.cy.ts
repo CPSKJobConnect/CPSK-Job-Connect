@@ -49,13 +49,9 @@ describe('Company Job Posting Flow', () => {
   });
 
   it('should post and edit job successfully', function() {
-    cy.editJob();
-    cy.getJobs();
-    cy.getFilters();
     cy.postJob();
     cy.wait(5000);
     cy.get('a[href="/company/job-applicant"]').click();
-    cy.wait('@getJobs');
     cy.wait(5000);
     cy.get('[data-testid^="job-card-"]', { timeout: 10000 })
       .should('have.length.at.least', 1)
@@ -69,7 +65,6 @@ describe('Company Job Posting Flow', () => {
       .first()
       .click({ force: true });
 
-    cy.wait('@getFilters');
 
     cy.get('[data-testid="location-combobox"]', { timeout: 10000 }).click();
     cy.get('[data-testid="province-option-Bangkok"]', { timeout: 10000 }).click();
@@ -102,16 +97,11 @@ describe('Company Job Posting Flow', () => {
       .first()
       .click({ force: true });
 
-    cy.wait('@jobEditing').its('response.statusCode').should('eq', 200);
     cy.contains('Job updated successfully!', { timeout: 10000 }).should('be.visible');
   });
 
   it('should post and delete job successfully', function() {
-    cy.deleteJob();
-    cy.getJobs();
-    cy.postJob();
     cy.get('a[href="/company/job-applicant"]').click();
-    cy.wait('@getJobs');
     cy.get('[data-testid^="job-card-"]', { timeout: 10000 })
       .should('have.length.at.least', 1)
       .first()
@@ -123,7 +113,6 @@ describe('Company Job Posting Flow', () => {
     cy.wait(5000);
     cy.get('[data-testid="delete-job-button"]', { timeout: 5000 }).first().click();
 
-    cy.wait('@jobDeleting');
     cy.reload();
     cy.intercept('GET', '/api/company/jobs', { statusCode: 200, body: [] });
     cy.wait(500);

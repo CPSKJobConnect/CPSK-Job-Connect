@@ -1,7 +1,4 @@
 it('should register successfully and redirect to dashboard', function() {
-    cy.intercept('POST', '/api/register', (req) => {
-      req.reply({ statusCode: 200, body: { redirectTo: '/student/dashboard' } })
-    }).as('register')
     cy.visit('http://localhost:3000/')
     cy.get('#role-selection div.hover\\:bg-green-100 img.w-full').click();
     cy.get('[data-testid="auth-signup"]', { timeout: 10000 }).should('be.visible').click();
@@ -24,7 +21,6 @@ it('should register successfully and redirect to dashboard', function() {
     cy.get('label.w-full').click();
     cy.get('#transcript').selectFile('cypress/fixtures/transcript.pdf', { force: true });
     cy.get('[data-testid="auth-submit"]').click();
-    cy.wait('@register');
     cy.location('pathname', { timeout: 10000 }).should('include', '/student/dashboard');
 });
 
