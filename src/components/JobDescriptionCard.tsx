@@ -13,6 +13,7 @@ import { useState, useRef, useEffect } from "react";
 import EditJobCard from "./EditJobCard";
 import { validateForm } from "@/lib/validateJobForm";
 import { toast } from "sonner";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 
 interface JobDescriptionProps {
   job: JobInfo;
@@ -196,7 +197,7 @@ const JobDescriptionCard = ({
   return (
     <div className={`${baseStyle} ${sizeStyle}`}>
       <div className="relative w-full h-40">
-        {job.companyBg ? (
+        {isValidImageUrl(job.companyBg) ? (
           <Image
             src={job.companyBg}
             alt={job.companyName || "companyBg"}
@@ -235,7 +236,7 @@ const JobDescriptionCard = ({
         )}
 
         <div className="absolute -bottom-6 left-4 bg-white p-2 rounded-md shadow-md">
-          {job.companyLogo ? (
+          {isValidImageUrl(job.companyLogo) ? (
             <Image
               src={job.companyLogo}
               alt={job.companyName || "companyLogo"}

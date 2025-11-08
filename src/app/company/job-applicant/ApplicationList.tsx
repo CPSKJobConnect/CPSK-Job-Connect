@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import StudentInfoModal from "@/components/StudentInfoModal";
 
 interface Applicant {
@@ -108,9 +109,9 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
             >
               <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 md:gap-0">
                 <div className="flex flex-row gap-4 items-center min-w-0">
-                    {student.profile_url ? (
+                    {isValidImageUrl(student.profile_url) ? (
                   <Image
-                    src={student.profile_url ?? "/assets/images/companyLogo.png"}
+                    src={student.profile_url}
                     alt="studentProfile"
                     width={60}
                     height={60}

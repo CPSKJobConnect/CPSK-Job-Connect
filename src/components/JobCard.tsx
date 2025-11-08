@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatPostedDate } from "@/lib/dateHelper";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { JobInfo } from "@/types/job";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
@@ -151,7 +152,7 @@ const JobCard = (job: JobCardProps) => {
     <div className={`${baseStyle} ${sizeStyle}`}>
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
-          {job.info.companyLogo ? (
+          {isValidImageUrl(job.info.companyLogo) ? (
             <Image
               src={job.info.companyLogo}
               alt={job.info.companyName || "companyLogo"}

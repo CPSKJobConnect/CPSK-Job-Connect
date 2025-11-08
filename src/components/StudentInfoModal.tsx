@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { LuPhone } from "react-icons/lu";
@@ -102,7 +103,7 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
           <div className="flex flex-col gap-6">
             <div className="flex flex-row gap-6">
               <div className="flex-shrink-0">
-                {applicantInfo.profile_url ? (
+                {isValidImageUrl(applicantInfo.profile_url) ? (
                   <Image
                     src={applicantInfo.profile_url}
                     alt="applicantProfile"

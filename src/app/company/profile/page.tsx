@@ -119,7 +119,7 @@ export default function CompanyProfilePage() {
         <div className="flex items-center gap-6">
           {/* Profile Picture */}
           <div className="relative group">
-            {company.profile_url ? (
+            {company.profile_url && typeof company.profile_url === 'string' && company.profile_url.trim() !== "" && company.profile_url.startsWith('http') ? (
               <div className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
                 <Image
                   src={company.profile_url}
@@ -127,6 +127,9 @@ export default function CompanyProfilePage() {
                   width={120}
                   height={120}
                   className="w-full h-full object-cover object-center"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               </div>
             ) : (
@@ -203,7 +206,7 @@ export default function CompanyProfilePage() {
         </TabsList>
 
         <TabsContent value="profile">
-          <ProfileTab company={company} />
+          <ProfileTab company={company} onProfileUpdate={fetchCompanyProfile} />
         </TabsContent>
 
         <TabsContent value="documents">

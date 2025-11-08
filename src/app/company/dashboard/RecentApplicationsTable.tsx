@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { RecentApplicationsTableProps } from "@/types/companyStat";
 import Image from "next/image";
 import { useState } from "react";
@@ -104,7 +105,7 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
               className="flex flex-row items-center justify-between px-2 py-3 hover:bg-gray-50 border-b"
             >
               <div className="flex items-center gap-4 w-1/4 min-w-0">
-                {student.applicant.profile_url ? (
+                {isValidImageUrl(student.applicant.profile_url) ? (
                   <Image
                     src={student.applicant.profile_url}
                     alt={`${student.applicant.name} profile`}
