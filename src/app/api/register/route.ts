@@ -49,6 +49,14 @@ export async function POST(req: NextRequest) {
         data.transcript = transcriptFile;
       }
     }
+
+    // Add evidence file to data for validation (required for companies)
+    if (role === "company") {
+      const evidenceFile = formData.get("evidence") as File | null;
+      if (evidenceFile && evidenceFile.size > 0) {
+        data.evidence = evidenceFile;
+      }
+    }
     // Validate data base on role
     // console.log("Data to validate:", data);
     let validatedData: z.ZodSafeParseResult<StudentData | CompanyData>;
