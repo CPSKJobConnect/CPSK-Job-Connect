@@ -104,7 +104,7 @@ export async function GET(request: Request) {
     // Build registration status filter for companies
     const companyStatusFilter = statusFilter === "all"
       ? {}
-      : { registration_status: statusFilter === "pending" ? "pending" : statusFilter };
+      : { registration_status: statusFilter.toUpperCase() as "PENDING" | "APPROVED" | "REJECTED" };
 
     // Fetch companies with filtered registration status
     if (accountType === "all" || accountType === "company") {
