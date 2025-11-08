@@ -104,6 +104,15 @@ export function AuthForm({ role, mode }: AuthFormProps) {
         }
       }
 
+      // Validate evidence for company
+      if (mode === "register" && role === "company") {
+        if (!selectedFile) {
+          setError("Company evidence document is required")
+          setIsLoading(false)
+          return
+        }
+      }
+
       if (mode === "login") {
         const result = await signIn("credentials", {
           email: data.email,
@@ -211,8 +220,14 @@ export function AuthForm({ role, mode }: AuthFormProps) {
     const file = e.target.files?.[0]
     if (file) {
       setSelectedFile(file)
+      // Register the file with the form for validation
+      if (role === "student") {
+        setValue("transcript", file)
+      } else if (role === "company") {
+        setValue("evidence", file)
+      }
     }
-  }, [])
+  }, [role, setValue])
 
   return (
     <Card className={`w-full max-w-md bg-white ${roleConfig.secondaryColor.split(' ')[0]}`}>
@@ -232,8 +247,16 @@ export function AuthForm({ role, mode }: AuthFormProps) {
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit, () => {
-          setError("Please fix the form errors before submitting")
+        <form onSubmit={handleSubmit(onSubmit, (errors) => {
+          console.log("Form validation errors:", errors)
+          // Find the first error and display it
+          const firstError = Object.entries(errors)[0]
+          if (firstError) {
+            const [field, error] = firstError
+            setError(`${field}: ${error.message || 'Invalid value'}`)
+          } else {
+            setError("Please fix the form errors before submitting")
+          }
         })} className="space-y-4">
           <div>
             <Label htmlFor="email">
@@ -527,12 +550,22 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                       />
                       <Label
                         htmlFor="evidence"
-                        className="flex items-center justify-center w-full h-10 px-3 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+                        className={`flex items-center justify-center w-full h-10 px-3 py-2 border ${
+                          !selectedFile ? "border-red-300" : "border-gray-300"
+                        } rounded-md cursor-pointer hover:bg-gray-50`}
                       >
                         <Upload className="w-4 h-4 mr-2" />
                         {selectedFile ? selectedFile.name : "Choose evidence file"}
                       </Label>
                     </div>
+                    {!selectedFile && (
+                      <p className="text-sm text-red-600 mt-1">
+                        Company evidence document is required
+                      </p>
+                    )}
+                    {errors.evidence && (
+                      <p className="text-sm text-red-600 mt-1">{errors.evidence.message}</p>
+                    )}
                     <p className="text-xs text-gray-500 mt-1">
                       Upload documents like business license, registration certificate, or other proof of company legitimacy
                     </p>
