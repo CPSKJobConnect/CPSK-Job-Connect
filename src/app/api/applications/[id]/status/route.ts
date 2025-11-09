@@ -9,6 +9,22 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check if company is verified
+    const company = await prisma.company.findUnique({
+      where: { account_id: parseInt(session.user.id) },
+      select: { registration_status: true },
+    });
+
+    if (!company || company.registration_status !== "APPROVED") {
+      return NextResponse.json(
+        {
+          error: "Company not verified",
+          message: "Only verified companies can manage applications"
+        },
+        { status: 403 }
+      );
+    }
+
     const { id } = await context.params;
     const appId = Number(id);
     if (isNaN(appId))

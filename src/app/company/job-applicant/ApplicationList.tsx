@@ -30,6 +30,7 @@ interface Status {
 
 interface ApplicantListProps {
   applicants: Applicant[];
+  isCompanyVerified?: boolean;
 }
 
 type StatusType = "pending" | "reviewed" | "interview" | "offered" | "rejected";
@@ -42,7 +43,7 @@ const statusColors: Record<StatusType, string> = {
   rejected: "bg-red-100 text-red-800",
 };
 
-const ApplicationList = ({ applicants }: ApplicantListProps) => {
+const ApplicationList = ({ applicants, isCompanyVerified = true }: ApplicantListProps) => {
   const [statusList, setStatusList] = useState<Status[]>([]);
   const [statusMap, setStatusMap] = useState<Record<number, { id: number; type: StatusType }>>({});
 
@@ -136,9 +137,10 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
                       onValueChange={(val) =>
                         handleStatusChange(Number(student.application_id), Number(val))
                       }
+                      disabled={!isCompanyVerified}
                     >
                       <SelectTrigger
-                        className={`rounded-full w-full text-sm transition-all duration-200 border-none p-3 ${statusColors[currentStatus.type as StatusType]}`}
+                        className={`rounded-full w-full text-sm transition-all duration-200 border-none p-3 ${statusColors[currentStatus.type as StatusType]} ${!isCompanyVerified ? 'opacity-60 cursor-not-allowed' : ''}`}
                       >
                         <SelectValue placeholder="Select status">
                             {statusList.find((st) => st.id === currentStatus.id)?.name || "Pending"}

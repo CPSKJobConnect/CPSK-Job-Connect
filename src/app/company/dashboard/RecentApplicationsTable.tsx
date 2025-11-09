@@ -27,7 +27,7 @@ const statusColor: Record<string, string> = {
 	rejected: "bg-red-100 text-red-800",
 };
 
-export default function RecentApplicationsTable({ applications, loading }: RecentApplicationsTableProps) {
+export default function RecentApplicationsTable({ applications, loading, isCompanyVerified = true }: RecentApplicationsTableProps & { isCompanyVerified?: boolean }) {
   const items = Array.isArray(applications) ? applications : [];
 
   const statusTypes: StatusType[] = ["pending", "reviewed", "interview", "offered", "rejected"];
@@ -134,9 +134,10 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
                     onValueChange={(val) =>
                       handleStatus(student.id, val as StatusType)
                     }
+                    disabled={!isCompanyVerified}
                   >
                     <SelectTrigger
-                      className={`rounded-full text-sm transition-all duration-200 border-none p-2 h-5 w-[110px] ${statusColor[currentStatus]}`}
+                      className={`rounded-full text-sm transition-all duration-200 border-none p-2 h-5 w-[110px] ${statusColor[currentStatus]} ${!isCompanyVerified ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                       <SelectValue />
                     </SelectTrigger>

@@ -262,7 +262,11 @@ const CompanyDashboardPage = () => {
 
         <div className="flex flex-col lg:flex-row gap-5 h-full items-stretch">
           <div className="basis-3/5 h-full min-h-0">
-            <RecentApplicationsTable applications={recentApplicationsData} loading={false} />
+            <RecentApplicationsTable
+              applications={recentApplicationsData}
+              loading={false}
+              isCompanyVerified={companyProfile?.registration_status === "APPROVED"}
+            />
           </div>
           <div className="basis-2/5 h-full min-h-0">
             <TopJobCard jobs={topJobsData} loading={false} />
