@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/db";
 import { NextResponse, NextRequest } from "next/server";
 
-
-export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
   try {
-    const { id } = await context.params;
-    const job = await prisma.jobPost.findUnique({
-      where: { id: Number(id) },
+    const { id } = context.params;
+    const companyId = Number(id);
+
+    const jobs = await prisma.jobPost.findMany({
+      where: { company_id: companyId },
       include: {
         category: true,
         tags: true,
@@ -18,125 +18,94 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       },
     });
 
-    if (!job) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
-    }
+    if (!jobs.length) return NextResponse.json([], { status: 200 });
 
-    // Derive status from is_Published and deadline
-    let status = "active";
-    if (!job.is_Published) {
-      status = "draft";
-    } else if (job.deadline && new Date(job.deadline) < new Date()) {
-      status = "expire";
-    }
+    const mappedJobs = jobs.map((job) => {
+      let status = "active";
+      if (!job.is_Published) status = "draft";
+      else if (job.deadline && new Date(job.deadline) < new Date()) status = "expire";
 
-    const mappedJob = {
-      id: job.id,
-      companyLogo: job.company.account?.logoUrl ?? "",
-      companyBg: job.company.account?.backgroundUrl ?? "",
-      title: job.jobName,
-      companyName: job.company.name,
-      category: job.category?.name ?? "",
-      location: job.location,
-      posted: job.created_at.toISOString(),
-      applied: job.applications.length,
-      salary: {
-        min: Number(job.min_salary),
-        max: Number(job.max_salary),
-      },
-      type: job.jobType.name,
-      description: {
-        overview: job.aboutRole ?? "",
-        responsibility: job.responsibilities ?? "-",
-        requirement: job.requirements.join("\n"),
-        qualification: job.qualifications.join("\n"),
-      },
-      skills: job.tags.map((tag: { name: string }) => tag.name),
-      arrangement: job.jobArrangement.name,
-      deadline: job.deadline.toISOString(),
-      status,
-    };
+      return {
+        id: job.id,
+        companyLogo: job.company.account?.logoUrl ?? "",
+        companyBg: job.company.account?.backgroundUrl ?? "",
+        title: job.jobName,
+        companyName: job.company.name,
+        category: job.category?.name ?? "",
+        location: job.location,
+        posted: job.created_at.toISOString(),
+        applied: job.applications.length,
+        salary: { min: Number(job.min_salary), max: Number(job.max_salary) },
+        type: job.jobType?.name ?? "",
+        description: {
+          overview: job.aboutRole ?? "",
+          responsibility: job.responsibilities ?? "-",
+          requirement: job.requirements?.join("\n") ?? "",
+          qualification: job.qualifications?.join("\n") ?? "",
+        },
+        skills: job.tags.map((tag: { name: string }) => tag.name),
+        arrangement: job.jobArrangement?.name ?? "",
+        deadline: job.deadline?.toISOString() ?? "",
+        status,
+      };
+    });
 
-    return NextResponse.json(mappedJob);
+    return NextResponse.json(mappedJobs);
   } catch (error) {
-    console.error("API error:", error);
-    return NextResponse.json({ error: "Failed to fetch job" }, { status: 500 });
+    console.error("GET /api/company/jobs/[id] error:", error);
+    return NextResponse.json({ error: "Failed to fetch company jobs" }, { status: 500 });
   }
 }
 
 
-export async function DELETE(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: NextRequest, context: { params: { id: string } }) {
   try {
-    const { id } = await context.params;
+    const { id } = context.params;
     const jobId = Number(id);
 
-    const existingJob = await prisma.jobPost.findUnique({
-      where: { id: jobId },
-    });
+    const existingJob = await prisma.jobPost.findUnique({ where: { id: jobId } });
+    if (!existingJob) return NextResponse.json({ error: "Job not found" }, { status: 404 });
 
-    if (!existingJob) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
-    }
-
-    await prisma.jobPost.delete({
-      where: { id: jobId },
-    });
-
-    return NextResponse.json({ message: "Job deleted successfully" }, { status: 200 });
+    await prisma.jobPost.delete({ where: { id: jobId } });
+    return NextResponse.json({ message: "Job deleted successfully" });
   } catch (error) {
-    console.error("DELETE /api/jobs/[id] error:", error);
+    console.error("DELETE /api/company/jobs/[id] error:", error);
     return NextResponse.json({ error: "Failed to delete job" }, { status: 500 });
   }
 }
 
 
-export async function PATCH(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, context: { params: { id: string } }) {
   try {
-    const { id } = await context.params;
+    const { id } = context.params;
     const jobId = Number(id);
 
     const existingJob = await prisma.jobPost.findUnique({
       where: { id: jobId },
       include: { tags: true, category: true },
     });
+    if (!existingJob) return NextResponse.json({ error: "Job not found" }, { status: 404 });
 
-    if (!existingJob) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
-    }
     const body = await request.json();
 
     const arrangement = body.arrangement
       ? await prisma.jobArrangement.findUnique({ where: { name: body.arrangement } })
       : null;
-
-
     const type = body.type
       ? await prisma.jobType.findUnique({ where: { name: body.type } })
       : null;
-
     if ((body.arrangement && !arrangement) || (body.type && !type)) {
       return NextResponse.json({ error: "Invalid arrangement or type" }, { status: 400 });
     }
 
     const tagIds = body.tags?.length
-      ? await prisma.jobTag.findMany({
-          where: { name: { in: body.tags } },
-          select: { id: true },
-        })
+      ? await prisma.jobTag.findMany({ where: { name: { in: body.tags } }, select: { id: true } })
       : [];
 
     let categoryId = existingJob.job_category_id;
     if (body.category) {
       const category = await prisma.jobCategory.findUnique({ where: { name: body.category } });
-      if (!category) {
-        return NextResponse.json({ error: "Category not found" }, { status: 400 });
-      }
+      if (!category) return NextResponse.json({ error: "Category not found" }, { status: 400 });
       categoryId = category.id;
     }
 
@@ -157,12 +126,9 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json({
-      message: "Job updated successfully",
-      job: updatedJob,
-    });
+    return NextResponse.json({ message: "Job updated successfully", job: updatedJob });
   } catch (error) {
-    console.error("PATCH /api/jobs/[id] error:", error);
+    console.error("PATCH /api/company/jobs/[id] error:", error);
     return NextResponse.json({ error: "Failed to update job" }, { status: 500 });
   }
 }
