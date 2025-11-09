@@ -143,6 +143,7 @@ export async function POST(req: NextRequest) {
             year: (validatedData.data as StudentData).year.toString(),
             phone: (validatedData.data as StudentData).phone,
             transcript: transcriptPath,
+            updated_at: new Date(),
           }
         })
       } else {
