@@ -2,8 +2,9 @@
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
 import Link from "next/link";
+import { useDismissibleBanner } from "@/hooks/useDismissibleBanner";
 
 interface CompanyVerificationBannerProps {
   registrationStatus: "PENDING" | "APPROVED" | "REJECTED";
@@ -14,12 +15,28 @@ export function CompanyVerificationBanner({
   registrationStatus,
   verificationNotes,
 }: CompanyVerificationBannerProps) {
+  // Use the dismissible banner hook
+  const { isDismissed, handleDismiss } = useDismissibleBanner(registrationStatus, "companyBannerDismissedStatus");
+
+  // Don't show banner if approved or dismissed
+  if (registrationStatus === "APPROVED" || isDismissed) {
+    return null;
+  }
+
   // Company pending approval
   if (registrationStatus === "PENDING") {
     return (
-      <Alert className="mb-6 border-blue-300 bg-blue-50">
+      <Alert className="mb-6 border-blue-300 bg-blue-50 relative">
         <AlertCircle className="h-4 w-4 text-blue-600" />
-        <AlertDescription>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 h-6 w-6 p-0 hover:bg-blue-100"
+          onClick={handleDismiss}
+        >
+          <X className="h-4 w-4 text-blue-600" />
+        </Button>
+        <AlertDescription className="pr-8">
           <strong className="text-blue-900">⏳ Company Registration Pending Admin Approval</strong>
           <p className="text-blue-800 mt-1">
             Your company registration is under review. You&apos;ll receive an email once an admin
@@ -33,9 +50,17 @@ export function CompanyVerificationBanner({
   // Company rejected
   if (registrationStatus === "REJECTED") {
     return (
-      <Alert variant="destructive" className="mb-6">
+      <Alert variant="destructive" className="mb-6 relative">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 h-6 w-6 p-0 hover:bg-red-100"
+          onClick={handleDismiss}
+        >
+          <X className="h-4 w-4 text-red-600" />
+        </Button>
+        <AlertDescription className="pr-8">
           <div>
             <strong>❌ Company Registration Rejected</strong>
             {verificationNotes && (
@@ -53,21 +78,6 @@ export function CompanyVerificationBanner({
               </Button>
             </Link>
           </div>
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  // Company approved
-  if (registrationStatus === "APPROVED") {
-    return (
-      <Alert className="mb-6 border-green-300 bg-green-50">
-        <CheckCircle className="h-4 w-4 text-green-600" />
-        <AlertDescription>
-          <strong className="text-green-900">✓ Company Verified</strong>
-          <p className="text-green-800 mt-1">
-            Your company has been successfully verified. You can now post jobs and manage applications.
-          </p>
         </AlertDescription>
       </Alert>
     );

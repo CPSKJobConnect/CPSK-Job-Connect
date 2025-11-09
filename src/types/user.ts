@@ -39,6 +39,7 @@ export interface BaseUser {
     year: number;
     phone: string;
     registration_status: "PENDING" | "APPROVED" | "REJECTED";
+    verification_notes?: string | null;
     documents: {
       evidence: FileMeta[];
     };

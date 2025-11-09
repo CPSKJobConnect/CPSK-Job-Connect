@@ -109,7 +109,7 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
                     alt="applicantProfile"
                     width={70}
                     height={70}
-                    className="rounded-lg shadow-md object-cover"
+                    className="w-[70px] h-[70px] object-cover rounded-lg shadow-md"
                   />
                 ) : (
                   <div className="w-[70px] h-[70px] bg-gray-100 rounded-lg shadow-md flex items-center justify-center text-2xl font-semibold text-gray-700">

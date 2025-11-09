@@ -2,8 +2,9 @@
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Mail, CheckCircle } from "lucide-react";
+import { AlertCircle, Mail, CheckCircle, X } from "lucide-react";
 import Link from "next/link";
+import { useDismissibleBanner } from "@/hooks/useDismissibleBanner";
 
 interface VerificationBannerProps {
   emailVerified: boolean;
@@ -20,12 +21,30 @@ export function VerificationBanner({
   email,
   rejectionReason,
 }: VerificationBannerProps) {
+  // Create a unique key for this banner state
+  const bannerKey = `${studentStatus}_${verificationStatus}_${emailVerified}`;
+
+  // Use the dismissible banner hook
+  const { isDismissed, handleDismiss } = useDismissibleBanner(bannerKey, "studentBannerDismissedKey");
+  // Don't show if dismissed
+  if (isDismissed) {
+    return null;
+  }
+
   // Current students who haven't verified email
   if (studentStatus === "CURRENT" && !emailVerified) {
     return (
-      <Alert className="mb-6 border-blue-300 bg-blue-50">
+      <Alert className="mb-6 border-blue-300 bg-blue-50 relative">
         <Mail className="h-4 w-4 text-blue-600" />
-        <AlertDescription className="flex items-center justify-between">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 h-6 w-6 p-0 hover:bg-blue-100"
+          onClick={handleDismiss}
+        >
+          <X className="h-4 w-4 text-blue-600" />
+        </Button>
+        <AlertDescription className="flex items-center justify-between pr-8">
           <div>
             <strong className="text-blue-900">📧 Email Verification Needed</strong>
             <p className="text-blue-800 mt-1">
@@ -45,9 +64,17 @@ export function VerificationBanner({
   // Alumni pending approval
   if (studentStatus === "ALUMNI" && verificationStatus === "PENDING") {
     return (
-      <Alert className="mb-6 border-blue-300 bg-blue-50">
+      <Alert className="mb-6 border-blue-300 bg-blue-50 relative">
         <AlertCircle className="h-4 w-4 text-blue-600" />
-        <AlertDescription>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 h-6 w-6 p-0 hover:bg-blue-100"
+          onClick={handleDismiss}
+        >
+          <X className="h-4 w-4 text-blue-600" />
+        </Button>
+        <AlertDescription className="pr-8">
           <strong className="text-blue-900">⏳ Account Pending Admin Approval</strong>
           <p className="text-blue-800 mt-1">
             Your alumni verification is under review. You&apos;ll receive an email once an admin
@@ -61,9 +88,17 @@ export function VerificationBanner({
   // Alumni rejected
   if (studentStatus === "ALUMNI" && verificationStatus === "REJECTED") {
     return (
-      <Alert variant="destructive" className="mb-6">
+      <Alert variant="destructive" className="mb-6 relative">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 h-6 w-6 p-0 hover:bg-red-100"
+          onClick={handleDismiss}
+        >
+          <X className="h-4 w-4 text-red-600" />
+        </Button>
+        <AlertDescription className="pr-8">
           <div>
             <strong>❌ Verification Rejected</strong>
             {rejectionReason && (
@@ -89,9 +124,17 @@ export function VerificationBanner({
   // Alumni approved but email not verified
   if (studentStatus === "ALUMNI" && verificationStatus === "APPROVED" && !emailVerified) {
     return (
-      <Alert className="mb-6 border-green-300 bg-green-50">
+      <Alert className="mb-6 border-green-300 bg-green-50 relative">
         <CheckCircle className="h-4 w-4 text-green-600" />
-        <AlertDescription className="flex items-center justify-between">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 h-6 w-6 p-0 hover:bg-green-100"
+          onClick={handleDismiss}
+        >
+          <X className="h-4 w-4 text-green-600" />
+        </Button>
+        <AlertDescription className="flex items-center justify-between pr-8">
           <div>
             <Link href={`/student/verify-email?email=${encodeURIComponent(email || "")}`} className="hover:underline">
               <strong className="text-green-900 cursor-pointer">✅ Verification Approved - Email Verification Required</strong>
@@ -110,12 +153,20 @@ export function VerificationBanner({
     );
   }
 
-  // All verified - show success message (optional)
+  // All verified - show success message (optional) - can be dismissed permanently
   if (emailVerified && verificationStatus === "APPROVED") {
     return (
-      <Alert className="mb-6 border-green-300 bg-green-50">
+      <Alert className="mb-6 border-green-300 bg-green-50 relative">
         <CheckCircle className="h-4 w-4 text-green-600" />
-        <AlertDescription>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 h-6 w-6 p-0 hover:bg-green-100"
+          onClick={handleDismiss}
+        >
+          <X className="h-4 w-4 text-green-600" />
+        </Button>
+        <AlertDescription className="pr-8">
           <strong className="text-green-900">✓ Account Verified</strong>
           <p className="text-green-800 mt-1">
             Your account is fully verified. You can browse and apply for jobs.
