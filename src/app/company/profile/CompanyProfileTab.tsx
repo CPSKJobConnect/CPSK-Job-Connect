@@ -103,6 +103,8 @@ export default function CompanyProfileTab({ company, onUpdate }: CompanyProfileT
               <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
+                type="number"
+                inputMode="numeric"
                 value={formData.phone ?? ""}
                 onChange={(e) => handleChange("phone", e.target.value)}
                 disabled={!isEditing}
