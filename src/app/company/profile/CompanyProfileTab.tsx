@@ -70,7 +70,7 @@ export default function CompanyProfileTab({ company, onUpdate }: CompanyProfileT
               <Label htmlFor="name">Company Name</Label>
               <Input
                 id="name"
-                value={formData.name}
+                value={formData.name ?? ""}
                 onChange={(e) => handleChange("name", e.target.value)}
                 disabled={!isEditing}
                 className={!isEditing ? "bg-gray-50" : ""}
@@ -81,7 +81,7 @@ export default function CompanyProfileTab({ company, onUpdate }: CompanyProfileT
               <Label htmlFor="location">Location</Label>
               <Input
                 id="location"
-                value={formData.location}
+                value={formData.location ?? ""}
                 onChange={(e) => handleChange("location", e.target.value)}
                 disabled={!isEditing}
                 className={!isEditing ? "bg-gray-50" : ""}
@@ -92,7 +92,7 @@ export default function CompanyProfileTab({ company, onUpdate }: CompanyProfileT
               <Label htmlFor="website">Website</Label>
               <Input
                 id="website"
-                value={formData.website}
+                value={formData.website ?? ""}
                 onChange={(e) => handleChange("website", e.target.value)}
                 disabled={!isEditing}
                 className={!isEditing ? "bg-gray-50" : ""}
@@ -103,7 +103,7 @@ export default function CompanyProfileTab({ company, onUpdate }: CompanyProfileT
               <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
-                value={formData.phone}
+                value={formData.phone ?? ""}
                 onChange={(e) => handleChange("phone", e.target.value)}
                 disabled={!isEditing}
                 className={!isEditing ? "bg-gray-50" : ""}
@@ -115,7 +115,7 @@ export default function CompanyProfileTab({ company, onUpdate }: CompanyProfileT
             <Label htmlFor="description">Description</Label>
             <textarea
               id="description"
-              value={formData.description}
+              value={formData.description ?? ""}
               onChange={(e) => handleChange("description", e.target.value)}
               disabled={!isEditing}
               className={`w-full p-2 border rounded-md ${!isEditing ? "bg-gray-50" : ""}`}
