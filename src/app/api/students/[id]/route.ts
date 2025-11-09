@@ -28,6 +28,9 @@ export async function GET(request: NextRequest) {
     const [firstname, ...lastnameParts] = student.name.split(" ");
     const lastname = lastnameParts.join(" ");
 
+    // Handle year field: can be numeric (1-8) or "Alumni"
+    const yearValue = student.year === "Alumni" ? "Alumni" : Number(student.year);
+
     const responseStudent = {
       id: student.id,
       account_id: student.account_id,
@@ -39,7 +42,7 @@ export async function GET(request: NextRequest) {
       firstname,
       lastname,
       faculty: student.faculty,
-      year: Number(student.year),
+      year: yearValue,
       phone: student.phone,
       documents: {
         resume: student.account.documents
@@ -76,8 +79,22 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { name, faculty, year, phone } = body;
 
-    if (!name || !faculty || !year || !phone) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    console.log("📝 Update request body:", { name, faculty, year, phone });
+
+    // Validate required fields
+    const missingFields = [];
+    if (!name || name.trim() === "") missingFields.push("name");
+    if (!faculty || faculty.trim() === "") missingFields.push("faculty");
+    if (!year && year !== 0) missingFields.push("year");
+    if (!phone || phone.trim() === "") missingFields.push("phone");
+
+    if (missingFields.length > 0) {
+      console.error("❌ Missing fields:", missingFields);
+      return NextResponse.json({
+        error: "Missing required fields",
+        fields: missingFields,
+        received: { name, faculty, year, phone }
+      }, { status: 400 });
     }
 
     const student = await prisma.student.findUnique({
@@ -114,6 +131,9 @@ export async function PUT(request: NextRequest) {
     const [firstname, ...lastnameParts] = updatedStudent.name.split(" ");
     const lastname = lastnameParts.join(" ");
 
+    // Handle year field: can be numeric (1-8) or "Alumni"
+    const yearValueUpdated = updatedStudent.year === "Alumni" ? "Alumni" : Number(updatedStudent.year);
+
     const responseStudent = {
       id: updatedStudent.id,
       account_id: updatedStudent.account_id,
@@ -125,7 +145,7 @@ export async function PUT(request: NextRequest) {
       firstname,
       lastname,
       faculty: updatedStudent.faculty,
-      year: Number(updatedStudent.year),
+      year: yearValueUpdated,
       phone: updatedStudent.phone,
       documents: {
         resume: updatedStudent.account.documents
