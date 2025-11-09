@@ -69,6 +69,7 @@ export async function GET() {
       year: new Date().getFullYear(), // Not used for companies but required by interface
       phone: company.phone,
       registration_status: company.registration_status as "PENDING" | "APPROVED" | "REJECTED",
+      verification_notes: company.verification_notes,
       documents: {
         evidence: company.account.documents.map(doc => ({
           id: doc.id,
@@ -176,7 +177,9 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({
       message: "Profile updated successfully",
-      company: updatedCompany
+      company: updatedCompany,
+      logoUrl,
+      backgroundUrl
     }, { status: 200 });
 
   } catch (error) {

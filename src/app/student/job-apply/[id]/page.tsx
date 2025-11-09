@@ -170,10 +170,10 @@ export default function Page() {
                 alt={job.companyName || "companyLogo"}
                 width={120}
                 height={120}
-                className="h-auto bg-white translate-y-1 shadow-md rounded-md"
+                className="w-[120px] h-[120px] object-contain bg-white translate-y-1 shadow-md rounded-md"
               />
              ) : (
-              <div className="h-[120px] w-[120px] bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+              <div className="w-[120px] h-[120px] bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
                 {job.companyName ? job.companyName.charAt(0).toUpperCase() : "C"}
             </div>
             )}

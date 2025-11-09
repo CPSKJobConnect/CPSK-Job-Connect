@@ -59,11 +59,9 @@ export async function POST(request: NextRequest) {
 
     // Upload new profile image
     const timestamp = Date.now();
-    const fileExtension = file.name.split(".").pop();
-    const fileName = `profile-${timestamp}.${fileExtension}`;
-    const filePath = `company-${account.id}/${fileName}`;
+    const filePath = `profile-images/${account.id}/${timestamp}_${file.name}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { data, error: uploadError } = await supabase.storage
       .from("documents")
       .upload(filePath, file);
 
@@ -71,15 +69,24 @@ export async function POST(request: NextRequest) {
       throw new Error(`Failed to upload file: ${uploadError.message}`);
     }
 
+    // Get signed URL (valid for 1 year)
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from("documents")
+      .createSignedUrl(data.path, 31536000); // 1 year in seconds
+
+    if (signedUrlError) {
+      throw new Error(`Failed to generate signed URL: ${signedUrlError.message}`);
+    }
+
     // Update account with new profile image URL
     await prisma.account.update({
       where: { id: account.id },
-      data: { logoUrl: filePath }
+      data: { logoUrl: signedUrlData.signedUrl }
     });
 
     return NextResponse.json({
       success: true,
-      profile_url: filePath
+      profile_url: signedUrlData.signedUrl
     });
   } catch (error) {
     console.error("Error uploading profile image:", error);
