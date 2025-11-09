@@ -13,6 +13,7 @@ import ApplicantBarChart from "./ApplicantLineChart";
 import StatusPieChart from "./StatusPieChart";
 import CategoryBarChart from "./CategoryBarChart";
 import InterviewConversionCard from "./InterviewConversionCard";
+import { VerificationBanner } from "@/components/VerificationBanner";
 
 
 const statIconMap: Record<string, { icon: IconType; iconBg: string; iconColor: string; key: string }> = {
@@ -24,8 +25,9 @@ const statIconMap: Record<string, { icon: IconType; iconBg: string; iconColor: s
 
 
 const StudentDashboardPage = () => {
-  const { data: session, status } = useSession()
+  const { data: session, status, update } = useSession()
   const [studentStat, setStudentStat] = useState<{ title: string; value: number; icon: IconType; iconBg: string; iconColor: string }[]>([]);
+  const [verificationNotes, setVerificationNotes] = useState<string | null>(null);
 
   useEffect(() => {
     const stats = Object.entries(statIconMap).map(([title, data]) => ({
@@ -38,6 +40,44 @@ const StudentDashboardPage = () => {
 
     setStudentStat(stats);
   }, []);
+
+  // Check for verification status updates
+  useEffect(() => {
+    const checkVerificationStatus = async () => {
+      if (!session?.user?.id) return;
+
+      try {
+        const response = await fetch('/api/students/verification-status');
+        if (response.ok) {
+          const data = await response.json();
+
+          // Store verification notes for display in banner
+          setVerificationNotes(data.verificationNotes);
+
+          // If verification status changed, update the session
+          if (data.verificationStatus !== session.user.verificationStatus) {
+            await update({
+              ...session,
+              user: {
+                ...session.user,
+                verificationStatus: data.verificationStatus,
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error checking verification status:', error);
+      }
+    };
+
+    // Check on mount
+    checkVerificationStatus();
+
+    // Check every 30 seconds
+    const interval = setInterval(checkVerificationStatus, 30000);
+
+    return () => clearInterval(interval);
+  }, [session, update]);
 
   if (status === "loading") {
     return (
@@ -58,6 +98,19 @@ const StudentDashboardPage = () => {
 
   return (
     <div className="flex flex-col gap-5 p-5">
+      {/* Verification Banner */}
+      {session.user.emailVerified !== undefined &&
+       session.user.studentStatus &&
+       session.user.verificationStatus && (
+        <VerificationBanner
+          emailVerified={session.user.emailVerified}
+          studentStatus={session.user.studentStatus}
+          verificationStatus={session.user.verificationStatus}
+          email={session.user.email || ""}
+          rejectionReason={verificationNotes}
+        />
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {studentStat.map((stat, idx) => {
           const iconData = statIconMap[stat.title];

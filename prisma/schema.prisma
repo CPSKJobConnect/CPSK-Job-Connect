@@ -27,8 +27,8 @@ model Account {
   notifications     Notification[]
   reports           Report[]
   student           Student?
-  sessions          Session[]
   verifiedStudents  Student[]      @relation("VerifiedStudents")
+  sessions          Session[]
 
   @@unique([provider, providerAccountId])
   @@index([email])
@@ -53,26 +53,26 @@ enum VerificationStatus {
 }
 
 model Student {
-  id                   Int                  @id @default(autoincrement())
-  account_id           Int                  @unique
-  student_id           String
-  name                 String
-  faculty              String
-  year                 String
-  phone                String
-  created_at           DateTime             @default(now())
-  updated_at           DateTime             @updatedAt
-  transcript           String?
-  email_verified       Boolean              @default(true)
-  student_status       StudentStatus        @default(CURRENT)
-  verification_status  VerificationStatus   @default(APPROVED)
-  verified_by          Int?
-  verified_at          DateTime?
-  verification_notes   String?
-  applications         Application[]
-  savedJobs            SavedJob[]
-  account              Account              @relation(fields: [account_id], references: [id], onDelete: Cascade)
-  verifiedByAdmin      Account?             @relation("VerifiedStudents", fields: [verified_by], references: [id])
+  id                  Int                @id @default(autoincrement())
+  account_id          Int                @unique
+  student_id          String
+  name                String
+  faculty             String
+  year                String
+  phone               String
+  created_at          DateTime           @default(now())
+  updated_at          DateTime           @updatedAt
+  transcript          String?
+  email_verified      Boolean            @default(true)
+  student_status      StudentStatus      @default(CURRENT)
+  verification_notes  String?
+  verification_status VerificationStatus @default(APPROVED)
+  verified_at         DateTime?
+  verified_by         Int?
+  applications        Application[]
+  savedJobs           SavedJob[]
+  account             Account            @relation(fields: [account_id], references: [id], onDelete: Cascade)
+  verifiedByAdmin     Account?           @relation("VerifiedStudents", fields: [verified_by], references: [id])
 
   @@index([account_id])
   @@index([student_status])
@@ -104,7 +104,7 @@ model Document {
   file_name             String
   portfolioApplications Application[] @relation("PortfolioDocument")
   resumeApplications    Application[] @relation("ResumeDocument")
-  account               Account       @relation(fields: [account_id], references: [id])
+  account               Account       @relation(fields: [account_id], references: [id], onDelete: Cascade)
   documentType          DocumentType  @relation(fields: [doc_type_id], references: [id])
 }
 
@@ -138,7 +138,6 @@ model JobPost {
   jobName            String
   location           String
   aboutRole          String
-  responsibilities   String?
   requirements       String[]
   qualifications     String[]
   min_salary         Int
@@ -149,13 +148,14 @@ model JobPost {
   is_Published       Boolean        @default(true)
   job_arrangement_id Int
   job_type_id        Int
-  job_category_id Int?
+  job_category_id    Int?
+  responsibilities   String?
   applications       Application[]
-  savedBy            SavedJob[]
   company            Company        @relation(fields: [company_id], references: [id], onDelete: Cascade)
   jobArrangement     JobArrangement @relation(fields: [job_arrangement_id], references: [id])
+  category           JobCategory?   @relation(fields: [job_category_id], references: [id])
   jobType            JobType        @relation(fields: [job_type_id], references: [id])
-  category        JobCategory? @relation(fields: [job_category_id], references: [id])
+  savedBy            SavedJob[]
   tags               JobTag[]       @relation("JobTagesOnPosts")
 }
 
@@ -196,11 +196,11 @@ model Application {
   portfolioDocument Document?         @relation("PortfolioDocument", fields: [portfolio_id], references: [id])
   resumeDocument    Document?         @relation("ResumeDocument", fields: [resume_id], references: [id])
   applicationStatus ApplicationStatus @relation(fields: [status], references: [id])
-  student           Student           @relation(fields: [student_id], references: [id])
+  student           Student           @relation(fields: [student_id], references: [id], onDelete: Cascade)
 
   @@unique([student_id, job_post_id])
-  @@index([student_id])
   @@index([job_post_id])
+  @@index([student_id])
 }
 
 model ApplicationStatus {
@@ -214,9 +214,8 @@ model SavedJob {
   student_id  Int
   job_post_id Int
   created_at  DateTime @default(now())
-
-  student Student @relation(fields: [student_id], references: [id], onDelete: Cascade)
-  jobPost JobPost @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
+  jobPost     JobPost  @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
+  student     Student  @relation(fields: [student_id], references: [id], onDelete: Cascade)
 
   @@unique([student_id, job_post_id])
   @@index([student_id])

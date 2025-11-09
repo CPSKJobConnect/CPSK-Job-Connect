@@ -62,20 +62,47 @@ async function main() {
     },
   });
 
-  const transcriptType = await prisma.documentType.upsert({
+  const portfolioTypeActual = await prisma.documentType.upsert({
     where: { id: 3 },
     update: {},
     create: {
       id: 3,
-      name: 'Transcript',
+      name: 'Portfolio',
     },
   });
 
-  const companyEvidenceType = await prisma.documentType.upsert({
+  const transcriptType = await prisma.documentType.upsert({
     where: { id: 4 },
     update: {},
     create: {
       id: 4,
+      name: 'Transcript',
+    },
+  });
+
+  const profileLogoType = await prisma.documentType.upsert({
+    where: { id: 5 },
+    update: {},
+    create: {
+      id: 5,
+      name: 'ProfileLogo',
+    },
+  });
+
+  const profileBackgroundType = await prisma.documentType.upsert({
+    where: { id: 6 },
+    update: {},
+    create: {
+      id: 6,
+      name: 'ProfileBackground',
+    },
+  });
+
+  const companyEvidenceType = await prisma.documentType.upsert({
+    where: { id: 7 },
+    update: {},
+    create: {
+      id: 7,
       name: 'Company Evidence',
     },
   });

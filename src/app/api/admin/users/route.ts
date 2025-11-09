@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     console.log("🔍 User role:", userRole);
 
     if (userRole !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
 
     if (role && role !== "all") {
       whereClause.accountRole = {
-        name: role.charAt(0).toUpperCase() + role.slice(1)
+        name: { equals: role.toLowerCase(), mode: "insensitive" }
       };
     }
 

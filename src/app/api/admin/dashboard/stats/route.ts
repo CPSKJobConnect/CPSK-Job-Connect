@@ -16,7 +16,7 @@ export async function GET() {
     console.log("🔍 User role:", userRole);
 
     if (userRole !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 
     // Get all statistics in parallel

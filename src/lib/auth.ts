@@ -50,6 +50,13 @@ export const authOptions: NextAuthOptions = {
               select: {
                 name: true
               }
+            },
+            student: {
+              select: {
+                email_verified: true,
+                student_status: true,
+                verification_status: true
+              }
             }
           }
         });
@@ -69,6 +76,9 @@ export const authOptions: NextAuthOptions = {
           role: user.accountRole?.name,
           logoUrl: user.logoUrl,
           backgroundUrl: user.backgroundUrl,
+          emailVerified: user.student?.email_verified,
+          studentStatus: user.student?.student_status,
+          verificationStatus: user.student?.verification_status,
         } as User
       },
     }),
@@ -82,11 +92,22 @@ export const authOptions: NextAuthOptions = {
         token.username = (user as any).name || (user as any).username;
         token.logoUrl = user.logoUrl;
         token.backgroundUrl = user.backgroundUrl;
+        token.emailVerified = typeof user.emailVerified === 'boolean' ? user.emailVerified : undefined;
+        token.studentStatus = user.studentStatus;
+        token.verificationStatus = user.verificationStatus;
       }
 
-      // Handle session update (when profile image is changed)
-      if (trigger === "update" && session?.user?.logoUrl) {
-        token.logoUrl = session.user.logoUrl;
+      // Handle session update (when profile image is changed or verification status changes)
+      if (trigger === "update") {
+        if (session?.user?.logoUrl) {
+          token.logoUrl = session.user.logoUrl;
+        }
+        if (session?.user?.emailVerified !== undefined) {
+          token.emailVerified = session.user.emailVerified;
+        }
+        if (session?.user?.verificationStatus) {
+          token.verificationStatus = session.user.verificationStatus;
+        }
       }
 
       // for OAuth users
@@ -144,6 +165,9 @@ export const authOptions: NextAuthOptions = {
         session.user.username = token.username as string
         session.user.logoUrl = token.logoUrl as string
         session.user.backgroundUrl = token.backgroundUrl as string
+        session.user.emailVerified = token.emailVerified
+        session.user.studentStatus = token.studentStatus
+        session.user.verificationStatus = token.verificationStatus
       }
       return session;
     },

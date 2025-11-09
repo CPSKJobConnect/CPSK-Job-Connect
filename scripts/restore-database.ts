@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -10,6 +11,12 @@ const prisma = new PrismaClient({
     },
   },
 });
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 async function restoreDatabase() {
   try {
@@ -32,8 +39,25 @@ async function restoreDatabase() {
 
     const data = JSON.parse(fs.readFileSync(backupFile, 'utf-8'));
 
+    console.log('\n⚠️  IMPORTANT: Prerequisites for restore:');
+    console.log('1. Database must be migrated (run: npx prisma migrate deploy)');
+    console.log('2. OR run fresh migrations (run: npx prisma migrate reset --force)');
     console.log('\n⚠️  WARNING: This will restore data to your database.');
-    console.log('Make sure you have run migrations and seeded the database first!\n');
+    console.log('Any existing data may be overwritten!\n');
+
+    // Check if tables exist by trying a simple query
+    try {
+      await prisma.accountRole.findFirst();
+    } catch (error) {
+      console.error('\n❌ ERROR: Database tables do not exist!\n');
+      console.log('Please run ONE of these commands first:\n');
+      console.log('Option 1 - Fresh start (recommended):');
+      console.log('  npx prisma migrate reset --force\n');
+      console.log('Option 2 - Deploy migrations only:');
+      console.log('  npx prisma migrate deploy\n');
+      console.log('Then try the restore again.\n');
+      process.exit(1);
+    }
 
     // Restore data in order (respecting foreign key constraints)
 
@@ -174,7 +198,7 @@ async function restoreDatabase() {
       console.log(`Restoring ${data.jobPosts.length} job posts...`);
       for (const jobPost of data.jobPosts) {
         // Remove relation fields for initial creation
-        const { categories, tags, ...postData } = jobPost;
+        const { category, tags, applications, savedBy, company, jobArrangement, jobType, ...postData } = jobPost;
 
         await prisma.jobPost.upsert({
           where: { id: postData.id },
@@ -182,18 +206,7 @@ async function restoreDatabase() {
           create: postData,
         });
 
-        // Restore many-to-many relationships
-        if (categories && categories.length > 0) {
-          await prisma.jobPost.update({
-            where: { id: postData.id },
-            data: {
-              category: {
-                connect: { id: categories[0].id }
-              },
-            },
-          });
-        }
-
+        // Restore many-to-many relationship with tags
         if (tags && tags.length > 0) {
           await prisma.jobPost.update({
             where: { id: postData.id },
@@ -273,6 +286,80 @@ async function restoreDatabase() {
     }
 
     console.log('\n✅ Database restore completed successfully!');
+
+    // Restore Supabase Storage files
+    const backupDir = path.dirname(backupFile);
+    const backupFileName = path.basename(backupFile, '.json');
+    const timestamp = backupFileName.replace('backup-', '');
+    const storageBackupDir = path.join(backupDir, `storage-${timestamp}`);
+
+    if (fs.existsSync(storageBackupDir)) {
+      console.log('\n📦 Starting Supabase Storage restore...');
+      console.log(`📁 Storage backup directory: ${storageBackupDir}`);
+
+      let uploadedFiles = 0;
+      let failedFiles = 0;
+      let skippedFiles = 0;
+
+      // Get all documents from restored database
+      const documents = data.documents as Array<{ id: number; file_path: string; file_name: string }>;
+
+      if (documents && documents.length > 0) {
+        console.log(`Found ${documents.length} documents to restore to Supabase Storage...`);
+
+        for (const doc of documents) {
+          try {
+            const localFilePath = path.join(storageBackupDir, doc.file_path);
+
+            if (!fs.existsSync(localFilePath)) {
+              console.warn(`⚠️  Local file not found: ${localFilePath}`);
+              skippedFiles++;
+              continue;
+            }
+
+            // Read file from local backup
+            const fileBuffer = fs.readFileSync(localFilePath);
+            const fileType = doc.file_name.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream';
+
+            // Upload to Supabase (upsert to avoid errors if file already exists)
+            const { error } = await supabase.storage
+              .from('documents')
+              .upload(doc.file_path, fileBuffer, {
+                contentType: fileType,
+                upsert: true // Overwrite if exists
+              });
+
+            if (error) {
+              console.error(`❌ Failed to upload ${doc.file_path}:`, error.message);
+              failedFiles++;
+              continue;
+            }
+
+            uploadedFiles++;
+
+            // Progress indicator
+            if (uploadedFiles % 10 === 0) {
+              console.log(`Progress: ${uploadedFiles}/${documents.length} files uploaded...`);
+            }
+          } catch (error) {
+            console.error(`❌ Error restoring file ${doc.file_path}:`, error);
+            failedFiles++;
+          }
+        }
+
+        console.log(`\n✅ Storage restore completed!`);
+        console.log(`- Successfully uploaded: ${uploadedFiles} files`);
+        console.log(`- Failed uploads: ${failedFiles} files`);
+        console.log(`- Skipped (not found): ${skippedFiles} files`);
+      } else {
+        console.log('ℹ️  No documents found in backup to restore.');
+      }
+    } else {
+      console.log('\nℹ️  No storage backup directory found. Skipping file restore.');
+      console.log(`   Expected directory: ${storageBackupDir}`);
+    }
+
+    console.log('\n🎉 Full restore completed successfully!');
 
   } catch (error) {
     console.error('❌ Error restoring database:', error);

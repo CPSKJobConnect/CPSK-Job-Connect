@@ -2,6 +2,10 @@ import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * GET /api/students/profile
+ * Fetch the current logged-in student's profile
+ */
 export async function GET(request: NextRequest) {
   try {
     const session = await getApiSession(request);
@@ -64,10 +68,14 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error("API error:", error);
-    return NextResponse.json({ error: "Failed to fetch student" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch student profile" }, { status: 500 });
   }
 }
 
+/**
+ * PUT /api/students/profile
+ * Update the current logged-in student's profile
+ */
 export async function PUT(request: NextRequest) {
   try {
     const session = await getApiSession(request);
@@ -163,6 +171,7 @@ export async function PUT(request: NextRequest) {
       }
     };
 
+    console.log("✅ Profile updated successfully for student:", student.id);
     return NextResponse.json(responseStudent);
 
   } catch (error) {
