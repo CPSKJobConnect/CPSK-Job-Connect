@@ -168,11 +168,11 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
               {/* Main nav */}
 
               {/* Logo */}
-              <div className="flex items-center">
+              <div className="flex items-center gap-4">
                 <button
                   onClick={(e) => e.preventDefault()}
                   aria-label="Home"
-                  className="inline-flex items-center justify-center p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="inline-flex items-center justify-center p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 hover:scale-105 transition-transform"
                 >
                   {logo}
                 </button>
@@ -207,17 +207,17 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
               {isMobile ? (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      className="group h-9 w-9 hover:bg-accent hover:text-accent-foreground"
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Open menu"
-                    >
-                      <HamburgerIcon />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-64 p-2">
-                    <div className="flex flex-col gap-2">
+                      <Button
+                        className="group h-10 w-10 bg-white/10 text-white hover:bg-white/20 rounded-lg shadow-sm"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Open menu"
+                      >
+                        <HamburgerIcon />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-72 p-3 bg-white rounded-lg shadow-lg ring-1 ring-black/5">
+                      <div className="flex flex-col gap-3">
                       {/* Use a plain vertical list for mobile to avoid upstream NavigationMenu layout overrides */}
                       <div className="flex flex-col items-start gap-1">
                         {/* {navigationLinks.map((link, index) => (
@@ -239,73 +239,71 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                         ))} */}
                       </div>
 
-                      <div className="border-t" />
-
                       {/* Render action items (Profile / Bookmarks / Sign out) as individual mobile menu entries
                           instead of dumping the entire rightContent node which may render horizontally. */}
-                      <div className="flex flex-col gap-2 pt-2">
+                      <div className="flex flex-col gap-2 pt-2 divide-y divide-gray-100">
                         {session ? (
                           <>
                             <button
                               onClick={() => router.push(`/${session.user?.role || 'student'}/profile`)}
-                              className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                              className="w-full text-left flex items-center gap-3 px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition"
                             >
-                              Profile
+                              <span className="font-medium">Profile</span>
                             </button>
 
                             <button
                               onClick={() => router.push('/jobs')}
-                              className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                              className="w-full text-left flex items-center gap-3 px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition"
                             >
                               Browse Jobs
                             </button>
 
                             <button
                               onClick={() => router.push(`/${session.user?.role || 'student'}/dashboard`)}
-                              className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                              className="w-full text-left flex items-center gap-3 px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition"
                             >
                               Dashboard
                             </button>
 
                             {session.user?.role === 'company' && (
-                              <button
-                                onClick={() => router.push('/company/job-posting')}
-                                className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
-                              >
-                                Job Posting
-                              </button>
+                                <button
+                                  onClick={() => router.push('/company/job-posting')}
+                                  className="w-full text-left px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                                >
+                                  Job Posting
+                                </button>
                             )}
 
                             {session.user?.role === 'company' && (
-                              <button
-                                onClick={() => router.push('/company/job-applicant')}
-                                className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
-                              >
-                                Job Applicant
-                              </button>
+                                <button
+                                  onClick={() => router.push('/company/job-applicant')}
+                                  className="w-full text-left px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                                >
+                                  Job Applicant
+                                </button>
                             )}
 
                             {session.user?.role === 'student' && (
-                              <button
-                                onClick={() => router.push('/student/bookmark')}
-                                className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
-                              >
-                                Bookmark
-                              </button>
+                                <button
+                                  onClick={() => router.push('/student/bookmark')}
+                                  className="w-full text-left px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                                >
+                                  Bookmark
+                                </button>
                             )}
 
                             {session.user?.role === 'student' && (
-                              <button
-                                onClick={() => router.push('/student/my-application')}
-                                className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
-                              >
-                                My Applications
-                              </button>
+                                <button
+                                  onClick={() => router.push('/student/my-application')}
+                                  className="w-full text-left px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                                >
+                                  My Applications
+                                </button>
                             )}
 
                             <button
                               onClick={() => signOut({ callbackUrl: '/' })}
-                              className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-red-50 hover:text-red-600"
+                              className="w-full text-left flex items-center gap-3 px-3 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition"
                             >
                               Sign out
                             </button>
@@ -318,7 +316,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                               if (section) section.scrollIntoView({ behavior: 'smooth' });
                               else window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
                             }}
-                            className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                            className="w-full text-left flex items-center gap-3 px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition"
                           >
                             Sign In
                           </button>
@@ -336,6 +334,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                        role="button"
                        tabIndex={0}
                        aria-haspopup="menu"
+                       data-testid="profile-avatar"
                        className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center"
                       >
                         {session.user?.logoUrl ? (
@@ -353,16 +352,22 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                         )}
                       </div>
                     </PopoverTrigger>
-                    <PopoverContent className="w-50 text-center">
-                      <p className="text-sm font-medium">{session.user?.name}</p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-red-500 hover:text-red-600"
-                        onClick={() => signOut({ callbackUrl: "/" })}
-                      >
-                        Sign out
-                      </Button>
+                    <PopoverContent className="w-50 text-center p-3">
+                      <div className="flex flex-col divide-y divide-gray-200">
+                        <div className="py-2">
+                          <p className="text-sm font-medium">{session.user?.name}</p>
+                        </div>
+                        <div className="py-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-red-500 hover:text-red-600"
+                            onClick={() => signOut({ callbackUrl: "/" })}
+                          >
+                            Sign out
+                          </Button>
+                        </div>
+                      </div>
                     </PopoverContent>
                   </Popover>
                 ) : (

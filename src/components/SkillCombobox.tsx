@@ -147,6 +147,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
                       <CommandItem
                         key={idx}
                         value={skill}
+                        data-testid={`skill-option-${skill.replace(/\s/g, '-')}`}
                         onSelect={handleSelectSkill}
                       >
                         {skill}

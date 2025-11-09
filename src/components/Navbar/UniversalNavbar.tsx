@@ -130,10 +130,10 @@ export default function UniversalNavbar({ links, showBookmarks = false, onSignIn
                   variant="ghost"
                   size="sm"
                   className="w-full justify-start gap-2 hover:bg-gray-100 text-gray-700 hover:text-gray-900 font-normal"
-                  onClick={() => router.push('/student/bookmarks')}
+                  onClick={() => router.push('/student/bookmark')}
                 >
                   <Bookmark className="h-4 w-4" />
-                  <span>Bookmarks</span>
+                  <span>Bookmark</span>
                 </Button>
               )}
 

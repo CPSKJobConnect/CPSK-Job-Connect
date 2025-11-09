@@ -24,7 +24,7 @@ Cypress.Commands.add('fillJobPostDetail', () => {
   cy.get('[name="minSalary"]').click();
   cy.get('[name="minSalary"]').type('30000');
   cy.get('[name="maxSalary"]').click();
-  cy.get('[name="maxSalary"]').type('60000');
+  cy.get('[name="maxSalary"]').type('50000');
 
   const today = new Date();
   const nextMonth = new Date(today);
@@ -63,12 +63,6 @@ Cypress.Commands.add('postJob', (options = {}) => {
       : 'Job posted successfully!',
   } = options;
 
-  // cy.intercept('POST', '/api/company/jobs/create', {
-  //   statusCode: 200,
-  //   body: { message },
-  // }).as('jobPosting');
-
-
   cy.fillJobPostDetail();
   cy.get('[data-testid="next-step-button"]').click();
   cy.fillJobPostDescription();
@@ -79,8 +73,6 @@ Cypress.Commands.add('postJob', (options = {}) => {
   } else {
     cy.get('[data-testid="publish-job-button"]').click();
   }
-
-  // cy.wait('@jobPosting');
 });
 
 export {}
