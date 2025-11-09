@@ -1,7 +1,4 @@
 it('should login successfully and redirect to dashboard', function() {
-  cy.intercept('POST', '/api/login', (req) => {
-      req.reply({ statusCode: 200, body: { redirectTo: '/company/dashboard' } })
-  }).as('login')
   cy.visit('http://localhost:3000/')
   cy.get('#role-selection div.bg-green-100').click();
   cy.get('[name="email"]').click();
