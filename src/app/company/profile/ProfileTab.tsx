@@ -10,6 +10,8 @@ import { IoBusinessOutline, IoCallOutline, IoGlobeOutline, IoLocationOutline, Io
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
+import { useSession } from "next-auth/react";
 
 interface ProfileTabProps {
   company: Company;
@@ -19,6 +21,7 @@ interface ProfileTabProps {
 export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { data: session, update: updateSession } = useSession();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -129,7 +132,21 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
       });
 
       if (response.ok) {
+        const data = await response.json();
         toast.success("Profile updated successfully");
+
+        // Update session if logo or background was changed
+        if (logoFile || backgroundFile) {
+          await updateSession({
+            ...session,
+            user: {
+              ...session?.user,
+              logoUrl: data.logoUrl,
+              backgroundUrl: data.backgroundUrl,
+            },
+          });
+        }
+
         setIsEditing(false);
         setLogoPreview(null);
         setBackgroundPreview(null);
@@ -204,7 +221,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
               <Label className="text-sm font-medium mb-2 block">Company Logo</Label>
               <div className="flex items-center gap-4">
                 <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-100">
-                  {logoPreview || (company.profile_url && typeof company.profile_url === 'string' && company.profile_url.trim() !== "" && company.profile_url.startsWith('http')) ? (
+                  {logoPreview || isValidImageUrl(company.profile_url) ? (
                     <Image
                       src={logoPreview || company.profile_url!}
                       alt="Company Logo"
@@ -249,7 +266,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
               <Label className="text-sm font-medium mb-2 block">Background Image</Label>
               <div className="flex items-start gap-4">
                 <div className="relative w-48 h-24 rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100">
-                  {backgroundPreview || (company.bg_profile_url && typeof company.bg_profile_url === 'string' && company.bg_profile_url.trim() !== "" && company.bg_profile_url.startsWith('http')) ? (
+                  {backgroundPreview || isValidImageUrl(company.bg_profile_url) ? (
                     <Image
                       src={backgroundPreview || company.bg_profile_url!}
                       alt="Background"

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useRouter } from "next/navigation";
 import { Building2, LogOut } from 'lucide-react';
+import { isValidImageUrl } from '@/lib/validateImageUrl';
 
 export default function CompanyNavbar() {
   const { data: session } = useSession();
@@ -44,7 +45,7 @@ export default function CompanyNavbar() {
               aria-haspopup="menu"
               className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center"
             >
-              {session.user?.logoUrl && typeof session.user.logoUrl === 'string' && session.user.logoUrl.trim() !== "" && session.user.logoUrl.startsWith('http') ? (
+              {isValidImageUrl(session.user?.logoUrl) ? (
                 <Image
                   src={session.user.logoUrl}
                   alt="Profile"

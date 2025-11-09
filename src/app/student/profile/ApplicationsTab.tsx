@@ -119,7 +119,7 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
                         alt={application.job.company.name}
                         width={60}
                         height={60}
-                        className="rounded-lg border border-gray-200"
+                        className="w-[60px] h-[60px] object-contain rounded-lg border border-gray-200"
                       />
                     ) : (
                       <div className="w-[60px] h-[60px] bg-gray-200 rounded-lg flex items-center justify-center">

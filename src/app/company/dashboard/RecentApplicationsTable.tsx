@@ -111,11 +111,10 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
                     alt={`${student.applicant.name} profile`}
                     width={40}
                     height={40}
-                    style={{ width: 40, height: 40 }}
-                    className="rounded-full shadow-sm object-cover"
+                    className="w-[40px] h-[40px] object-cover rounded-full shadow-sm"
                   />
                 ) : (
-                  <div className="flex items-center justify-center rounded-full shadow-sm bg-gray-100 text-sm font-semibold text-gray-700" style={{ width: 40, height: 40 }}>
+                  <div className="w-[40px] h-[40px] flex items-center justify-center rounded-full shadow-sm bg-gray-100 text-sm font-semibold text-gray-700">
                     {`${(student.applicant.name?.[0] || "").toUpperCase()}`}
                   </div>
                 )}

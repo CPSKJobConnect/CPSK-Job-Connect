@@ -158,10 +158,10 @@ const JobCard = (job: JobCardProps) => {
               alt={job.info.companyName || "companyLogo"}
               width={60}
               height={60}
-              className="h-auto bg-white translate-y-1 shadow-md rounded-md"
+              className="w-[60px] h-[60px] object-contain bg-white translate-y-1 shadow-md rounded-md"
             />
           ) : (
-            <div className="w-15 h-15 bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+            <div className="w-[60px] h-[60px] bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
               {job.info.companyName ? job.info.companyName.charAt(0).toUpperCase() : "C"}
             </div>
           )}
