@@ -11,6 +11,7 @@ import { useSession } from "next-auth/react";
 import ApplicationsTab from "./ApplicationsTab";
 import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 
 export default function StudentProfilePage() {
   const [student, setStudent] = useState<Student | null>(null);
@@ -123,14 +124,17 @@ export default function StudentProfilePage() {
         <div className="flex items-center gap-6">
           {/* Profile Picture */}
           <div className="relative group">
-            {student.profile_url ? (
-              <div className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-lg overflow-hidden">
+            {isValidImageUrl(student.profile_url) ? (
+              <div className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
                 <Image
                   src={student.profile_url}
                   alt={`${student.firstname} ${student.lastname}`}
                   width={120}
                   height={120}
-                  className="w-full h-full object-cover object-[center_20%]"
+                  className="w-full h-full object-cover object-center"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               </div>
             ) : (
@@ -187,8 +191,18 @@ export default function StudentProfilePage() {
               </div>
             </div>
             <div className="mt-3">
-              <span className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium">
-                Year {student.year}
+              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                student.verification_status === "APPROVED"
+                  ? "bg-green-500/30 backdrop-blur-sm"
+                  : student.verification_status === "PENDING"
+                  ? "bg-yellow-500/30 backdrop-blur-sm"
+                  : "bg-red-500/30 backdrop-blur-sm"
+              }`}>
+                {student.verification_status === "APPROVED"
+                  ? "Verified Student"
+                  : student.verification_status === "PENDING"
+                  ? "Verification Pending"
+                  : "Verification Rejected"}
               </span>
             </div>
           </div>
