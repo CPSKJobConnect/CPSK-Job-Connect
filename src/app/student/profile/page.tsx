@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Student } from "@/types/user";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { IoCallOutline, IoCameraOutline, IoIdCardOutline, IoMailOutline, IoPersonCircleOutline, IoSchoolOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -98,6 +97,19 @@ export default function StudentProfilePage() {
 
   useEffect(() => {
     fetchStudentProfile();
+
+    // Refresh profile when page becomes visible (e.g., after switching tabs or navigating back)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchStudentProfile();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   if (loading) {
@@ -192,14 +204,18 @@ export default function StudentProfilePage() {
             </div>
             <div className="mt-3">
               <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                student.verification_status === "APPROVED"
+                student.verification_status === "APPROVED" && student.email_verified
                   ? "bg-green-500/30 backdrop-blur-sm"
+                  : student.verification_status === "APPROVED" && student.student_status === "ALUMNI" && !student.email_verified
+                  ? "bg-blue-500/30 backdrop-blur-sm"
                   : student.verification_status === "PENDING"
                   ? "bg-yellow-500/30 backdrop-blur-sm"
                   : "bg-red-500/30 backdrop-blur-sm"
               }`}>
-                {student.verification_status === "APPROVED"
+                {student.verification_status === "APPROVED" && student.email_verified
                   ? "Verified Student"
+                  : student.verification_status === "APPROVED" && student.student_status === "ALUMNI" && !student.email_verified
+                  ? "Email Verification Required"
                   : student.verification_status === "PENDING"
                   ? "Verification Pending"
                   : "Verification Rejected"}

@@ -124,27 +124,27 @@ export function VerificationBanner({
   // Alumni approved but email not verified
   if (studentStatus === "ALUMNI" && verificationStatus === "APPROVED" && !emailVerified) {
     return (
-      <Alert className="mb-6 border-green-300 bg-green-50 relative">
-        <CheckCircle className="h-4 w-4 text-green-600" />
+      <Alert className="mb-6 border-blue-300 bg-blue-50 relative">
+        <CheckCircle className="h-4 w-4 text-blue-600" />
         <Button
           variant="ghost"
           size="sm"
-          className="absolute top-2 right-2 h-6 w-6 p-0 hover:bg-green-100"
+          className="absolute top-2 right-2 h-6 w-6 p-0 hover:bg-blue-100"
           onClick={handleDismiss}
         >
-          <X className="h-4 w-4 text-green-600" />
+          <X className="h-4 w-4 text-blue-600" />
         </Button>
         <AlertDescription className="flex items-center justify-between pr-8">
           <div>
             <Link href={`/student/verify-email?email=${encodeURIComponent(email || "")}`} className="hover:underline">
-              <strong className="text-green-900 cursor-pointer">✅ Verification Approved - Email Verification Required</strong>
+              <strong className="text-blue-900 cursor-pointer">✅ Verification Approved - Email Verification Required</strong>
             </Link>
-            <p className="text-green-800 mt-1">
+            <p className="text-blue-800 mt-1">
               Your alumni status has been approved! Click "Verify Email" to receive a verification code and complete registration.
             </p>
           </div>
           <Link href={`/student/verify-email?email=${encodeURIComponent(email || "")}`}>
-            <Button className="ml-4 bg-green-600 hover:bg-green-700">
+            <Button className="ml-4 bg-blue-600 hover:bg-blue-700">
               Verify Email
             </Button>
           </Link>

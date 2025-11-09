@@ -54,13 +54,18 @@ const StudentDashboardPage = () => {
           // Store verification notes for display in banner
           setVerificationNotes(data.verificationNotes);
 
-          // If verification status changed, update the session
-          if (data.verificationStatus !== session.user.verificationStatus) {
+          // Check if verification status or email verification status changed
+          const statusChanged = data.verificationStatus !== session.user.verificationStatus;
+          const emailVerifiedChanged = data.emailVerified !== session.user.emailVerified;
+
+          // If either status changed, update the session
+          if (statusChanged || emailVerifiedChanged) {
             await update({
               ...session,
               user: {
                 ...session.user,
                 verificationStatus: data.verificationStatus,
+                emailVerified: data.emailVerified,
               }
             });
           }

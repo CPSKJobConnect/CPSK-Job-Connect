@@ -12,6 +12,7 @@ import { IoPersonOutline, IoIdCardOutline, IoMailOutline, IoCallOutline, IoSchoo
 import Image from "next/image";
 import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 interface ProfileTabProps {
   student: Student;
@@ -63,7 +64,12 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, emailVerified: boolean) => {
+    // For alumni who are approved but haven't verified email, show blue (pending email verification)
+    if (status === "APPROVED" && student.student_status === "ALUMNI" && !emailVerified) {
+      return "bg-blue-100 text-blue-800 border-blue-300";
+    }
+
     switch (status) {
       case "APPROVED":
         return "bg-green-100 text-green-800 border-green-300";
@@ -76,7 +82,12 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: string, emailVerified: boolean) => {
+    // For alumni who are approved but haven't verified email
+    if (status === "APPROVED" && student.student_status === "ALUMNI" && !emailVerified) {
+      return "Email Verification Required";
+    }
+
     switch (status) {
       case "APPROVED":
         return "Verified";
@@ -269,8 +280,8 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
           <IoShieldCheckmarkOutline className="w-6 h-6 text-gray-600" />
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-700">Verification Status</p>
-            <span className={`inline-block mt-1 px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(student.verification_status)}`}>
-              {getStatusText(student.verification_status)}
+            <span className={`inline-block mt-1 px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(student.verification_status, student.email_verified)}`}>
+              {getStatusText(student.verification_status, student.email_verified)}
             </span>
           </div>
         </div>
@@ -427,7 +438,25 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
           </div>
         )}
 
-        {!isEditing && student.verification_status === "APPROVED" && (
+        {!isEditing && student.verification_status === "APPROVED" && student.student_status === "ALUMNI" && !student.email_verified && (
+          <div className="mt-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-blue-900">Admin Approval Complete - Email Verification Required</p>
+                <p className="text-sm text-blue-800 mt-1">
+                  Your alumni status has been approved by an admin! Please verify your KU email to complete registration and start applying for jobs.
+                </p>
+              </div>
+              <Link href={`/student/verify-email?email=${encodeURIComponent(student.email)}`}>
+                <Button className="ml-4 bg-blue-600 hover:bg-blue-700">
+                  Verify Email
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {!isEditing && student.verification_status === "APPROVED" && student.email_verified && (
           <div className="mt-6 p-4 bg-green-50 border-l-4 border-green-500 rounded">
             <p className="text-sm font-semibold text-green-900">Student Verified</p>
             <p className="text-sm text-green-800 mt-1">
