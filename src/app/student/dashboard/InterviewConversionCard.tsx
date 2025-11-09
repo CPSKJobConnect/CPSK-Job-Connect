@@ -44,7 +44,7 @@ export default function InterviewConversionCard() {
   }, [selectedCategory, data]);
 
   return (
-    <Card shadow="md" radius="lg" p="lg" className="w-full text-center h-[300px]">
+    <Card shadow="md" radius="lg" p="lg" className="w-full text-center h-full">
       <div className="flex justify-between items-center mb-4 gap-5">
         <Title order={4} className="text-gray-800">
           Interview Conversion Rate
@@ -58,7 +58,7 @@ export default function InterviewConversionCard() {
           style={{ width: 130 }}
         />
       </div>
-      <div className="mt-8">
+      <div className="mt-5">
         <Text size="xl" fw={700} c="blue.6">
           {conversionRate}%
         </Text>

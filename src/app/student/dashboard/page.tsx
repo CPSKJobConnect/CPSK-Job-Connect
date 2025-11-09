@@ -84,10 +84,9 @@ const StudentDashboardPage = () => {
           <ApplicantBarChart />
           <StatusPieChart />
         </div>
-
+        <InterviewConversionCard />
         <div className="flex flex-col lg:flex-row gap-5 h-full">
           <CategoryBarChart />
-          <InterviewConversionCard />
         </div>
       </div>
     </div>
