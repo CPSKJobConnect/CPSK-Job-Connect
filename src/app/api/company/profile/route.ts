@@ -54,27 +54,39 @@ export async function GET() {
   }
 }
 
+export async function PUT(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    const data = await req.json();
 
-// Mock data for the company profile page
-// import { NextResponse } from "next/server";
+    // Find the account first
+    const account = await prisma.account.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
 
-// export async function GET() {
-//   // mock data for the company profile page
-//   const mockCompanyProfile = {
-//     id: "mock-company-001",
-//     name: "Wongnai Technologies Co., Ltd.",
-//     email: "contact@wongnai.com",
-//     website: "https://www.wongnai.com",
-//     location: "Bangkok, Thailand",
-//     phone: "0999999999",
-//     description:
-//       "We are a leading Thai tech company building food delivery, review, and digital service platforms.",
-//     industry: "Technology / Food Delivery",
-//     established: "2010",
-//     jobsPosted: 12,
-//     isVerified: true,
-//   };
+    if (!account)
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
 
-//   return NextResponse.json(mockCompanyProfile, { status: 200 });
-// }
+    // Update company using account_id
+    const updated = await prisma.company.update({
+      where: { account_id: account.id },
+      data: {
+        name: data.name,
+        address: data.location, // map from frontend field
+        website: data.website,
+        phone: data.phone,
+        description: data.description,
+      },
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Failed to update company" }, { status: 500 });
+  }
+}
+
