@@ -7,13 +7,27 @@ import { toast } from "sonner";
 interface JobInfo {
   id: string;
   title: string;
+  category: string;
   location: string;
   type: string;
   arrangement: string;
   salary: { min: number; max: number };
   posted: string;
+  deadline: string;
   status: string;
-  description: { overview: string };
+  skills: string[];
+  applied: number;
+
+  companyName: string;
+  companyLogo: string;
+  companyBg: string;
+
+  description: {
+    overview: string;
+    responsibility: string;
+    requirement: string;
+    qualification: string;
+  };
 }
 
 interface CompanyJobPostsProps {
