@@ -39,6 +39,14 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Check if company is verified (APPROVED status)
+    if (account.company.registration_status !== "APPROVED") {
+      return NextResponse.json(
+        { error: "Your company must be verified before posting jobs. Please check your verification status in your profile page and wait for admin approval." },
+        { status: 403 }
+      );
+    }
     const tagIds = await prisma.jobTag.findMany({
       where: { name: { in: body.skills } },
       select: { id: true },
@@ -72,6 +80,7 @@ export async function POST(request: NextRequest) {
         max_salary: Number(body.salary?.max) || 0,
         deadline: new Date(body.deadline),
         is_Published: body.is_published ?? true,
+        updated_at: new Date(),
 
         job_type_id: jobType.id,
         job_arrangement_id: jobArrangement.id,

@@ -17,8 +17,10 @@ export interface BaseUser {
     firstname: string;
     lastname: string;
     faculty: string;
-    year: number;
+    year: number | "Alumni"; // Can be 1-8 or "Alumni"
     phone: string;
+    student_status: "CURRENT" | "ALUMNI";
+    verification_status: "PENDING" | "APPROVED" | "REJECTED";
     documents: {
       resume: FileMeta[];
       cv: FileMeta[];
@@ -36,6 +38,11 @@ export interface BaseUser {
     department: string[];
     year: number;
     phone: string;
+    registration_status: "PENDING" | "APPROVED" | "REJECTED";
+    verification_notes?: string | null;
+    documents: {
+      evidence: FileMeta[];
+    };
   }
   
   // Admin

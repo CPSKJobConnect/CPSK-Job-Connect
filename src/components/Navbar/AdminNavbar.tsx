@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Shield, LogOut } from 'lucide-react';
+import { isValidImageUrl } from '@/lib/validateImageUrl';
 
 export default function AdminNavbar() {
   const { data: session } = useSession();
@@ -16,8 +17,9 @@ export default function AdminNavbar() {
 
   const links: Navbar01NavLink[] = [
     { href: '/admin/dashboard', label: 'Dashboard', active: pathname === '/admin/dashboard' },
-    { href: '/admin/approve-company', label: 'Approve Companies', active: pathname === '/admin/approve-company' },
+    { href: '/admin/approve-accounts', label: 'Approve Accounts', active: pathname === '/admin/approve-accounts' },
     { href: '/admin/manage-post', label: 'Manage Posts', active: pathname === '/admin/manage-post' },
+    { href: '/admin/manage-user', label: 'Manage Users', active: pathname === '/admin/manage-user' },
   ];
 
   const rightContent = (
@@ -37,7 +39,7 @@ export default function AdminNavbar() {
         <Popover>
           <PopoverTrigger asChild>
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center">
-              {session.user?.logoUrl ? (
+              {isValidImageUrl(session.user?.logoUrl) ? (
                 <Image
                   src={session.user.logoUrl}
                   alt="Profile"

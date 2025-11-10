@@ -1,5 +1,6 @@
 import { DefaultSession } from "next-auth";
 import React from "react";
+import { StudentStatus, VerificationStatus } from "@prisma/client";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -10,6 +11,10 @@ declare module "next-auth" {
       profileComplete: boolean;
       logoUrl?: string;
       backgroundUrl?: string;
+      emailVerified?: boolean;
+      studentStatus?: StudentStatus;
+      verificationStatus?: VerificationStatus;
+      companyRegistrationStatus?: string;
     } & DefaultSession["user"];
   }
 
@@ -18,6 +23,10 @@ declare module "next-auth" {
     username?: string;
     logoUrl?: string;
     backgroundUrl?: string;
+    emailVerified?: boolean;
+    studentStatus?: StudentStatus;
+    verificationStatus?: VerificationStatus;
+    companyRegistrationStatus?: string;
   }
 }
 
@@ -27,6 +36,10 @@ declare module "next-auth/jwt" {
     username?:string
     logoUrl?:string
     backgroundUrl?:string
+    emailVerified?: boolean;
+    studentStatus?: StudentStatus;
+    verificationStatus?: VerificationStatus;
+    companyRegistrationStatus?: string;
   }
 }
 

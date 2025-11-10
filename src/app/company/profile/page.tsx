@@ -21,6 +21,11 @@ interface Company {
   background_url?: string;
 }
 
+// import { Company } from "@/types/user";
+import DocumentsTab from "./DocumentsTab";
+import ProfileTab from "./ProfileTab";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
+
 export default function CompanyProfilePage() {
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,30 +37,32 @@ export default function CompanyProfilePage() {
     try {
       const res = await fetch("/api/company/profile");
       if (!res.ok) {
-        toast.error("Failed to fetch company profile");
+        toast.error("Failed to fetch profile");
         return;
       }
       const data: Company = await res.json();
       setCompany(data);
     } catch (error) {
-      console.error("Error fetching company profile:", error);
-      toast.error("Error loading company profile");
+      console.error("Failed to fetch company profile:", error);
+      toast.error("Error loading profile");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
 
+    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be smaller than 5MB");
+      toast.error("Image size must be less than 5MB");
       return;
     }
 
@@ -65,35 +72,39 @@ export default function CompanyProfilePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("/api/company/profile/logo", {
+      const res = await fetch("/api/company/profile-image", {
         method: "POST",
         body: formData,
       });
 
       if (!res.ok) {
         const error = await res.json();
-        toast.error(error.error || "Failed to upload logo");
+        toast.error(error.error || "Failed to upload profile image");
         return;
       }
 
       const data = await res.json();
-      toast.success("Logo updated successfully");
 
+      toast.success("Profile image updated successfully");
+
+      // Update the session with new logoUrl to refresh navbar
       await updateSession({
         ...session,
         user: {
           ...session?.user,
-          logo_url: data.logo_url,
+          logoUrl: data.profile_url,
         },
       });
 
       await fetchCompanyProfile();
     } catch (error) {
-      console.error("Error uploading logo:", error);
-      toast.error("Error uploading logo");
+      console.error("Error uploading profile image:", error);
+      toast.error("Error uploading profile image");
     } finally {
       setUploadingImage(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -101,35 +112,40 @@ export default function CompanyProfilePage() {
     fetchCompanyProfile();
   }, []);
 
-  if (loading)
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-lg">Loading...</div>
       </div>
     );
+  }
 
-  if (!company)
+  if (!company) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-lg text-red-600">Failed to load profile</div>
       </div>
     );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#006C67] to-[#00968F] rounded-lg shadow-lg p-8 mb-8 text-white">
+      {/* Profile Header */}
+      <div className="bg-linear-to-r from-[#006C67] to-[#00968F] rounded-lg shadow-lg p-8 mb-8 text-white">
         <div className="flex items-center gap-6">
-          {/* Logo */}
+          {/* Profile Picture */}
           <div className="relative group">
-            {company.logo_url ? (
-              <div className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-lg overflow-hidden">
+            {isValidImageUrl(company.profile_url) ? (
+              <div className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
                 <Image
-                  src={company.logo_url}
+                  src={company.profile_url}
                   alt={company.name}
                   width={120}
                   height={120}
-                  className="object-cover w-full h-full"
+                  className="w-full h-full object-cover object-center"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               </div>
             ) : (
@@ -138,11 +154,12 @@ export default function CompanyProfilePage() {
               </div>
             )}
 
+            {/* Upload Button Overlay */}
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingImage}
               className="absolute inset-0 w-[120px] h-[120px] rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
-              title="Change company logo"
+              title="Change profile picture"
             >
               {uploadingImage ? (
                 <div className="text-white text-sm">Uploading...</div>
@@ -150,10 +167,18 @@ export default function CompanyProfilePage() {
                 <IoCameraOutline className="w-10 h-10 text-white" />
               )}
             </button>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+
+            {/* Hidden File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleProfileImageUpload}
+              className="hidden"
+            />
           </div>
 
-          {/* Info */}
+          {/* Company Info */}
           <div className="flex-1">
             <h1 className="text-3xl font-bold mb-2">{company.name}</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
@@ -163,16 +188,27 @@ export default function CompanyProfilePage() {
               </div>
               <div className="flex items-center gap-2">
                 <IoCallOutline className="w-5 h-5" />
-                <span className="text-sm">{company.phone || "N/A"}</span>
+                <span className="text-sm">{company.phone}</span>
               </div>
               <div className="flex items-center gap-2">
                 <IoLocationOutline className="w-5 h-5" />
-                <span className="text-sm">{company.location || "No address provided"}</span>
+                <span className="text-sm">{company.address.join(", ")}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <IoGlobeOutline className="w-5 h-5" />
-                <span className="text-sm">{company.website || "No website"}</span>
-              </div>
+            </div>
+            <div className="mt-3">
+              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                company.registration_status === "APPROVED"
+                  ? "bg-green-500/30 backdrop-blur-sm"
+                  : company.registration_status === "PENDING"
+                  ? "bg-yellow-500/30 backdrop-blur-sm"
+                  : "bg-red-500/30 backdrop-blur-sm"
+              }`}>
+                {company.registration_status === "APPROVED"
+                  ? "Verified Company"
+                  : company.registration_status === "PENDING"
+                  ? "Verification Pending"
+                  : "Verification Rejected"}
+              </span>
             </div>
           </div>
         </div>
@@ -182,15 +218,15 @@ export default function CompanyProfilePage() {
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="posts">Job Posts</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
-          <CompanyProfileTab company={company} onUpdate={fetchCompanyProfile} />
+          <ProfileTab company={company} onProfileUpdate={fetchCompanyProfile} />
         </TabsContent>
 
-        <TabsContent value="posts">
-          <CompanyJobPosts companyId={company.id} />
+        <TabsContent value="documents">
+          <DocumentsTab company={company} onUpdate={fetchCompanyProfile} />
         </TabsContent>
       </Tabs>
     </div>

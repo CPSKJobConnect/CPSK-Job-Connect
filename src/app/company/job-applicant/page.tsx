@@ -22,6 +22,7 @@ export default function Page() {
   const [jobTypeList, setJobTypeList] = useState<string[]>([]);
   const [arrangementList, setArrangementList] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
+  const [isCompanyVerified, setIsCompanyVerified] = useState(true);
 
   // Fetch jobs from API
   const fetchJobs = async () => {
@@ -57,6 +58,20 @@ export default function Page() {
 
   useEffect(() => {
     fetchJobs();
+
+    // Fetch company verification status
+    const fetchCompanyStatus = async () => {
+      try {
+        const res = await fetch("/api/company/profile");
+        if (res.ok) {
+          const data = await res.json();
+          setIsCompanyVerified(data.registration_status === "APPROVED");
+        }
+      } catch (error) {
+        console.error("Error fetching company status:", error);
+      }
+    };
+    fetchCompanyStatus();
 
     // Responsive dialog
     const m = window.matchMedia("(max-width: 1024px)");
@@ -159,7 +174,7 @@ export default function Page() {
                       arrangements={arrangementList}
                       tags={allTags}
                   />
-                  <ApplicationList applicants={applicants} />
+                  <ApplicationList applicants={applicants} isCompanyVerified={isCompanyVerified} />
                 </>
               ) : (
                 <div className="flex flex-col items-center gap-4 py-44">
@@ -194,7 +209,7 @@ export default function Page() {
               {selectedJob && (
                 <div className="space-y-4">
                   <JobDescriptionCard size="md" onApply={false} onEdit={true} job={selectedJob} />
-                  <ApplicationList applicants={applicants} />
+                  <ApplicationList applicants={applicants} isCompanyVerified={isCompanyVerified} />
                 </div>
               )}
             </div>

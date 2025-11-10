@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { IoBriefcaseOutline, IoLocationOutline } from "react-icons/io5";
@@ -112,13 +113,13 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
                 <div className="flex items-start gap-4">
                   {/* Company Logo */}
                   <div className="flex-shrink-0">
-                    {application.job.company.logoUrl ? (
+                    {isValidImageUrl(application.job.company.logoUrl) ? (
                       <Image
                         src={application.job.company.logoUrl}
                         alt={application.job.company.name}
                         width={60}
                         height={60}
-                        className="rounded-lg border border-gray-200"
+                        className="w-[60px] h-[60px] object-contain rounded-lg border border-gray-200"
                       />
                     ) : (
                       <div className="w-[60px] h-[60px] bg-gray-200 rounded-lg flex items-center justify-center">

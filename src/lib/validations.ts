@@ -23,9 +23,19 @@ export const studentRegisterSchema = z.object({
   ]),
   phone: z.string().regex(/^\d{10,}$/, "Phone number must be at least 10 digits and only digits"),
   transcript: z.instanceof(File).optional(),
+  studentStatus: z.enum(["CURRENT", "ALUMNI"]).optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
+}).refine((data) => {
+  // Alumni must upload transcript
+  if (data.studentStatus === "ALUMNI" && !data.transcript) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Alumni must upload a transcript",
+  path: ["transcript"],
 });
 
 export const companyRegisterSchema = z.object({
@@ -38,6 +48,7 @@ export const companyRegisterSchema = z.object({
   website: z.string().url("Website must be a valid URL").or(z.literal("")).optional(),
   description: z.string().min(10,  "Description must be atleast 10 characters."),
   phone: z.string().regex(/^\d{10,}$/, "Phone number must be at least 10 digits and only digits"),
+  evidence: z.instanceof(File, { message: "Company evidence document is required" }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],

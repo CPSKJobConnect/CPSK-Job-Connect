@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Navbar01, Navbar01NavLink } from '@/components/ui/shadcn-io/navbar-01';
+import { isValidImageUrl } from '@/lib/validateImageUrl';
 import { Bookmark, LogOut, User } from 'lucide-react';
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
@@ -46,7 +47,7 @@ export default function StudentNavbar() {
               aria-haspopup="menu"
               className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center"
             >
-              {session.user?.logoUrl ? (
+              {isValidImageUrl(session.user?.logoUrl) ? (
                 <Image
                   src={session.user.logoUrl}
                   alt="Profile"

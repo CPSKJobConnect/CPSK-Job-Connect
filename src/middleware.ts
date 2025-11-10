@@ -8,8 +8,15 @@ export default withAuth(
     const token = req.nextauth.token
     const role = token?.role?.toLowerCase()
 
+    console.log("🔍 Middleware hit:", pathname, "Role:", role)
+    // TEMPORARY BYPASS for admin routes
+    // if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+    //   console.log("⚙️ Skipping middleware for admin routes (temporary)")
+    //   return NextResponse.next()
+    // }
+
     // Public routes
-    const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/jobs"]
+    const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/jobs", "/student/verify-email"]
     const isPublicRoute = publicRoutes.some(route =>
       pathname === route || pathname.startsWith(`${route}/`)
     )
@@ -41,6 +48,47 @@ export default withAuth(
         return NextResponse.redirect(new URL("/register/complete", req.url))
       }
 
+      // Check if student needs email verification for job application
+      if (role === "student" && pathname.startsWith("/student/job-apply/")) {
+        const emailVerified = token.emailVerified;
+        const studentStatus = token.studentStatus;
+        const verificationStatus = token.verificationStatus;
+
+        // Current students must verify email before applying for jobs
+        if (studentStatus === "CURRENT" && !emailVerified) {
+          const verifyUrl = new URL("/student/verify-email", req.url);
+          verifyUrl.searchParams.set("email", token.email || "");
+          return NextResponse.redirect(verifyUrl);
+        }
+
+        // Alumni who are approved must verify email before applying for jobs
+        if (studentStatus === "ALUMNI" && verificationStatus === "APPROVED" && !emailVerified) {
+          const verifyUrl = new URL("/student/verify-email", req.url);
+          verifyUrl.searchParams.set("email", token.email || "");
+          return NextResponse.redirect(verifyUrl);
+        }
+
+        // Alumni with PENDING status cannot apply (redirect to dashboard)
+        if (studentStatus === "ALUMNI" && verificationStatus === "PENDING") {
+          return NextResponse.redirect(new URL("/student/dashboard", req.url));
+        }
+
+        // Alumni with REJECTED status cannot apply (redirect to dashboard)
+        if (studentStatus === "ALUMNI" && verificationStatus === "REJECTED") {
+          return NextResponse.redirect(new URL("/student/dashboard", req.url));
+        }
+      }
+
+      // Check if company is verified for job posting
+      if (role === "company" && pathname.startsWith("/company/jobs/create")) {
+        const companyRegistrationStatus = token.companyRegistrationStatus;
+
+        // Only APPROVED companies can create jobs
+        if (companyRegistrationStatus !== "APPROVED") {
+          return NextResponse.redirect(new URL("/company/dashboard", req.url));
+        }
+      }
+
       // Student trying to access company or admin routes
       if (role === "student" && (pathname.startsWith("/company") || pathname.startsWith("/admin"))) {
         return NextResponse.redirect(new URL("/student/dashboard", req.url))
@@ -63,8 +111,8 @@ export default withAuth(
 
       // Redirect authenticated users from auth pages and homepage to their dashboard
       if (isPublicRoute && role && !pathname.startsWith("/api")) {
-        if (pathname === "/jobs") {
-          return NextResponse.next() // allow access to public jobs page for authenticated users
+        if (pathname === "/jobs" || pathname === "/student/verify-email") {
+          return NextResponse.next() // allow access to public jobs page and verify-email page
         }
         return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
       }

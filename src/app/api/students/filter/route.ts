@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+/// Use this api to fetch the data from the students with specific conditions
+/// I will do it later <3
 
-export async function GET(request: NextRequest) {
-  return NextResponse.json({ success: true });
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  return NextResponse.json({ message: "API endpoint not yet implemented" }, { status: 501 });
 }

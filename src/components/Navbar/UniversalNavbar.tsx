@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { User, Building2, Shield, Bookmark, LogOut } from 'lucide-react';
+import { isValidImageUrl } from '@/lib/validateImageUrl';
 
 interface UniversalNavbarProps {
   links: Navbar01NavLink[];
@@ -81,7 +82,7 @@ export default function UniversalNavbar({ links, showBookmarks = false, onSignIn
               aria-haspopup="menu"
               className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center"
             >
-              {session.user?.logoUrl ? (
+              {isValidImageUrl(session.user?.logoUrl) ? (
                 <Image
                   src={session.user.logoUrl}
                   alt="Profile"

@@ -1,6 +1,3 @@
-
-
-
 import { prisma } from "@/lib/db";
 import { createClient } from "@supabase/supabase-js";
 
@@ -15,6 +12,7 @@ export async function uploadDocument(file: File, accountId: string, docTypeId: n
   else if (docTypeId === 2) suffix = "cv";
   else if (docTypeId === 3) suffix = "portfolio";
   else if (docTypeId === 4) suffix = "transcript";
+  else if (docTypeId === 5) suffix = "company_evidence";
 
   const filePath = `${accountId}/${Date.now()}_${suffix}_${file.name}`;
   const { data, error } = await supabase.storage
