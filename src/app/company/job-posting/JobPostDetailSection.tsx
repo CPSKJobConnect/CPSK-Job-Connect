@@ -149,6 +149,38 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
                   required={true}
                 />
             </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">Required Documents</h3>
+              <div className="flex flex-col gap-2">
+                {[
+                  { key: 'resume', label: 'Resume' },
+                  { key: 'cv', label: 'CV' },
+                  { key: 'portfolio', label: 'Portfolio' },
+                  { key: 'transcript', label: 'Transcript' },
+                ].map((doc) => {
+                  const checked = formData.requiredDocuments?.includes(doc.key) ?? false;
+                  return (
+                    <label key={doc.key} className="inline-flex items-center gap-3">
+                      <input
+                        data-testid={`reqdoc-${doc.key}`}
+                        type="checkbox"
+                        className="w-4 h-4"
+                        checked={checked}
+                        onChange={(e) => {
+                          setFormData((prev) => {
+                            const list = new Set(prev.requiredDocuments || []);
+                            if (e.target.checked) list.add(doc.key);
+                            else list.delete(doc.key);
+                            return { ...prev, requiredDocuments: Array.from(list) };
+                          });
+                        }}
+                      />
+                      <span className="text-sm text-gray-700">{doc.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
         </div>
     );
 }
