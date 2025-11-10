@@ -43,7 +43,7 @@ const DocumentUploadSection = ({
     }
 
     return (
-      <div className="shadow-md w-[420px] h-full rounded-md border border-gray-100/70">
+      <div className="shadow-md w-full h-full rounded-md border border-gray-100/70">
       <div className="px-10 mt-3">
         <p className="text-sm font-semibold text-gray-800">{title}</p>
         <p className="text-gray-600">{description}</p>

@@ -36,16 +36,13 @@ const StudentDashboardPage = () => {
       iconColor: data.iconColor,
     }));
 
+    // Set the mock data immediately; no global begin/done here because this
+    // page uses mock data only and child components load synchronously.
     setStudentStat(stats);
   }, []);
 
-  if (status === "loading") {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg">Loading...</div>
-      </div>
-    )
-  }
+  // Let the global loader handle initial loading (session + child components)
+  if (status === "loading") return null;
 
   if (!session) {
     return (

@@ -15,11 +15,10 @@ export default function ApplicantLineChart() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setData(mockApplicantLine);
-      setLoading(false);
-    }, 1000);
+    // Immediate load for mock data — no artificial delay so the global loader
+    // will not be held up by this component when using mock data.
+    setData(mockApplicantLine);
+    setLoading(false);
   }, []);
 
   return (
@@ -44,7 +43,7 @@ export default function ApplicantLineChart() {
         }}
       />
 
-      {loading && <div className="text-center mt-2 text-gray-500">Loading...</div>}
+  {/* Global loader handles page-level loading; internal loading state kept for visuals if needed */}
     </Card>
   );
 }

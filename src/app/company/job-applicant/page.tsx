@@ -5,6 +5,7 @@ import JobDescriptionCard from "@/components/JobDescriptionCard";
 import { FaRegFileAlt } from "react-icons/fa";
 import { MdTipsAndUpdates } from "react-icons/md";
 import React, { useState, useEffect } from "react";
+import { begin, done } from "@/lib/loaderSignal";
 import { useRouter } from "next/navigation";
 import { JobInfo } from "@/types/job";
 import ApplicationList from "./ApplicationList";
@@ -25,6 +26,7 @@ export default function Page() {
 
   // Fetch jobs from API
   const fetchJobs = async () => {
+    begin();
     try {
       const res = await fetch("/api/company/jobs");
       if (!res.ok) throw new Error("Failed to fetch jobs");
@@ -33,7 +35,7 @@ export default function Page() {
     } catch (error) {
       console.error("Error fetching jobs:", error);
     } finally {
-      setLoading(false);
+      done();
     }
   };
 
@@ -114,13 +116,8 @@ export default function Page() {
     router.push(`/company/job-posting`);
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-gray-500">Loading jobs...</p>
-      </div>
-    );
-  }
+  // Rely on the global loader; return nothing locally while initial data loads
+  if (!jobPost) return null;
 
   return (
     <div className="p-5 mb-3 max-h-screen overflow-y-auto">

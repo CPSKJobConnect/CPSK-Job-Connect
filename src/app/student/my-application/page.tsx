@@ -3,6 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { begin, done } from "@/lib/loaderSignal";
 import { IoBriefcaseOutline, IoLocationOutline } from "react-icons/io5";
 import { MdOutlineTimer } from "react-icons/md";
 import { toast } from "sonner";
@@ -62,6 +63,7 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
 
   useEffect(() => {
     const fetchApplications = async () => {
+      begin();
       try {
         const res = await fetch("/api/students/applications");
         if (!res.ok) {
@@ -74,7 +76,7 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
         console.error("Failed to fetch applications:", error);
         toast.error("Error loading applications");
       } finally {
-        setLoading(false);
+        done();
       }
     };
 
@@ -116,15 +118,8 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
     };
   }, []);
 
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-8">
-          <div className="text-center text-gray-500">Loading applications...</div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Rely on global loader; render nothing locally until data arrives
+  if (!applications) return null;
 
   return (
     <div className="mx-auto px-6 py-4">

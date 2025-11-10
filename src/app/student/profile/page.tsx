@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Student } from "@/types/user";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { begin, done } from "@/lib/loaderSignal";
 import { IoCallOutline, IoCameraOutline, IoIdCardOutline, IoMailOutline, IoPersonCircleOutline, IoSchoolOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -18,6 +19,7 @@ export default function StudentProfilePage() {
   const { data: session, update: updateSession } = useSession();
 
   const fetchStudentProfile = async () => {
+    begin();
     try {
       const res = await fetch("/api/students/[id]");
       if (!res.ok) {
@@ -30,6 +32,7 @@ export default function StudentProfilePage() {
       console.error("Failed to fetch student profile:", error);
       toast.error("Error loading profile");
     } finally {
+      done();
       setLoading(false);
     }
   };
@@ -96,13 +99,8 @@ export default function StudentProfilePage() {
     fetchStudentProfile();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
+  // Rely on global loader for initial load; render nothing locally while fetching
+  if (!student) return null;
 
   if (!student) {
     return (

@@ -5,15 +5,8 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import Link from "next/link"
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from '@/components/ui/navigation-menu';
 import {
   Popover,
   PopoverContent,
@@ -24,20 +17,18 @@ import {
   MantineProvider
 } from '@mantine/core';
 
-// Simple logo component for the navbar
 const Logo = ({ className, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
   return (
     <img
       src="/assets/icons/logo.png"
       alt="Logo"
-      // constrain logo to navbar height: small on mobile, slightly larger on md+
       className={cn("block h-8 md:h-10 w-auto object-contain", className)}
       {...props}
     />
   );
 };
 
-// Hamburger icon component
+
 const HamburgerIcon = ({ className, ...props }: React.SVGAttributes<SVGElement>) => (
   <svg
     className={cn('pointer-events-none', className)}
@@ -67,30 +58,26 @@ const HamburgerIcon = ({ className, ...props }: React.SVGAttributes<SVGElement>)
   </svg>
 );
 
-// Types for left side
+
 export interface Navbar01NavLink {
   href: string;
   label: string;
   active?: boolean;
 }
 
-// Types 2 for right side
+
 export interface Navbar01NavLink2 {
   href: string;
   label: string;
   active?: boolean;
 }
 
-// Default navigation links
-// const defaultNavigationLinks: Navbar01NavLink[] = [
-//   { href: 'https://github.com/CPSKJobConnect/CPSK-Job-Connect/wiki', label: 'About' },
-// ];
 
 export interface Navbar01Props extends React.HTMLAttributes<HTMLElement> {
   logo?: React.ReactNode;
   logoHref?: string;
   navigationLinks?: Navbar01NavLink[];
-  rightContent?: React.ReactNode; // NEW: custom right content like avatar/buttons
+  rightContent?: React.ReactNode;
   signInText?: string;
   signInHref?: string;
   ctaText?: string;
@@ -105,15 +92,14 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
       className,
       logo = <Logo />,
       logoHref = '#',
-      // navigationLinks = defaultNavigationLinks,
-      rightContent, // destructure so it doesn't go to header
+      rightContent,
       signInText = 'Sign In',
       signInHref = '#signin',
       ctaText = 'Get Started',
       ctaHref = '#get-started',
       onSignInClick,
       onCtaClick,
-      ...props // only native props
+      ...props
     },
     ref
   ) => {
@@ -145,10 +131,11 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
     const pathname = usePathname();
     const { data: session } = useSession();
     const router = useRouter();
+    const isActive = (href: string) => {
+      if (!pathname) return false;
+      return pathname === href || pathname.startsWith(href + "/");
+    };
 
-    // const RightSideLinks: Navbar01NavLink2[] = [
-    //   { href: '/jobs', label: 'Browse Jobs', active: pathname === '/jobs' },
-    // ];
 
     return (
       <MantineProvider>
@@ -158,154 +145,123 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
             'fixed top-0 z-50 w-full border-b bg-[#006C67] backdrop-blur supports-[backdrop-filter]:bg-[#006C67]/95 px-4 md:px-6 [&_*]:no-underline',
             className
           )}
-          {...props} // safe now, rightContent is not included
+          {...props}
         >
           <div className="container mx-auto flex h-16 max-w-screen-2xl items-center justify-between gap-4">
-            {/* Left side */}
             <div className="flex items-center">
-              {/* Mobile: don't render any navigation on the left - we show a single hamburger on the right */}
-
-              {/* Main nav */}
-
-              {/* Logo */}
-              <div className="flex items-center">
+              <div className="flex items-center gap-4">
                 <button
                   onClick={(e) => e.preventDefault()}
                   aria-label="Home"
-                  className="inline-flex items-center justify-center p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="inline-flex items-center justify-center p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 hover:scale-105 transition-transform"
                 >
                   {logo}
                 </button>
-
-                {/* Left side */}
-                {/* {!isMobile && (
-                  <NavigationMenu className="flex">
-                    <NavigationMenuList className="gap-1">
-                      {navigationLinks.map((link, index) => (
-                        <NavigationMenuItem key={index}>
-                          <NavigationMenuLink
-                            asChild
-                            className={cn(`px-3 py-2 rounded-md font-semibold transition-colors ${
-                              link.active ? "bg-white/20 text-white" : "text-gray-200 hover:bg-white/10 hover:text-white"}`)}
-                          >
-                            {link.href.startsWith("http") ? (
-                              <a href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a>
-                            ) : (
-                              <Link href={link.href}>{link.label}</Link>
-                            )}
-                          </NavigationMenuLink>
-                        </NavigationMenuItem>
-                      ))}
-                    </NavigationMenuList>
-                  </NavigationMenu>
-                )} */}
               </div>
             </div>
 
-            {/* Right side */}
             <div className="flex items-center gap-3">
               {isMobile ? (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      className="group h-9 w-9 hover:bg-accent hover:text-accent-foreground"
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Open menu"
-                    >
-                      <HamburgerIcon />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-64 p-2">
-                    <div className="flex flex-col gap-2">
-                      {/* Use a plain vertical list for mobile to avoid upstream NavigationMenu layout overrides */}
+                      <Button
+                        className="group h-10 w-10 bg-white/10 text-white hover:bg-white/20 rounded-lg shadow-sm"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Open menu"
+                      >
+                        <HamburgerIcon />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-72 p-3 bg-white rounded-lg shadow-lg ring-1 ring-black/5">
+                      <div className="flex flex-col gap-3">
                       <div className="flex flex-col items-start gap-1">
-                        {/* {navigationLinks.map((link, index) => (
-                          <div key={index} className="w-full">
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                if (link.href.startsWith('http')) window.open(link.href, '_blank');
-                                else router.push(link.href);
-                              }}
-                              className={cn(
-                                "w-full text-left rounded-md px-3 py-3 text-sm font-medium transition-colors",
-                                link.active ? "bg-accent text-accent-foreground" : "text-black hover:bg-accent hover:text-accent-foreground"
-                              )}
-                            >
-                              {link.label}
-                            </button>
-                          </div>
-                        ))} */}
                       </div>
 
-                      <div className="border-t" />
-
-                      {/* Render action items (Profile / Bookmarks / Sign out) as individual mobile menu entries
-                          instead of dumping the entire rightContent node which may render horizontally. */}
-                      <div className="flex flex-col gap-2 pt-2">
+                      <div className="flex flex-col gap-2 pt-2 divide-y divide-gray-100">
                         {session ? (
                           <>
                             <button
                               onClick={() => router.push(`/${session.user?.role || 'student'}/profile`)}
-                              className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                              className={cn(
+                                "w-full text-left flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-md transition",
+                                isActive(`/${session.user?.role || 'student'}/profile`) ? 'bg-[#F3FEFA] text-[#2BA17C]' : 'text-gray-700 hover:bg-gray-50'
+                              )}
                             >
-                              Profile
+                              <span className="font-medium">Profile</span>
                             </button>
 
                             <button
                               onClick={() => router.push('/jobs')}
-                              className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                              className={cn(
+                                "w-full text-left flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-md transition",
+                                isActive('/jobs') ? 'bg-[#F3FEFA] text-[#2BA17C]' : 'text-gray-700 hover:bg-gray-50'
+                              )}
                             >
                               Browse Jobs
                             </button>
 
                             <button
                               onClick={() => router.push(`/${session.user?.role || 'student'}/dashboard`)}
-                              className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                              className={cn(
+                                "w-full text-left flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-md transition",
+                                isActive(`/${session.user?.role || 'student'}/dashboard`) ? 'bg-[#F3FEFA] text-[#2BA17C]' : 'text-gray-700 hover:bg-gray-50'
+                              )}
                             >
                               Dashboard
                             </button>
 
                             {session.user?.role === 'company' && (
-                              <button
-                                onClick={() => router.push('/company/job-posting')}
-                                className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
-                              >
-                                Job Posting
-                              </button>
+                                <button
+                                  onClick={() => router.push('/company/job-posting')}
+                                  className={cn(
+                                    "w-full text-left px-3 py-3 text-sm font-medium rounded-md transition",
+                                    isActive('/company/job-posting') ? 'bg-[#F3FEFA] text-[#2BA17C]' : 'text-black hover:bg-accent hover:text-accent-foreground'
+                                  )}
+                                >
+                                  Job Posting
+                                </button>
                             )}
 
                             {session.user?.role === 'company' && (
-                              <button
-                                onClick={() => router.push('/company/job-applicant')}
-                                className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
-                              >
-                                Job Applicant
-                              </button>
+                                <button
+                                  onClick={() => router.push('/company/job-applicant')}
+                                  className={cn(
+                                    "w-full text-left px-3 py-3 text-sm font-medium rounded-md transition",
+                                    isActive('/company/job-applicant') ? 'bg-[#F3FEFA] text-[#2BA17C]' : 'text-black hover:bg-accent hover:text-accent-foreground'
+                                  )}
+                                >
+                                  Job Applicant
+                                </button>
                             )}
 
                             {session.user?.role === 'student' && (
-                              <button
-                                onClick={() => router.push('/student/bookmark')}
-                                className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
-                              >
-                                Bookmark
-                              </button>
+                                <button
+                                  onClick={() => router.push('/student/bookmark')}
+                                  className={cn(
+                                    "w-full text-left px-3 py-3 text-sm font-medium rounded-md transition",
+                                    isActive('/student/bookmark') ? 'bg-[#F3FEFA] text-[#2BA17C]' : 'text-black hover:bg-accent hover:text-accent-foreground'
+                                  )}
+                                >
+                                  Bookmark
+                                </button>
                             )}
 
                             {session.user?.role === 'student' && (
-                              <button
-                                onClick={() => router.push('/student/my-application')}
-                                className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
-                              >
-                                My Applications
-                              </button>
+                                <button
+                                  onClick={() => router.push('/student/my-application')}
+                                  className={cn(
+                                    "w-full text-left px-3 py-3 text-sm font-medium rounded-md transition",
+                                    isActive('/student/my-application') ? 'bg-[#F3FEFA] text-[#2BA17C]' : 'text-black hover:bg-accent hover:text-accent-foreground'
+                                  )}
+                                >
+                                  My Applications
+                                </button>
                             )}
 
                             <button
                               onClick={() => signOut({ callbackUrl: '/' })}
-                              className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-red-50 hover:text-red-600"
+                              className="w-full text-left flex items-center gap-3 px-3 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition"
                             >
                               Sign out
                             </button>
@@ -318,7 +274,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                               if (section) section.scrollIntoView({ behavior: 'smooth' });
                               else window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
                             }}
-                            className="w-full text-left rounded-md px-3 py-3 text-sm font-medium text-black hover:bg-accent hover:text-accent-foreground"
+                            className="w-full text-left flex items-center gap-3 px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition"
                           >
                             Sign In
                           </button>
@@ -328,7 +284,6 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                   </PopoverContent>
                 </Popover>
               ) : (
-                // Desktop/tablet: show rightContent as-is (avatar, buttons, etc.)
                 (rightContent ? rightContent : session ? (
                   <Popover>
                     <PopoverTrigger asChild>
@@ -336,6 +291,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                        role="button"
                        tabIndex={0}
                        aria-haspopup="menu"
+                       data-testid="profile-avatar"
                        className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center"
                       >
                         {session.user?.logoUrl ? (
@@ -353,16 +309,22 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                         )}
                       </div>
                     </PopoverTrigger>
-                    <PopoverContent className="w-50 text-center">
-                      <p className="text-sm font-medium">{session.user?.name}</p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-red-500 hover:text-red-600"
-                        onClick={() => signOut({ callbackUrl: "/" })}
-                      >
-                        Sign out
-                      </Button>
+                    <PopoverContent className="w-50 text-center p-3">
+                      <div className="flex flex-col divide-y divide-gray-200">
+                        <div className="py-2">
+                          <p className="text-sm font-medium">{session.user?.name}</p>
+                        </div>
+                        <div className="py-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-red-500 hover:text-red-600"
+                            onClick={() => signOut({ callbackUrl: "/" })}
+                          >
+                            Sign out
+                          </Button>
+                        </div>
+                      </div>
                     </PopoverContent>
                   </Popover>
                 ) : (
