@@ -28,6 +28,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [awaitingSession, setAwaitingSession] = useState(false)
   const [studentStatus, setStudentStatus] = useState<"CURRENT" | "ALUMNI">("CURRENT")
+  const [actualUserRole, setActualUserRole] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session } = useSession()
@@ -117,12 +118,24 @@ export function AuthForm({ role, mode }: AuthFormProps) {
         const result = await signIn("credentials", {
           email: data.email,
           password: data.password,
+          role: role, // Pass the role from URL
           redirect: false,
         })
 
         if (result?.error) {
-          setError("Invalid email or password")
-          setIsLoading(false)
+          // Check if it's a role mismatch error
+          if (result.error.startsWith("ROLE_MISMATCH:")) {
+            const parts = result.error.split(":");
+            const actualRole = parts[1]; // student or company
+            const message = parts[2]; // The error message
+            setActualUserRole(actualRole)
+            setError(message)
+            setIsLoading(false)
+          } else {
+            setActualUserRole(null)
+            setError("Invalid email or password")
+            setIsLoading(false)
+          }
         } else {
           // Wait for session to be established before redirecting
           setAwaitingSession(true)
@@ -243,7 +256,22 @@ export function AuthForm({ role, mode }: AuthFormProps) {
       <CardContent>
         {error && (
           <Alert className="mb-4" variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>
+              <div className="flex flex-col gap-2">
+                <p>{error}</p>
+                {actualUserRole && mode === "login" && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full sm:w-auto bg-white hover:bg-gray-50"
+                    onClick={() => router.push(`/login/${actualUserRole}`)}
+                  >
+                    Go to {actualUserRole === "student" ? "Student" : "Company"} Login →
+                  </Button>
+                )}
+              </div>
+            </AlertDescription>
           </Alert>
         )}
 

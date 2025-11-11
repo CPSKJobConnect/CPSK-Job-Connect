@@ -27,13 +27,17 @@ export const authOptions: NextAuthOptions = {
           label: "Password",
           type: "password",
           placeholder: "Enter your password"
+        },
+        role: {
+          label: "Role",
+          type: "text"
         }
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials.password) {
           throw new Error("Invalid credentials");
-          return null;
         }
+
         const user = await prisma.account.findUnique({
           where: {
             email: credentials.email,
@@ -65,13 +69,26 @@ export const authOptions: NextAuthOptions = {
             }
           }
         });
+
         if (!user || !user.password) {
-          return null;
+          throw new Error("Invalid credentials");
         }
 
         const isPasswordValid = await bycrypt.compare(credentials.password, user.password);
         if (!isPasswordValid) {
-          return null;
+          throw new Error("Invalid credentials");
+        }
+
+        // Validate role matches (if role is provided in credentials)
+        if (credentials.role) {
+          const userRole = user.accountRole?.name?.toLowerCase();
+          const requestedRole = credentials.role.toLowerCase();
+
+          if (userRole !== requestedRole) {
+            // Create a more helpful error message based on the actual role
+            const roleLabel = userRole === 'student' ? 'Student' : userRole === 'company' ? 'Company' : userRole;
+            throw new Error(`ROLE_MISMATCH:${userRole}:This account is registered as a ${roleLabel}. Please use the ${roleLabel} login page.`);
+          }
         }
 
         return {
