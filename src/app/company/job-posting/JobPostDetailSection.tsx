@@ -29,7 +29,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
 
     return (
         <div className="flex flex-col gap-6 bg-white p-6 rounded-md shadow-md h-full">
-          <div className="bg-gradient-to-r from-[#ABE9D6] to-[#67C3A6] h-[10px] -mx-6 -mt-6 rounded-t-md"></div>
+          <div className="bg-linear-to-r from-[#ABE9D6] to-[#67C3A6] h-2.5 -mx-6 -mt-6 rounded-t-md"></div>
             <div className="flex flex-row gap-6">
               <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Job Title</p>
