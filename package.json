@@ -19,6 +19,7 @@
     "seed": "ts-node --project tsconfig.node.json prisma/seed.ts"
   },
   "dependencies": {
+    "@auth/core": "^0.41.1",
     "@hookform/resolvers": "^5.2.1",
     "@mantine/charts": "^8.3.5",
     "@mantine/core": "^8.3.3",
@@ -45,7 +46,7 @@
     "lucide-react": "^0.541.0",
     "multer": "^2.0.2",
     "next": "15.5.0",
-    "next-auth": "^4.24.13",
+    "next-auth": "^4.24.7",
     "next-themes": "^0.4.6",
     "nodemailer": "^7.0.10",
     "react": "19.1.0",
