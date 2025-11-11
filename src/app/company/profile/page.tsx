@@ -1,12 +1,14 @@
 "use client";
 
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { IoCallOutline, IoCameraOutline, IoGlobeOutline, IoMailOutline, IoBusinessOutline, IoLocationOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
-import CompanyProfileTab from "./CompanyProfileTab";
+import DocumentsTab from "./DocumentsTab";
+import ProfileTab from "./ProfileTab";
 import CompanyJobPosts from "./CompanyJobPostTab";
 
 interface Company {
@@ -21,10 +23,6 @@ interface Company {
   background_url?: string;
 }
 
-// import { Company } from "@/types/user";
-import DocumentsTab from "./DocumentsTab";
-import ProfileTab from "./ProfileTab";
-import { isValidImageUrl } from "@/lib/validateImageUrl";
 
 export default function CompanyProfilePage() {
   const [company, setCompany] = useState<Company | null>(null);
@@ -219,6 +217,7 @@ export default function CompanyProfilePage() {
         <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="job-posts">Job Posts</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -227,6 +226,10 @@ export default function CompanyProfilePage() {
 
         <TabsContent value="documents">
           <DocumentsTab company={company} onUpdate={fetchCompanyProfile} />
+        </TabsContent>
+        
+        <TabsContent value="job-posts">
+          <CompanyJobPosts company={company} onUpdate={fetchCompanyProfile} />
         </TabsContent>
       </Tabs>
     </div>
