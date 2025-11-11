@@ -214,7 +214,7 @@ export default function CompanyProfilePage() {
 
       {/* Tabs */}
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
+        <TabsList className="grid w-full grid-cols-3 mb-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="job-posts">Job Posts</TabsTrigger>
@@ -229,7 +229,7 @@ export default function CompanyProfilePage() {
         </TabsContent>
         
         <TabsContent value="job-posts">
-          <CompanyJobPosts company={company} onUpdate={fetchCompanyProfile} />
+          <CompanyJobPosts companyId={company.id} />
         </TabsContent>
       </Tabs>
     </div>
