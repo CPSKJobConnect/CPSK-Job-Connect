@@ -293,6 +293,7 @@ function JobCard({
             <div>
               <label className="text-sm font-medium">Overview</label>
               <Textarea
+                className="w-full resize-y max-h-40 overflow-auto whitespace-pre-wrap break-words"
                 value={form.description.overview}
                 onChange={(e) => handleDescriptionChange("overview", e.target.value)}
                 placeholder="Overview"
@@ -302,6 +303,7 @@ function JobCard({
             <div>
               <label className="text-sm font-medium">Responsibilities</label>
               <Textarea
+                className="w-full resize-y max-h-40 overflow-auto whitespace-pre-wrap break-words"
                 value={form.description.responsibility}
                 onChange={(e) => handleDescriptionChange("responsibility", e.target.value)}
                 placeholder="Responsibilities"
@@ -311,6 +313,7 @@ function JobCard({
             <div>
               <label className="text-sm font-medium">Requirements</label>
               <Textarea
+                className="w-full resize-y max-h-40 overflow-auto whitespace-pre-wrap break-words"
                 value={form.description.requirement}
                 onChange={(e) => handleDescriptionChange("requirement", e.target.value)}
                 placeholder="Requirements"
@@ -320,11 +323,13 @@ function JobCard({
             <div>
               <label className="text-sm font-medium">Qualifications</label>
               <Textarea
+                className="w-full resize-y max-h-40 overflow-auto whitespace-pre-wrap break-words"
                 value={form.description.qualification}
                 onChange={(e) => handleDescriptionChange("qualification", e.target.value)}
                 placeholder="Qualifications"
               />
             </div>
+
           </div>
           <DialogFooter className="mt-4 flex justify-end gap-2">
             <Button onClick={handleSave}>Save</Button>
