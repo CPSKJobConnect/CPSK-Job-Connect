@@ -187,14 +187,14 @@ export default function Page() {
             {selectedJob ? (
               role === 'company' ? (
                 <JobDescriptionCard
-                  size="md"
+                  size="lg"
                   onApply={false}
                   onEdit={false}
                   job={selectedJob}
                 />
               ): (
                 <JobDescriptionCard
-                  size="md"
+                  size="lg"
                   onApply={true}
                   onEdit={false}
                   job={selectedJob}
@@ -230,14 +230,14 @@ export default function Page() {
                 {selectedJob !== null && (
                   role === 'company' ? (
                     <JobDescriptionCard
-                      size="md"
+                      size="lg"
                       onApply={false}
                       onEdit={false}
                       job={selectedJob}
                     />
                   ): (
                     <JobDescriptionCard
-                      size="md"
+                      size="lg"
                       onApply={true}
                       onEdit={false}
                       job={selectedJob}

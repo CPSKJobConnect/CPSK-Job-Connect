@@ -18,7 +18,7 @@ import { toast } from "sonner";
 
 interface JobDescriptionProps {
   job: JobInfo;
-  size: "sm" | "md";
+  size: "sm" | "md" | "lg";
   onApply: boolean;
   onEdit: boolean;
   tags?: string[];
@@ -69,6 +69,7 @@ const JobDescriptionCard = ({
   const sizeStyle = {
     sm: "w-full sm:w-[400px]",
     md: "w-full h-[600px]",
+    lg: "w-full h-[800px]",
   }[size];
 
   const handleApply = () => {

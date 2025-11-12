@@ -40,6 +40,8 @@ export async function GET(request: NextRequest) {
         applicationStatus: true,
         resumeDocument: true,
         portfolioDocument: true,
+        cvDocument: true,
+        transcriptDocument: true,
 
       },
       orderBy: {

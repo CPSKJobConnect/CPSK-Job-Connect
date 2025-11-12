@@ -40,6 +40,16 @@ interface Application {
       file_name: string;
       file_path: string;
     } | null;
+    cv: {
+      id: number;
+      file_name: string;
+      file_path: string;
+    } | null;
+    transcript: {
+      id: number;
+      file_name: string;
+      file_path: string;
+    } | null;
   };
 }
 
@@ -226,6 +236,16 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
                         {application.documents.portfolio && (
                           <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal">
                             Portfolio: {application.documents.portfolio.file_name}
+                          </span>
+                        )}
+                        {application.documents.cv && (
+                          <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal">
+                            CV: {application.documents.cv.file_name}
+                          </span>
+                        )}
+                        {application.documents.transcript && (
+                          <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal">
+                            Transcript: {application.documents.transcript.file_name}
                           </span>
                         )}
                       </div>
