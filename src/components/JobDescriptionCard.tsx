@@ -10,10 +10,11 @@ import { RiDeleteBinFill } from "react-icons/ri";
 import { HiOutlineOfficeBuilding } from "react-icons/hi";
 import { JobInfo, JobPostFormData } from "@/types/job";
 import { useState, useRef, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import EditJobCard from "./EditJobCard";
 import { validateForm } from "@/lib/validateJobForm";
 import { toast } from "sonner";
-import { de } from "zod/v4/locales";
+
 
 interface JobDescriptionProps {
   job: JobInfo;
@@ -59,6 +60,7 @@ const JobDescriptionCard = ({
     deadline: job.deadline,
     skills: job.skills,
     description: { ...job.description },
+    documents: job.documents,
   }));
 
   const baseStyle =
@@ -81,7 +83,10 @@ const JobDescriptionCard = ({
       return false;
     }
 
-    const confirmed = window.confirm("Are you sure you want to save these changes?");
+    const confirmed = await new Promise<boolean>((resolve) => {
+      confirmResolver.current = resolve;
+      setConfirmOpen(true);
+    });
     if (!confirmed) return false;
 
     try {
@@ -98,6 +103,7 @@ const JobDescriptionCard = ({
         tags: formData.skills,
         category: formData.category,
         deadline: formData.deadline,
+        requiredDocuments: formData.documents,
       };
 
       const res = await fetch(`/api/jobs/${job.id}`, {
@@ -121,6 +127,37 @@ const JobDescriptionCard = ({
       return false;
     }
   };
+
+  // Render a custom confirmation dialog (avoids browser native confirm with origin text)
+  const ConfirmationDialog = () => (
+    <Dialog open={confirmOpen} onOpenChange={(open) => {
+      setConfirmOpen(open);
+      if (!open && confirmResolver.current) {
+        // If closed without explicit choice, resolve as false
+        confirmResolver.current(false);
+        confirmResolver.current = null;
+      }
+    }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Confirm save</DialogTitle>
+        </DialogHeader>
+        <div className="text-sm text-gray-700">Are you sure you want to save these changes?</div>
+        <DialogFooter className="mt-4">
+          <Button variant="ghost" onClick={() => {
+            if (confirmResolver.current) confirmResolver.current(false);
+            confirmResolver.current = null;
+            setConfirmOpen(false);
+          }}>Cancel</Button>
+          <Button onClick={() => {
+            if (confirmResolver.current) confirmResolver.current(true);
+            confirmResolver.current = null;
+            setConfirmOpen(false);
+          }} className="bg-[#2BA17C]">Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 
   const handleDelete = async () => {
     const confirmed = window.confirm("Are you sure you want to delete this job post?");
@@ -152,6 +189,9 @@ const JobDescriptionCard = ({
   const [qualificationOpen, setQualificationOpen] = useState(false);
   const [hasBgError, setHasBgError] = useState(false);
   const [hasLogoError, setHasLogoError] = useState(false);
+  // Confirmation modal state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const confirmResolver = useRef<((value: boolean) => void) | null>(null);
 
   const Section: React.FC<{
     title: string;
@@ -205,6 +245,8 @@ const JobDescriptionCard = ({
 
   return (
     <div className={`${baseStyle} ${sizeStyle}`}>
+      {/* Render confirmation dialog so handleEdit can await the user's choice */}
+      <ConfirmationDialog />
       <div className="relative w-full h-40">
         {job.companyBg && !hasBgError ? (
           <Image

@@ -122,17 +122,16 @@ export default function Page() {
   }, [student, job]);
 
     const handleSubmit = async () => {
-    // Check required documents according to job.requiredDocuments if provided.
-    const required = job && (job as any).requiredDocuments && (job as any).requiredDocuments.length
-      ? (job as any).requiredDocuments
-      : ["resume", "portfolio"];
+    const requiredRaw: string[] = job?.documents && job.documents.length ? job.documents : [];
+
+    const required = requiredRaw.map((r) => (r || "").toString().trim().toLowerCase());
 
     const hasDoc = (key: string) => {
       switch (key) {
         case "resume":
           return !!(uploadedResume || selectedResume);
         case "cv":
-          return !!(uploadedCv || selectedCv); // fallback to resume
+          return !!(uploadedCv || selectedCv);
         case "portfolio":
           return !!(uploadedPortfolio || selectedPortfolio);
         case "transcript":
@@ -142,12 +141,14 @@ export default function Page() {
       }
     };
 
-    for (const req of required) {
-      if (!hasDoc(req)) {
-        const label = req.charAt(0).toUpperCase() + req.slice(1);
-        toast.error(`${label} Missing`, `Please select or upload your ${label} before submitting.`);
-        return;
-      }
+    const missing = required.filter((req) => !hasDoc(req));
+    if (missing.length > 0) {
+      const display = missing.map((m) => {
+        if (m.toLowerCase() === "cv") return "CV";
+        return m.charAt(0).toUpperCase() + m.slice(1);
+      });
+      toast.error(`You must upload all required documents: ${display.join(", ")}`);
+      return;
     }
 
     if (!student || !job) {
@@ -190,6 +191,7 @@ export default function Page() {
       });
 
       const data = await res.json();
+      console.log("form: ", data);
 
       if (!res.ok) {
         console.error(data);
@@ -198,7 +200,6 @@ export default function Page() {
       }
 
       toast.success("Application submitted!", "Your job application has been sent successfully.");
-      // Save a recently applied marker to localStorage so the application list can highlight it
       try {
         const marker = {
           jobId: job.id,
@@ -206,7 +207,6 @@ export default function Page() {
         };
         localStorage.setItem("recentlyApplied", JSON.stringify(marker));
       } catch (err) {
-        // ignore localStorage errors
         console.warn("Could not write recentlyApplied marker", err);
       }
 
@@ -392,6 +392,14 @@ export default function Page() {
                       <div>
                         <p className="text-xs font-medium">Portfolio</p>
                         <p className="text-xs">{uploadedPortfolio ? uploadedPortfolio.name : selectedPortfolio ? selectedPortfolio.name || `File #${selectedPortfolio.id}` : "(none)"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium">CV</p>
+                        <p className="text-xs">{uploadedCv ? uploadedCv.name : selectedCv ? selectedCv.name || `File #${selectedCv.id}` : "(none)"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium">Transcript</p>
+                        <p className="text-xs">{uploadedTranscript ? uploadedTranscript.name : selectedTranscript ? selectedTranscript.name || `File #${selectedTranscript.id}` : "(none)"}</p>
                       </div>
                     </div>
                   </section>

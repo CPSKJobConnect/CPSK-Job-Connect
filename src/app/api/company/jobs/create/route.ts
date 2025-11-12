@@ -44,6 +44,20 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
 
+    let documentIds: Array<{ id: number }> = [];
+    if (Array.isArray(body.requiredDocuments) && body.requiredDocuments.length) {
+      const inputSet = new Set(
+        body.requiredDocuments.map((s: any) => String(s).toLowerCase().replace(/\s+/g, ""))
+      );
+      const allDocTypes = await prisma.documentType.findMany({ select: { id: true, name: true } });
+      documentIds = allDocTypes
+        .filter((d) => {
+          const nameNorm = d.name.toLowerCase().replace(/\s+/g, "");
+          return inputSet.has(nameNorm) || inputSet.has(d.name.toLowerCase());
+        })
+        .map((d) => ({ id: d.id }));
+    }
+
     let categoryId: number | null = null;
     if (body.category) {
       const category = await prisma.jobCategory.findUnique({
@@ -72,6 +86,7 @@ export async function POST(request: NextRequest) {
         max_salary: Number(body.salary?.max) || 0,
         deadline: new Date(body.deadline),
         is_Published: body.is_published ?? true,
+        updated_at: new Date(),
 
         job_type_id: jobType.id,
         job_arrangement_id: jobArrangement.id,
@@ -82,7 +97,13 @@ export async function POST(request: NextRequest) {
               connect: tagIds.map(tag => ({ id: tag.id })),
             }
           : undefined,
-      },
+        
+        documents: documentIds.length 
+          ? {
+              connect: documentIds.map((doc: { id: number }) => ({ id: doc.id })),
+            }
+          : undefined,
+        }
     });
 
     return NextResponse.json(newJob, { status: 201 });

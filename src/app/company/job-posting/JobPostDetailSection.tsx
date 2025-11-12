@@ -158,7 +158,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
                   { key: 'portfolio', label: 'Portfolio' },
                   { key: 'transcript', label: 'Transcript' },
                 ].map((doc) => {
-                  const checked = formData.requiredDocuments?.includes(doc.key) ?? false;
+                  const checked = formData.documents?.includes(doc.key) ?? false;
                   return (
                     <label key={doc.key} className="inline-flex items-center gap-3">
                       <input
@@ -168,10 +168,10 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
                         checked={checked}
                         onChange={(e) => {
                           setFormData((prev) => {
-                            const list = new Set(prev.requiredDocuments || []);
+                            const list = new Set(prev.documents || []);
                             if (e.target.checked) list.add(doc.key);
                             else list.delete(doc.key);
-                            return { ...prev, requiredDocuments: Array.from(list) };
+                            return { ...prev, documents: Array.from(list) };
                           });
                         }}
                       />

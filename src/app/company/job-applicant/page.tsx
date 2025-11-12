@@ -155,8 +155,8 @@ export default function Page() {
                       size="md"
                       onApply={false}
                       onEdit={true}
-            job={selectedJob}
-            onUpdate={fetchJobs}
+                      job={selectedJob}
+                      onUpdate={fetchJobs}
                       categories={allDepartment}
                       types={jobTypeList}
                       arrangements={arrangementList}

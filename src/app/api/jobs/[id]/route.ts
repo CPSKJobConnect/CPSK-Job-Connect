@@ -15,6 +15,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         company: { include: { account: true } },
         jobType: true,
         jobArrangement: true,
+        documents: true,
       },
     });
 
@@ -52,11 +53,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         qualification: job.qualifications.join("\n"),
       },
       skills: job.tags.map((tag: { name: string }) => tag.name),
+      documents: job.documents.map((doc: { name: string }) => doc.name),
       arrangement: job.jobArrangement.name,
-      deadline: job.deadline.toISOString(),
+      deadline: job.deadline ? job.deadline.toISOString() : null,
       status,
     };
-
     return NextResponse.json(mappedJob);
   } catch (error) {
     console.error("API error:", error);
@@ -131,6 +132,13 @@ export async function PATCH(
         })
       : [];
 
+    const documentIds = body.requiredDocuments?.length
+      ? await prisma.documentType.findMany({
+          where: { name: { in: body.requiredDocuments } },
+          select: { id: true },
+        })
+      : [];
+
     let categoryId = existingJob.job_category_id;
     if (body.category) {
       const category = await prisma.jobCategory.findUnique({ where: { name: body.category } });
@@ -155,6 +163,7 @@ export async function PATCH(
         tags: tagIds.length ? { set: tagIds.map(tag => ({ id: tag.id })) } : undefined,
         job_category_id: categoryId,
         deadline: body.deadline ? new Date(body.deadline) : existingJob.deadline,
+        documents: documentIds.length ? { set: documentIds.map(doc => ({ id: doc.id })) } : undefined,
       },
     });
 

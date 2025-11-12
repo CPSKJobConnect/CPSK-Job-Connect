@@ -89,7 +89,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="md:w-[500px] justify-between text-gray-500"
+          className="w-full justify-between text-gray-500"
         >
           {value
             ? existingSkills.find((skill) => skill === value) || value
@@ -97,7 +97,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="md:w-[500px] p-0">
+  <PopoverContent className="w-full max-w-[500px] p-0">
         <Command>
           <CommandInput 
           placeholder="Search skill..." 

@@ -58,7 +58,6 @@ const statusColors: Record<string, string> = {
 export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
   const [applications, setApplications] = useState<Application[]>([]);
   const [filteredApplications, setFilteredApplications] = useState<Application[]>(applications);
-  const [loading, setLoading] = useState(true);
   const [recentApplied, setRecentApplied] = useState<{ jobId: number; appliedAt: number } | null>(null);
 
   useEffect(() => {
@@ -71,6 +70,7 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
           return;
         }
         const data = await res.json();
+        console.log("app", data);
         setApplications(data);
       } catch (error) {
         console.error("Failed to fetch applications:", error);

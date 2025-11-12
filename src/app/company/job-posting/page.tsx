@@ -74,6 +74,7 @@ export default function Page() {
     posted: "",
     deadline: formData.deadline || "",
     status: "",
+    documents: formData.documents,
   }), [formData, company]);
   
   const handlePost = async () => {
@@ -83,12 +84,14 @@ export default function Page() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          requiredDocuments: formData.documents,
           is_published: true,
         }),
       });
 
       if (res.ok) {
         const data = await res.json();
+        console.log("data", data)
         toast.success("Job posted successfully!", "Your job has been published.");
         router.push("/company/job-applicant");
       } else {
@@ -108,6 +111,8 @@ export default function Page() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          // ensure required documents are passed to API
+          requiredDocuments: formData.documents,
           is_published: false,
         }),
       });

@@ -28,6 +28,7 @@ export interface JobInfo {
   deadline: string;
   status: string;
   isSaved?: boolean;
+  documents: string[];
 }
 
 export interface JobPostFormData {
@@ -41,7 +42,7 @@ export interface JobPostFormData {
   deadline: string;
   skills: string[];
   description: JobDescription;
-  requiredDocuments?: string[];
+  documents: string[];
 }
 
 export const defaultJobPostForm: JobPostFormData = {
@@ -60,7 +61,7 @@ export const defaultJobPostForm: JobPostFormData = {
     requirement: "",
     qualification: "",
   },
-  requiredDocuments: [],
+  documents: [],
 };
 
 export interface BookmarkJobInfo {
