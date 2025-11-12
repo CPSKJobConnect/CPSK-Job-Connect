@@ -136,17 +136,24 @@ export function DocumentViewerModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-6 py-4 border-b">
-          <div className="flex items-start justify-between gap-8 pr-8">
-            <div className="flex items-center gap-3">
-              {getFileIcon()}
-              <div>
-                <DialogTitle className="text-lg font-semibold">{fileName}</DialogTitle>
+          <div className="flex items-start justify-between gap-4 pr-8">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="flex-shrink-0">
+                {getFileIcon()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <DialogTitle
+                  className="text-lg font-semibold truncate"
+                  title={fileName}
+                >
+                  {fileName}
+                </DialogTitle>
                 <p className="text-sm text-muted-foreground mt-1">
                   {fileType.toUpperCase()} Document
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-shrink-0">
               <Button
                 variant="outline"
                 size="sm"
