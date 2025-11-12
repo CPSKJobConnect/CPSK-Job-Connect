@@ -6,8 +6,21 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface JobInfo {
   id: string;
@@ -91,7 +104,15 @@ export default function CompanyJobPosts({ companyId }: CompanyJobPostsProps) {
   );
 }
 
-function JobCard({ job, onDelete, fetchJobs }: { job: JobInfo; onDelete: (id: string) => void; fetchJobs: () => void }) {
+function JobCard({
+  job,
+  onDelete,
+  fetchJobs,
+}: {
+  job: JobInfo;
+  onDelete: (id: string) => void;
+  fetchJobs: () => void;
+}) {
   const [viewOpen, setViewOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState(job);
@@ -100,8 +121,14 @@ function JobCard({ job, onDelete, fetchJobs }: { job: JobInfo; onDelete: (id: st
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleDescriptionChange = (field: keyof JobInfo["description"], value: string) => {
-    setForm((prev) => ({ ...prev, description: { ...prev.description, [field]: value } }));
+  const handleDescriptionChange = (
+    field: keyof JobInfo["description"],
+    value: string
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      description: { ...prev.description, [field]: value },
+    }));
   };
 
   const handleSave = async () => {
@@ -144,83 +171,166 @@ function JobCard({ job, onDelete, fetchJobs }: { job: JobInfo; onDelete: (id: st
               <Badge variant="secondary">{job.arrangement}</Badge>
               <Badge variant="outline">{job.location}</Badge>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">{job.applied} applied</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {job.applied} applied
+            </p>
           </div>
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setViewOpen(true)}>View</Button>
-          <Button variant="default" size="sm" onClick={() => setEditOpen(true)}>Edit</Button>
-          <Button variant="destructive" size="sm" onClick={() => onDelete(job.id)}>Delete</Button>
+          <Button variant="outline" size="sm" onClick={() => setViewOpen(true)}>
+            View
+          </Button>
+          <Button variant="default" size="sm" onClick={() => setEditOpen(true)}>
+            Edit
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => onDelete(job.id)}
+          >
+            Delete
+          </Button>
         </div>
       </div>
 
       {/* View Modal */}
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{job.title}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-sm">
-            <p><strong>Overview:</strong> {job.description.overview}</p>
-            <p><strong>Responsibilities:</strong> {job.description.responsibility}</p>
-            <p><strong>Requirements:</strong> {job.description.requirement}</p>
-            <p><strong>Qualifications:</strong> {job.description.qualification}</p>
+            <p>
+              <strong>Overview:</strong> {job.description.overview}
+            </p>
+            <p>
+              <strong>Responsibilities:</strong>{" "}
+              {job.description.responsibility}
+            </p>
+            <p>
+              <strong>Requirements:</strong> {job.description.requirement}
+            </p>
+            <p>
+              <strong>Qualifications:</strong>{" "}
+              {job.description.qualification}
+            </p>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Edit Modal */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit {job.title}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 text-sm">
+          <div className="space-y-4 text-sm">
             <Input
               value={form.title}
               onChange={(e) => handleChange("title", e.target.value)}
               placeholder="Job title"
             />
-            <Input
-              value={form.type}
-              onChange={(e) => handleChange("type", e.target.value)}
-              placeholder="Job type"
-            />
-            <Input
-              value={form.arrangement}
-              onChange={(e) => handleChange("arrangement", e.target.value)}
-              placeholder="Work arrangement"
-            />
-            <Input
-              value={form.location}
-              onChange={(e) => handleChange("location", e.target.value)}
-              placeholder="Location"
-            />
-            <Input
-              value={form.description.overview}
-              onChange={(e) => handleDescriptionChange("overview", e.target.value)}
-              placeholder="Overview"
-            />
-            <Input
-              value={form.description.responsibility}
-              onChange={(e) => handleDescriptionChange("responsibility", e.target.value)}
-              placeholder="Responsibilities"
-            />
-            <Input
-              value={form.description.requirement}
-              onChange={(e) => handleDescriptionChange("requirement", e.target.value)}
-              placeholder="Requirements"
-            />
-            <Input
-              value={form.description.qualification}
-              onChange={(e) => handleDescriptionChange("qualification", e.target.value)}
-              placeholder="Qualifications"
-            />
+
+            {/* Job Type */}
+            <div>
+              <label className="text-sm font-medium">Type</label>
+              <Select
+                value={form.type}
+                onValueChange={(val) => handleChange("type", val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="internship">Internship</SelectItem>
+                  <SelectItem value="part-time">Part-time</SelectItem>
+                  <SelectItem value="fulltime">Full-time</SelectItem>
+                  <SelectItem value="freelance">Freelance</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Arrangement */}
+            <div>
+              <label className="text-sm font-medium">Arrangement</label>
+              <Select
+                value={form.arrangement}
+                onValueChange={(val) => handleChange("arrangement", val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Arrangement" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="onsite">Onsite</SelectItem>
+                  <SelectItem value="remote">Remote</SelectItem>
+                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectItem value="online">Online</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="text-sm font-medium">Location</label>
+              <Select
+                value={form.location}
+                onValueChange={(val) => handleChange("location", val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Bangkok">Bangkok</SelectItem>
+                  <SelectItem value="Chiang Mai">Chiang Mai</SelectItem>
+                  <SelectItem value="Phuket">Phuket</SelectItem>
+                  <SelectItem value="Remote">Remote</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Descriptions */}
+            <div>
+              <label className="text-sm font-medium">Overview</label>
+              <Textarea
+                value={form.description.overview}
+                onChange={(e) => handleDescriptionChange("overview", e.target.value)}
+                placeholder="Overview"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Responsibilities</label>
+              <Textarea
+                value={form.description.responsibility}
+                onChange={(e) => handleDescriptionChange("responsibility", e.target.value)}
+                placeholder="Responsibilities"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Requirements</label>
+              <Textarea
+                value={form.description.requirement}
+                onChange={(e) => handleDescriptionChange("requirement", e.target.value)}
+                placeholder="Requirements"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Qualifications</label>
+              <Textarea
+                value={form.description.qualification}
+                onChange={(e) => handleDescriptionChange("qualification", e.target.value)}
+                placeholder="Qualifications"
+              />
+            </div>
           </div>
           <DialogFooter className="mt-4 flex justify-end gap-2">
             <Button onClick={handleSave}>Save</Button>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>
+              Cancel
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
