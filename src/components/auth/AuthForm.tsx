@@ -222,12 +222,15 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         if (!response.ok) {
           setError(result.error || "Registration failed")
         } else {
-          // For OAuth users, force session reload and redirect
+          // For OAuth users, sign in again to get fresh session with role
           if (isOAuthCompletion) {
-            console.log("OAuth registration complete, reloading page to refresh session...")
-            // Force a full page reload to trigger fresh session fetch
-            // This will cause the JWT callback to run again and fetch the updated role
-            window.location.href = result.redirectTo
+            console.log("OAuth registration complete, signing in with Google to refresh session...")
+            // Sign in with Google again to get a fresh session with the updated role
+            // This will trigger the OAuth flow and fetch the complete user data including role
+            await signIn("google", {
+              callbackUrl: result.redirectTo,
+              redirect: true
+            })
           } else {
             // Auto-login after registration for credentials users
             const loginResult = await signIn("credentials", {

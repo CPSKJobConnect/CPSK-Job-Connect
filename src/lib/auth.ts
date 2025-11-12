@@ -118,6 +118,18 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user, account, trigger, session }) {
+      // Debug logging for OAuth flow
+      if (token.email?.includes('@gmail.com') || token.email?.includes('@hotmail.com')) {
+        console.log('🔐 JWT callback - OAuth user:', {
+          email: token.email,
+          hasUser: !!user,
+          hasAccount: !!account,
+          tokenRole: token.role,
+          tokenSub: token.sub,
+          trigger
+        });
+      }
+
       if (user) {
         // `authorize` returns `name` (username) and `role` on first sign-in.
         // Map those to token fields so subsequent requests have them available.
@@ -194,18 +206,46 @@ export const authOptions: NextAuthOptions = {
       // If token exists but role wasn't set (e.g. older session or created without role),
       // try to populate it from the database using the subject (user id).
       if (!token.role && token.sub) {
+        console.log('🔄 Fetching role from DB for user:', token.sub);
         try {
           const userId = parseInt(token.sub as string, 10)
           if (!Number.isNaN(userId)) {
             const existing = await prisma.account.findUnique({
               where: { id: userId },
-              select: { accountRole: { select: { name: true } }, username: true, logoUrl: true, backgroundUrl: true }
+              select: {
+                accountRole: { select: { name: true } },
+                username: true,
+                logoUrl: true,
+                backgroundUrl: true,
+                student: {
+                  select: {
+                    email_verified: true,
+                    student_status: true,
+                    verification_status: true
+                  }
+                },
+                company: {
+                  select: {
+                    registration_status: true
+                  }
+                }
+              }
             })
+            console.log('📊 Fetched user data:', {
+              found: !!existing,
+              role: existing?.accountRole?.name,
+              hasStudent: !!existing?.student,
+              hasCompany: !!existing?.company
+            });
             if (existing) {
               token.role = existing.accountRole?.name || token.role
               token.username = existing.username || token.username
               token.logoUrl = existing.logoUrl || token.logoUrl
               token.backgroundUrl = existing.backgroundUrl || token.backgroundUrl
+              token.emailVerified = existing.student?.email_verified
+              token.studentStatus = existing.student?.student_status
+              token.verificationStatus = existing.student?.verification_status
+              token.companyRegistrationStatus = existing.company?.registration_status
             }
           }
         } catch (err) {
