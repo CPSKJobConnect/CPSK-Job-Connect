@@ -257,6 +257,8 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
                     <Input
                       data-testid="edit-job-salary-min"
                       className="w-full"
+                      type="number"
+                      min={0}
                       value={formData.salary.min?.toString() ?? ""}
                       onChange={(e) => {
                         const value = e.target.value;
@@ -266,7 +268,7 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
                           ...formData,
                           salary: {
                             ...formData.salary,
-                            min: isNaN(numericValue) ? 0 : numericValue,
+                            min: isNaN(numericValue) ? 0 : Math.max(0, numericValue),
                           },
                         });
                       }}
@@ -279,6 +281,8 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
                     <Input
                       data-testid="edit-job-salary-max"
                       className="w-full"
+                      type="number"
+                      min={0}
                       value={formData.salary.max?.toString() ?? ""}
                       onChange={(e) => {
                         const value = e.target.value;
@@ -288,7 +292,7 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
                           ...formData,
                           salary: {
                             ...formData.salary,
-                            max: isNaN(numericValue) ? 0 : numericValue,
+                            max: isNaN(numericValue) ? 0 : Math.max(0, numericValue),
                           },
                         });
                       }}

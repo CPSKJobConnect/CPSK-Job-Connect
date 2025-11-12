@@ -105,12 +105,13 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">฿</span>
                   <Input
                     type="number"
+                    min={0}
                     name="minSalary"
                     value={formData.salary.min || ""}
                     onChange={(e) => setFormData({ ...formData,
                       salary: {
                         ...formData.salary,
-                        min: e.target.value === "" ? 0 : Number(e.target.value)
+                        min: e.target.value === "" ? 0 : Math.max(0, Number(e.target.value))
                     }})}
                     required={true}
                     placeholder="30000"
@@ -124,12 +125,13 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">฿</span>
                   <Input
                     type="number"
+                    min={0}
                     name="maxSalary"
                     value={formData.salary.max || ""}
                     onChange={(e) => setFormData({ ...formData,
                       salary: {
                         ...formData.salary,
-                        max: e.target.value === "" ? 0 : Number(e.target.value)
+                        max: e.target.value === "" ? 0 : Math.max(0, Number(e.target.value))
                     }})}
                     required={true}
                     placeholder="60000"
