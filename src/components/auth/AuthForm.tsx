@@ -24,6 +24,7 @@ interface AuthFormProps {
 export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false)
+  const [isCompletingRegistration, setIsCompletingRegistration] = useState(false)
   const [error, setError] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [awaitingSession, setAwaitingSession] = useState(false)
@@ -223,15 +224,22 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         if (!response.ok) {
           setError(result.error || "Registration failed")
         } else {
-          // For OAuth users, sign in again to get fresh session with role
+          // For OAuth users, update session and redirect
           if (isOAuthCompletion) {
-            console.log("OAuth registration complete, signing in with Google to refresh session...")
-            // Sign in with Google again to get a fresh session with the updated role
-            // This will trigger the OAuth flow and fetch the complete user data including role
-            await signIn("google", {
-              callbackUrl: result.redirectTo,
-              redirect: true
-            })
+            console.log("OAuth registration complete, updating session...")
+
+            // Show completion state
+            setIsCompletingRegistration(true)
+            setError("") // Clear any errors
+
+            // Wait for database transaction to commit (reduce to 500ms)
+            await new Promise(resolve => setTimeout(resolve, 500))
+
+            // Update session to fetch fresh user data with role
+            await update()
+
+            // Navigate to dashboard
+            router.push(result.redirectTo)
           } else {
             // Auto-login after registration for credentials users
             const loginResult = await signIn("credentials", {
@@ -757,9 +765,13 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             disabled={isLoading}
           >
             {isLoading
-              ? awaitingSession
-                ? "Authenticating..."
-                : "Loading..."
+              ? isCompletingRegistration
+                ? "Setting up your account..."
+                : awaitingSession
+                  ? "Authenticating..."
+                  : mode === "register"
+                    ? "Registering..."
+                    : "Loading..."
               : mode === "login"
                 ? "Sign In"
                 : "Create Account"}

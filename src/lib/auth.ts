@@ -145,6 +145,54 @@ export const authOptions: NextAuthOptions = {
 
       // Handle session update (when profile image is changed or verification status changes)
       if (trigger === "update") {
+        // If no role yet, fetch from database (e.g., after OAuth registration completion)
+        if (!token.role && token.sub) {
+          console.log('🔄 Update trigger - fetching role from DB for user:', token.sub);
+          try {
+            const userId = parseInt(token.sub as string, 10)
+            if (!Number.isNaN(userId)) {
+              const existing = await prisma.account.findUnique({
+                where: { id: userId },
+                select: {
+                  accountRole: { select: { name: true } },
+                  username: true,
+                  logoUrl: true,
+                  backgroundUrl: true,
+                  student: {
+                    select: {
+                      email_verified: true,
+                      student_status: true,
+                      verification_status: true
+                    }
+                  },
+                  company: {
+                    select: {
+                      registration_status: true
+                    }
+                  }
+                }
+              })
+              console.log('📊 Update trigger - fetched data:', {
+                found: !!existing,
+                role: existing?.accountRole?.name,
+              });
+              if (existing) {
+                token.role = existing.accountRole?.name || token.role
+                token.username = existing.username || token.username
+                token.logoUrl = existing.logoUrl || token.logoUrl
+                token.backgroundUrl = existing.backgroundUrl || token.backgroundUrl
+                token.emailVerified = existing.student?.email_verified
+                token.studentStatus = existing.student?.student_status
+                token.verificationStatus = existing.student?.verification_status
+                token.companyRegistrationStatus = existing.company?.registration_status
+              }
+            }
+          } catch (err) {
+            console.log('Error fetching role during update:', err)
+          }
+        }
+
+        // Update other session fields
         if (session?.user?.logoUrl) {
           token.logoUrl = session.user.logoUrl;
         }
