@@ -142,6 +142,13 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+      include: {
+        jobPost: {
+          include: {
+            company: true,
+          },
+        },
+      },
     });
 
     await prisma.notification.create({
