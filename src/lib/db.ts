@@ -10,11 +10,6 @@ new PrismaClient({
       ? ["error", "warn"]
       : ["error"],
       // could add "query" for debugging
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
 });
 
 if (process.env.NODE_ENV !== "production") {

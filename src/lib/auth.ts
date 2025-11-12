@@ -1,19 +1,24 @@
 import { prisma } from "@/lib/db";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bycrypt from "bcryptjs";
 import { NextAuthOptions, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt"
   },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "select_account",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
     CredentialsProvider({
       name: "credentials",
@@ -70,8 +75,13 @@ export const authOptions: NextAuthOptions = {
           }
         });
 
-        if (!user || !user.password) {
+        if (!user) {
           throw new Error("Invalid credentials");
+        }
+
+        // Check if this is an OAuth account (no password set)
+        if (!user.password) {
+          throw new Error("OAUTH_ACCOUNT:This account uses Google sign-in. Please click 'Continue with Google' to login.");
         }
 
         const isPasswordValid = await bycrypt.compare(credentials.password, user.password);
@@ -137,13 +147,14 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      // for OAuth users
+      // for OAuth users - fetch complete user data including verification status
       if (account?.provider === "google") {
         const existingUser = await prisma.account.findUnique({
           where: {
             email: user.email!
           },
           select: {
+            id: true,
             username: true,
             logoUrl: true,
             backgroundUrl: true,
@@ -151,14 +162,32 @@ export const authOptions: NextAuthOptions = {
               select: {
                 name: true
               }
+            },
+            student: {
+              select: {
+                email_verified: true,
+                student_status: true,
+                verification_status: true
+              }
+            },
+            company: {
+              select: {
+                registration_status: true
+              }
             }
           }
         })
         if (existingUser) {
+          // Use database ID instead of provider ID to avoid integer overflow
+          token.sub = existingUser.id.toString()
           token.role = existingUser.accountRole?.name
           token.username = existingUser.username || undefined
           token.logoUrl = existingUser.logoUrl || undefined
           token.backgroundUrl = existingUser.backgroundUrl || undefined
+          token.emailVerified = existingUser.student?.email_verified
+          token.studentStatus = existingUser.student?.student_status
+          token.verificationStatus = existingUser.student?.verification_status
+          token.companyRegistrationStatus = existingUser.company?.registration_status
         }
       }
 
@@ -207,9 +236,21 @@ export const authOptions: NextAuthOptions = {
               email: user.email!
             },
             select: {
-              id: true
+              id: true,
+              role: true,
+              student: {
+                select: {
+                  id: true
+                }
+              },
+              company: {
+                select: {
+                  id: true
+                }
+              }
             }
-          })
+          });
+
           if (!existingUser) {
             // Create new user but without role (needs to complete registration)
             await prisma.account.create({
@@ -221,11 +262,36 @@ export const authOptions: NextAuthOptions = {
                 providerAccountId: account.providerAccountId,
                 emailVerified: new Date(),
               }
-            })
+            });
+            // Allow sign in, middleware will redirect to /register/complete
+            return true;
           }
-          return true
+
+          // Existing user - check if they have completed registration
+          if (!existingUser.role) {
+            // Account exists but no role, needs to complete registration
+            return true;
+          }
+
+          // Check if they have completed role-specific profile
+          const roleRecord = await prisma.accountRole.findUnique({
+            where: { id: existingUser.role }
+          });
+          const roleName = roleRecord?.name?.toLowerCase();
+
+          if (roleName === "student" && !existingUser.student) {
+            // Has student role but no student profile, needs to complete
+            return true;
+          }
+          if (roleName === "company" && !existingUser.company) {
+            // Has company role but no company profile, needs to complete
+            return true;
+          }
+
+          // All good, allow sign in
+          return true;
         } catch (error) {
-          console.log("Error creating user:", error);
+          console.error("Error in OAuth sign-in:", error);
           return false;
         }
       }

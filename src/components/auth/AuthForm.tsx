@@ -8,11 +8,9 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { ROLE_CONFIGS } from "@/lib/role-config"
-import { companyRegisterSchema, loginSchema, studentRegisterSchema } from "@/lib/validations"
 import { AuthFormData, Role } from "@/types/auth"
-import { zodResolver } from "@hookform/resolvers/zod"
 import { Upload } from "lucide-react"
-import { signIn, useSession } from "next-auth/react"
+import { signIn, signOut, useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
@@ -20,9 +18,10 @@ import { useForm } from "react-hook-form"
 interface AuthFormProps {
   role: Role
   mode: "login" | "register"
+  isOAuthCompletion?: boolean
 }
 
-export function AuthForm({ role, mode }: AuthFormProps) {
+export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -31,15 +30,9 @@ export function AuthForm({ role, mode }: AuthFormProps) {
   const [actualUserRole, setActualUserRole] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { data: session } = useSession()
+  const { data: session, update } = useSession()
 
   const callbackUrl = searchParams.get("callbackUrl")
-
-  const schema = mode === "login"
-    ? loginSchema
-    : role === "student"
-      ? studentRegisterSchema
-      : companyRegisterSchema
 
   const {
     register,
@@ -48,7 +41,8 @@ export function AuthForm({ role, mode }: AuthFormProps) {
     setValue,
     watch,
   } = useForm<AuthFormData>({
-    resolver: zodResolver(schema),
+    // Remove Zod resolver for frontend - validation happens on backend
+    // resolver: zodResolver(schema),
   })
 
   const emailValue = watch("email")
@@ -60,6 +54,26 @@ export function AuthForm({ role, mode }: AuthFormProps) {
       setValue("year", "Alumni")
     }
   }, [studentStatus, mode, role, setValue])
+
+  // Pre-fill email for OAuth completion
+  useEffect(() => {
+    if (isOAuthCompletion && session?.user?.email) {
+      setValue("email", session.user.email)
+    }
+  }, [isOAuthCompletion, session, setValue])
+
+  // Auto-lock student status based on OAuth email domain
+  useEffect(() => {
+    if (isOAuthCompletion && session?.user?.email && role === "student") {
+      const email = session.user.email.toLowerCase()
+      // If OAuth email is not @ku.th, force ALUMNI status
+      if (!email.endsWith("@ku.th")) {
+        setStudentStatus("ALUMNI")
+        // Also set year to "Alumni" immediately
+        setValue("year", "Alumni", { shouldValidate: true })
+      }
+    }
+  }, [isOAuthCompletion, session, role, setValue])
 
   // Handle session-based redirection after login
   useEffect(() => {
@@ -90,7 +104,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
       // Validate KU email for current students
       if (mode === "register" && role === "student" && studentStatus === "CURRENT") {
         if (!data.email.toLowerCase().endsWith("@ku.th")) {
-          setError("Current students must use a KU email address (@ku.th)")
+          setError("Current students must use a KU email address (@ku.th). If you don't have access to your KU email, please register as Alumni instead and provide your transcript for verification.")
           setIsLoading(false)
           return
         }
@@ -131,6 +145,12 @@ export function AuthForm({ role, mode }: AuthFormProps) {
             setActualUserRole(actualRole)
             setError(message)
             setIsLoading(false)
+          } else if (result.error.startsWith("OAUTH_ACCOUNT:")) {
+            // OAuth account trying to login with credentials
+            const message = result.error.split(":")[1];
+            setActualUserRole(null)
+            setError(message)
+            setIsLoading(false)
           } else {
             setActualUserRole(null)
             setError("Invalid email or password")
@@ -142,11 +162,20 @@ export function AuthForm({ role, mode }: AuthFormProps) {
         }
       } else {
         // Registration
+        console.log("Starting registration, isOAuthCompletion:", isOAuthCompletion)
         const formData = new FormData()
         formData.append("role", role)
         formData.append("email", data.email)
-        formData.append("password", data.password!)
-        formData.append("confirmPassword", data.confirmPassword!)
+
+        // For OAuth completion, mark as OAuth and skip password
+        if (isOAuthCompletion) {
+          console.log("OAuth registration - skipping password fields")
+          formData.append("isOAuth", "true")
+        } else {
+          console.log("Credentials registration - including password fields")
+          formData.append("password", data.password!)
+          formData.append("confirmPassword", data.confirmPassword!)
+        }
 
         if (role === "student") {
           formData.append("studentId", data.studentId!)
@@ -193,17 +222,25 @@ export function AuthForm({ role, mode }: AuthFormProps) {
         if (!response.ok) {
           setError(result.error || "Registration failed")
         } else {
-          // Auto-login after registration for all users
-          const loginResult = await signIn("credentials", {
-            email: data.email,
-            password: data.password,
-            redirect: false,
-          })
-
-          if (loginResult?.error) {
-            setError("Registration successful but login failed. Please try logging in.")
+          // For OAuth users, force session reload and redirect
+          if (isOAuthCompletion) {
+            console.log("OAuth registration complete, reloading page to refresh session...")
+            // Force a full page reload to trigger fresh session fetch
+            // This will cause the JWT callback to run again and fetch the updated role
+            window.location.href = result.redirectTo
           } else {
-            router.push(result.redirectTo)
+            // Auto-login after registration for credentials users
+            const loginResult = await signIn("credentials", {
+              email: data.email,
+              password: data.password,
+              redirect: false,
+            })
+
+            if (loginResult?.error) {
+              setError("Registration successful but login failed. Please try logging in.")
+            } else {
+              router.push(result.redirectTo)
+            }
           }
         }
       }
@@ -215,11 +252,38 @@ export function AuthForm({ role, mode }: AuthFormProps) {
     }
   }
 
+  const handleSwitchGoogleAccount = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      // Build callback URL
+      const callbackUrl = mode === "register"
+        ? `/register/complete/${role}`
+        : roleConfig.redirectPath
+
+      // Directly trigger Google OAuth flow
+      // The prompt: "select_account" in provider config will force Google to show account picker
+      // No need to sign out - Google will handle account selection
+      await signIn("google", {
+        callbackUrl,
+        redirect: true
+      })
+    } catch (error) {
+      setError("Failed to switch account")
+      console.log("Switch account error:", error)
+      setIsLoading(false)
+    }
+  }, [mode, role, roleConfig.redirectPath])
+
   const handleGoogleSignIn = useCallback(async () => {
     setIsLoading(true)
     try {
+      // For registration, pass role to skip role selection page
+      const callbackUrl = mode === "register"
+        ? `/register/complete/${role}`
+        : roleConfig.redirectPath
+
       await signIn("google", {
-        callbackUrl: roleConfig.redirectPath,
+        callbackUrl,
         redirect: true
       })
     } catch (error) {
@@ -227,7 +291,7 @@ export function AuthForm({ role, mode }: AuthFormProps) {
       console.log("Google sign-in error:", error)
       setIsLoading(false)
     }
-  }, [roleConfig.redirectPath])
+  }, [mode, role, roleConfig.redirectPath])
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -254,6 +318,20 @@ export function AuthForm({ role, mode }: AuthFormProps) {
       </CardHeader>
 
       <CardContent>
+        {isOAuthCompletion && session?.user?.email && (
+          <Alert className="mb-4 border-blue-200 bg-blue-50">
+            <AlertDescription>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-blue-900">
+                  <strong>Completing registration for:</strong> {session.user.email}
+                </p>
+                <p className="text-xs text-blue-700">
+                  Not your account? Click "Use a different Google account" below the email field.
+                </p>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
         {error && (
           <Alert className="mb-4" variant="destructive">
             <AlertDescription>
@@ -277,20 +355,28 @@ export function AuthForm({ role, mode }: AuthFormProps) {
 
         <form onSubmit={handleSubmit(onSubmit, (errors) => {
           console.log("Form validation errors:", errors)
+          // Filter out password errors for OAuth completion
+          const filteredErrors = isOAuthCompletion
+            ? Object.entries(errors).filter(([field]) => field !== 'password' && field !== 'confirmPassword')
+            : Object.entries(errors);
+
           // Find the first error and display it
-          const firstError = Object.entries(errors)[0]
+          const firstError = filteredErrors[0]
           if (firstError) {
             const [field, error] = firstError
             setError(`${field}: ${error.message || 'Invalid value'}`)
-          } else {
+          } else if (!isOAuthCompletion) {
             setError("Please fix the form errors before submitting")
           }
         })} className="space-y-4">
           <div>
             <Label htmlFor="email">
               Email
-              {mode === "register" && role === "student" && studentStatus === "CURRENT" && (
+              {mode === "register" && role === "student" && studentStatus === "CURRENT" && !isOAuthCompletion && (
                 <span className="text-xs text-gray-500 ml-2">(Must be KU email: @ku.th)</span>
+              )}
+              {isOAuthCompletion && (
+                <span className="text-xs text-green-600 ml-2">✓ Verified by Google</span>
               )}
             </Label>
             <Input
@@ -303,58 +389,85 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                   ? "yourname@ku.th"
                   : "Enter your email"
               }
+              disabled={isOAuthCompletion}
+              readOnly={isOAuthCompletion}
             />
             {errors.email && (
               <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
             )}
-            {mode === "register" && role === "student" && studentStatus === "CURRENT" && emailValue && !emailValue.toLowerCase().endsWith("@ku.th") && (
+            {mode === "register" && role === "student" && studentStatus === "CURRENT" && emailValue && !emailValue.toLowerCase().endsWith("@ku.th") && !isOAuthCompletion && (
               <p className="text-sm text-amber-600 mt-1">
                 ⚠️ Current students must use a KU email address (@ku.th)
               </p>
             )}
-          </div>
-
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              {...register("password")}
-              className="mt-1 bg-gray-50"
-            />
-            {errors.password && (
-              <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
+            {isOAuthCompletion && (
+              <div className="mt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSwitchGoogleAccount}
+                  disabled={isLoading}
+                  className="text-xs"
+                >
+                  {isLoading ? "Switching account..." : "Use a different Google account"}
+                </Button>
+              </div>
             )}
           </div>
 
-          {mode === "register" && (
+          {!isOAuthCompletion && (
             <>
               <div>
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
-                  id="confirmPassword"
+                  id="password"
                   type="password"
-                  {...register("confirmPassword")}
+                  {...register("password")}
                   className="mt-1 bg-gray-50"
                 />
-                {errors.confirmPassword && (
-                  <p className="text-sm text-red-600 mt-1">{errors.confirmPassword.message}</p>
+                {errors.password && (
+                  <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
                 )}
               </div>
 
+              {mode === "register" && (
+                <div>
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    {...register("confirmPassword")}
+                    className="mt-1 bg-gray-50"
+                  />
+                  {errors.confirmPassword && (
+                    <p className="text-sm text-red-600 mt-1">{errors.confirmPassword.message}</p>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {mode === "register" && (
+            <>
               {role === "student" ? (
                 <>
                   {/* Student Status Selection */}
                   <div className="space-y-3">
                     <Label>I am a</Label>
                     <div className="flex gap-4">
-                      <label className="flex items-center space-x-2 cursor-pointer">
+                      <label className={`flex items-center space-x-2 ${
+                        isOAuthCompletion && session?.user?.email && !session.user.email.toLowerCase().endsWith("@ku.th")
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer"
+                      }`}>
                         <input
                           type="radio"
                           name="studentStatus"
                           value="CURRENT"
                           checked={studentStatus === "CURRENT"}
                           onChange={(e) => setStudentStatus(e.target.value as "CURRENT" | "ALUMNI")}
+                          disabled={isOAuthCompletion && session?.user?.email && !session.user.email.toLowerCase().endsWith("@ku.th")}
                           className="w-4 h-4 text-blue-600"
                         />
                         <span className="text-sm font-medium">Current KU Student</span>
@@ -371,15 +484,27 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                         <span className="text-sm font-medium">KU Alumni</span>
                       </label>
                     </div>
-                    {studentStatus === "CURRENT" && (
-                      <p className="text-xs text-gray-600 mt-1">
-                        You&apos;ll need to verify your KU email (@ku.th) after registration
-                      </p>
+                    {/* Show locked message for non-KU OAuth emails */}
+                    {isOAuthCompletion && session?.user?.email && !session.user.email.toLowerCase().endsWith("@ku.th") && (
+                      <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                        <p className="text-xs text-amber-900">
+                          <strong>Note:</strong> Your Google account ({session.user.email}) is not a KU email (@ku.th), so you must register as Alumni. Your account will require admin approval with transcript verification.
+                        </p>
+                      </div>
                     )}
-                    {studentStatus === "ALUMNI" && (
-                      <p className="text-xs text-amber-600 mt-1">
-                        Your account will need admin approval. Please upload your transcript.
-                      </p>
+                    {studentStatus === "CURRENT" && (
+                      <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <p className="text-xs text-blue-900">
+                          <strong>Current students:</strong> Must use KU email (@ku.th) for instant verification. You&apos;ll need to verify your email after registration.
+                        </p>
+                      </div>
+                    )}
+                    {studentStatus === "ALUMNI" && !(isOAuthCompletion && session?.user?.email && !session.user.email.toLowerCase().endsWith("@ku.th")) && (
+                      <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                        <p className="text-xs text-amber-900">
+                          <strong>Alumni:</strong> Can use any email address. Your account requires admin approval - please upload your transcript for verification.
+                        </p>
+                      </div>
                     )}
                   </div>
 
@@ -409,7 +534,10 @@ export function AuthForm({ role, mode }: AuthFormProps) {
 
                   <div>
                     <Label htmlFor="faculty">Faculty</Label>
-                    <Select onValueChange={(value) => setValue("faculty", value)}>
+                    <Select
+                      onValueChange={(value) => setValue("faculty", value, { shouldValidate: true })}
+                      defaultValue={watch("faculty")}
+                    >
                       <SelectTrigger className="mt-1 bg-gray-50">
                         <SelectValue placeholder="Select faculty" />
                       </SelectTrigger>
@@ -430,9 +558,10 @@ export function AuthForm({ role, mode }: AuthFormProps) {
                   <div>
                     <Label htmlFor="year">Year</Label>
                     <Select
-                      onValueChange={(value) => setValue("year", value === "Alumni" ? value : parseInt(value))}
+                      onValueChange={(value) => setValue("year", value === "Alumni" ? value : parseInt(value), { shouldValidate: true })}
                       disabled={studentStatus === "ALUMNI"}
                       value={yearValue?.toString()}
+                      defaultValue={yearValue?.toString()}
                     >
                       <SelectTrigger className="mt-1 bg-gray-50">
                         <SelectValue placeholder="Select year" />
