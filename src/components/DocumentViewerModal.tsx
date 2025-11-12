@@ -15,6 +15,7 @@ import {
   Image as ImageIcon,
   Loader2
 } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -195,11 +196,14 @@ export function DocumentViewerModal({
                   title={fileName}
                 />
               ) : fileType === "image" ? (
-                <div className="h-full w-full flex items-center justify-center p-6">
-                  <img
+                <div className="h-full w-full flex items-center justify-center p-6 relative">
+                  <Image
                     src={documentUrl}
                     alt={fileName}
-                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                    fill
+                    className="object-contain rounded-lg shadow-lg"
+                    sizes="(max-width: 95vw) 95vw, 90vh"
+                    priority
                   />
                 </div>
               ) : (
