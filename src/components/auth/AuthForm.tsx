@@ -23,6 +23,7 @@ interface AuthFormProps {
 
 export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const [isSwitchingAccount, setIsSwitchingAccount] = useState(false)
   const [error, setError] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [awaitingSession, setAwaitingSession] = useState(false)
@@ -256,7 +257,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   }
 
   const handleSwitchGoogleAccount = useCallback(async () => {
-    setIsLoading(true)
+    setIsSwitchingAccount(true)
     try {
       // Build callback URL
       const callbackUrl = mode === "register"
@@ -273,7 +274,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
     } catch (error) {
       setError("Failed to switch account")
       console.log("Switch account error:", error)
-      setIsLoading(false)
+      setIsSwitchingAccount(false)
     }
   }, [mode, role, roleConfig.redirectPath])
 
@@ -410,10 +411,10 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                   variant="outline"
                   size="sm"
                   onClick={handleSwitchGoogleAccount}
-                  disabled={isLoading}
+                  disabled={isSwitchingAccount || isLoading}
                   className="text-xs"
                 >
-                  {isLoading ? "Switching account..." : "Use a different Google account"}
+                  {isSwitchingAccount ? "Switching account..." : "Use a different Google account"}
                 </Button>
               </div>
             )}
