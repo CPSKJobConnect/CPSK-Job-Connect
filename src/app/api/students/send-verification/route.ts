@@ -69,12 +69,12 @@ export async function POST(req: NextRequest) {
     const expiryDate = getVerificationExpiry();
 
     // Delete any existing verification tokens for this email
-    await prisma.emailVerificationToken.deleteMany({
+    await prisma.email_verification_tokens.deleteMany({
       where: { email: normalizedEmail },
     });
 
     // Save token to database
-    await prisma.emailVerificationToken.create({
+    await prisma.email_verification_tokens.create({
       data: {
         email: normalizedEmail,
         token: verificationCode,
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     } catch (emailError) {
       console.error('Failed to send email:', emailError);
       // Clean up the token if email fails
-      await prisma.emailVerificationToken.deleteMany({
+      await prisma.email_verification_tokens.deleteMany({
         where: { email: normalizedEmail, token: verificationCode },
       });
 

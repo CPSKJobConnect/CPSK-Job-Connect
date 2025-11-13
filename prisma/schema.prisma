@@ -8,28 +8,39 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       Int      @map("user_id")
+  expires      DateTime
+  account      Account  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
 model Account {
-  id                Int            @id @default(autoincrement())
-  username          String?        @unique
-  email             String         @unique
-  password          String?
-  role              Int?
-  created_at        DateTime       @default(now())
-  updated_at        DateTime       @updatedAt
-  emailVerified     DateTime?
-  provider          String?
-  providerAccountId String?
-  backgroundUrl     String?
-  logoUrl           String?
-  accountRole       AccountRole?   @relation(fields: [role], references: [id])
-  company           Company?
-  documents         Document[]
-  reports           Report[]
-  student           Student?
-  verifiedStudents  Student[]      @relation("VerifiedStudents")
-  sessions          Session[]
-  sentNotifications        Notification[]   @relation("NotificationSender")
-  receivedNotifications    Notification[]   @relation("NotificationReceiver")
+  id                    Int            @id @default(autoincrement())
+  username              String?        @unique
+  email                 String         @unique
+  password              String?
+  role                  Int?
+  created_at            DateTime       @default(now())
+  updated_at            DateTime       @updatedAt
+  emailVerified         DateTime?
+  provider              String?
+  providerAccountId     String?
+  backgroundUrl         String?
+  logoUrl               String?
+  accountRole           AccountRole?   @relation(fields: [role], references: [id])
+  company               Company?
+  documents             Document[]
+  receivedNotifications Notification[] @relation("NotificationReceiver")
+  sentNotifications     Notification[] @relation("NotificationSender")
+  reports               Report[]
+  student               Student?       @relation("StudentAccount")
+  verifiedStudents      Student[]      @relation("VerifiedStudents")
+  verifiedCompanies     Company[]      @relation("VerifiedCompanies")
+  sessions              Session[]
 
   @@unique([provider, providerAccountId])
   @@index([email])
@@ -42,42 +53,30 @@ model AccountRole {
   accounts Account[]
 }
 
-enum StudentStatus {
-  CURRENT
-  ALUMNI
+model Application {
+  id                Int               @id @default(autoincrement())
+  job_post_id       Int
+  student_id        Int
+  status            Int
+  applied_at        DateTime          @default(now())
+  updated_at        DateTime
+  portfolio_id      Int?
+  resume_id         Int?
+  jobPost           JobPost           @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
+  portfolioDocument Document?         @relation("PortfolioDocument", fields: [portfolio_id], references: [id])
+  resumeDocument    Document?         @relation("ResumeDocument", fields: [resume_id], references: [id])
+  applicationStatus ApplicationStatus @relation(fields: [status], references: [id])
+  student           Student           @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@unique([student_id, job_post_id])
+  @@index([job_post_id])
+  @@index([student_id])
 }
 
-enum VerificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-model Student {
-  id                  Int                @id @default(autoincrement())
-  account_id          Int                @unique
-  student_id          String
-  name                String
-  faculty             String
-  year                String
-  phone               String
-  created_at          DateTime           @default(now())
-  updated_at          DateTime           @updatedAt
-  transcript          String?
-  email_verified      Boolean            @default(true)
-  student_status      StudentStatus      @default(CURRENT)
-  verification_notes  String?
-  verification_status VerificationStatus @default(APPROVED)
-  verified_at         DateTime?
-  verified_by         Int?
-  applications        Application[]
-  savedJobs           SavedJob[]
-  account             Account            @relation(fields: [account_id], references: [id], onDelete: Cascade)
-  verifiedByAdmin     Account?           @relation("VerifiedStudents", fields: [verified_by], references: [id])
-
-  @@index([account_id])
-  @@index([student_status])
-  @@index([verification_status])
+model ApplicationStatus {
+  id           Int           @id @default(autoincrement())
+  name         String
+  applications Application[]
 }
 
 model Company {
@@ -92,8 +91,14 @@ model Company {
   created_at          DateTime  @default(now())
   updated_at          DateTime  @updatedAt
   website             String?
+  verification_notes  String?
+  verified_at         DateTime?
+  verified_by         Int?
   account             Account   @relation(fields: [account_id], references: [id], onDelete: Cascade)
+  verifiedByAdmin     Account?  @relation("VerifiedCompanies", fields: [verified_by], references: [id])
   jobPosts            JobPost[]
+
+  @@index([registration_status])
 }
 
 model Document {
@@ -115,29 +120,16 @@ model DocumentType {
   documents Document[]
 }
 
-model Notification {
-  id          Int       @id @default(autoincrement())
-  sender_id   Int?
-  account_id  Int
-  message     String
-  is_read     Boolean   @default(false)
-  created_at  DateTime  @default(now())
-
-  sender      Account?   @relation("NotificationSender", fields: [sender_id], references: [id])
-  account     Account   @relation("NotificationReceiver", fields: [account_id], references: [id], onDelete: Cascade)
-
-   @@index([account_id, sender_id, is_read])
+model JobArrangement {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  posts JobPost[]
 }
 
-
-model Report {
-  id         Int      @id @default(autoincrement())
-  account_id Int
-  report_id  Int
-  post_id    Int
-  type       String
-  created_at DateTime @default(now())
-  account    Account  @relation(fields: [account_id], references: [id])
+model JobCategory {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  posts JobPost[]
 }
 
 model JobPost {
@@ -152,7 +144,7 @@ model JobPost {
   max_salary         Int
   deadline           DateTime
   created_at         DateTime       @default(now())
-  updated_at         DateTime       @updatedAt
+  updated_at         DateTime
   is_Published       Boolean        @default(true)
   job_arrangement_id Int
   job_type_id        Int
@@ -167,54 +159,39 @@ model JobPost {
   tags               JobTag[]       @relation("JobTagesOnPosts")
 }
 
+model JobTag {
+  id    Int       @id @default(autoincrement())
+  name  String
+  posts JobPost[] @relation("JobTagesOnPosts")
+}
+
 model JobType {
   id    Int       @id @default(autoincrement())
   name  String    @unique
   posts JobPost[]
 }
 
-model JobArrangement {
-  id    Int       @id @default(autoincrement())
-  name  String    @unique
-  posts JobPost[]
+model Notification {
+  id         Int      @id @default(autoincrement())
+  account_id Int
+  sender_id  Int?
+  message    String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+  account    Account  @relation("NotificationReceiver", fields: [account_id], references: [id], onDelete: Cascade)
+  sender     Account? @relation("NotificationSender", fields: [sender_id], references: [id])
+
+  @@index([account_id, sender_id, is_read])
 }
 
-model JobCategory {
-  id    Int       @id @default(autoincrement())
-  name  String    @unique
-  posts JobPost[]
-}
-
-model JobTag {
-  id       Int       @id @default(autoincrement())
-  name     String
-  jobPosts JobPost[] @relation("JobTagesOnPosts")
-}
-
-model Application {
-  id                Int               @id @default(autoincrement())
-  job_post_id       Int
-  student_id        Int
-  status            Int
-  applied_at        DateTime          @default(now())
-  updated_at        DateTime          @updatedAt
-  portfolio_id      Int?
-  resume_id         Int?
-  jobPost           JobPost           @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
-  portfolioDocument Document?         @relation("PortfolioDocument", fields: [portfolio_id], references: [id])
-  resumeDocument    Document?         @relation("ResumeDocument", fields: [resume_id], references: [id])
-  applicationStatus ApplicationStatus @relation(fields: [status], references: [id])
-  student           Student           @relation(fields: [student_id], references: [id], onDelete: Cascade)
-
-  @@unique([student_id, job_post_id])
-  @@index([job_post_id])
-  @@index([student_id])
-}
-
-model ApplicationStatus {
-  id           Int           @id @default(autoincrement())
-  name         String
-  applications Application[]
+model Report {
+  id         Int      @id @default(autoincrement())
+  account_id Int
+  report_id  Int
+  post_id    Int
+  type       String
+  created_at DateTime @default(now())
+  account    Account  @relation(fields: [account_id], references: [id])
 }
 
 model SavedJob {
@@ -226,30 +203,38 @@ model SavedJob {
   student     Student  @relation(fields: [student_id], references: [id], onDelete: Cascade)
 
   @@unique([student_id, job_post_id])
-  @@index([student_id])
   @@index([job_post_id])
+  @@index([student_id])
 }
 
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       Int      @map("user_id")
-  expires      DateTime
-  user         Account  @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Student {
+  id                  Int                @id @default(autoincrement())
+  account_id          Int                @unique
+  student_id          String
+  name                String
+  faculty             String
+  year                String
+  phone               String
+  created_at          DateTime           @default(now())
+  updated_at          DateTime
+  transcript          String?
+  email_verified      Boolean            @default(true)
+  student_status      StudentStatus      @default(CURRENT)
+  verification_notes  String?
+  verification_status VerificationStatus @default(APPROVED)
+  verified_at         DateTime?
+  verified_by         Int?
+  applications        Application[]
+  savedJobs           SavedJob[]
+  account             Account            @relation("StudentAccount", fields: [account_id], references: [id], onDelete: Cascade)
+  verifiedByAdmin     Account?           @relation("VerifiedStudents", fields: [verified_by], references: [id])
 
-  @@map("sessions")
+  @@index([account_id])
+  @@index([student_status])
+  @@index([verification_status])
 }
 
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-  @@map("verification_tokens")
-}
-
-model EmailVerificationToken {
+model email_verification_tokens {
   id         Int      @id @default(autoincrement())
   email      String
   token      String   @unique
@@ -258,5 +243,23 @@ model EmailVerificationToken {
 
   @@index([email])
   @@index([token])
-  @@map("email_verification_tokens")
+}
+
+model verification_tokens {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum StudentStatus {
+  CURRENT
+  ALUMNI
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

@@ -1,6 +1,7 @@
 "use client";''
 
 import AdminNavbar from "@/components/Navbar/AdminNavbar";
+import FloatingNotification from "@/components/FloatingNotification";
 
 type Props = {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ export default function StudentLayout({ children }: Props) {
         <AdminNavbar />
       </div>
       <main className="flex-1 p-4 mt-16">{children}</main>
+      <FloatingNotification />
     </div>
   );
 }

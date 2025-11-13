@@ -1,18 +1,19 @@
 "use client";
 
-import Image from "next/image";
-import { Button } from "./ui/button";
-import { useRouter } from "next/navigation";
-import { IoLocationOutline } from "react-icons/io5";
-import { MdOutlinePeopleAlt } from "react-icons/md";
-import { LiaMoneyCheckAltSolid } from "react-icons/lia";
-import { RiDeleteBinFill } from "react-icons/ri";
-import { HiOutlineOfficeBuilding } from "react-icons/hi";
-import { JobInfo, JobPostFormData } from "@/types/job";
-import { useState, useRef, useEffect } from "react";
-import EditJobCard from "./EditJobCard";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { validateForm } from "@/lib/validateJobForm";
+import { JobInfo, JobPostFormData } from "@/types/job";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { HiOutlineOfficeBuilding } from "react-icons/hi";
+import { IoLocationOutline } from "react-icons/io5";
+import { LiaMoneyCheckAltSolid } from "react-icons/lia";
+import { MdOutlinePeopleAlt } from "react-icons/md";
+import { RiDeleteBinFill } from "react-icons/ri";
 import { toast } from "sonner";
+import EditJobCard from "./EditJobCard";
+import { Button } from "./ui/button";
 
 interface JobDescriptionProps {
   job: JobInfo;
@@ -196,7 +197,7 @@ const JobDescriptionCard = ({
   return (
     <div className={`${baseStyle} ${sizeStyle}`}>
       <div className="relative w-full h-40">
-        {job.companyBg ? (
+        {isValidImageUrl(job.companyBg) ? (
           <Image
             src={job.companyBg}
             alt={job.companyName || "companyBg"}
@@ -235,13 +236,13 @@ const JobDescriptionCard = ({
         )}
 
         <div className="absolute -bottom-6 left-4 bg-white p-2 rounded-md shadow-md">
-          {job.companyLogo ? (
+          {isValidImageUrl(job.companyLogo) ? (
             <Image
               src={job.companyLogo}
               alt={job.companyName || "companyLogo"}
               width={60}
               height={60}
-              className="h-auto w-auto"
+              className="w-[100px] h-[100px] object-contain"
             />
           ) : (
             <div className="h-[60px] w-[60px] bg-gray-100 rounded-md flex items-center justify-center text-sm font-medium text-gray-700">

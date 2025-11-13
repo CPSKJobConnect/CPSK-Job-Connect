@@ -41,6 +41,7 @@ import {
   UserCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import { DocumentViewerModal } from "@/components/DocumentViewerModal";
 
 interface Document {
   id: number;
@@ -67,6 +68,7 @@ interface PendingAccount {
     year?: string;
     phone?: string;
     transcript?: string;
+    isReapplication?: boolean;
     // Company details
     address?: string;
     description?: string;
@@ -85,6 +87,11 @@ export default function ApproveAccountsPage() {
   const [action, setAction] = useState<"approve" | "reject" | null>(null);
   const [reason, setReason] = useState("");
   const [processing, setProcessing] = useState(false);
+
+  // Document viewer modal
+  const [isDocViewerOpen, setIsDocViewerOpen] = useState(false);
+  const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
+  const [selectedDocName, setSelectedDocName] = useState("");
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -192,24 +199,10 @@ export default function ApproveAccountsPage() {
     return filename.split('.').pop()?.toUpperCase() || 'FILE';
   };
 
-  const viewDocument = async (documentId: number, fileName: string) => {
-    try {
-      const response = await fetch(`/api/admin/documents/view/${documentId}`);
-
-      if (!response.ok) {
-        toast.error("Failed to get document URL");
-        return;
-      }
-
-      const data = await response.json();
-
-      // Open the signed URL in a new tab
-      window.open(data.url, '_blank');
-      toast.success(`Opening ${fileName}`);
-    } catch (error) {
-      console.error("Error viewing document:", error);
-      toast.error("Failed to view document");
-    }
+  const viewDocument = (documentId: number, fileName: string) => {
+    setSelectedDocId(documentId);
+    setSelectedDocName(fileName);
+    setIsDocViewerOpen(true);
   };
 
   if (loading) {
@@ -318,6 +311,11 @@ export default function ApproveAccountsPage() {
                         }`}>
                           {account.type === "student" ? "Alumni" : "Company"}
                         </span>
+                        {account.details.isReapplication && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 font-semibold">
+                            Re-application
+                          </span>
+                        )}
                       </div>
                       <CardDescription className="mt-1">
                         Registered on {formatDate(account.createdAt)}
@@ -494,6 +492,14 @@ export default function ApproveAccountsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Document Viewer Modal */}
+      <DocumentViewerModal
+        isOpen={isDocViewerOpen}
+        onClose={() => setIsDocViewerOpen(false)}
+        documentId={selectedDocId}
+        fileName={selectedDocName}
+      />
     </div>
   );
 }

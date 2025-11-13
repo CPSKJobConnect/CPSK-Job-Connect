@@ -18,12 +18,37 @@ interface EmailOptions {
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
+ * Track recent emails to prevent duplicates (in-memory cache)
+ * Key: email+subject hash, Value: timestamp
+ */
+const recentEmails = new Map<string, number>();
+
+/**
  * Send an email using SMTP or Resend
  * Priority: SMTP → Resend → Console Logging
  * @param options - Email options (to, subject, html, text)
  * @returns Promise that resolves when email is sent
  */
 export async function sendEmail(options: EmailOptions): Promise<void> {
+  // Prevent duplicate emails within 10 seconds
+  const emailKey = `${options.to}:${options.subject}`;
+  const now = Date.now();
+  const lastSent = recentEmails.get(emailKey);
+
+  if (lastSent && now - lastSent < 10000) {
+    console.warn(`⚠️ Duplicate email prevented: ${options.subject} to ${options.to} (sent ${Math.round((now - lastSent) / 1000)}s ago)`);
+    return; // Skip sending duplicate
+  }
+
+  // Record this email
+  recentEmails.set(emailKey, now);
+
+  // Clean up old entries (older than 30 seconds)
+  for (const [key, timestamp] of recentEmails.entries()) {
+    if (now - timestamp > 30000) {
+      recentEmails.delete(key);
+    }
+  }
   try {
     // 1. SMTP (Gmail/Mailtrap) - HIGHEST PRIORITY
     if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {

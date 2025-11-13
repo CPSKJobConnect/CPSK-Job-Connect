@@ -14,6 +14,7 @@ declare module "next-auth" {
       emailVerified?: boolean;
       studentStatus?: StudentStatus;
       verificationStatus?: VerificationStatus;
+      companyRegistrationStatus?: string;
     } & DefaultSession["user"];
   }
 
@@ -25,6 +26,7 @@ declare module "next-auth" {
     emailVerified?: boolean;
     studentStatus?: StudentStatus;
     verificationStatus?: VerificationStatus;
+    companyRegistrationStatus?: string;
   }
 }
 
@@ -37,6 +39,7 @@ declare module "next-auth/jwt" {
     emailVerified?: boolean;
     studentStatus?: StudentStatus;
     verificationStatus?: VerificationStatus;
+    companyRegistrationStatus?: string;
   }
 }
 
@@ -77,4 +80,5 @@ export interface AuthFormData {
   address?: string
   website?: string
   description?: string
+  evidence?: FileList
 }

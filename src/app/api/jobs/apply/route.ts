@@ -87,6 +87,30 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Check if the company posting this job is verified
+    const jobPost = await prisma.jobPost.findUnique({
+      where: { id: jobId },
+      include: {
+        company: {
+          select: { registration_status: true }
+        }
+      }
+    });
+
+    if (!jobPost) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
+    if (jobPost.company.registration_status !== "APPROVED") {
+      return NextResponse.json(
+        {
+          error: "Company not verified",
+          message: "You can only apply to jobs from verified companies"
+        },
+        { status: 403 }
+      );
+    }
+
     // Check if student has already applied to this job
     const existingApplication = await prisma.application.findFirst({
       where: {
@@ -109,6 +133,7 @@ export async function POST(request: NextRequest) {
         status: 1, // pending หรือ waiting
         resume_id: resumeDoc?.id,
         portfolio_id: portfolioDoc?.id,
+        updated_at: new Date(),
       },
       include: {
         jobPost: {

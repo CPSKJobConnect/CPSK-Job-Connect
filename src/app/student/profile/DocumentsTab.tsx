@@ -97,18 +97,43 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
     formData.append("docTypeId", String(docTypeId));
 
     try {
-      const res = await fetch("/api/students/documents", {
-        method: "POST",
-        body: formData,
-      });
+      // For rejected alumni uploading transcript (docTypeId 4), use re-application endpoint
+      const isTranscript = docTypeId === 4;
+      const isRejectedAlumni = student.student_status === "ALUMNI" && student.verification_status === "REJECTED";
 
-      if (!res.ok) {
-        toast.error("Failed to upload document");
-        return;
+      if (isTranscript && isRejectedAlumni) {
+        // Use special re-application endpoint
+        const reapplyFormData = new FormData();
+        reapplyFormData.append("transcript", file);
+
+        const res = await fetch("/api/students/reapply-verification", {
+          method: "POST",
+          body: reapplyFormData,
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          toast.error(error.error || "Failed to submit re-application");
+          return;
+        }
+
+        toast.success("Re-application submitted successfully! Your verification is now pending admin review.");
+        onUpdate();
+      } else {
+        // Regular document upload
+        const res = await fetch("/api/students/documents", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          toast.error("Failed to upload document");
+          return;
+        }
+
+        toast.success("Document uploaded successfully");
+        onUpdate();
       }
-
-      toast.success("Document uploaded successfully");
-      onUpdate();
     } catch (error) {
       console.error("Error uploading document:", error);
       toast.error("Error uploading document");
@@ -179,6 +204,14 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
         </div>
 
         <div className="border-t pt-8">
+          {student.student_status === "ALUMNI" && student.verification_status === "REJECTED" && (
+            <div className="mb-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
+              <p className="text-sm font-semibold text-orange-900">Re-application Required</p>
+              <p className="text-sm text-orange-800 mt-1">
+                Upload a new transcript to re-apply for verification. Your status will be reset to PENDING and admins will be notified.
+              </p>
+            </div>
+          )}
           <DocumentSection
             title="Transcript"
             documents={student.documents.transcript || []}

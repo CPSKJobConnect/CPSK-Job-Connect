@@ -12,14 +12,17 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const accountId = Number(session.user.id);
-  const senderIdNum = Number(senderId);
+
+  // Handle "system" or "null" as null sender_id
+  const senderIdNum = (senderId === "system" || senderId === "null") ? null : Number(senderId);
 
   const messages = await prisma.notification.findMany({
     where: { account_id: accountId, sender_id: senderIdNum },
     orderBy: { created_at: "desc" },
   });
 
-  prisma.notification.updateMany({
+  // Mark all messages from this sender as read
+  await prisma.notification.updateMany({
     where: { account_id: accountId, sender_id: senderIdNum, is_read: false },
     data: { is_read: true },
   });

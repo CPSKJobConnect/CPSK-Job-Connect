@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { RecentApplicationsTableProps } from "@/types/companyStat";
 import Image from "next/image";
 import { useState } from "react";
@@ -26,7 +27,7 @@ const statusColor: Record<string, string> = {
 	rejected: "bg-red-100 text-red-800",
 };
 
-export default function RecentApplicationsTable({ applications, loading }: RecentApplicationsTableProps) {
+export default function RecentApplicationsTable({ applications, loading, isCompanyVerified = true }: RecentApplicationsTableProps & { isCompanyVerified?: boolean }) {
   const items = Array.isArray(applications) ? applications : [];
 
   const statusTypes: StatusType[] = ["pending", "reviewed", "interview", "offered", "rejected"];
@@ -104,17 +105,16 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
               className="flex flex-row items-center justify-between px-2 py-3 hover:bg-gray-50 border-b"
             >
               <div className="flex items-center gap-4 w-1/4 min-w-0">
-                {student.applicant.profile_url ? (
+                {isValidImageUrl(student.applicant.profile_url) ? (
                   <Image
                     src={student.applicant.profile_url}
                     alt={`${student.applicant.name} profile`}
                     width={40}
                     height={40}
-                    style={{ width: 40, height: 40 }}
-                    className="rounded-full shadow-sm object-cover"
+                    className="w-[40px] h-[40px] object-cover rounded-full shadow-sm"
                   />
                 ) : (
-                  <div className="flex items-center justify-center rounded-full shadow-sm bg-gray-100 text-sm font-semibold text-gray-700" style={{ width: 40, height: 40 }}>
+                  <div className="w-[40px] h-[40px] flex items-center justify-center rounded-full shadow-sm bg-gray-100 text-sm font-semibold text-gray-700">
                     {`${(student.applicant.name?.[0] || "").toUpperCase()}`}
                   </div>
                 )}
@@ -134,9 +134,10 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
                     onValueChange={(val) =>
                       handleStatus(student.id, val as StatusType)
                     }
+                    disabled={!isCompanyVerified}
                   >
                     <SelectTrigger
-                      className={`rounded-full text-sm transition-all duration-200 border-none p-2 h-5 w-[110px] ${statusColor[currentStatus]}`}
+                      className={`rounded-full text-sm transition-all duration-200 border-none p-2 h-5 w-[110px] ${statusColor[currentStatus]} ${!isCompanyVerified ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                       <SelectValue />
                     </SelectTrigger>
@@ -155,7 +156,7 @@ export default function RecentApplicationsTable({ applications, loading }: Recen
               </div>
 
               <div className="w-24 text-right">
-                <StudentInfoModal applicant_id={student.applicant.id} size="sm" />
+                <StudentInfoModal applicant_id={student.id} size="sm" />
               </div>
             </div>
           );

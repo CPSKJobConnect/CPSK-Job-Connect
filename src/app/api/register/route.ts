@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { companyRegisterSchema, studentRegisterSchema } from "@/lib/validations";
+import { notifyAdminsNewAlumni, notifyAdminsNewCompany } from "@/lib/notifyAdmins";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -42,10 +43,37 @@ export async function POST(req: NextRequest) {
     }
 
     // Add transcript file to data for validation
+    // Convert File to FileList-like object for validation
     if (role === "student") {
       const transcriptFile = formData.get("transcript") as File | null;
       if (transcriptFile && transcriptFile.size > 0) {
-        data.transcript = transcriptFile;
+        // Create a FileList-like object with the file
+        const fileList = {
+          0: transcriptFile,
+          length: 1,
+          item: (index: number) => index === 0 ? transcriptFile : null,
+          [Symbol.iterator]: function* () {
+            yield transcriptFile;
+          }
+        } as unknown as FileList;
+        data.transcript = fileList;
+      }
+    }
+
+    // Add evidence file to data for validation (required for companies)
+    if (role === "company") {
+      const evidenceFile = formData.get("evidence") as File | null;
+      if (evidenceFile && evidenceFile.size > 0) {
+        // Create a FileList-like object with the file
+        const fileList = {
+          0: evidenceFile,
+          length: 1,
+          item: (index: number) => index === 0 ? evidenceFile : null,
+          [Symbol.iterator]: function* () {
+            yield evidenceFile;
+          }
+        } as unknown as FileList;
+        data.evidence = fileList;
       }
     }
     // Validate data base on role
@@ -152,6 +180,7 @@ export async function POST(req: NextRequest) {
             // Alumni need admin approval, current students just need email verification
             verification_status: isAlumni ? "PENDING" : "APPROVED",
             email_verified: false,
+            updated_at: new Date(),
           }
         })
       } else {
@@ -165,7 +194,7 @@ export async function POST(req: NextRequest) {
             description: (validatedData.data as CompanyData).description,
             website: (validatedData.data as CompanyData).website || null,
             register_day: new Date(),
-            registration_status: "pending",
+            registration_status: "PENDING",
           }
         })
       }
@@ -194,7 +223,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Send registration confirmation email to alumni
+    // Send registration confirmation email to alumni and notify admins
     if (role === "student") {
       const studentData = validatedData.data as StudentData;
       const isAlumni = studentData.studentStatus === "ALUMNI";
@@ -211,6 +240,18 @@ export async function POST(req: NextRequest) {
           console.error(`❌ Failed to send registration email to ${validatedData.data.email}:`, emailError);
           // Continue with registration even if email fails
         }
+
+        // Notify all admins about new alumni registration
+        try {
+          await notifyAdminsNewAlumni(
+            studentData.name,
+            studentData.studentId,
+            account.id
+          );
+        } catch (notificationError) {
+          console.error("❌ Failed to notify admins about new alumni:", notificationError);
+          // Continue with registration even if notification fails
+        }
       }
     }
 
@@ -222,6 +263,20 @@ export async function POST(req: NextRequest) {
       } catch (error) {
         console.error("Error uploading evidence file:", error);
         // Continue with registration even if file upload fails
+      }
+    }
+
+    // Notify admins about new company registration
+    if (role === "company") {
+      try {
+        const companyData = validatedData.data as CompanyData;
+        await notifyAdminsNewCompany(
+          companyData.companyName,
+          account.id
+        );
+      } catch (notificationError) {
+        console.error("❌ Failed to notify admins about new company:", notificationError);
+        // Continue with registration even if notification fails
       }
     }
 
