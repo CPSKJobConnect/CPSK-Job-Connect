@@ -120,14 +120,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account, trigger, session }) {
       // Debug logging for OAuth flow
       if (token.email?.includes('@gmail.com') || token.email?.includes('@hotmail.com')) {
-        console.log('🔐 JWT callback - OAuth user:', {
-          email: token.email,
-          hasUser: !!user,
-          hasAccount: !!account,
-          tokenRole: token.role,
-          tokenSub: token.sub,
-          trigger
-        });
+        // console.log('🔐 JWT callback - OAuth user:', {
+        //   email: token.email,
+        //   hasUser: !!user,
+        //   hasAccount: !!account,
+        //   tokenRole: token.role,
+        //   tokenSub: token.sub,
+        //   trigger
+        // });
       }
 
       if (user) {
