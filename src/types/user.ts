@@ -21,6 +21,7 @@ export interface BaseUser {
     phone: string;
     student_status: "CURRENT" | "ALUMNI";
     verification_status: "PENDING" | "APPROVED" | "REJECTED";
+    email_verified: boolean;
     documents: {
       resume: FileMeta[];
       cv: FileMeta[];
