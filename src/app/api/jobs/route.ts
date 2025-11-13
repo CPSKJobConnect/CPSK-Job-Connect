@@ -18,13 +18,15 @@ export async function GET(req: Request) {
 
     const today = new Date();
 
-    const jobs = await prisma.jobPost.findMany({
-        where: {
-            is_Published: true,
-            deadline: {
-                gte: today,
-            },
+    // Removed unknown 'documents' include to satisfy Prisma include typing.
+    // Cast result to any[] so TypeScript won't complain about optional relation properties.
+    const jobs = (await prisma.jobPost.findMany({
+      where: {
+        is_Published: true,
+        deadline: {
+          gte: today,
         },
+      },
       include: {
         category: true,
         tags: true,
@@ -44,7 +46,7 @@ export async function GET(req: Request) {
             }
           : false,
       },
-    });
+    })) as any[];
 
 
     type JobWithRelations = {
@@ -66,10 +68,11 @@ export async function GET(req: Request) {
       requirements: string[];
       qualifications: string[];
       tags: { name: string }[];
+      documents?: { name: string }[]; // optional now, guard access at runtime
       jobArrangement: { name: string };
     };
 
-    const mappedData = jobs.map((job: JobWithRelations) => {
+  const mappedData = jobs.map((job) => {
       // Derive status from is_Published and deadline
       let status = "active";
       if (!job.is_Published) {
@@ -103,8 +106,9 @@ export async function GET(req: Request) {
           qualification: job.qualifications.join("\n"),
         },
         skills: job.tags.map((tag: { name: string }) => tag.name),
+        requiredDocuments: Array.isArray(job.documents) ? job.documents.map((d: { name: string }) => d.name) : [],
         arrangement: job.jobArrangement.name,
-        deadline: job.deadline.toISOString(),
+        deadline: job.deadline ? job.deadline.toISOString() : null,
         status,
         isSaved,
       };

@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookmarkJobInfo } from "@/types/job";
 import { useEffect, useState } from "react";
+import { begin, done } from "@/lib/loaderSignal";
 import { IoMdSearch } from "react-icons/io";
 import JobSortDropdown from "./JobSortDropdown";
 
@@ -20,8 +21,8 @@ export default function Page() {
   // Fetch saved jobs from API on component mount
   useEffect(() => {
     const fetchSavedJobs = async () => {
+      begin();
       try {
-        setIsLoading(true);
         const response = await fetch("/api/students/saved-jobs", {
           method: "GET",
           headers: {
@@ -38,11 +39,11 @@ export default function Page() {
         console.error("Error fetching bookmarked jobs:", err);
         setError(err instanceof Error ? err.message : "Failed to load bookmarks");
       } finally {
-        setIsLoading(false);
+        done();
       }
     };
     fetchSavedJobs();
-  }, []); 
+  }, []);
 
   useEffect(() => {
     setAppliedJobs(sortedBookmarkedJobs.filter((j) => j.isApplied));
@@ -61,17 +62,9 @@ export default function Page() {
     );
   });
 
-  // Show loading state while fetching data
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2BA17C] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your bookmarks...</p>
-        </div>
-      </div>
-    );
-  }
+  // The global loader covers initial load / navigation. When data is missing
+  // we simply render nothing locally (global loader will be visible while fetch runs).
+  if (!bookmarkedJobs) return null;
 
   // Show error state if fetch failed
   if (error) {
@@ -93,7 +86,7 @@ export default function Page() {
   return (
     <div className="mx-auto px-6 py-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
+        <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold text-gray-900">Bookmarks</h1>
           <p className="text-sm text-gray-600">Manage your saved job opportunities</p>
         </div>

@@ -1,16 +1,16 @@
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import {
-  companyRegisterSchema,
-  studentRegisterSchema,
-  companyOAuthRegisterSchema,
-  studentOAuthRegisterSchema
-} from "@/lib/validations";
 import { notifyAdminsNewAlumni, notifyAdminsNewCompany } from "@/lib/notifyAdmins";
+import {
+  companyOAuthRegisterSchema,
+  companyRegisterSchema,
+  studentOAuthRegisterSchema,
+  studentRegisterSchema
+} from "@/lib/validations";
 import bcrypt from "bcryptjs";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 type StudentData = z.infer<typeof studentRegisterSchema>;
 type CompanyData = z.infer<typeof companyRegisterSchema>;
