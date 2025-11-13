@@ -19,12 +19,9 @@ type CompanyOAuthData = z.infer<typeof companyOAuthRegisterSchema>;
 
 export async function POST(req: NextRequest) {
   try {
-    console.log("Registration API called");
     const formData = await req.formData();
-    // console.log("FormData received, entries:", Array.from(formData.entries()));
     const role = formData.get("role") as string;
     const isOAuth = formData.get("isOAuth") === "true";
-    // console.log("Role:", role, "isOAuth:", isOAuth);
 
     if (!["student", "company"].includes(role)) {
       return NextResponse.json(
@@ -65,20 +62,24 @@ export async function POST(req: NextRequest) {
     }
 
     // Add transcript file to data for validation
-    // Convert File to FileList-like object for validation
     if (role === "student") {
       const transcriptFile = formData.get("transcript") as File | null;
       if (transcriptFile && transcriptFile.size > 0) {
-        // Create a FileList-like object with the file
-        const fileList = {
-          0: transcriptFile,
-          length: 1,
-          item: (index: number) => index === 0 ? transcriptFile : null,
-          [Symbol.iterator]: function* () {
-            yield transcriptFile;
-          }
-        } as unknown as FileList;
-        data.transcript = fileList;
+        // For OAuth, pass File directly; for regular registration, create FileList-like object
+        if (isOAuth) {
+          data.transcript = transcriptFile;
+        } else {
+          // Create a FileList-like object with the file
+          const fileList = {
+            0: transcriptFile,
+            length: 1,
+            item: (index: number) => index === 0 ? transcriptFile : null,
+            [Symbol.iterator]: function* () {
+              yield transcriptFile;
+            }
+          } as unknown as FileList;
+          data.transcript = fileList;
+        }
       }
     }
 
@@ -86,36 +87,37 @@ export async function POST(req: NextRequest) {
     if (role === "company") {
       const evidenceFile = formData.get("evidence") as File | null;
       if (evidenceFile && evidenceFile.size > 0) {
-        // Create a FileList-like object with the file
-        const fileList = {
-          0: evidenceFile,
-          length: 1,
-          item: (index: number) => index === 0 ? evidenceFile : null,
-          [Symbol.iterator]: function* () {
-            yield evidenceFile;
-          }
-        } as unknown as FileList;
-        data.evidence = fileList;
+        // For OAuth, pass File directly; for regular registration, create FileList-like object
+        if (isOAuth) {
+          data.evidence = evidenceFile;
+        } else {
+          // Create a FileList-like object with the file
+          const fileList = {
+            0: evidenceFile,
+            length: 1,
+            item: (index: number) => index === 0 ? evidenceFile : null,
+            [Symbol.iterator]: function* () {
+              yield evidenceFile;
+            }
+          } as unknown as FileList;
+          data.evidence = fileList;
+        }
       }
     }
     // Validate data base on role and OAuth status
-    // console.log("Data to validate:", data);
     let validatedData: z.ZodSafeParseResult<StudentData | CompanyData | StudentOAuthData | CompanyOAuthData>;
     if (role === "student") {
-      // safe parse throws errors instead of crashing the server
       validatedData = isOAuth
         ? studentOAuthRegisterSchema.safeParse(data)
         : studentRegisterSchema.safeParse(data);
-      // console.log("Student validation result:", validatedData);
     } else {
       validatedData = isOAuth
         ? companyOAuthRegisterSchema.safeParse(data)
         : companyRegisterSchema.safeParse(data);
-      // console.log("Company validation result:", validatedData);
     }
 
     if (!validatedData.success) {
-      // console.log("Validation failed:", validatedData.error.issues);
+      console.error("❌ Validation failed:", validatedData.error.issues);
       return NextResponse.json(
         { error: "Invalid data", details: validatedData.error.issues },
         { status: 400 }
@@ -135,7 +137,7 @@ export async function POST(req: NextRequest) {
 
     // If account exists and has complete registration
     if (existingUser && (existingUser.student || existingUser.company)) {
-      return NextResponse.json( 
+      return NextResponse.json(
         { error: "User already exists" },
         { status: 400 }
       );
@@ -143,11 +145,9 @@ export async function POST(req: NextRequest) {
 
     // If account exists but is orphaned (no student/company record), use it for OAuth
     if (existingUser && isOAuth) {
-      console.log("Found existing OAuth account:", existingUser.id);
       // For OAuth, we'll update this account with role and create student/company record
     } else if (existingUser) {
       // Regular registration - clean up orphaned account
-      console.log("Found orphaned account, cleaning up:", existingUser.id);
       await prisma.account.delete({
         where: { id: existingUser.id }
       });
@@ -238,7 +238,6 @@ export async function POST(req: NextRequest) {
             account_id: account.id,
             name: companyData.companyName,
             address: companyData.address,
-            // year: companyData.year, // Removed from schema
             phone: companyData.phone,
             description: companyData.description,
             website: companyData.website || null,
@@ -284,9 +283,8 @@ export async function POST(req: NextRequest) {
             validatedData.data.email,
             studentData.name
           );
-          console.log(`✅ Registration confirmation email sent to ${validatedData.data.email}`);
         } catch (emailError) {
-          console.error(`❌ Failed to send registration email to ${validatedData.data.email}:`, emailError);
+          console.error("❌ Failed to send registration email:", emailError);
           // Continue with registration even if email fails
         }
 
