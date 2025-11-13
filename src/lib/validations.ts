@@ -22,14 +22,21 @@ export const studentRegisterSchema = z.object({
     z.literal("Alumni"),
   ]),
   phone: z.string().regex(/^\d{10,}$/, "Phone number must be at least 10 digits and only digits"),
-  transcript: z.instanceof(File).optional(),
+  transcript: z.any().optional().refine(
+    (val) => {
+      // Allow undefined or objects that look like FileList (have length property)
+      if (!val) return true;
+      return typeof val === 'object' && 'length' in val;
+    },
+    { message: "Transcript must be a file" }
+  ),
   studentStatus: z.enum(["CURRENT", "ALUMNI"]).optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
 }).refine((data) => {
   // Alumni must upload transcript
-  if (data.studentStatus === "ALUMNI" && !data.transcript) {
+  if (data.studentStatus === "ALUMNI" && (!data.transcript || data.transcript.length === 0)) {
     return false;
   }
   return true;
@@ -48,10 +55,25 @@ export const companyRegisterSchema = z.object({
   website: z.string().url("Website must be a valid URL").or(z.literal("")).optional(),
   description: z.string().min(10,  "Description must be atleast 10 characters."),
   phone: z.string().regex(/^\d{10,}$/, "Phone number must be at least 10 digits and only digits"),
-  evidence: z.instanceof(File, { message: "Company evidence document is required" }),
+  evidence: z.any().refine(
+    (val) => {
+      // Must be an object that looks like FileList (has length property)
+      return val && typeof val === 'object' && 'length' in val;
+    },
+    { message: "Company evidence document is required" }
+  ),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
+}).refine((data) => {
+  // Evidence must have at least one file
+  if (!data.evidence || data.evidence.length === 0) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Company evidence document is required",
+  path: ["evidence"],
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;

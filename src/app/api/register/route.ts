@@ -43,10 +43,20 @@ export async function POST(req: NextRequest) {
     }
 
     // Add transcript file to data for validation
+    // Convert File to FileList-like object for validation
     if (role === "student") {
       const transcriptFile = formData.get("transcript") as File | null;
       if (transcriptFile && transcriptFile.size > 0) {
-        data.transcript = transcriptFile;
+        // Create a FileList-like object with the file
+        const fileList = {
+          0: transcriptFile,
+          length: 1,
+          item: (index: number) => index === 0 ? transcriptFile : null,
+          [Symbol.iterator]: function* () {
+            yield transcriptFile;
+          }
+        } as unknown as FileList;
+        data.transcript = fileList;
       }
     }
 
@@ -54,7 +64,16 @@ export async function POST(req: NextRequest) {
     if (role === "company") {
       const evidenceFile = formData.get("evidence") as File | null;
       if (evidenceFile && evidenceFile.size > 0) {
-        data.evidence = evidenceFile;
+        // Create a FileList-like object with the file
+        const fileList = {
+          0: evidenceFile,
+          length: 1,
+          item: (index: number) => index === 0 ? evidenceFile : null,
+          [Symbol.iterator]: function* () {
+            yield evidenceFile;
+          }
+        } as unknown as FileList;
+        data.evidence = fileList;
       }
     }
     // Validate data base on role
