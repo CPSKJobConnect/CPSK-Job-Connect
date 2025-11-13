@@ -19,6 +19,9 @@ export interface BaseUser {
     faculty: string;
     year: number | "Alumni"; // Can be 1-8 or "Alumni"
     phone: string;
+    student_status: "CURRENT" | "ALUMNI";
+    verification_status: "PENDING" | "APPROVED" | "REJECTED";
+    email_verified: boolean;
     documents: {
       resume: FileMeta[];
       cv: FileMeta[];
@@ -26,7 +29,7 @@ export interface BaseUser {
       transcript?: FileMeta[];
     }
   }
-  
+
   // Company
   export interface Company extends BaseUser {
     role: "company";
@@ -36,6 +39,11 @@ export interface BaseUser {
     department: string[];
     year: number;
     phone: string;
+    registration_status: "PENDING" | "APPROVED" | "REJECTED";
+    verification_notes?: string | null;
+    documents: {
+      evidence: FileMeta[];
+    };
   }
   
   // Admin
