@@ -1,10 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { PieChart } from "@mantine/charts";
 import { Card, Title, Group, Box, Text } from "@mantine/core";
-import { mockStatusPie } from "@public/data/mockStudentStat";
-import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 interface StatusPieProps {
   name: string;
@@ -12,21 +11,31 @@ interface StatusPieProps {
 }
 
 export default function StatusPieChart() {
+  const { data: session } = useSession();
   const [data, setData] = useState<StatusPieProps[]>([]);
   const statusColors: Record<string, string> = {
-    Pending: "#FFF4CC",
-    Offered: "#C8E6C9",
-    Interview: "#B3E5FC",
-    Rejected: "#F8D7DA",
+    Pending: "#ffe377",
+    Offered: "#65df6a",
+    Interview: "#77cbef",
+    Rejected: "#f17c8a",
+    Reviewed: "#b474dd",
   };
 
-
   useEffect(() => {
-    setData(mockStatusPie.map(item => ({
-      name: item.name,
-      value: item.value,
-    })));
-  }, [])
+    if (!session?.user?.id) return;
+
+    const fetchStatusData = async () => {
+      try {
+        const res = await fetch(`/api/students/${session.user.id}/statistics/status`);
+        const json: StatusPieProps[] = await res.json();
+        setData(json);
+      } catch (error) {
+        console.error("Error fetching status data:", error);
+      }
+    };
+
+    fetchStatusData();
+  }, [session]);
 
   return (
     <Card shadow="md" radius="lg" p="md" className="w-full">
