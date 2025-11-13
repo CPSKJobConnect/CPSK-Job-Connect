@@ -786,8 +786,8 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                 : "Create Account"}
           </Button>
 
-          {/* Only show Google OAuth for non-admin roles */}
-          {role !== "admin" && (
+          {/* Only show Google OAuth for non-admin roles and non-OAuth completion */}
+          {role !== "admin" && !isOAuthCompletion && (
             <>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
