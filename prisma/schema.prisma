@@ -59,7 +59,7 @@ model Application {
   student_id         Int
   status             Int
   applied_at         DateTime          @default(now())
-  updated_at         DateTime
+  updated_at         DateTime          @updatedAt
   portfolio_id       Int?
   resume_id          Int?
   cv_id              Int?
@@ -81,6 +81,17 @@ model ApplicationStatus {
   id           Int           @id @default(autoincrement())
   name         String
   applications Application[]
+}
+
+enum StudentStatus {
+  CURRENT
+  ALUMNI
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Company {
@@ -127,16 +138,28 @@ model DocumentType {
   jobPosts  JobPost[]  @relation("RequiredDocsOnPost")
 }
 
-model JobArrangement {
-  id    Int       @id @default(autoincrement())
-  name  String    @unique
-  posts JobPost[]
+model Notification {
+  id         Int      @id @default(autoincrement())
+  sender_id  Int?
+  account_id Int
+  message    String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  sender  Account? @relation("NotificationSender", fields: [sender_id], references: [id])
+  account Account  @relation("NotificationReceiver", fields: [account_id], references: [id], onDelete: Cascade)
+
+  @@index([account_id, sender_id, is_read])
 }
 
-model JobCategory {
-  id    Int       @id @default(autoincrement())
-  name  String    @unique
-  posts JobPost[]
+model Report {
+  id         Int      @id @default(autoincrement())
+  account_id Int
+  report_id  Int
+  post_id    Int
+  type       String
+  created_at DateTime @default(now())
+  account    Account  @relation(fields: [account_id], references: [id])
 }
 
 model JobPost {
@@ -151,7 +174,7 @@ model JobPost {
   max_salary         Int
   deadline           DateTime
   created_at         DateTime       @default(now())
-  updated_at         DateTime
+  updated_at         DateTime       @updatedAt
   is_Published       Boolean        @default(true)
   job_arrangement_id Int
   job_type_id        Int
@@ -167,39 +190,28 @@ model JobPost {
   documents          DocumentType[] @relation("RequiredDocsOnPost")
 }
 
-model JobTag {
-  id    Int       @id @default(autoincrement())
-  name  String
-  posts JobPost[] @relation("JobTagesOnPosts")
-}
-
 model JobType {
   id    Int       @id @default(autoincrement())
   name  String    @unique
   posts JobPost[]
 }
 
-model Notification {
-  id         Int      @id @default(autoincrement())
-  account_id Int
-  sender_id  Int?
-  message    String
-  is_read    Boolean  @default(false)
-  created_at DateTime @default(now())
-  account    Account  @relation("NotificationReceiver", fields: [account_id], references: [id], onDelete: Cascade)
-  sender     Account? @relation("NotificationSender", fields: [sender_id], references: [id])
-
-  @@index([account_id, sender_id, is_read])
+model JobArrangement {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  posts JobPost[]
 }
 
-model Report {
-  id         Int      @id @default(autoincrement())
-  account_id Int
-  report_id  Int
-  post_id    Int
-  type       String
-  created_at DateTime @default(now())
-  account    Account  @relation(fields: [account_id], references: [id])
+model JobCategory {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  posts JobPost[]
+}
+
+model JobTag {
+  id    Int       @id @default(autoincrement())
+  name  String
+  posts JobPost[] @relation("JobTagesOnPosts")
 }
 
 model SavedJob {
@@ -224,7 +236,7 @@ model Student {
   year                String
   phone               String
   created_at          DateTime           @default(now())
-  updated_at          DateTime
+  updated_at          DateTime           @updatedAt
   transcript          String?
   email_verified      Boolean            @default(true)
   student_status      StudentStatus      @default(CURRENT)
@@ -251,6 +263,7 @@ model email_verification_tokens {
 
   @@index([email])
   @@index([token])
+  @@map("email_verification_tokens")
 }
 
 model verification_tokens {
@@ -259,15 +272,4 @@ model verification_tokens {
   expires    DateTime
 
   @@unique([identifier, token])
-}
-
-enum StudentStatus {
-  CURRENT
-  ALUMNI
-}
-
-enum VerificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
 }

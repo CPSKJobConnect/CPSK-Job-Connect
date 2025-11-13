@@ -21,7 +21,8 @@ export default function StudentProfilePage() {
   const fetchStudentProfile = async () => {
     begin();
     try {
-      const res = await fetch("/api/students/[id]");
+      // Session-based endpoint doesn't need ID parameter
+      const res = await fetch("/api/students/profile");
       if (!res.ok) {
         toast.error("Failed to fetch profile");
         return;

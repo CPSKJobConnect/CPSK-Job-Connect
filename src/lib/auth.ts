@@ -10,7 +10,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt"
   },
-  providers : [
+  providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!
@@ -50,6 +50,13 @@ export const authOptions: NextAuthOptions = {
               select: {
                 name: true
               }
+            },
+            student: {
+              select: {
+                email_verified: true,
+                student_status: true,
+                verification_status: true
+              }
             }
           }
         });
@@ -69,22 +76,38 @@ export const authOptions: NextAuthOptions = {
           role: user.accountRole?.name,
           logoUrl: user.logoUrl,
           backgroundUrl: user.backgroundUrl,
+          emailVerified: user.student?.email_verified,
+          studentStatus: user.student?.student_status,
+          verificationStatus: user.student?.verification_status,
         } as User
       },
     }),
   ],
   callbacks: {
-    async jwt({token, user, account, trigger, session}) {
+    async jwt({ token, user, account, trigger, session }) {
       if (user) {
-        token.role = user.role;
-        token.username = user.username;
+        // `authorize` returns `name` (username) and `role` on first sign-in.
+        // Map those to token fields so subsequent requests have them available.
+        token.role = (user as any).role;
+        token.username = (user as any).name || (user as any).username;
         token.logoUrl = user.logoUrl;
         token.backgroundUrl = user.backgroundUrl;
+        token.emailVerified = typeof user.emailVerified === 'boolean' ? user.emailVerified : undefined;
+        token.studentStatus = user.studentStatus;
+        token.verificationStatus = user.verificationStatus;
       }
 
-      // Handle session update (when profile image is changed)
-      if (trigger === "update" && session?.user?.logoUrl) {
-        token.logoUrl = session.user.logoUrl;
+      // Handle session update (when profile image is changed or verification status changes)
+      if (trigger === "update") {
+        if (session?.user?.logoUrl) {
+          token.logoUrl = session.user.logoUrl;
+        }
+        if (session?.user?.emailVerified !== undefined) {
+          token.emailVerified = session.user.emailVerified;
+        }
+        if (session?.user?.verificationStatus) {
+          token.verificationStatus = session.user.verificationStatus;
+        }
       }
 
       // for OAuth users
@@ -111,19 +134,44 @@ export const authOptions: NextAuthOptions = {
           token.backgroundUrl = existingUser.backgroundUrl || undefined
         }
       }
+
+      // If token exists but role wasn't set (e.g. older session or created without role),
+      // try to populate it from the database using the subject (user id).
+      if (!token.role && token.sub) {
+        try {
+          const userId = parseInt(token.sub as string, 10)
+          if (!Number.isNaN(userId)) {
+            const existing = await prisma.account.findUnique({
+              where: { id: userId },
+              select: { accountRole: { select: { name: true } }, username: true, logoUrl: true, backgroundUrl: true }
+            })
+            if (existing) {
+              token.role = existing.accountRole?.name || token.role
+              token.username = existing.username || token.username
+              token.logoUrl = existing.logoUrl || token.logoUrl
+              token.backgroundUrl = existing.backgroundUrl || token.backgroundUrl
+            }
+          }
+        } catch (err) {
+          console.log('Error populating token from DB:', err)
+        }
+      }
       return token;
     },
-    async session({session, token}) {
+    async session({ session, token }) {
       if (token) {
         session.user.id = token.sub!
         session.user.role = token.role as string
         session.user.username = token.username as string
         session.user.logoUrl = token.logoUrl as string
         session.user.backgroundUrl = token.backgroundUrl as string
+        session.user.emailVerified = token.emailVerified
+        session.user.studentStatus = token.studentStatus
+        session.user.verificationStatus = token.verificationStatus
       }
       return session;
     },
-    async signIn({user, account, profile}) {
+    async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
         try {
           const existingUser = await prisma.account.findUnique({

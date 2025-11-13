@@ -7,6 +7,7 @@ import { MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import "@mantine/charts/styles.css";
 import ClientLayout from "./ClientLayout";
+import FloatingNotification from "@/components/FloatingNotification";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -31,6 +32,8 @@ export default function RootLayout({
           <Toaster richColors closeButton position="top-right" />
           <AuthProvider>
             <ClientLayout>{children}</ClientLayout>
+            {children}
+            <FloatingNotification />
           </AuthProvider>
         </MantineProvider>
       </body>

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -10,6 +11,12 @@ const prisma = new PrismaClient({
     },
   },
 });
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 async function backupDatabase() {
   try {
@@ -58,12 +65,12 @@ async function backupDatabase() {
       data.savedJobs = [];
     }
 
-    // Write backup to file
+    // Write database backup to file
     fs.writeFileSync(backupFile, JSON.stringify(data, null, 2));
 
-    console.log(`✅ Backup completed successfully!`);
-    console.log(`📁 Backup file: ${backupFile}`);
-    console.log('\nBackup summary:');
+    console.log(`✅ Database backup completed!`);
+    console.log(`📁 Database backup file: ${backupFile}`);
+    console.log('\nDatabase backup summary:');
     console.log(`- Account Roles: ${data.accountRoles?.length || 0}`);
     console.log(`- Accounts: ${data.accounts?.length || 0}`);
     console.log(`- Students: ${data.students?.length || 0}`);
@@ -82,6 +89,67 @@ async function backupDatabase() {
     console.log(`- Saved Jobs: ${data.savedJobs?.length || 0}`);
     console.log(`- Sessions: ${data.sessions?.length || 0}`);
     console.log(`- Verification Tokens: ${data.verificationTokens?.length || 0}`);
+
+    // Backup Supabase Storage files
+    console.log('\n📦 Starting Supabase Storage backup...');
+    const storageBackupDir = path.join(backupDir, `storage-${timestamp}`);
+    fs.mkdirSync(storageBackupDir, { recursive: true });
+
+    let downloadedFiles = 0;
+    let failedFiles = 0;
+
+    // Get all documents from database
+    const documents = data.documents as Array<{ id: number; file_path: string; file_name: string }>;
+
+    if (documents.length > 0) {
+      console.log(`Found ${documents.length} documents to backup from Supabase Storage...`);
+
+      for (const doc of documents) {
+        try {
+          // Download file from Supabase
+          const { data: fileData, error } = await supabase.storage
+            .from('documents')
+            .download(doc.file_path);
+
+          if (error) {
+            console.error(`❌ Failed to download ${doc.file_path}:`, error.message);
+            failedFiles++;
+            continue;
+          }
+
+          // Create directory structure for the file
+          const filePath = path.join(storageBackupDir, doc.file_path);
+          const fileDir = path.dirname(filePath);
+
+          if (!fs.existsSync(fileDir)) {
+            fs.mkdirSync(fileDir, { recursive: true });
+          }
+
+          // Write file to disk
+          const buffer = Buffer.from(await fileData.arrayBuffer());
+          fs.writeFileSync(filePath, buffer);
+
+          downloadedFiles++;
+
+          // Progress indicator
+          if (downloadedFiles % 10 === 0) {
+            console.log(`Progress: ${downloadedFiles}/${documents.length} files downloaded...`);
+          }
+        } catch (error) {
+          console.error(`❌ Error backing up file ${doc.file_path}:`, error);
+          failedFiles++;
+        }
+      }
+
+      console.log(`\n✅ Storage backup completed!`);
+      console.log(`📁 Storage backup directory: ${storageBackupDir}`);
+      console.log(`- Successfully downloaded: ${downloadedFiles} files`);
+      console.log(`- Failed downloads: ${failedFiles} files`);
+    } else {
+      console.log('ℹ️  No documents found in database to backup.');
+    }
+
+    console.log('\n🎉 Full backup completed successfully!');
 
   } catch (error) {
     console.error('❌ Error backing up database:', error);

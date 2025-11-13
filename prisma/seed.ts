@@ -62,12 +62,48 @@ async function main() {
     },
   });
 
-  const transcriptType = await prisma.documentType.upsert({
+  const portfolioTypeActual = await prisma.documentType.upsert({
     where: { id: 3 },
     update: {},
     create: {
       id: 3,
+      name: 'Portfolio',
+    },
+  });
+
+  const transcriptType = await prisma.documentType.upsert({
+    where: { id: 4 },
+    update: {},
+    create: {
+      id: 4,
       name: 'Transcript',
+    },
+  });
+
+  const profileLogoType = await prisma.documentType.upsert({
+    where: { id: 5 },
+    update: {},
+    create: {
+      id: 5,
+      name: 'ProfileLogo',
+    },
+  });
+
+  const profileBackgroundType = await prisma.documentType.upsert({
+    where: { id: 6 },
+    update: {},
+    create: {
+      id: 6,
+      name: 'ProfileBackground',
+    },
+  });
+
+  const companyEvidenceType = await prisma.documentType.upsert({
+    where: { id: 7 },
+    update: {},
+    create: {
+      id: 7,
+      name: 'Company Evidence',
     },
   });
 
@@ -114,33 +150,37 @@ async function main() {
 
   // Seed Job Types
   const fullTimeType = await prisma.jobType.upsert({
-    where: { name: 'Full-time' },
+    where: { id: 1 },
     update: {},
     create: {
+      id: 1,
       name: 'Full-time',
     },
   });
 
   const partTimeType = await prisma.jobType.upsert({
-    where: { name: 'Part-time' },
+    where: { id: 2 },
     update: {},
     create: {
+      id: 2,
       name: 'Part-time',
     },
   });
 
   const internshipType = await prisma.jobType.upsert({
-    where: { name: 'Internship' },
+    where: { id: 3 },
     update: {},
     create: {
+      id: 3,
       name: 'Internship',
     },
   });
 
   const contractType = await prisma.jobType.upsert({
-    where: { name: 'Contract' },
+    where: { id: 4 },
     update: {},
     create: {
+      id: 4,
       name: 'Contract',
     },
   });
@@ -149,25 +189,28 @@ async function main() {
 
   // Seed Job Arrangements
   const onsiteArrangement = await prisma.jobArrangement.upsert({
-    where: { name: 'On-site' },
+    where: { id: 1 },
     update: {},
     create: {
+      id: 1,
       name: 'On-site',
     },
   });
 
   const remoteArrangement = await prisma.jobArrangement.upsert({
-    where: { name: 'Remote' },
+    where: { id: 2 },
     update: {},
     create: {
+      id: 2,
       name: 'Remote',
     },
   });
 
   const hybridArrangement = await prisma.jobArrangement.upsert({
-    where: { name: 'Hybrid' },
+    where: { id: 3 },
     update: {},
     create: {
+      id: 3,
       name: 'Hybrid',
     },
   });
@@ -188,12 +231,13 @@ async function main() {
     'Engineering',
   ];
 
-  for (const category of categories) {
+  for (let i = 0; i < categories.length; i++) {
     await prisma.jobCategory.upsert({
-      where: { name: category },
+      where: { id: i + 1 },
       update: {},
       create: {
-        name: category,
+        id: i + 1,
+        name: categories[i],
       },
     });
   }
