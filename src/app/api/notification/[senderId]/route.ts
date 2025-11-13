@@ -21,7 +21,8 @@ export async function GET(
     orderBy: { created_at: "desc" },
   });
 
-  prisma.notification.updateMany({
+  // Mark all messages from this sender as read
+  await prisma.notification.updateMany({
     where: { account_id: accountId, sender_id: senderIdNum, is_read: false },
     data: { is_read: true },
   });
