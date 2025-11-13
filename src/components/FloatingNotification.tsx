@@ -101,6 +101,26 @@ export default function FloatingNotification() {
     );
   };
 
+  const markNotificationAsRead = async (notificationId: number, senderId: number | null) => {
+    // Use "system" as the URL parameter for null sender_id
+    const senderParam = senderId === null ? "system" : senderId;
+
+    try {
+      const res = await fetch(`/api/notification/${senderParam}/${notificationId}`, {
+        method: "PATCH",
+      });
+
+      if (res.ok) {
+        // Update local state to mark this notification as read
+        setDetailMessages((prev) =>
+          prev.map((m) => (m.id === notificationId ? { ...m, is_read: true } : m))
+        );
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
   const backToSummary = () => {
     setSelectedSender(undefined);
     setDetailMessages([]);
@@ -213,7 +233,17 @@ export default function FloatingNotification() {
               <p className="text-gray-500 text-sm text-center">No messages</p>
             ) : (
               detailMessages.map((m) => (
-                <div key={m.id} className="border-b py-2">
+                <div
+                  key={m.id}
+                  onClick={() => {
+                    if (!m.is_read) {
+                      markNotificationAsRead(m.id, selectedSender);
+                    }
+                  }}
+                  className={`border-b py-2 px-2 rounded cursor-pointer transition ${
+                    m.is_read ? "bg-white" : "bg-green-50 border-l-4 border-green-500"
+                  } hover:bg-gray-50`}
+                >
                   <p className="text-sm text-gray-700">{m.message}</p>
                   <p className="text-xs text-gray-400">{formatDateTime(m.created_at)}</p>
                 </div>
