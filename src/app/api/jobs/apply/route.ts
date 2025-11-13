@@ -1,6 +1,6 @@
-import { uploadDocument } from "@/lib/uploadDocument";
-import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
+import { prisma } from "@/lib/db";
+import { uploadDocument } from "@/lib/uploadDocument";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -103,6 +103,30 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         );
       }
+    }
+
+    // Check if the company posting this job is verified
+    const jobPost = await prisma.jobPost.findUnique({
+      where: { id: jobId },
+      include: {
+        company: {
+          select: { registration_status: true }
+        }
+      }
+    });
+
+    if (!jobPost) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
+    if (jobPost.company.registration_status !== "APPROVED") {
+      return NextResponse.json(
+        {
+          error: "Company not verified",
+          message: "You can only apply to jobs from verified companies"
+        },
+        { status: 403 }
+      );
     }
 
     // Check if student has already applied to this job

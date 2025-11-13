@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatPostedDate } from "@/lib/dateHelper";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { JobInfo } from "@/types/job";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
@@ -152,17 +153,16 @@ const JobCard = (job: JobCardProps) => {
     <div className={`${baseStyle} ${sizeStyle}`}>
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
-          {job.info.companyLogo && !hasLogoError ? (
+          {isValidImageUrl(job.info.companyLogo) ? (
             <Image
               src={job.info.companyLogo}
               alt={job.info.companyName || "companyLogo"}
               width={60}
               height={60}
-              className="h-auto bg-white translate-y-1 shadow-md rounded-md"
-              onError={() => setHasLogoError(true)}
+              className="w-[60px] h-[60px] object-contain bg-white translate-y-1 shadow-md rounded-md"
             />
           ) : (
-            <div className="w-15 h-15 bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+            <div className="w-[60px] h-[60px] bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
               {job.info.companyName ? job.info.companyName.charAt(0).toUpperCase() : "C"}
             </div>
           )}

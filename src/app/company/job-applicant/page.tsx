@@ -1,15 +1,15 @@
 "use client";
-import { IoMdAdd } from "react-icons/io";
-import AllJobPost from "./AllJobPost";
 import JobDescriptionCard from "@/components/JobDescriptionCard";
-import { FaRegFileAlt } from "react-icons/fa";
-import { MdTipsAndUpdates } from "react-icons/md";
-import React, { useState, useEffect } from "react";
-import { begin, done } from "@/lib/loaderSignal";
-import { useRouter } from "next/navigation";
-import { JobInfo } from "@/types/job";
-import ApplicationList from "./ApplicationList";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { begin, done } from "@/lib/loaderSignal";
+import { JobInfo } from "@/types/job";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { FaRegFileAlt } from "react-icons/fa";
+import { IoMdAdd } from "react-icons/io";
+import { MdTipsAndUpdates } from "react-icons/md";
+import AllJobPost from "./AllJobPost";
+import ApplicationList from "./ApplicationList";
 
 export default function Page() {
   const router = useRouter();
@@ -23,6 +23,7 @@ export default function Page() {
   const [jobTypeList, setJobTypeList] = useState<string[]>([]);
   const [arrangementList, setArrangementList] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
+  const [isCompanyVerified, setIsCompanyVerified] = useState(true);
 
   // Fetch jobs from API
   const fetchJobs = async () => {
@@ -59,6 +60,20 @@ export default function Page() {
 
   useEffect(() => {
     fetchJobs();
+
+    // Fetch company verification status
+    const fetchCompanyStatus = async () => {
+      try {
+        const res = await fetch("/api/company/profile");
+        if (res.ok) {
+          const data = await res.json();
+          setIsCompanyVerified(data.registration_status === "APPROVED");
+        }
+      } catch (error) {
+        console.error("Error fetching company status:", error);
+      }
+    };
+    fetchCompanyStatus();
 
     // Responsive dialog
     const m = window.matchMedia("(max-width: 1024px)");
@@ -162,7 +177,7 @@ export default function Page() {
                       arrangements={arrangementList}
                       tags={allTags}
                   />
-                  <ApplicationList applicants={applicants} />
+                  <ApplicationList applicants={applicants} isCompanyVerified={isCompanyVerified} />
                 </>
               ) : (
                 <div className="flex flex-col items-center gap-4 py-44">
@@ -196,8 +211,8 @@ export default function Page() {
             <div className="max-h-[70vh] overflow-y-auto">
                   {selectedJob && (
                 <div className="space-y-4">
-                  <JobDescriptionCard size="md" onApply={false} onEdit={true} job={selectedJob} onUpdate={fetchJobs} />
-                  <ApplicationList applicants={applicants} />
+                  <JobDescriptionCard size="md" onApply={false} onEdit={true} job={selectedJob} />
+                  <ApplicationList applicants={applicants} isCompanyVerified={isCompanyVerified} />
                 </div>
               )}
             </div>

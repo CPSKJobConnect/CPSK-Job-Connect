@@ -54,6 +54,7 @@ async function backupDatabase() {
       applications: await prisma.application.findMany(),
       sessions: await prisma.session.findMany(),
       verificationTokens: await prisma.verification_tokens.findMany(),
+      emailVerificationTokens: await prisma.email_verification_tokens.findMany(),
     };
 
     // Try to fetch savedJobs if the table exists

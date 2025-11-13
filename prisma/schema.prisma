@@ -54,23 +54,19 @@ model AccountRole {
 }
 
 model Application {
-  id                 Int               @id @default(autoincrement())
-  job_post_id        Int
-  student_id         Int
-  status             Int
-  applied_at         DateTime          @default(now())
-  updated_at         DateTime          @updatedAt
-  portfolio_id       Int?
-  resume_id          Int?
-  cv_id              Int?
-  transcript_id      Int?
-  jobPost            JobPost           @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
-  portfolioDocument  Document?         @relation("PortfolioDocument", fields: [portfolio_id], references: [id])
-  resumeDocument     Document?         @relation("ResumeDocument", fields: [resume_id], references: [id])
-  cvDocument         Document?         @relation("CvDocument", fields: [cv_id], references: [id])
-  transcriptDocument Document?         @relation("TranscriptDocument", fields: [transcript_id], references: [id])
-  applicationStatus  ApplicationStatus @relation(fields: [status], references: [id])
-  student            Student           @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  id                Int               @id @default(autoincrement())
+  job_post_id       Int
+  student_id        Int
+  status            Int
+  applied_at        DateTime          @default(now())
+  updated_at        DateTime
+  portfolio_id      Int?
+  resume_id         Int?
+  jobPost           JobPost           @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
+  portfolioDocument Document?         @relation("PortfolioDocument", fields: [portfolio_id], references: [id])
+  resumeDocument    Document?         @relation("ResumeDocument", fields: [resume_id], references: [id])
+  applicationStatus ApplicationStatus @relation(fields: [status], references: [id])
+  student           Student           @relation(fields: [student_id], references: [id], onDelete: Cascade)
 
   @@unique([student_id, job_post_id])
   @@index([job_post_id])
@@ -81,17 +77,6 @@ model ApplicationStatus {
   id           Int           @id @default(autoincrement())
   name         String
   applications Application[]
-}
-
-enum StudentStatus {
-  CURRENT
-  ALUMNI
-}
-
-enum VerificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
 }
 
 model Company {
@@ -117,83 +102,22 @@ model Company {
 }
 
 model Document {
-  id                     Int           @id @default(autoincrement())
-  account_id             Int
-  doc_type_id            Int
-  file_path              String
-  created_at             DateTime      @default(now())
-  file_name              String
-  portfolioApplications  Application[] @relation("PortfolioDocument")
-  resumeApplications     Application[] @relation("ResumeDocument")
-  cvApplications         Application[] @relation("CvDocument")
-  transcriptApplications Application[] @relation("TranscriptDocument")
-  account                Account       @relation(fields: [account_id], references: [id], onDelete: Cascade)
-  documentType           DocumentType  @relation(fields: [doc_type_id], references: [id])
+  id                    Int           @id @default(autoincrement())
+  account_id            Int
+  doc_type_id           Int
+  file_path             String
+  created_at            DateTime      @default(now())
+  file_name             String
+  portfolioApplications Application[] @relation("PortfolioDocument")
+  resumeApplications    Application[] @relation("ResumeDocument")
+  account               Account       @relation(fields: [account_id], references: [id], onDelete: Cascade)
+  documentType          DocumentType  @relation(fields: [doc_type_id], references: [id])
 }
 
 model DocumentType {
   id        Int        @id @default(autoincrement())
   name      String
   documents Document[]
-  jobPosts  JobPost[]  @relation("RequiredDocsOnPost")
-}
-
-model Notification {
-  id         Int      @id @default(autoincrement())
-  sender_id  Int?
-  account_id Int
-  message    String
-  is_read    Boolean  @default(false)
-  created_at DateTime @default(now())
-
-  sender  Account? @relation("NotificationSender", fields: [sender_id], references: [id])
-  account Account  @relation("NotificationReceiver", fields: [account_id], references: [id], onDelete: Cascade)
-
-  @@index([account_id, sender_id, is_read])
-}
-
-model Report {
-  id         Int      @id @default(autoincrement())
-  account_id Int
-  report_id  Int
-  post_id    Int
-  type       String
-  created_at DateTime @default(now())
-  account    Account  @relation(fields: [account_id], references: [id])
-}
-
-model JobPost {
-  id                 Int            @id @default(autoincrement())
-  company_id         Int
-  jobName            String
-  location           String
-  aboutRole          String
-  requirements       String[]
-  qualifications     String[]
-  min_salary         Int
-  max_salary         Int
-  deadline           DateTime
-  created_at         DateTime       @default(now())
-  updated_at         DateTime       @updatedAt
-  is_Published       Boolean        @default(true)
-  job_arrangement_id Int
-  job_type_id        Int
-  job_category_id    Int?
-  responsibilities   String?
-  applications       Application[]
-  company            Company        @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  jobArrangement     JobArrangement @relation(fields: [job_arrangement_id], references: [id])
-  category           JobCategory?   @relation(fields: [job_category_id], references: [id])
-  jobType            JobType        @relation(fields: [job_type_id], references: [id])
-  savedBy            SavedJob[]
-  tags               JobTag[]       @relation("JobTagesOnPosts")
-  documents          DocumentType[] @relation("RequiredDocsOnPost")
-}
-
-model JobType {
-  id    Int       @id @default(autoincrement())
-  name  String    @unique
-  posts JobPost[]
 }
 
 model JobArrangement {
@@ -208,10 +132,66 @@ model JobCategory {
   posts JobPost[]
 }
 
+model JobPost {
+  id                 Int            @id @default(autoincrement())
+  company_id         Int
+  jobName            String
+  location           String
+  aboutRole          String
+  requirements       String[]
+  qualifications     String[]
+  min_salary         Int
+  max_salary         Int
+  deadline           DateTime
+  created_at         DateTime       @default(now())
+  updated_at         DateTime
+  is_Published       Boolean        @default(true)
+  job_arrangement_id Int
+  job_type_id        Int
+  job_category_id    Int?
+  responsibilities   String?
+  applications       Application[]
+  company            Company        @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  jobArrangement     JobArrangement @relation(fields: [job_arrangement_id], references: [id])
+  category           JobCategory?   @relation(fields: [job_category_id], references: [id])
+  jobType            JobType        @relation(fields: [job_type_id], references: [id])
+  savedBy            SavedJob[]
+  tags               JobTag[]       @relation("JobTagesOnPosts")
+}
+
 model JobTag {
   id    Int       @id @default(autoincrement())
   name  String
   posts JobPost[] @relation("JobTagesOnPosts")
+}
+
+model JobType {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  posts JobPost[]
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  account_id Int
+  sender_id  Int?
+  message    String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+  account    Account  @relation("NotificationReceiver", fields: [account_id], references: [id], onDelete: Cascade)
+  sender     Account? @relation("NotificationSender", fields: [sender_id], references: [id])
+
+  @@index([account_id, sender_id, is_read])
+}
+
+model Report {
+  id         Int      @id @default(autoincrement())
+  account_id Int
+  report_id  Int
+  post_id    Int
+  type       String
+  created_at DateTime @default(now())
+  account    Account  @relation(fields: [account_id], references: [id])
 }
 
 model SavedJob {
@@ -236,7 +216,7 @@ model Student {
   year                String
   phone               String
   created_at          DateTime           @default(now())
-  updated_at          DateTime           @updatedAt
+  updated_at          DateTime
   transcript          String?
   email_verified      Boolean            @default(true)
   student_status      StudentStatus      @default(CURRENT)
@@ -263,7 +243,6 @@ model email_verification_tokens {
 
   @@index([email])
   @@index([token])
-  @@map("email_verification_tokens")
 }
 
 model verification_tokens {
@@ -272,4 +251,15 @@ model verification_tokens {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+enum StudentStatus {
+  CURRENT
+  ALUMNI
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

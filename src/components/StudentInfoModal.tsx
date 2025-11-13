@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { LuPhone } from "react-icons/lu";
@@ -107,23 +108,19 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
           <div className="flex flex-col gap-6">
             <div className="flex flex-row gap-6">
               <div className="flex-shrink-0">
-                {(() => {
-                  const url = applicantInfo.profile_url;
-                  const hasImage = typeof url === "string" && url.trim() !== "" && url !== "/default-avatar.png" && url !== "null";
-                  return hasImage ? (
-                    <Image
-                      src={url as string}
-                      alt="applicantProfile"
-                      width={70}
-                      height={70}
-                      className="rounded-lg shadow-md object-cover"
-                    />
-                  ) : (
-                    <div className="w-[70px] h-[70px] bg-gray-100 rounded-lg shadow-md flex items-center justify-center text-2xl font-semibold text-gray-700">
-                      {applicantInfo.firstname.charAt(0).toUpperCase()}
-                    </div>
-                  );
-                })()}
+                {isValidImageUrl(applicantInfo.profile_url) ? (
+                  <Image
+                    src={applicantInfo.profile_url}
+                    alt="applicantProfile"
+                    width={70}
+                    height={70}
+                    className="w-[70px] h-[70px] object-cover rounded-lg shadow-md"
+                  />
+                ) : (
+                  <div className="w-[70px] h-[70px] bg-gray-100 rounded-lg shadow-md flex items-center justify-center text-2xl font-semibold text-gray-700">
+                    {applicantInfo.firstname.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col justify-between gap-3 flex-1">

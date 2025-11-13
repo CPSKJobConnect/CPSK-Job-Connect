@@ -9,6 +9,8 @@ import { defaultJobPostForm } from "@/types/job";
 import { toast } from "@/lib/toastTemplate";
 import { validateForm, validateDetail, validateDescription } from "@/lib/validateJobForm";
 import { useRouter } from "next/navigation";
+import { CompanyVerificationBanner } from "@/components/CompanyVerificationBanner";
+import { Company } from "@/types/user";
 
 interface CompanyProps {
   name: string;
@@ -27,6 +29,7 @@ export default function Page() {
   const [tags, setTags] = useState<string[]>([]);
   const router = useRouter();
   const [company, setCompany] = useState<CompanyProps | null>(null);
+  const [companyProfile, setCompanyProfile] = useState<Company | null>(null);
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -47,6 +50,19 @@ export default function Page() {
       setCompany(data.user || null)
     };
     fetchCompany();
+
+    const fetchCompanyProfile = async () => {
+      try {
+        const response = await fetch('/api/company/profile');
+        if (response.ok) {
+          const data: Company = await response.json();
+          setCompanyProfile(data);
+        }
+      } catch (error) {
+        console.error("Error fetching company profile:", error);
+      }
+    };
+    fetchCompanyProfile();
   }, []);
 
   const previewJob = useMemo<JobInfo>(() => ({
@@ -137,6 +153,13 @@ export default function Page() {
         <p className="text-xl font-semibold">Post a New Job Opening</p>
         <p className="text-md text-gray-700">Create and submit a new job for your company</p>
       </div>
+
+      {companyProfile && (
+        <CompanyVerificationBanner
+          registrationStatus={companyProfile.registration_status}
+          verificationNotes={companyProfile.verification_notes}
+        />
+      )}
 
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-4">

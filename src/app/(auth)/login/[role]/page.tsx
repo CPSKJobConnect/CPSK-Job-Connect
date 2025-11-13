@@ -18,7 +18,7 @@ const LoginPage =  ({params}: LoginPageProps) => {
     notFound();
   }
   return (
-    <AuthLayout role={role as Role}>
+    <AuthLayout role={role as Role} mode="login">
       <AuthForm mode="login" role={role as Role} />
     </AuthLayout>
   )

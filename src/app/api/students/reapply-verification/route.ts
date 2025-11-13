@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
 import { uploadDocument } from "@/lib/uploadDocument";
+import { notifyAdminsAlumniReapplication } from "@/lib/notifyAdmins";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -28,11 +29,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get student record
+    // Get student record with name and student_id for notification
     const student = await prisma.student.findUnique({
       where: { account_id: parseInt(session.user.id) },
       select: {
         id: true,
+        name: true,
+        student_id: true,
         student_status: true,
         verification_status: true,
       }
@@ -53,11 +56,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upload the new transcript (docTypeId: 2 for transcript)
+    // Upload the new transcript (docTypeId: 4 for transcript)
     const transcriptDoc = await uploadDocument(
       transcriptFile,
       session.user.id,
-      2
+      4
     );
 
     // Reset verification status to PENDING
@@ -78,6 +81,13 @@ export async function POST(request: NextRequest) {
         message: "Your new transcript has been uploaded successfully. Your verification request is now pending admin review."
       }
     });
+
+    // Notify all admins about the re-application
+    await notifyAdminsAlumniReapplication(
+      student.name,
+      student.student_id,
+      parseInt(session.user.id)
+    );
 
     return NextResponse.json({
       success: true,

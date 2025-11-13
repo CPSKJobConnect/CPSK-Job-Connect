@@ -45,7 +45,30 @@ export default withAuth(
     if (token) {
       // Redirect users without role to complete registration
       if (!role && !pathname.startsWith("/register/complete")) {
-        return NextResponse.redirect(new URL("/register/complete", req.url))
+        // Try to extract role hint from multiple sources:
+        // 1. Current path: /login/student or /register/company
+        // 2. Dashboard paths: /student/dashboard or /company/dashboard
+        const roleMatch = pathname.match(/\/(login|register|student|company)\/(student|company|dashboard)/)
+        let roleHint = null
+
+        if (roleMatch) {
+          // If the path contains /student/ or /company/, use that as the role
+          if (roleMatch[1] === 'student' || roleMatch[1] === 'company') {
+            roleHint = roleMatch[1]
+          }
+          // Otherwise check if the second part is student or company
+          else if (roleMatch[2] === 'student' || roleMatch[2] === 'company') {
+            roleHint = roleMatch[2]
+          }
+        }
+
+        if (roleHint) {
+          // Redirect directly to role-specific registration form
+          return NextResponse.redirect(new URL(`/register/complete/${roleHint}`, req.url))
+        } else {
+          // No role hint, go to role selection page
+          return NextResponse.redirect(new URL("/register/complete", req.url))
+        }
       }
 
       // Check if student needs email verification for job application
@@ -76,6 +99,16 @@ export default withAuth(
         // Alumni with REJECTED status cannot apply (redirect to dashboard)
         if (studentStatus === "ALUMNI" && verificationStatus === "REJECTED") {
           return NextResponse.redirect(new URL("/student/dashboard", req.url));
+        }
+      }
+
+      // Check if company is verified for job posting
+      if (role === "company" && pathname.startsWith("/company/jobs/create")) {
+        const companyRegistrationStatus = token.companyRegistrationStatus;
+
+        // Only APPROVED companies can create jobs
+        if (companyRegistrationStatus !== "APPROVED") {
+          return NextResponse.redirect(new URL("/company/dashboard", req.url));
         }
       }
 

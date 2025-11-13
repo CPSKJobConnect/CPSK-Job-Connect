@@ -1,11 +1,21 @@
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { companyRegisterSchema, studentRegisterSchema } from "@/lib/validations";
+import { notifyAdminsNewAlumni, notifyAdminsNewCompany } from "@/lib/notifyAdmins";
+import {
+  companyOAuthRegisterSchema,
+  companyRegisterSchema,
+  studentOAuthRegisterSchema,
+  studentRegisterSchema
+} from "@/lib/validations";
 import bcrypt from "bcryptjs";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 type StudentData = z.infer<typeof studentRegisterSchema>;
 type CompanyData = z.infer<typeof companyRegisterSchema>;
+type StudentOAuthData = z.infer<typeof studentOAuthRegisterSchema>;
+type CompanyOAuthData = z.infer<typeof companyOAuthRegisterSchema>;
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,12 +23,25 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     // console.log("FormData received, entries:", Array.from(formData.entries()));
     const role = formData.get("role") as string;
-    // console.log("Role:", role);
+    const isOAuth = formData.get("isOAuth") === "true";
+    // console.log("Role:", role, "isOAuth:", isOAuth);
+
     if (!["student", "company"].includes(role)) {
       return NextResponse.json(
         { error: "Invalid role" },
         { status: 400 }
       )
+    }
+
+    // For OAuth registration, validate session exists
+    if (isOAuth) {
+      const session = await getServerSession(authOptions);
+      if (!session?.user?.email) {
+        return NextResponse.json(
+          { error: "Unauthorized - OAuth session required" },
+          { status: 401 }
+        );
+      }
     }
 
     // Convert FormData to object
@@ -42,21 +65,52 @@ export async function POST(req: NextRequest) {
     }
 
     // Add transcript file to data for validation
+    // Convert File to FileList-like object for validation
     if (role === "student") {
       const transcriptFile = formData.get("transcript") as File | null;
       if (transcriptFile && transcriptFile.size > 0) {
-        data.transcript = transcriptFile;
+        // Create a FileList-like object with the file
+        const fileList = {
+          0: transcriptFile,
+          length: 1,
+          item: (index: number) => index === 0 ? transcriptFile : null,
+          [Symbol.iterator]: function* () {
+            yield transcriptFile;
+          }
+        } as unknown as FileList;
+        data.transcript = fileList;
       }
     }
-    // Validate data base on role
+
+    // Add evidence file to data for validation (required for companies)
+    if (role === "company") {
+      const evidenceFile = formData.get("evidence") as File | null;
+      if (evidenceFile && evidenceFile.size > 0) {
+        // Create a FileList-like object with the file
+        const fileList = {
+          0: evidenceFile,
+          length: 1,
+          item: (index: number) => index === 0 ? evidenceFile : null,
+          [Symbol.iterator]: function* () {
+            yield evidenceFile;
+          }
+        } as unknown as FileList;
+        data.evidence = fileList;
+      }
+    }
+    // Validate data base on role and OAuth status
     // console.log("Data to validate:", data);
-    let validatedData: z.ZodSafeParseResult<StudentData | CompanyData>;
+    let validatedData: z.ZodSafeParseResult<StudentData | CompanyData | StudentOAuthData | CompanyOAuthData>;
     if (role === "student") {
       // safe parse throws errors instead of crashing the server
-      validatedData = studentRegisterSchema.safeParse(data);
+      validatedData = isOAuth
+        ? studentOAuthRegisterSchema.safeParse(data)
+        : studentRegisterSchema.safeParse(data);
       // console.log("Student validation result:", validatedData);
     } else {
-      validatedData = companyRegisterSchema.safeParse(data);
+      validatedData = isOAuth
+        ? companyOAuthRegisterSchema.safeParse(data)
+        : companyRegisterSchema.safeParse(data);
       // console.log("Company validation result:", validatedData);
     }
 
@@ -87,16 +141,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // If account exists but is orphaned (no student/company record), clean it up
-    if (existingUser) {
+    // If account exists but is orphaned (no student/company record), use it for OAuth
+    if (existingUser && isOAuth) {
+      console.log("Found existing OAuth account:", existingUser.id);
+      // For OAuth, we'll update this account with role and create student/company record
+    } else if (existingUser) {
+      // Regular registration - clean up orphaned account
       console.log("Found orphaned account, cleaning up:", existingUser.id);
       await prisma.account.delete({
         where: { id: existingUser.id }
       });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(validatedData.data.password, 12);
+    // Hash password (not needed for OAuth)
+    let hashedPassword: string | null = null;
+    if (!isOAuth) {
+      const dataWithPassword = validatedData.data as StudentData | CompanyData;
+      hashedPassword = await bcrypt.hash(dataWithPassword.password, 12);
+    }
 
     // Get role ID
     const roleRecord = await prisma.accountRole.findFirst({
@@ -124,46 +186,64 @@ export async function POST(req: NextRequest) {
 
     // Use transaction to ensure atomic account + role-specific record creation
     const account = await prisma.$transaction(async (tx) => {
-      // Create account
-      const account = await tx.account.create({
-        data: {
-          email: validatedData.data.email,
-          password: hashedPassword,
-          role: roleId,
-          username: role === "student" ? (validatedData.data as StudentData).name : (validatedData.data as CompanyData).companyName,
-        }
-      })
+      let account;
+
+      if (isOAuth && existingUser) {
+        // Update existing OAuth account with role
+        account = await tx.account.update({
+          where: { id: existingUser.id },
+          data: {
+            role: roleId,
+            username: role === "student" ? (validatedData.data as StudentData).name : (validatedData.data as CompanyData).companyName,
+          }
+        });
+      } else {
+        // Create new account
+        account = await tx.account.create({
+          data: {
+            email: validatedData.data.email,
+            password: hashedPassword,
+            role: roleId,
+            username: role === "student" ? (validatedData.data as StudentData).name : (validatedData.data as CompanyData).companyName,
+          }
+        });
+      }
 
       // Create role-specific record (without file paths initially)
       if (role === "student") {
-        const studentData = validatedData.data as StudentData;
+        const studentData = validatedData.data as StudentData | StudentOAuthData;
         const isAlumni = studentData.studentStatus === "ALUMNI";
 
         await tx.student.create({
           data: {
             account_id: account.id,
-            student_id: (validatedData.data as StudentData).studentId,
-            name: (validatedData.data as StudentData).name,
-            faculty: (validatedData.data as StudentData).faculty,
-            year: (validatedData.data as StudentData).year.toString(),
-            phone: (validatedData.data as StudentData).phone,
-            transcript: transcriptPath,
+            student_id: studentData.studentId,
+            name: studentData.name,
+            faculty: studentData.faculty,
+            year: studentData.year.toString(),
+            phone: studentData.phone,
+            transcript: null, // Will be updated after file upload
+            student_status: isAlumni ? "ALUMNI" : "CURRENT",
+            // Alumni need admin approval, current students just need email verification
+            verification_status: isAlumni ? "PENDING" : "APPROVED",
+            // For OAuth current students, trust Google email verification
+            email_verified: isOAuth && !isAlumni ? true : false,
             updated_at: new Date(),
           }
         })
       } else {
+        const companyData = validatedData.data as CompanyData | CompanyOAuthData;
         await tx.company.create({
           data: {
             account_id: account.id,
-            name: (validatedData.data as CompanyData).companyName,
-            address: (validatedData.data as CompanyData).address,
-            // year: (validatedData.data as CompanyData).year, // Removed from schema
-            phone: (validatedData.data as CompanyData).phone,
-            description: (validatedData.data as CompanyData).description,
-            website: (validatedData.data as CompanyData).website || null,
+            name: companyData.companyName,
+            address: companyData.address,
+            // year: companyData.year, // Removed from schema
+            phone: companyData.phone,
+            description: companyData.description,
+            website: companyData.website || null,
             register_day: new Date(),
-            registration_status: "pending",
-            updated_at: new Date(),
+            registration_status: "PENDING",
           }
         })
       }
@@ -192,7 +272,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Send registration confirmation email to alumni
+    // Send registration confirmation email to alumni and notify admins
     if (role === "student") {
       const studentData = validatedData.data as StudentData;
       const isAlumni = studentData.studentStatus === "ALUMNI";
@@ -209,6 +289,18 @@ export async function POST(req: NextRequest) {
           console.error(`❌ Failed to send registration email to ${validatedData.data.email}:`, emailError);
           // Continue with registration even if email fails
         }
+
+        // Notify all admins about new alumni registration
+        try {
+          await notifyAdminsNewAlumni(
+            studentData.name,
+            studentData.studentId,
+            account.id
+          );
+        } catch (notificationError) {
+          console.error("❌ Failed to notify admins about new alumni:", notificationError);
+          // Continue with registration even if notification fails
+        }
       }
     }
 
@@ -220,6 +312,20 @@ export async function POST(req: NextRequest) {
       } catch (error) {
         console.error("Error uploading evidence file:", error);
         // Continue with registration even if file upload fails
+      }
+    }
+
+    // Notify admins about new company registration
+    if (role === "company") {
+      try {
+        const companyData = validatedData.data as CompanyData;
+        await notifyAdminsNewCompany(
+          companyData.companyName,
+          account.id
+        );
+      } catch (notificationError) {
+        console.error("❌ Failed to notify admins about new company:", notificationError);
+        // Continue with registration even if notification fails
       }
     }
 

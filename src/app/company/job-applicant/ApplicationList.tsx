@@ -14,7 +14,8 @@ import StudentInfoModal from "@/components/StudentInfoModal";
 import { toast } from "sonner";
 
 interface Applicant {
-  applicant_id: string;
+  application_id: number;
+  applicant_id: number;
   profile_url: string;
   name: string;
   email: string;
@@ -29,6 +30,7 @@ interface Status {
 
 interface ApplicantListProps {
   applicants: Applicant[];
+  isCompanyVerified?: boolean;
 }
 
 type StatusType = "pending" | "reviewed" | "interview" | "offered" | "rejected";
@@ -41,7 +43,7 @@ const statusColors: Record<StatusType, string> = {
   rejected: "bg-red-100 text-red-800",
 };
 
-const ApplicationList = ({ applicants }: ApplicantListProps) => {
+const ApplicationList = ({ applicants, isCompanyVerified = true }: ApplicantListProps) => {
   const [statusList, setStatusList] = useState<Status[]>([]);
   const [statusMap, setStatusMap] = useState<Record<number, { id: number; type: StatusType }>>({});
   const [avatarError, setAvatarError] = useState<Record<string, boolean>>({});
@@ -55,7 +57,7 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
         const initialMap: Record<number, { id: number; type: StatusType }> = {};
         applicants.forEach((a) => {
           const s = data.statuses.find((st: Status) => String(st.id) === a.status);
-          initialMap[Number(a.applicant_id)] = {
+          initialMap[Number(a.application_id)] = {
             id: Number(a.status),
             type: (s?.name.toLowerCase() as StatusType) || "pending",
           };
@@ -65,27 +67,27 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
       .catch(console.error);
   }, [applicants]);
 
-  const handleStatusChange = async (applicant_id: number, newStatusId: number) => {
+  const handleStatusChange = async (application_id: number, newStatusId: number) => {
     const s = statusList.find((st) => st.id === newStatusId);
     if (!s) return;
-    const previous = statusMap[applicant_id];
+    const previous = statusMap[application_id];
 
     setStatusMap((prev) => ({
       ...prev,
-      [applicant_id]: { id: newStatusId, type: s.name.toLowerCase() as StatusType },
+      [application_id]: { id: newStatusId, type: s.name.toLowerCase() as StatusType },
     }));
 
     try {
-      const response = await fetch(`/api/applications/${applicant_id}/status`, {
+      const response = await fetch(`/api/applications/${application_id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status_id: newStatusId }),
       });
 
-      let result: any = null;
+      let result: { error?: string } | null = null;
       try {
         result = await response.json();
-      } catch (e) {
+      } catch {
         // ignore parse errors
       }
 
@@ -95,7 +97,7 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
           description: result?.error || "Please try again.",
         });
         // revert optimistic update
-        setStatusMap((prev) => ({ ...prev, [applicant_id]: previous }));
+        setStatusMap((prev) => ({ ...prev, [application_id]: previous }));
         return;
       }
 
@@ -106,7 +108,7 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
     } catch (error) {
       console.error("Failed to update status:", error);
       toast.error("Failed to update application status");
-      setStatusMap((prev) => ({ ...prev, [applicant_id]: previous }));
+      setStatusMap((prev) => ({ ...prev, [application_id]: previous }));
     }
   };
 
@@ -121,14 +123,14 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
       ) : (
         <div className="flex flex-col gap-4">
           {applicants.map((student) => {
-            const currentStatus = statusMap[Number(student.applicant_id)] || {
+            const currentStatus = statusMap[Number(student.application_id)] || {
               id: Number(student.status),
               type: statusList.find(s => s.id === Number(student.status))?.name.toLowerCase() as StatusType || 'pending'
               };
 
             return (
               <div
-                key={student.applicant_id}
+                key={student.application_id}
                 className="group flex flex-col shadow-sm rounded-lg p-3 border border-gray-100 transition transition-transform duration-300 hover:-translate-y-1 hover:shadow-md bg-white hover:bg-[#F3FEFA]"
               >
                 <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 md:gap-0">
@@ -163,11 +165,12 @@ const ApplicationList = ({ applicants }: ApplicantListProps) => {
                       <Select
                         value={String(currentStatus.id)}
                         onValueChange={(val) =>
-                          handleStatusChange(Number(student.applicant_id), Number(val))
+                          handleStatusChange(Number(student.application_id), Number(val))
                         }
+                        disabled={!isCompanyVerified}
                       >
                         <SelectTrigger
-                          className={`rounded-full w-full text-sm transition-all duration-200 border-none p-3 ${statusColors[currentStatus.type as StatusType]}`}
+                          className={`rounded-full w-full text-sm transition-all duration-200 border-none p-3 ${statusColors[currentStatus.type as StatusType]} ${!isCompanyVerified ? 'opacity-60 cursor-not-allowed' : ''}`}
                         >
                           <SelectValue placeholder="Select status">
                               {statusList.find((st) => st.id === currentStatus.id)?.name || "Pending"}

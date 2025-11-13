@@ -68,10 +68,11 @@ export async function POST(request: Request) {
         ? "Your alumni status has been approved! Please verify your KU email to complete registration and start applying for jobs."
         : `Your alumni verification has been rejected. ${reason ? `Reason: ${reason}` : ""}`;
 
-      // Create notification for the student
+      // Create notification for the student with admin as sender
       await prisma.notification.create({
         data: {
           account_id: student.account_id,
+          sender_id: adminAccount.id,
           message: notificationMessage
         }
       });
@@ -109,11 +110,14 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Company not found" }, { status: 404 });
       }
 
-      // Update company registration status
+      // Update company registration status with tracking
       await prisma.company.update({
         where: { id: accountId },
         data: {
-          registration_status: action === "approve" ? "approved" : "rejected"
+          registration_status: action === "approve" ? "APPROVED" : "REJECTED",
+          verified_at: new Date(),
+          verified_by: adminAccount.id,
+          verification_notes: action === "reject" ? reason : null
         }
       });
 
@@ -121,10 +125,11 @@ export async function POST(request: Request) {
         ? "Your company registration has been approved! You can now post jobs and manage applications."
         : `Your company registration has been rejected. ${reason ? `Reason: ${reason}` : ""}`;
 
-      // Create notification for the company
+      // Create notification for the company with admin as sender
       await prisma.notification.create({
         data: {
           account_id: company.account_id,
+          sender_id: adminAccount.id,
           message: notificationMessage
         }
       });

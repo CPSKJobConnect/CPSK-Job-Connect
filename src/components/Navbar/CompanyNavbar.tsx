@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useRouter } from "next/navigation";
 import { Building2, LogOut } from 'lucide-react';
+import { isValidImageUrl } from '@/lib/validateImageUrl';
 
 export default function CompanyNavbar() {
   const { data: session } = useSession();
@@ -38,19 +39,23 @@ export default function CompanyNavbar() {
       {session && (
         <Popover>
           <PopoverTrigger asChild>
-            <div 
+            <div
               role="button"
               tabIndex={0}
               aria-haspopup="menu"
               className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer bg-gray-300 flex items-center justify-center"
             >
-              {session.user?.logoUrl ? (
+              {isValidImageUrl(session.user?.logoUrl) ? (
                 <Image
                   src={session.user.logoUrl}
                   alt="Profile"
                   width={40}
                   height={40}
                   className="object-cover"
+                  onError={(e) => {
+                    // Hide image and show fallback on error
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               ) : (
                 <span className="text-gray-600 font-semibold text-sm">

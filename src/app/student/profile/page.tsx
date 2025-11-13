@@ -1,13 +1,14 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { begin, done } from "@/lib/loaderSignal";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { Student } from "@/types/user";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { begin, done } from "@/lib/loaderSignal";
 import { IoCallOutline, IoCameraOutline, IoIdCardOutline, IoMailOutline, IoPersonCircleOutline, IoSchoolOutline } from "react-icons/io5";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
 import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
 
@@ -98,6 +99,19 @@ export default function StudentProfilePage() {
 
   useEffect(() => {
     fetchStudentProfile();
+
+    // Refresh profile when page becomes visible (e.g., after switching tabs or navigating back)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchStudentProfile();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   // Rely on global loader for initial load; render nothing locally while fetching
@@ -119,14 +133,17 @@ export default function StudentProfilePage() {
         <div className="flex items-center gap-6">
           {/* Profile Picture */}
           <div className="relative group">
-            {student.profile_url ? (
-              <div className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-lg overflow-hidden">
+            {isValidImageUrl(student.profile_url) ? (
+              <div className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
                 <Image
                   src={student.profile_url}
                   alt={`${student.firstname} ${student.lastname}`}
                   width={120}
                   height={120}
-                  className="w-full h-full object-cover object-[center_20%]"
+                  className="w-full h-full object-cover object-center"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               </div>
             ) : (
@@ -183,8 +200,22 @@ export default function StudentProfilePage() {
               </div>
             </div>
             <div className="mt-3">
-              <span className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium">
-                Year {student.year}
+              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                student.verification_status === "APPROVED" && student.email_verified
+                  ? "bg-green-500/30 backdrop-blur-sm"
+                  : student.verification_status === "APPROVED" && student.student_status === "ALUMNI" && !student.email_verified
+                  ? "bg-blue-500/30 backdrop-blur-sm"
+                  : student.verification_status === "PENDING"
+                  ? "bg-yellow-500/30 backdrop-blur-sm"
+                  : "bg-red-500/30 backdrop-blur-sm"
+              }`}>
+                {student.verification_status === "APPROVED" && student.email_verified
+                  ? "Verified Student"
+                  : student.verification_status === "APPROVED" && student.student_status === "ALUMNI" && !student.email_verified
+                  ? "Email Verification Required"
+                  : student.verification_status === "PENDING"
+                  ? "Verification Pending"
+                  : "Verification Rejected"}
               </span>
             </div>
           </div>

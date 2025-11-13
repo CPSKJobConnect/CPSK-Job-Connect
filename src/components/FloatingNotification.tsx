@@ -32,12 +32,12 @@ export const formatDateTime = (dateString: string) => {
 };
 
 export default function FloatingNotification() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const isLoggedIn = status === "authenticated";
 
   const [summaries, setSummaries] = useState<NotificationSummary[]>([]);
   const [detailMessages, setDetailMessages] = useState<NotificationDetail[]>([]);
-  const [selectedSender, setSelectedSender] = useState<number | null>(null);
+  const [selectedSender, setSelectedSender] = useState<number | null | undefined>(undefined);
   const [isOpen, setIsOpen] = useState(false);
 
   // filter / sort states
@@ -48,14 +48,38 @@ export default function FloatingNotification() {
     if (!isLoggedIn) return;
 
     const fetchSummaries = async () => {
-      const res = await fetch("/api/notification/");
-      const data = await res.json();
-      setSummaries(Array.isArray(data) ? data : []);
+      // Only fetch if the page is visible
+      if (document.hidden) return;
+
+      try {
+        const res = await fetch("/api/notification/");
+        if (res.ok) {
+          const data = await res.json();
+          setSummaries(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
     };
 
+    // Initial fetch
     fetchSummaries();
-    const interval = setInterval(fetchSummaries, 5000);
-    return () => clearInterval(interval);
+
+    // Poll every 30 seconds (reduced from 5 seconds)
+    const interval = setInterval(fetchSummaries, 30000);
+
+    // Fetch when tab becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchSummaries();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [isLoggedIn]);
 
   if (!isLoggedIn) return null;
@@ -63,10 +87,11 @@ export default function FloatingNotification() {
   const unreadCount = summaries.filter((n) => !n.is_read).length;
 
   const openDetail = async (senderId: number | null) => {
-    if (senderId === null) return;
     setSelectedSender(senderId);
 
-    const res = await fetch(`/api/notification/${senderId}`);
+    // Use "system" as the URL parameter for null sender_id
+    const senderParam = senderId === null ? "system" : senderId;
+    const res = await fetch(`/api/notification/${senderParam}`);
     const data = await res.json();
     setDetailMessages(Array.isArray(data) ? data : []);
 
@@ -76,8 +101,28 @@ export default function FloatingNotification() {
     );
   };
 
+  const markNotificationAsRead = async (notificationId: number, senderId: number | null) => {
+    // Use "system" as the URL parameter for null sender_id
+    const senderParam = senderId === null ? "system" : senderId;
+
+    try {
+      const res = await fetch(`/api/notification/${senderParam}/${notificationId}`, {
+        method: "PATCH",
+      });
+
+      if (res.ok) {
+        // Update local state to mark this notification as read
+        setDetailMessages((prev) =>
+          prev.map((m) => (m.id === notificationId ? { ...m, is_read: true } : m))
+        );
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
   const backToSummary = () => {
-    setSelectedSender(null);
+    setSelectedSender(undefined);
     setDetailMessages([]);
   };
 
@@ -93,7 +138,10 @@ export default function FloatingNotification() {
     <div className="fixed bottom-6 right-6 flex flex-col items-end z-50">
       {/* Bell Button */}
       <button
-        onClick={() => setIsOpen((prev) => !prev && !selectedSender)}
+        onClick={() => {
+          setIsOpen((prev) => !prev);
+          setSelectedSender(undefined);
+        }}
         className="relative bg-white rounded-full shadow-lg p-3 hover:bg-gray-100 transition cursor-pointer"
       >
         <FaBell size={24} color="#006C67" />
@@ -105,7 +153,7 @@ export default function FloatingNotification() {
       </button>
 
       {/* Summary View */}
-      {!selectedSender && isOpen && (
+      {selectedSender === undefined && isOpen && (
         <div className="absolute bottom-14 right-0 w-80 bg-white rounded-lg shadow-lg border overflow-hidden">
           {/* Header */}
           <div className="flex justify-between items-center bg-[#006C67] text-white px-4 py-2 cursor-pointer">
@@ -163,7 +211,7 @@ export default function FloatingNotification() {
       )}
 
       {/* Detail View */}
-      {selectedSender && isOpen && (
+      {selectedSender !== undefined && isOpen && (
         <div className="absolute bottom-14 right-0 w-80 bg-white rounded-lg shadow-lg border overflow-hidden">
           {/* Header */}
           <div className="flex justify-between items-center bg-[#006C67] text-white px-4 py-2">
@@ -185,7 +233,17 @@ export default function FloatingNotification() {
               <p className="text-gray-500 text-sm text-center">No messages</p>
             ) : (
               detailMessages.map((m) => (
-                <div key={m.id} className="border-b py-2">
+                <div
+                  key={m.id}
+                  onClick={() => {
+                    if (!m.is_read) {
+                      markNotificationAsRead(m.id, selectedSender);
+                    }
+                  }}
+                  className={`border-b py-2 px-2 rounded cursor-pointer transition ${
+                    m.is_read ? "bg-white" : "bg-green-50 border-l-4 border-green-500"
+                  } hover:bg-gray-50`}
+                >
                   <p className="text-sm text-gray-700">{m.message}</p>
                   <p className="text-xs text-gray-400">{formatDateTime(m.created_at)}</p>
                 </div>

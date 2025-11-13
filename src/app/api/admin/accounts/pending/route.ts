@@ -79,6 +79,7 @@ export async function GET(request: Request) {
       });
 
       pendingStudents.forEach(student => {
+        const isReapplication = student.account.documents.length > 1;
         pendingAccounts.push({
           type: "student",
           id: student.id,
@@ -93,7 +94,8 @@ export async function GET(request: Request) {
             year: student.year,
             phone: student.phone,
             transcript: student.transcript,
-            documents: student.account.documents
+            documents: student.account.documents,
+            isReapplication
           }
         });
       });
@@ -102,7 +104,7 @@ export async function GET(request: Request) {
     // Build registration status filter for companies
     const companyStatusFilter = statusFilter === "all"
       ? {}
-      : { registration_status: statusFilter === "pending" ? "pending" : statusFilter };
+      : { registration_status: statusFilter.toUpperCase() as "PENDING" | "APPROVED" | "REJECTED" };
 
     // Fetch companies with filtered registration status
     if (accountType === "all" || accountType === "company") {
@@ -135,6 +137,9 @@ export async function GET(request: Request) {
       });
 
       pendingCompanies.forEach(company => {
+        // Detect re-application: if company has more than one evidence document
+        const isReapplication = company.account.documents.length > 1;
+
         pendingAccounts.push({
           type: "company",
           id: company.id,
@@ -148,7 +153,8 @@ export async function GET(request: Request) {
             phone: company.phone,
             description: company.description,
             website: company.website,
-            documents: company.account.documents
+            documents: company.account.documents,
+            isReapplication
           }
         });
       });

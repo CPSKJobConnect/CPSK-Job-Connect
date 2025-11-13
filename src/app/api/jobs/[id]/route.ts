@@ -69,15 +69,36 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { getApiSession } = await import("@/lib/api-auth");
+    const session = await getApiSession(request);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await context.params;
     const jobId = Number(id);
 
     const existingJob = await prisma.jobPost.findUnique({
       where: { id: jobId },
+      include: { company: true },
     });
 
     if (!existingJob) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
+    // Verify the company owns this job
+    if (existingJob.company.account_id !== parseInt(session.user.id)) {
+      return NextResponse.json({ error: "Forbidden: You don't own this job" }, { status: 403 });
+    }
+
+    // Check if company is still verified
+    if (existingJob.company.registration_status !== "APPROVED") {
+      return NextResponse.json(
+        { error: "Your company must be verified to manage jobs. Please check your verification status in your profile page." },
+        { status: 403 }
+      );
     }
 
     await prisma.jobPost.delete({
@@ -97,17 +118,38 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { getApiSession } = await import("@/lib/api-auth");
+    const session = await getApiSession(request);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await context.params;
     const jobId = Number(id);
 
     const existingJob = await prisma.jobPost.findUnique({
       where: { id: jobId },
-      include: { tags: true, category: true },
+      include: { tags: true, category: true, company: true },
     });
 
     if (!existingJob) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
+
+    // Verify the company owns this job
+    if (existingJob.company.account_id !== parseInt(session.user.id)) {
+      return NextResponse.json({ error: "Forbidden: You don't own this job" }, { status: 403 });
+    }
+
+    // Check if company is still verified
+    if (existingJob.company.registration_status !== "APPROVED") {
+      return NextResponse.json(
+        { error: "Your company must be verified to manage jobs. Please check your verification status in your profile page." },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
     const arrangement = body.arrangement

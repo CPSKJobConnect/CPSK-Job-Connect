@@ -59,7 +59,8 @@ export async function GET(
         }
 
         return {
-          applicant_id: a.id,
+          application_id: a.id, // This is the application ID, needed for /api/company/applicants/[id]
+          applicant_id: a.student.id, // This is the actual student/applicant ID
           name: a.student.name,
           student_id: a.student.student_id,
           email: a.student.account.email,

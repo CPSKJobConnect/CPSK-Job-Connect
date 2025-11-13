@@ -16,6 +16,8 @@ import TopJobCard from "./TopJobsCard";
 import { useEffect, useState } from "react";
 import { begin, done } from "@/lib/loaderSignal";
 import { IconType } from "react-icons/lib";
+import { CompanyVerificationBanner } from "@/components/CompanyVerificationBanner";
+import { Company } from "@/types/user";
 
 
 const companyStatsConfig: Record<string, { icon: IconType; iconBg: string; iconColor: string; key: string }> = {
@@ -94,6 +96,7 @@ const CompanyDashboardPage = () => {
   const [statusBreakdownData, setStatusBreakdownData] = useState<StatusBreakdownChartProps['data']>(null);
   const [recentApplicationsData, setRecentApplicationsData] = useState<RecentApplicationsTableProps['applications']>([]);
   const [topJobsData, setTopJobsData] = useState<TopJobsCardProps['jobs']>([]);
+  const [companyProfile, setCompanyProfile] = useState<Company | null>(null);
   async function parseJsonSafe(response: Response) {
     const contentType = response.headers.get("content-type") || "";
     if (!response.ok) {
@@ -196,12 +199,27 @@ const CompanyDashboardPage = () => {
         done();
       }
     };
-    
+
+    const fetchCompanyProfile = async () => {
+      try {
+        const response = await fetch('/api/company/profile');
+        if (response.ok) {
+          const data: Company = await response.json();
+          setCompanyProfile(data);
+        } else {
+          console.error("Failed to fetch company profile");
+        }
+      } catch (error) {
+        console.error("Error fetching company profile:", error);
+      }
+    };
+
     useEffect(() => {
     fetchCompanyStats();
     fetchStatusBreakdown();
     fetchRecentApplications();
     fetchTopJobs();
+    fetchCompanyProfile();
   }, []);
 
 
@@ -220,6 +238,12 @@ const CompanyDashboardPage = () => {
 
   return (
     <div className="flex flex-col gap-5 p-5">
+      {companyProfile && (
+        <CompanyVerificationBanner
+          registrationStatus={companyProfile.registration_status}
+          verificationNotes={companyProfile.verification_notes}
+        />
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-6">
         {companyStat.map((stat, idx) => {
           const iconData = companyStatsConfig[stat.title];
@@ -247,7 +271,11 @@ const CompanyDashboardPage = () => {
 
         <div className="flex flex-col lg:flex-row gap-5 h-full items-stretch">
           <div className="basis-3/5 h-full min-h-0">
-            <RecentApplicationsTable applications={recentApplicationsData} loading={false} />
+            <RecentApplicationsTable
+              applications={recentApplicationsData}
+              loading={false}
+              isCompanyVerified={companyProfile?.registration_status === "APPROVED"}
+            />
           </div>
           <div className="basis-2/5 h-full min-h-0">
             <TopJobCard jobs={topJobsData} loading={false} />

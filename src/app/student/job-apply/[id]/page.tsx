@@ -24,6 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/lib/toastTemplate";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 
 
 const typeColors: Record<string, string> = {
@@ -224,16 +225,16 @@ export default function Page() {
       <>
         <div className="flex flex-col md:flex-row items-start md:items-center">
           <div className="py-6 md:py-14 md:ml-10 flex justify-center md:justify-start w-full md:w-auto">
-            {job.companyLogo ? (
+            {isValidImageUrl(job.companyLogo) ? (
               <Image
                 src={job.companyLogo}
                 alt={job.companyName || "companyLogo"}
                 width={120}
                 height={120}
-                className="h-auto bg-white translate-y-1 shadow-md rounded-md"
+                className="w-[120px] h-[120px] object-contain bg-white translate-y-1 shadow-md rounded-md"
               />
              ) : (
-              <div className="h-[120px] w-[120px] bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+              <div className="w-[120px] h-[120px] bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
                 {job.companyName ? job.companyName.charAt(0).toUpperCase() : "C"}
             </div>
             )}

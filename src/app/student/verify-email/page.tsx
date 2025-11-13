@@ -23,10 +23,12 @@ export default function VerifyEmailPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
+  const [hasSentInitialCode, setHasSentInitialCode] = useState(false);
 
-  // Auto-send verification email on page load
+  // Auto-send verification email on page load (only once)
   useEffect(() => {
-    if (email && !success) {
+    if (email && !success && !hasSentInitialCode) {
+      setHasSentInitialCode(true);
       sendVerificationCode();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
