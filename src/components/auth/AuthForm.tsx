@@ -306,14 +306,15 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   }, [mode, role, roleConfig.redirectPath])
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
+    const files = e.target.files
+    const file = files?.[0]
+    if (file && files) {
       setSelectedFile(file)
-      // Register the file with the form for validation
+      // Register the files with the form for validation
       if (role === "student") {
-        setValue("transcript", file)
+        setValue("transcript", files)
       } else if (role === "company") {
-        setValue("evidence", file)
+        setValue("evidence", files)
       }
     }
   }, [role, setValue])
@@ -481,7 +482,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                           value="CURRENT"
                           checked={studentStatus === "CURRENT"}
                           onChange={(e) => setStudentStatus(e.target.value as "CURRENT" | "ALUMNI")}
-                          disabled={isOAuthCompletion && session?.user?.email && !session.user.email.toLowerCase().endsWith("@ku.th")}
+                          disabled={!!(isOAuthCompletion && session?.user?.email && !session.user.email.toLowerCase().endsWith("@ku.th"))}
                           className="w-4 h-4 text-blue-600"
                         />
                         <span className="text-sm font-medium">Current KU Student</span>
