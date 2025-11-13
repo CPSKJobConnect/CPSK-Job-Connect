@@ -32,7 +32,6 @@ export default function RootLayout({
           <Toaster richColors closeButton position="top-right" />
           <AuthProvider>
             <ClientLayout>{children}</ClientLayout>
-            {children}
             <FloatingNotification />
           </AuthProvider>
         </MantineProvider>
