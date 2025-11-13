@@ -3,7 +3,7 @@
 import { LineChart } from "@mantine/charts";
 import { Card, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
-import { mockApplicantLine } from "@public/data/mockStudentStat";
+import { useSession } from "next-auth/react";
 
 interface ApplicantLineProps {
   date: string;
@@ -13,13 +13,50 @@ interface ApplicantLineProps {
 export default function ApplicantLineChart() {
   const [data, setData] = useState<ApplicantLineProps[]>([]);
   const [loading, setLoading] = useState(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
-    // Immediate load for mock data — no artificial delay so the global loader
-    // will not be held up by this component when using mock data.
-    setData(mockApplicantLine);
-    setLoading(false);
-  }, []);
+    if (!session?.user?.id) return;
+
+    const fetchApplicants = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/students/${session.user.id}/statistics/applied`
+        );
+
+        if (!res.ok) {
+          throw new Error(`API error: ${res.status}`);
+        }
+
+        const json: ApplicantLineProps[] = await res.json();
+
+        const aggregated = Object.values(
+          json.reduce((acc: Record<string, ApplicantLineProps>, cur) => {
+            const existing = acc[cur.date];
+            if (existing) {
+              existing.applicants += cur.applicants;
+            } else {
+              acc[cur.date] = { ...cur };
+            }
+            return acc;
+          }, {})
+        );
+
+        aggregated.sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+
+        setData(aggregated);
+      } catch (err) {
+        console.error("Error fetching applicant data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplicants();
+  }, [session?.user?.id]);
 
   return (
     <Card shadow="md" radius="lg" p="lg" className="w-full">
