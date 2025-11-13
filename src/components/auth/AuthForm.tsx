@@ -217,14 +217,15 @@ export function AuthForm({ role, mode }: AuthFormProps) {
   }, [roleConfig.redirectPath])
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
+    const files = e.target.files
+    const file = files?.[0]
+    if (file && files) {
       setSelectedFile(file)
-      // Register the file with the form for validation
+      // Register the files with the form for validation
       if (role === "student") {
-        setValue("transcript", file)
+        setValue("transcript", files)
       } else if (role === "company") {
-        setValue("evidence", file)
+        setValue("evidence", files)
       }
     }
   }, [role, setValue])

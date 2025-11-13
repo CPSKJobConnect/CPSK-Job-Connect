@@ -80,4 +80,5 @@ export interface AuthFormData {
   address?: string
   website?: string
   description?: string
+  evidence?: FileList
 }
