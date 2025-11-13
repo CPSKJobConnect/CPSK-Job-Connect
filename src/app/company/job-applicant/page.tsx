@@ -1,14 +1,15 @@
 "use client";
-import { IoMdAdd } from "react-icons/io";
-import AllJobPost from "./AllJobPost";
 import JobDescriptionCard from "@/components/JobDescriptionCard";
-import { FaRegFileAlt } from "react-icons/fa";
-import { MdTipsAndUpdates } from "react-icons/md";
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { JobInfo } from "@/types/job";
-import ApplicationList from "./ApplicationList";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { begin, done } from "@/lib/loaderSignal";
+import { JobInfo } from "@/types/job";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { FaRegFileAlt } from "react-icons/fa";
+import { IoMdAdd } from "react-icons/io";
+import { MdTipsAndUpdates } from "react-icons/md";
+import AllJobPost from "./AllJobPost";
+import ApplicationList from "./ApplicationList";
 
 export default function Page() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function Page() {
 
   // Fetch jobs from API
   const fetchJobs = async () => {
+    begin();
     try {
       const res = await fetch("/api/company/jobs");
       if (!res.ok) throw new Error("Failed to fetch jobs");
@@ -34,7 +36,7 @@ export default function Page() {
     } catch (error) {
       console.error("Error fetching jobs:", error);
     } finally {
-      setLoading(false);
+      done();
     }
   };
 
@@ -112,7 +114,6 @@ export default function Page() {
     fetchApplicants();
   }, [selectedCardId]);
 
-  // Handle small screen dialog
   useEffect(() => {
     if (!isSmallScreen && dialogOpen) setDialogOpen(false);
     if (isSmallScreen && selectedCardId !== null) setDialogOpen(true);
@@ -120,17 +121,18 @@ export default function Page() {
 
   const selectedJob = selectedCardId !== null ? jobPost.find(job => Number(job.id) === selectedCardId) : null;
 
+  useEffect(() => {
+    if (selectedCardId !== null && !selectedJob) {
+      setSelectedCardId(null);
+    }
+  }, [selectedCardId, selectedJob]);
+
   const handlePostJob = () => {
     router.push(`/company/job-posting`);
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-gray-500">Loading jobs...</p>
-      </div>
-    );
-  }
+  // Rely on the global loader; return nothing locally while initial data loads
+  if (!jobPost) return null;
 
   return (
     <div className="p-5 mb-3 max-h-screen overflow-y-auto">
@@ -161,7 +163,7 @@ export default function Page() {
           </div>
 
           <div className="flex-1">
-            <div className="flex flex-col rounded-md shadow-md p-3 max-h-[120vh]">
+            <div className="flex flex-col rounded-md shadow-md p-3 h-[1000px] max-h-[150vh]">
               {selectedJob ? (
                 <>
                   <JobDescriptionCard
@@ -169,6 +171,7 @@ export default function Page() {
                       onApply={false}
                       onEdit={true}
                       job={selectedJob}
+                      onUpdate={fetchJobs}
                       categories={allDepartment}
                       types={jobTypeList}
                       arrangements={arrangementList}
@@ -206,7 +209,7 @@ export default function Page() {
               <DialogTitle>{selectedJob?.title || ""}</DialogTitle>
             </DialogHeader>
             <div className="max-h-[70vh] overflow-y-auto">
-              {selectedJob && (
+                  {selectedJob && (
                 <div className="space-y-4">
                   <JobDescriptionCard size="md" onApply={false} onEdit={true} job={selectedJob} />
                   <ApplicationList applicants={applicants} isCompanyVerified={isCompanyVerified} />

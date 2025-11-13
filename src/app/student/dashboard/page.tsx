@@ -94,12 +94,9 @@ const StudentDashboardPage = () => {
     return () => clearInterval(interval);
   }, [session, update]);
 
+  // Let the global loader handle initial loading (session + child components)
   if (status === "loading") {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
+    return null;
   }
 
   if (!session) {

@@ -29,7 +29,7 @@ export interface BaseUser {
       transcript?: FileMeta[];
     }
   }
-  
+
   // Company
   export interface Company extends BaseUser {
     role: "company";

@@ -14,6 +14,7 @@ import StatusBreakdownChart from "./StatusBreakdownChart";
 import RecentApplicationsTable from "./RecentApplicationsTable";
 import TopJobCard from "./TopJobsCard";
 import { useEffect, useState } from "react";
+import { begin, done } from "@/lib/loaderSignal";
 import { IconType } from "react-icons/lib";
 import { CompanyVerificationBanner } from "@/components/CompanyVerificationBanner";
 import { Company } from "@/types/user";
@@ -119,6 +120,7 @@ const CompanyDashboardPage = () => {
 
 
     const fetchCompanyStats = async () => {
+      begin();
       try {
         const response = await fetch('/api/company/stats');
         const result = await parseJsonSafe(response);
@@ -138,12 +140,15 @@ const CompanyDashboardPage = () => {
         }
       } catch (error) {
         console.error("Error fetching company stats:", error);
+      } finally {
+        done();
       }
     };
 
 
     const fetchStatusBreakdown = async () => {
-      try {        
+      begin();
+      try {
         const response = await fetch('/api/company/analytics?type=status');
         const result = await parseJsonSafe(response);
         console.log("Status Breakdown API response:", result);
@@ -154,10 +159,13 @@ const CompanyDashboardPage = () => {
         }
       } catch (error) {
         console.error("Error fetching status breakdown data:", error);
+      } finally {
+        done();
       }
     };
 
     const fetchRecentApplications = async () => {
+      begin();
       try {
         const response = await fetch('/api/company/recent-applications?limit=5');
         const result = await parseJsonSafe(response);
@@ -169,10 +177,13 @@ const CompanyDashboardPage = () => {
         }
       } catch (error) {
         console.error("Error fetching recent applications data:", error);
+      } finally {
+        done();
       }
     };
 
-    const fetchTopJobs = async () => {
+      const fetchTopJobs = async () => {
+        begin();
       try {
         const response = await fetch('/api/company/top-jobs?limit=5');
         const result = await parseJsonSafe(response);
@@ -184,6 +195,8 @@ const CompanyDashboardPage = () => {
         }
       } catch (error) {
         console.error("Error fetching top jobs data:", error);
+      } finally {
+        done();
       }
     };
 
@@ -210,13 +223,9 @@ const CompanyDashboardPage = () => {
   }, []);
 
 
-  if (status === "loading") {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg">Loading...</div>
-      </div>
-    )
-  }
+  // Let the global loader handle initial navigation/loading. Return null here
+  // while session is loading so the global overlay remains visible.
+  if (status === "loading") return null;
 
   if (!session) {
     return (

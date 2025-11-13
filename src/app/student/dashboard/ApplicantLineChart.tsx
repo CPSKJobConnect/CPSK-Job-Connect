@@ -80,7 +80,7 @@ export default function ApplicantLineChart() {
         }}
       />
 
-      {loading && <div className="text-center mt-2 text-gray-500">Loading...</div>}
+  {/* Global loader handles page-level loading; internal loading state kept for visuals if needed */}
     </Card>
   );
 }
