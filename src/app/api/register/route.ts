@@ -154,7 +154,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Hash password (not needed for OAuth)
-    const hashedPassword = isOAuth ? null : await bcrypt.hash(validatedData.data.password, 12);
+    let hashedPassword: string | null = null;
+    if (!isOAuth) {
+      const dataWithPassword = validatedData.data as StudentData | CompanyData;
+      hashedPassword = await bcrypt.hash(dataWithPassword.password, 12);
+    }
 
     // Get role ID
     const roleRecord = await prisma.accountRole.findFirst({
