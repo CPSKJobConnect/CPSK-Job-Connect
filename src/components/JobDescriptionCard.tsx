@@ -289,17 +289,17 @@ const JobDescriptionCard = ({
           </>
         )}
 
-        <div className="absolute -bottom-6 left-4 bg-white p-2 rounded-md shadow-md">
+        <div className="absolute -bottom-6 left-4 bg-white p-2 rounded-md shadow-md w-[84px] h-[84px]">
           {isValidImageUrl(job.companyLogo) ? (
             <Image
               src={job.companyLogo}
               alt={job.companyName || "companyLogo"}
-              width={60}
-              height={60}
-              className="w-[100px] h-[100px] object-contain"
+              width={80}
+              height={80}
+              className="w-full h-full object-cover rounded-md"
             />
           ) : (
-            <div className="h-[60px] w-[60px] bg-gray-100 rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+            <div className="w-full h-full bg-gray-100 rounded-md flex items-center justify-center text-2xl font-medium text-gray-700">
               {job.companyName ? job.companyName.charAt(0).toUpperCase() : "C"}
             </div>
           )}
