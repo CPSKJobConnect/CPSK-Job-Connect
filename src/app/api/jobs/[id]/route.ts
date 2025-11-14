@@ -13,6 +13,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         company: { include: { account: true } },
         jobType: true,
         jobArrangement: true,
+        documents: true,
       },
     });
 
@@ -50,6 +51,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         qualification: job.qualifications.join("\n"),
       },
       skills: job.tags.map((tag: { name: string }) => tag.name),
+      documents: job.documents.map((doc: { name: string }) => doc.name),
       arrangement: job.jobArrangement.name,
       deadline: job.deadline ? job.deadline.toISOString() : null,
       status,

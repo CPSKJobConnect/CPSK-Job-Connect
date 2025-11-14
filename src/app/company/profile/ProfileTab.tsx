@@ -138,6 +138,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
         // Update session if logo or background was changed
         if (logoFile || backgroundFile) {
           await updateSession({
+            ...session,
             user: {
               ...session?.user,
               logoUrl: data.logoUrl,

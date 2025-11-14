@@ -138,14 +138,13 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
         const imageData = await imageRes.json();
 
         // Update session with new logoUrl
-        if (imageData.profile_url) {
-          await updateSession({
-            user: {
-              ...session?.user,
-              logoUrl: imageData.profile_url,
-            },
-          });
-        }
+        await updateSession({
+          ...session,
+          user: {
+            ...session?.user,
+            logoUrl: imageData.profile_url,
+          },
+        });
       }
 
       // Update other profile fields
