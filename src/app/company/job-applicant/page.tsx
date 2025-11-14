@@ -1,15 +1,15 @@
 "use client";
-import { IoMdAdd } from "react-icons/io";
-import AllJobPost from "./AllJobPost";
 import JobDescriptionCard from "@/components/JobDescriptionCard";
-import { FaRegFileAlt } from "react-icons/fa";
-import { MdTipsAndUpdates } from "react-icons/md";
-import React, { useState, useEffect } from "react";
-import { begin, done } from "@/lib/loaderSignal";
-import { useRouter } from "next/navigation";
-import { JobInfo } from "@/types/job";
-import ApplicationList from "./ApplicationList";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { begin, done } from "@/lib/loaderSignal";
+import { JobInfo } from "@/types/job";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { FaRegFileAlt } from "react-icons/fa";
+import { IoMdAdd } from "react-icons/io";
+import { MdTipsAndUpdates } from "react-icons/md";
+import AllJobPost from "./AllJobPost";
+import ApplicationList from "./ApplicationList";
 
 export default function Page() {
   const router = useRouter();

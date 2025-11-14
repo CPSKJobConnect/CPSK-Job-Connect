@@ -1,16 +1,16 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { begin, done } from "@/lib/loaderSignal";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { Student } from "@/types/user";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { begin, done } from "@/lib/loaderSignal";
 import { IoCallOutline, IoCameraOutline, IoIdCardOutline, IoMailOutline, IoPersonCircleOutline, IoSchoolOutline } from "react-icons/io5";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
 import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
-import { isValidImageUrl } from "@/lib/validateImageUrl";
 
 export default function StudentProfilePage() {
   const [student, setStudent] = useState<Student | null>(null);

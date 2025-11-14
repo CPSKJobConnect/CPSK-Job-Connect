@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { isValidImageUrl } from "@/lib/validateImageUrl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { LuPhone } from "react-icons/lu";

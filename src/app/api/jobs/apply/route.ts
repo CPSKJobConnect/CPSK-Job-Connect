@@ -1,6 +1,6 @@
-import { uploadDocument } from "@/lib/uploadDocument";
-import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
+import { prisma } from "@/lib/db";
+import { uploadDocument } from "@/lib/uploadDocument";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {

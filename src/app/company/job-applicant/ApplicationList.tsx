@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { isValidImageUrl } from "@/lib/validateImageUrl";
 import StudentInfoModal from "@/components/StudentInfoModal";
 import { toast } from "sonner";
 
@@ -85,10 +84,10 @@ const ApplicationList = ({ applicants, isCompanyVerified = true }: ApplicantList
         body: JSON.stringify({ status_id: newStatusId }),
       });
 
-      let result: any = null;
+      let result: { error?: string } | null = null;
       try {
         result = await response.json();
-      } catch (e) {
+      } catch {
         // ignore parse errors
       }
 

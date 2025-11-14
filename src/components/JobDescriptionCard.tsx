@@ -1,9 +1,7 @@
 "use client";
 
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { isValidImageUrl } from "@/lib/validateImageUrl";
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import EditJobCard from "./EditJobCard";
 import { validateForm } from "@/lib/validateJobForm";
 import { JobInfo, JobPostFormData } from "@/types/job";
 import Image from "next/image";
@@ -15,6 +13,7 @@ import { LiaMoneyCheckAltSolid } from "react-icons/lia";
 import { MdOutlinePeopleAlt } from "react-icons/md";
 import { RiDeleteBinFill } from "react-icons/ri";
 import { toast } from "sonner";
+import EditJobCard from "./EditJobCard";
 import { Button } from "./ui/button";
 
 
