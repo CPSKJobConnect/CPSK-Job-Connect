@@ -77,13 +77,14 @@ export default function StudentProfilePage() {
       toast.success("Profile image updated successfully");
 
       // Update the session with new logoUrl to refresh navbar
-      await updateSession({
-        ...session,
-        user: {
-          ...session?.user,
-          logoUrl: data.profile_url,
-        },
-      });
+      if (data.profile_url) {
+        await updateSession({
+          user: {
+            ...session?.user,
+            logoUrl: data.profile_url,
+          },
+        });
+      }
 
       await fetchStudentProfile();
     } catch (error) {

@@ -29,7 +29,6 @@ export async function GET() {
         company: { include: { account: true } },
         jobType: true,
         jobArrangement: true,
-        documents: true,
     },
     orderBy: { created_at: "desc" },
   });
@@ -61,7 +60,6 @@ export async function GET() {
             requirement: job.requirements.join("\n"),
             qualification: job.qualifications.join("\n"),
         },
-        documents: job.documents.map((doc) => doc.name),
       };
     });
 

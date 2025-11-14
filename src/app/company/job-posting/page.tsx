@@ -11,13 +11,7 @@ import { validateForm, validateDetail, validateDescription } from "@/lib/validat
 import { useRouter } from "next/navigation";
 import { CompanyVerificationBanner } from "@/components/CompanyVerificationBanner";
 import { Company } from "@/types/user";
-
-interface CompanyProps {
-  name: string;
-  logoUrl: string;
-  backgroundUrl: string;
-}
-
+import { useSession } from "next-auth/react";
 
 export default function Page() {
   const [formData, setFormData] = useState<JobPostFormData>(defaultJobPostForm);
@@ -28,8 +22,8 @@ export default function Page() {
   const [arrangements, setArrangements] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const router = useRouter();
-  const [company, setCompany] = useState<CompanyProps | null>(null);
   const [companyProfile, setCompanyProfile] = useState<Company | null>(null);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -42,14 +36,6 @@ export default function Page() {
         setTags(data.tags || []);
     };
     fetchFilters();
-
-    const fetchCompany = async () => {
-      const res = await fetch("/api/auth/session");
-      const data = await res.json();
-      console.log("Session data:", data);
-      setCompany(data.user || null)
-    };
-    fetchCompany();
 
     const fetchCompanyProfile = async () => {
       try {
@@ -65,33 +51,45 @@ export default function Page() {
     fetchCompanyProfile();
   }, []);
 
-  const previewJob = useMemo<JobInfo>(() => ({
-    title: formData.title,
-    companyName: company?.name || "Your Company",
-    companyLogo: company?.logoUrl || "/assets/images/companyLogo.png",
-    companyBg: company?.backgroundUrl || "/assets/images/companyBg.jpg",
-    category: formData.category,
-    location: formData.location,
-    arrangement: formData.arrangement,
-    salary: {
-      min: formData.salary.min,
-      max: formData.salary.max,
-    },
-    applied: 0,
-    type: formData.type,
-    skills: formData.skills,
-    description: {
-      overview: formData.description.overview,
-      responsibility: formData.description.responsibility,
-      requirement: formData.description.requirement,
-      qualification: formData.description.qualification,
-    },
-    id: "",
-    posted: "",
-    deadline: formData.deadline || "",
-    status: "",
-    documents: formData.documents,
-  }), [formData, company]);
+  const previewJob = useMemo<JobInfo>(() => {
+    console.log("Preview Job Data:", {
+      sessionStatus: status,
+      username: session?.user?.username,
+      logoUrl: session?.user?.logoUrl,
+      backgroundUrl: session?.user?.backgroundUrl,
+      companyProfileName: companyProfile?.name,
+      companyProfileLogo: companyProfile?.profile_url,
+      companyProfileBg: companyProfile?.bg_profile_url
+    });
+
+    return {
+      title: formData.title,
+      companyName: session?.user?.username || companyProfile?.name || "Your Company",
+      companyLogo: session?.user?.logoUrl || companyProfile?.profile_url || "/assets/images/companyLogo.png",
+      companyBg: session?.user?.backgroundUrl || companyProfile?.bg_profile_url || "/assets/images/companyBg.jpg",
+      category: formData.category,
+      location: formData.location,
+      arrangement: formData.arrangement,
+      salary: {
+        min: formData.salary.min,
+        max: formData.salary.max,
+      },
+      applied: 0,
+      type: formData.type,
+      skills: formData.skills,
+      description: {
+        overview: formData.description.overview,
+        responsibility: formData.description.responsibility,
+        requirement: formData.description.requirement,
+        qualification: formData.description.qualification,
+      },
+      id: "",
+      posted: "",
+      deadline: formData.deadline || "",
+      status: "",
+      documents: formData.documents,
+    };
+  }, [formData, session, companyProfile]);
   
   const handlePost = async () => {
     try {
