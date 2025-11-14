@@ -7,8 +7,9 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { LuPhone } from "react-icons/lu";
 import { MdOutlineMailOutline, MdOutlinePersonOutline } from "react-icons/md";
-import { RiExternalLinkLine } from "react-icons/ri";
+import { IoEyeOutline } from "react-icons/io5";
 import { toast } from "sonner";
+import { DocumentViewerModal } from "@/components/DocumentViewerModal";
 
 interface ApplicantInfo {
   applicant_id: string;
@@ -21,10 +22,18 @@ interface ApplicantInfo {
   year?: string;
   student_id?: string;
   documents: {
+    resume_id?: number | null;
     resume_url: string | null;
     resume_name?: string | null;
+    cv_id?: number | null;
+    cv_url: string | null;
+    cv_name?: string | null;
+    portfolio_id?: number | null;
     portfolio_url: string | null;
     portfolio_name?: string | null;
+    transcript_id?: number | null;
+    transcript_url: string | null;
+    transcript_name?: string | null;
   };
   applied_position: string;
   applied_at: Date | string;
@@ -40,6 +49,9 @@ interface ApplicantInfo {
 const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?: string }) => {
   const [applicantInfo, setApplicantInfo] = useState<ApplicantInfo | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isDocViewerOpen, setIsDocViewerOpen] = useState(false);
+  const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
+  const [selectedDocName, setSelectedDocName] = useState("");
 
   useEffect(() => {
     if (!applicant_id) return;
@@ -52,9 +64,13 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
         if (!response.ok) {
           const error = await response.json();
           console.error("Failed to fetch applicant info:", error);
-          toast.error("Failed to load applicant profile", {
-            description: error.error || "Unable to fetch applicant data"
-          });
+
+          // Don't show toast for 404 errors (application might have been deleted)
+          if (response.status !== 404) {
+            toast.error("Failed to load applicant profile", {
+              description: error.error || "Unable to fetch applicant data"
+            });
+          }
           return;
         }
 
@@ -80,6 +96,12 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
     fetchApplicantInfo();
   }, [applicant_id]);
 
+  const handleViewDocument = (docId: number, fileName: string) => {
+    setSelectedDocId(docId);
+    setSelectedDocName(fileName);
+    setIsDocViewerOpen(true);
+  };
+
   const baseStyle = "flex flex-row gap-1 bg-[#FD873E] text-white rounded-xl shadow-md hover:bg-[#FF9A50] hover:shadow-lg";
 
     const sizeStyle = {
@@ -102,7 +124,12 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
         </DialogHeader>
 
         {loading ? (
-          <p className="text-center text-gray-500">Loading applicant info...</p>
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+              <p className="text-gray-500">Loading applicant info...</p>
+            </div>
+          </div>
         ) : applicantInfo ? (
           <div className="flex flex-col gap-6">
             <div className="flex flex-row gap-6">
@@ -202,32 +229,78 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
 
             <div className="flex flex-col gap-2">
               <p className="text-md font-bold text-gray-800">Documents</p>
-              <div className="flex flex-row gap-6">
+              <div className="flex flex-wrap gap-2">
                 {applicantInfo.documents.resume_url ? (
-                  <a href={applicantInfo.documents.resume_url} target="_blank" rel="noopener noreferrer">
-                    <div className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F]">
-                      <RiExternalLinkLine className="w-5 h-5 mt-1"/>
-                      <p>Resume</p>
-                    </div>
-                  </a>
-                ) : (
-                  <div className="text-sm text-gray-500">No resume uploaded</div>
-                )}
-                {applicantInfo.documents.portfolio_url ? (
-                  <a href={applicantInfo.documents.portfolio_url} target="_blank" rel="noopener noreferrer">
-                    <div className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F]">
-                      <RiExternalLinkLine className="w-5 h-5 mt-1"/>
-                      <p>Portfolio</p>
-                    </div>
-                  </a>
+                  <button
+                    onClick={() => applicantInfo.documents.resume_id && handleViewDocument(applicantInfo.documents.resume_id, applicantInfo.documents.resume_name || "Resume")}
+                    disabled={!applicantInfo.documents.resume_id}
+                    className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <IoEyeOutline className="w-5 h-5"/>
+                    <p>View Resume</p>
+                  </button>
                 ) : null}
+
+                {applicantInfo.documents.cv_url ? (
+                  <button
+                    onClick={() => applicantInfo.documents.cv_id && handleViewDocument(applicantInfo.documents.cv_id, applicantInfo.documents.cv_name || "CV")}
+                    disabled={!applicantInfo.documents.cv_id}
+                    className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <IoEyeOutline className="w-5 h-5"/>
+                    <p>View CV</p>
+                  </button>
+                ) : null}
+
+                {applicantInfo.documents.portfolio_url ? (
+                  <button
+                    onClick={() => applicantInfo.documents.portfolio_id && handleViewDocument(applicantInfo.documents.portfolio_id, applicantInfo.documents.portfolio_name || "Portfolio")}
+                    disabled={!applicantInfo.documents.portfolio_id}
+                    className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <IoEyeOutline className="w-5 h-5"/>
+                    <p>View Portfolio</p>
+                  </button>
+                ) : null}
+
+                {applicantInfo.documents.transcript_url ? (
+                  <button
+                    onClick={() => applicantInfo.documents.transcript_id && handleViewDocument(applicantInfo.documents.transcript_id, applicantInfo.documents.transcript_name || "Transcript")}
+                    disabled={!applicantInfo.documents.transcript_id}
+                    className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <IoEyeOutline className="w-5 h-5"/>
+                    <p>View Transcript</p>
+                  </button>
+                ) : null}
+
+                {!applicantInfo.documents.resume_url &&
+                 !applicantInfo.documents.cv_url &&
+                 !applicantInfo.documents.portfolio_url &&
+                 !applicantInfo.documents.transcript_url && (
+                  <div className="text-sm text-gray-500">No documents uploaded</div>
+                )}
               </div>
             </div>
           </div>
         ) : (
-          <p className="text-center text-gray-500">No applicant information available</p>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <MdOutlinePersonOutline className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-gray-700 font-medium">No applicant information available</p>
+            <p className="text-gray-500 text-sm mt-1">This application may have been deleted or is no longer accessible</p>
+          </div>
         )}
       </DialogContent>
+
+      <DocumentViewerModal
+        isOpen={isDocViewerOpen}
+        onClose={() => setIsDocViewerOpen(false)}
+        documentId={selectedDocId}
+        fileName={selectedDocName}
+        apiEndpoint="company"
+      />
     </Dialog>
   );
 };

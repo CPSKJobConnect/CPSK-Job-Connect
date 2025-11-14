@@ -75,7 +75,21 @@ export async function GET(
             file_name: true
           }
         },
+        cvDocument: {
+          select: {
+            id: true,
+            file_path: true,
+            file_name: true
+          }
+        },
         portfolioDocument: {
+          select: {
+            id: true,
+            file_path: true,
+            file_name: true
+          }
+        },
+        transcriptDocument: {
           select: {
             id: true,
             file_path: true,
@@ -111,7 +125,9 @@ export async function GET(
     );
 
     let resumeUrl = null;
+    let cvUrl = null;
     let portfolioUrl = null;
+    let transcriptUrl = null;
 
     if (application.resumeDocument) {
       const { data } = await supabase.storage
@@ -120,11 +136,25 @@ export async function GET(
       resumeUrl = data?.signedUrl || null;
     }
 
+    if (application.cvDocument) {
+      const { data } = await supabase.storage
+        .from("documents")
+        .createSignedUrl(application.cvDocument.file_path, 3600);
+      cvUrl = data?.signedUrl || null;
+    }
+
     if (application.portfolioDocument) {
       const { data } = await supabase.storage
         .from("documents")
         .createSignedUrl(application.portfolioDocument.file_path, 3600);
       portfolioUrl = data?.signedUrl || null;
+    }
+
+    if (application.transcriptDocument) {
+      const { data } = await supabase.storage
+        .from("documents")
+        .createSignedUrl(application.transcriptDocument.file_path, 3600);
+      transcriptUrl = data?.signedUrl || null;
     }
 
     const applicantInfo = {
@@ -138,10 +168,18 @@ export async function GET(
       year: application.student.year,
       student_id: application.student.student_id,
       documents: {
+        resume_id: application.resumeDocument?.id || null,
         resume_url: resumeUrl,
         resume_name: application.resumeDocument?.file_name || null,
+        cv_id: application.cvDocument?.id || null,
+        cv_url: cvUrl,
+        cv_name: application.cvDocument?.file_name || null,
+        portfolio_id: application.portfolioDocument?.id || null,
         portfolio_url: portfolioUrl,
-        portfolio_name: application.portfolioDocument?.file_name || null
+        portfolio_name: application.portfolioDocument?.file_name || null,
+        transcript_id: application.transcriptDocument?.id || null,
+        transcript_url: transcriptUrl,
+        transcript_name: application.transcriptDocument?.file_name || null
       },
       applied_position: application.jobPost.jobName,
       applied_at: application.applied_at,

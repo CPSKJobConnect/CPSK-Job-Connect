@@ -193,7 +193,7 @@ const ApplicationList = ({ applicants, isCompanyVerified = true }: ApplicantList
                     </div>
 
                     <div className="flex-shrink-0">
-                      <StudentInfoModal applicant_id={student.applicant_id.toString()} />
+                      <StudentInfoModal applicant_id={student.application_id.toString()} />
                     </div>
                   </div>
                 </div>

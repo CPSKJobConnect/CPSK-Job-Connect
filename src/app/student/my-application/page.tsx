@@ -8,6 +8,7 @@ import { IoBriefcaseOutline, IoLocationOutline } from "react-icons/io5";
 import { MdOutlineTimer } from "react-icons/md";
 import { toast } from "sonner";
 import ApplicationSearchBar from "./ApplicationSearchBar";
+import { DocumentViewerModal } from "@/components/DocumentViewerModal";
 
 interface Application {
   id: number;
@@ -69,6 +70,9 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
   const [applications, setApplications] = useState<Application[]>([]);
   const [filteredApplications, setFilteredApplications] = useState<Application[]>(applications);
   const [recentApplied, setRecentApplied] = useState<{ jobId: number; appliedAt: number } | null>(null);
+  const [isDocViewerOpen, setIsDocViewerOpen] = useState(false);
+  const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
+  const [selectedDocName, setSelectedDocName] = useState("");
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -127,6 +131,12 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
+
+  const handleViewDocument = (docId: number, fileName: string) => {
+    setSelectedDocId(docId);
+    setSelectedDocName(fileName);
+    setIsDocViewerOpen(true);
+  };
 
   // Rely on global loader; render nothing locally until data arrives
   if (!applications) return null;
@@ -229,24 +239,36 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
                       <p className="text-xs text-gray-500 mb-2">Submitted documents:</p>
                       <div className="flex flex-col md:flex-row gap-2 text-xs">
                         {application.documents.resume && (
-                          <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal">
+                          <button
+                            onClick={() => handleViewDocument(application.documents.resume!.id, application.documents.resume!.file_name)}
+                            className="bg-blue-50 text-blue-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal hover:bg-blue-100 transition-colors cursor-pointer text-left"
+                          >
                             Resume: {application.documents.resume.file_name}
-                          </span>
+                          </button>
                         )}
                         {application.documents.portfolio && (
-                          <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal">
+                          <button
+                            onClick={() => handleViewDocument(application.documents.portfolio!.id, application.documents.portfolio!.file_name)}
+                            className="bg-purple-50 text-purple-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal hover:bg-purple-100 transition-colors cursor-pointer text-left"
+                          >
                             Portfolio: {application.documents.portfolio.file_name}
-                          </span>
+                          </button>
                         )}
                         {application.documents.cv && (
-                          <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal">
+                          <button
+                            onClick={() => handleViewDocument(application.documents.cv!.id, application.documents.cv!.file_name)}
+                            className="bg-purple-50 text-purple-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal hover:bg-purple-100 transition-colors cursor-pointer text-left"
+                          >
                             CV: {application.documents.cv.file_name}
-                          </span>
+                          </button>
                         )}
                         {application.documents.transcript && (
-                          <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal">
+                          <button
+                            onClick={() => handleViewDocument(application.documents.transcript!.id, application.documents.transcript!.file_name)}
+                            className="bg-purple-50 text-purple-700 px-2 py-1 rounded truncate max-w-[200px] md:max-w-none md:overflow-visible md:whitespace-normal hover:bg-purple-100 transition-colors cursor-pointer text-left"
+                          >
                             Transcript: {application.documents.transcript.file_name}
-                          </span>
+                          </button>
                         )}
                       </div>
                     </div>
@@ -257,6 +279,14 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
             })}
           </div>
         )}
+
+      <DocumentViewerModal
+        isOpen={isDocViewerOpen}
+        onClose={() => setIsDocViewerOpen(false)}
+        documentId={selectedDocId}
+        fileName={selectedDocName}
+        apiEndpoint="students"
+      />
     </div>
   );
 }

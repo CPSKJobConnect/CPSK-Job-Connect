@@ -78,7 +78,7 @@ export default function Page() {
     const fetchStudent = async () => {
       try {
         begin();
-        const res = await fetch(`/api/students/[id]`);
+        const res = await fetch(`/api/students/profile`);
         if (!res.ok) {
           console.error("Failed to fetch student");
           return;
@@ -295,50 +295,120 @@ export default function Page() {
                 <IoDocumentTextOutline  className="w-7 h-7" />
                 <p className="text-lg font-semibold text-gray-800">Documents</p>
             </div>
+            {/* Required Documents Notice */}
+            {job.documents && job.documents.length > 0 && (
+              <div className="px-2 md:px-6 mb-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+                <p className="text-sm font-semibold text-blue-900">Required Documents</p>
+                <p className="text-xs text-blue-800 mt-1">
+                  This job requires: {job.documents.map((doc) => doc.toUpperCase()).join(", ")}
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 px-2 md:px-6 py-3">
-              <DocumentUploadSection
-                title="Resume"
-                description="Upload your most recent resume or select from previously uploaded files"
-                uploadedFile={uploadedResume}
-                setUploadedFile={setUploadedResume}
-                selectedFile={selectedResume}
-                setSelectedFile={setSelectedResume}
-                existingFiles={existingResume}
-                acceptedTypes={["pdf", "doc", "docx"]}
-              />
+              {/* Dynamically render only required documents */}
+              {job.documents && job.documents.length > 0 ? (
+                <>
+                  {job.documents.includes("resume") && (
+                    <DocumentUploadSection
+                      title="Resume"
+                      description="Upload your most recent resume or select from previously uploaded files"
+                      uploadedFile={uploadedResume}
+                      setUploadedFile={setUploadedResume}
+                      selectedFile={selectedResume}
+                      setSelectedFile={setSelectedResume}
+                      existingFiles={existingResume}
+                      acceptedTypes={["pdf", "doc", "docx"]}
+                    />
+                  )}
 
-              <DocumentUploadSection
-                title="CV"
-                description="Upload your CV or select from previously uploaded files"
-                uploadedFile={uploadedCv}
-                setUploadedFile={setUploadedCv}
-                selectedFile={selectedCv}
-                setSelectedFile={setSelectedCv}
-                existingFiles={existingCv}
-                acceptedTypes={["pdf", "doc", "docx"]}
-              />
+                  {job.documents.includes("cv") && (
+                    <DocumentUploadSection
+                      title="CV"
+                      description="Upload your CV or select from previously uploaded files"
+                      uploadedFile={uploadedCv}
+                      setUploadedFile={setUploadedCv}
+                      selectedFile={selectedCv}
+                      setSelectedFile={setSelectedCv}
+                      existingFiles={existingCv}
+                      acceptedTypes={["pdf", "doc", "docx"]}
+                    />
+                  )}
 
-              <DocumentUploadSection
-                title="Portfolio"
-                description="Upload your portfolio or select from previously uploaded files"
-                uploadedFile={uploadedPortfolio}
-                setUploadedFile={setUploadedPortfolio}
-                selectedFile={selectedPortfolio}
-                setSelectedFile={setSelectedPortfolio}
-                existingFiles={existingPortfolio}
-                acceptedTypes={["pdf", "doc", "docx"]}
-              />
+                  {job.documents.includes("portfolio") && (
+                    <DocumentUploadSection
+                      title="Portfolio"
+                      description="Upload your portfolio or select from previously uploaded files"
+                      uploadedFile={uploadedPortfolio}
+                      setUploadedFile={setUploadedPortfolio}
+                      selectedFile={selectedPortfolio}
+                      setSelectedFile={setSelectedPortfolio}
+                      existingFiles={existingPortfolio}
+                      acceptedTypes={["pdf", "doc", "docx"]}
+                    />
+                  )}
 
-              <DocumentUploadSection
-                title="Transcript"
-                description="Upload your academic transcript (PDF preferred)"
-                uploadedFile={uploadedTranscript}
-                setUploadedFile={setUploadedTranscript}
-                selectedFile={selectedTranscript}
-                setSelectedFile={setSelectedTranscript}
-                existingFiles={existingTranscript}
-                acceptedTypes={["pdf", "doc", "docx"]}
-              />
+                  {job.documents.includes("transcript") && (
+                    <DocumentUploadSection
+                      title="Transcript"
+                      description="Upload your academic transcript (PDF preferred)"
+                      uploadedFile={uploadedTranscript}
+                      setUploadedFile={setUploadedTranscript}
+                      selectedFile={selectedTranscript}
+                      setSelectedFile={setSelectedTranscript}
+                      existingFiles={existingTranscript}
+                      acceptedTypes={["pdf", "doc", "docx"]}
+                    />
+                  )}
+                </>
+              ) : (
+                // Fallback: if no documents specified, show all (backward compatibility)
+                <>
+                  <DocumentUploadSection
+                    title="Resume"
+                    description="Upload your most recent resume or select from previously uploaded files"
+                    uploadedFile={uploadedResume}
+                    setUploadedFile={setUploadedResume}
+                    selectedFile={selectedResume}
+                    setSelectedFile={setSelectedResume}
+                    existingFiles={existingResume}
+                    acceptedTypes={["pdf", "doc", "docx"]}
+                  />
+
+                  <DocumentUploadSection
+                    title="CV"
+                    description="Upload your CV or select from previously uploaded files"
+                    uploadedFile={uploadedCv}
+                    setUploadedFile={setUploadedCv}
+                    selectedFile={selectedCv}
+                    setSelectedFile={setSelectedCv}
+                    existingFiles={existingCv}
+                    acceptedTypes={["pdf", "doc", "docx"]}
+                  />
+
+                  <DocumentUploadSection
+                    title="Portfolio"
+                    description="Upload your portfolio or select from previously uploaded files"
+                    uploadedFile={uploadedPortfolio}
+                    setUploadedFile={setUploadedPortfolio}
+                    selectedFile={selectedPortfolio}
+                    setSelectedFile={setSelectedPortfolio}
+                    existingFiles={existingPortfolio}
+                    acceptedTypes={["pdf", "doc", "docx"]}
+                  />
+
+                  <DocumentUploadSection
+                    title="Transcript"
+                    description="Upload your academic transcript (PDF preferred)"
+                    uploadedFile={uploadedTranscript}
+                    setUploadedFile={setUploadedTranscript}
+                    selectedFile={selectedTranscript}
+                    setSelectedFile={setSelectedTranscript}
+                    existingFiles={existingTranscript}
+                    acceptedTypes={["pdf", "doc", "docx"]}
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -386,22 +456,31 @@ export default function Page() {
                   <section className="mb-4">
                     <h3 className="text-sm font-semibold text-gray-700">Documents</h3>
                     <div className="mt-2 text-sm text-gray-600 space-y-1">
-                      <div>
-                        <p className="text-xs font-medium">Resume</p>
-                        <p className="text-xs">{uploadedResume ? uploadedResume.name : selectedResume ? selectedResume.name || `File #${selectedResume.id}` : "(none)"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium">Portfolio</p>
-                        <p className="text-xs">{uploadedPortfolio ? uploadedPortfolio.name : selectedPortfolio ? selectedPortfolio.name || `File #${selectedPortfolio.id}` : "(none)"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium">CV</p>
-                        <p className="text-xs">{uploadedCv ? uploadedCv.name : selectedCv ? selectedCv.name || `File #${selectedCv.id}` : "(none)"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium">Transcript</p>
-                        <p className="text-xs">{uploadedTranscript ? uploadedTranscript.name : selectedTranscript ? selectedTranscript.name || `File #${selectedTranscript.id}` : "(none)"}</p>
-                      </div>
+                      {/* Show only required documents in confirmation */}
+                      {(!job.documents || job.documents.length === 0 || job.documents.includes("resume")) && (
+                        <div>
+                          <p className="text-xs font-medium">Resume {job.documents?.includes("resume") && <span className="text-red-500">*</span>}</p>
+                          <p className="text-xs">{uploadedResume ? uploadedResume.name : selectedResume ? selectedResume.name || `File #${selectedResume.id}` : "(none)"}</p>
+                        </div>
+                      )}
+                      {(!job.documents || job.documents.length === 0 || job.documents.includes("cv")) && (
+                        <div>
+                          <p className="text-xs font-medium">CV {job.documents?.includes("cv") && <span className="text-red-500">*</span>}</p>
+                          <p className="text-xs">{uploadedCv ? uploadedCv.name : selectedCv ? selectedCv.name || `File #${selectedCv.id}` : "(none)"}</p>
+                        </div>
+                      )}
+                      {(!job.documents || job.documents.length === 0 || job.documents.includes("portfolio")) && (
+                        <div>
+                          <p className="text-xs font-medium">Portfolio {job.documents?.includes("portfolio") && <span className="text-red-500">*</span>}</p>
+                          <p className="text-xs">{uploadedPortfolio ? uploadedPortfolio.name : selectedPortfolio ? selectedPortfolio.name || `File #${selectedPortfolio.id}` : "(none)"}</p>
+                        </div>
+                      )}
+                      {(!job.documents || job.documents.length === 0 || job.documents.includes("transcript")) && (
+                        <div>
+                          <p className="text-xs font-medium">Transcript {job.documents?.includes("transcript") && <span className="text-red-500">*</span>}</p>
+                          <p className="text-xs">{uploadedTranscript ? uploadedTranscript.name : selectedTranscript ? selectedTranscript.name || `File #${selectedTranscript.id}` : "(none)"}</p>
+                        </div>
+                      )}
                     </div>
                   </section>
                 </section>
