@@ -1,4 +1,5 @@
 "use client";
+
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { validateForm } from "@/lib/validateJobForm";

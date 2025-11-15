@@ -6,8 +6,9 @@ import { FileMeta } from "@/types/file";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { IoDocumentTextOutline, IoTrashOutline } from "react-icons/io5";
+import { IoDocumentTextOutline, IoTrashOutline, IoEyeOutline } from "react-icons/io5";
 import FileUpload from "@/components/FileUpload";
+import { DocumentViewerModal } from "@/components/DocumentViewerModal";
 
 interface DocumentsTabProps {
   student: Student;
@@ -21,9 +22,10 @@ interface DocumentSectionProps {
   onUpload: (file: File, docTypeId: number) => void;
   onDelete: (docId: number) => void;
   uploading: boolean;
+  onViewDocument: (docId: number, fileName: string) => void;
 }
 
-function DocumentSection({ title, documents, docTypeId, onUpload, onDelete, uploading }: DocumentSectionProps) {
+function DocumentSection({ title, documents, docTypeId, onUpload, onDelete, uploading, onViewDocument }: DocumentSectionProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Auto-upload when file is selected
@@ -71,14 +73,24 @@ function DocumentSection({ title, documents, docTypeId, onUpload, onDelete, uplo
                   </p>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDelete(doc.id)}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <IoTrashOutline className="w-5 h-5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onViewDocument(doc.id, doc.name)}
+                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                >
+                  <IoEyeOutline className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(doc.id)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <IoTrashOutline className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
           ))
         )}
@@ -89,6 +101,9 @@ function DocumentSection({ title, documents, docTypeId, onUpload, onDelete, uplo
 
 export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
   const [uploading, setUploading] = useState(false);
+  const [isDocViewerOpen, setIsDocViewerOpen] = useState(false);
+  const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
+  const [selectedDocName, setSelectedDocName] = useState("");
 
   const handleUpload = async (file: File, docTypeId: number) => {
     setUploading(true);
@@ -165,63 +180,83 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
     }
   };
 
+  const handleViewDocument = (docId: number, fileName: string) => {
+    setSelectedDocId(docId);
+    setSelectedDocName(fileName);
+    setIsDocViewerOpen(true);
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>My Documents</CardTitle>
-        <CardDescription>Upload and manage your resumes, CVs, portfolios, and transcripts</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-8">
-        <DocumentSection
-          title="Resume"
-          documents={student.documents.resume}
-          docTypeId={1}
-          onUpload={handleUpload}
-          onDelete={handleDelete}
-          uploading={uploading}
-        />
-
-        <div className="border-t pt-8">
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>My Documents</CardTitle>
+          <CardDescription>Upload and manage your resumes, CVs, portfolios, and transcripts</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-8">
           <DocumentSection
-            title="CV"
-            documents={student.documents.cv}
-            docTypeId={2}
+            title="Resume"
+            documents={student.documents.resume}
+            docTypeId={1}
             onUpload={handleUpload}
             onDelete={handleDelete}
             uploading={uploading}
+            onViewDocument={handleViewDocument}
           />
-        </div>
 
-        <div className="border-t pt-8">
-          <DocumentSection
-            title="Portfolio"
-            documents={student.documents.portfolio}
-            docTypeId={3}
-            onUpload={handleUpload}
-            onDelete={handleDelete}
-            uploading={uploading}
-          />
-        </div>
+          <div className="border-t pt-8">
+            <DocumentSection
+              title="CV"
+              documents={student.documents.cv}
+              docTypeId={2}
+              onUpload={handleUpload}
+              onDelete={handleDelete}
+              uploading={uploading}
+              onViewDocument={handleViewDocument}
+            />
+          </div>
 
-        <div className="border-t pt-8">
-          {student.student_status === "ALUMNI" && student.verification_status === "REJECTED" && (
-            <div className="mb-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
-              <p className="text-sm font-semibold text-orange-900">Re-application Required</p>
-              <p className="text-sm text-orange-800 mt-1">
-                Upload a new transcript to re-apply for verification. Your status will be reset to PENDING and admins will be notified.
-              </p>
-            </div>
-          )}
-          <DocumentSection
-            title="Transcript"
-            documents={student.documents.transcript || []}
-            docTypeId={4}
-            onUpload={handleUpload}
-            onDelete={handleDelete}
-            uploading={uploading}
-          />
-        </div>
-      </CardContent>
-    </Card>
+          <div className="border-t pt-8">
+            <DocumentSection
+              title="Portfolio"
+              documents={student.documents.portfolio}
+              docTypeId={3}
+              onUpload={handleUpload}
+              onDelete={handleDelete}
+              uploading={uploading}
+              onViewDocument={handleViewDocument}
+            />
+          </div>
+
+          <div className="border-t pt-8">
+            {student.student_status === "ALUMNI" && student.verification_status === "REJECTED" && (
+              <div className="mb-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
+                <p className="text-sm font-semibold text-orange-900">Re-application Required</p>
+                <p className="text-sm text-orange-800 mt-1">
+                  Upload a new transcript to re-apply for verification. Your status will be reset to PENDING and admins will be notified.
+                </p>
+              </div>
+            )}
+            <DocumentSection
+              title="Transcript"
+              documents={student.documents.transcript || []}
+              docTypeId={4}
+              onUpload={handleUpload}
+              onDelete={handleDelete}
+              uploading={uploading}
+              onViewDocument={handleViewDocument}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <DocumentViewerModal
+        isOpen={isDocViewerOpen}
+        onClose={() => setIsDocViewerOpen(false)}
+        documentId={selectedDocId}
+        fileName={selectedDocName}
+        apiEndpoint="students"
+      />
+    </>
   );
 }

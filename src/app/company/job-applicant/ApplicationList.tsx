@@ -31,6 +31,7 @@ interface Status {
 interface ApplicantListProps {
   applicants: Applicant[];
   isCompanyVerified?: boolean;
+  loading?: boolean;
 }
 
 type StatusType = "pending" | "reviewed" | "interview" | "offered" | "rejected";
@@ -43,7 +44,7 @@ const statusColors: Record<StatusType, string> = {
   rejected: "bg-red-100 text-red-800",
 };
 
-const ApplicationList = ({ applicants, isCompanyVerified = true }: ApplicantListProps) => {
+const ApplicationList = ({ applicants, isCompanyVerified = true, loading = false }: ApplicantListProps) => {
   const [statusList, setStatusList] = useState<Status[]>([]);
   const [statusMap, setStatusMap] = useState<Record<number, { id: number; type: StatusType }>>({});
   const [avatarError, setAvatarError] = useState<Record<string, boolean>>({});
@@ -116,7 +117,28 @@ const ApplicationList = ({ applicants, isCompanyVerified = true }: ApplicantList
     <div className="flex flex-col rounded-md bg-white border border-gray-100 w-full gap-4 p-4 h-[350px]">
       <p className="text-lg font-semibold text-gray-700">Student Applications</p>
       <div className="overflow-y-auto">
-        {applicants.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col gap-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 md:gap-0 shadow-sm rounded-lg p-3 border border-gray-100 bg-white animate-pulse"
+              >
+                <div className="flex flex-row gap-4 items-center min-w-0">
+                  <div className="w-14 h-14 flex-shrink-0 rounded-full bg-gray-200"></div>
+                  <div className="flex flex-col gap-2">
+                    <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                    <div className="h-3 w-48 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+                <div className="flex flex-row items-center gap-3 w-full md:w-auto mt-2 md:mt-0 justify-end md:justify-start">
+                  <div className="w-32 h-8 bg-gray-200 rounded-full"></div>
+                  <div className="w-20 h-8 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : applicants.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 text-gray-500">
           <p className="text-center text-sm">No applicants yet</p>
         </div>
@@ -193,7 +215,7 @@ const ApplicationList = ({ applicants, isCompanyVerified = true }: ApplicantList
                     </div>
 
                     <div className="flex-shrink-0">
-                      <StudentInfoModal applicant_id={student.applicant_id.toString()} />
+                      <StudentInfoModal applicant_id={student.application_id.toString()} />
                     </div>
                   </div>
                 </div>

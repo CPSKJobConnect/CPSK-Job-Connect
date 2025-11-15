@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useEffect } from "react";
 import {
   Dialog,
@@ -9,6 +9,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FileMeta } from "@/types/file";
+import { IoEyeOutline } from "react-icons/io5";
+import { DocumentViewerModal } from "@/components/DocumentViewerModal";
 
 
 interface DocumentSelectorProps {
@@ -21,13 +23,24 @@ interface DocumentSelectorProps {
 
 
 const DocumentSelector = (props: DocumentSelectorProps) => {
+    const [isDocViewerOpen, setIsDocViewerOpen] = useState(false);
+    const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
+    const [selectedDocName, setSelectedDocName] = useState("");
+
     useEffect(() => {
         console.log(props.selectedFile)
       }, [props.selectedFile]);
-      
+
 
   const handleSelect = (file: FileMeta) => {
     props.onFileSelect(file);
+  };
+
+  const handleViewDocument = (e: React.MouseEvent, docId: number, fileName: string) => {
+    e.stopPropagation();
+    setSelectedDocId(docId);
+    setSelectedDocName(fileName);
+    setIsDocViewerOpen(true);
   };
 
   return (
@@ -53,14 +66,29 @@ const DocumentSelector = (props: DocumentSelectorProps) => {
               props.selectedFile && 'name' in props.selectedFile && props.selectedFile.name === file.name
                 ? "bg-[#F3FEFA]"
                 : "border-gray-200"
-            }`}
+            } flex items-center justify-between`}
           >
-            <p className="text-sm">{file.name}</p>
+            <p className="text-sm flex-1">{file.name}</p>
+            <button
+              onClick={(e) => handleViewDocument(e, file.id, file.name)}
+              className="p-1 hover:bg-blue-100 rounded-md text-blue-600 transition-colors"
+              title="Preview document"
+            >
+              <IoEyeOutline className="w-5 h-5" />
+            </button>
           </div>
-          
+
           ))}
         </div>
       </DialogContent>
+
+      <DocumentViewerModal
+        isOpen={isDocViewerOpen}
+        onClose={() => setIsDocViewerOpen(false)}
+        documentId={selectedDocId}
+        fileName={selectedDocName}
+        apiEndpoint="students"
+      />
     </Dialog>
   );
 };
