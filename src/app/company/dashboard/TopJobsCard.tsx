@@ -8,7 +8,7 @@ const statusColor: Record<string, string> = {
     closed: "bg-red-100 text-red-800",
 };
 
-export default function TopJobCard({ jobs, loading }: TopJobsCardProps) {
+export default function TopJobCard({ jobs }: TopJobsCardProps) {
     const items = Array.isArray(jobs) ? jobs : [];
 
     return (

@@ -15,6 +15,7 @@ import {
   Image as ImageIcon,
   Loader2
 } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -136,17 +137,24 @@ export function DocumentViewerModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-6 py-4 border-b">
-          <div className="flex items-start justify-between gap-8 pr-8">
-            <div className="flex items-center gap-3">
-              {getFileIcon()}
-              <div>
-                <DialogTitle className="text-lg font-semibold">{fileName}</DialogTitle>
+          <div className="flex items-start justify-between gap-4 pr-8">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="flex-shrink-0">
+                {getFileIcon()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <DialogTitle
+                  className="text-lg font-semibold truncate"
+                  title={fileName}
+                >
+                  {fileName}
+                </DialogTitle>
                 <p className="text-sm text-muted-foreground mt-1">
                   {fileType.toUpperCase()} Document
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-shrink-0">
               <Button
                 variant="outline"
                 size="sm"
@@ -188,11 +196,14 @@ export function DocumentViewerModal({
                   title={fileName}
                 />
               ) : fileType === "image" ? (
-                <div className="h-full w-full flex items-center justify-center p-6">
-                  <img
+                <div className="h-full w-full flex items-center justify-center p-6 relative">
+                  <Image
                     src={documentUrl}
                     alt={fileName}
-                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                    fill
+                    className="object-contain rounded-lg shadow-lg"
+                    sizes="(max-width: 95vw) 95vw, 90vh"
+                    priority
                   />
                 </div>
               ) : (

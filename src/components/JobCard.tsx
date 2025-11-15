@@ -37,6 +37,7 @@ const JobCard = (job: JobCardProps) => {
   const [isSaved, setIsSaved] = useState(job.info.isSaved || false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const [hasLogoError, setHasLogoError] = useState(false);
 
   const isClosed = job.info.status === "expire";
 
@@ -158,10 +159,10 @@ const JobCard = (job: JobCardProps) => {
               alt={job.info.companyName || "companyLogo"}
               width={60}
               height={60}
-              className="w-[60px] h-[60px] object-contain bg-white translate-y-1 shadow-md rounded-md"
+              className="w-[60px] h-[60px] object-cover bg-white translate-y-1 shadow-md rounded-md"
             />
           ) : (
-            <div className="w-[60px] h-[60px] bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+            <div className="w-[60px] h-[60px] bg-gray-100 translate-y-1 shadow-md rounded-md flex items-center justify-center text-lg font-medium text-gray-700">
               {job.info.companyName ? job.info.companyName.charAt(0).toUpperCase() : "C"}
             </div>
           )}
@@ -225,7 +226,7 @@ const JobCard = (job: JobCardProps) => {
       <div className="flex gap-4 py-2">
         <div className="flex gap-1 min-w-0 items-center">
           <div className="py-1"><IoLocationOutline /></div>
-          <span className="truncate text-sm text-gray-700 max-w-[250px]" title={job.info.location}>{job.info.location}</span>
+          <span className="truncate text-sm text-gray-700 max-w-[120px]" title={job.info.location}>{job.info.location}</span>
         </div>
         <div className="flex gap-1 min-w-0 items-center">
           <div className="py-1"><MdOutlineTimer /></div>

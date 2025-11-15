@@ -39,7 +39,10 @@ export async function GET(request: NextRequest) {
         },
         applicationStatus: true,
         resumeDocument: true,
-        portfolioDocument: true
+        portfolioDocument: true,
+        cvDocument: true,
+        transcriptDocument: true,
+
       },
       orderBy: {
         applied_at: 'desc'
@@ -78,7 +81,17 @@ export async function GET(request: NextRequest) {
           id: app.portfolioDocument.id,
           file_name: app.portfolioDocument.file_name,
           file_path: app.portfolioDocument.file_path
-        } : null
+        } : null,
+        cv: app.cvDocument ? {
+          id: app.cvDocument.id,
+          file_name: app.cvDocument.file_name,
+          file_path: app.cvDocument.file_path
+        } : null,
+        transcript: app.transcriptDocument ? {
+          id: app.transcriptDocument.id,
+          file_name: app.transcriptDocument.file_name,
+          file_path: app.transcriptDocument.file_path
+        } : null,
       }
     }));
 

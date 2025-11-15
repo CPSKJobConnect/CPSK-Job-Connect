@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { begin, done } from "@/lib/loaderSignal";
 import { useParams, useRouter } from "next/navigation"
 import { JobInfo } from "@/types/job";
 import { IoLocationOutline } from "react-icons/io5";
@@ -39,50 +40,66 @@ export default function Page() {
     const [job, setJob] = useState<JobInfo>();
     const [student, setStudent] = useState<Student>();
     const [existingResume, setResumeExisting] = useState<FileMeta[] | []>([]);
+    const [existingCv, setCvExisting] = useState<FileMeta[] | []>([]);
     const [existingPortfolio, setPortfolioExisting] = useState<FileMeta[] | []>([]);
+    const [existingTranscript, setTranscriptExisting] = useState<FileMeta[] | []>([]);
+
     const [uploadedResume, setUploadedResume] = useState<File | null>(null);
     const [selectedResume, setSelectedResume] = useState<FileMeta | null>(null);
+    const [uploadedCv, setUploadedCv] = useState<File | null>(null);
+    const [selectedCv, setSelectedCv] = useState<FileMeta | null>(null);
     const [uploadedPortfolio, setUploadedPortfolio] = useState<File | null>(null);
     const [selectedPortfolio, setSelectedPortfolio] = useState<FileMeta | null>(null);
+    const [uploadedTranscript, setUploadedTranscript] = useState<File | null>(null);
+    const [selectedTranscript, setSelectedTranscript] = useState<FileMeta | null>(null);
     const [alreadyApplied, setAlreadyApplied] = useState(false);
 
     useEffect(() => {
         if (!params?.id) return;
 
-        const fetchJob = async () => {
-            try {
-                const res = await fetch(`/api/jobs/${params.id}`);
-                if (!res.ok) {
-                    router.push("/jobs");
-                    return;
-                }
-                const data: JobInfo = await res.json();
-                setJob(data);
-            }   catch (error) {
-                console.error("Failed to fetch job:", error);
-                router.push("/jobs");
-            }
-        };
+    const fetchJob = async () => {
+      try {
+        begin();
+        const res = await fetch(`/api/jobs/${params.id}`);
+        if (!res.ok) {
+          router.push("/jobs");
+          return;
+        }
+        const data: JobInfo = await res.json();
+        setJob(data);
+      }   catch (error) {
+        console.error("Failed to fetch job:", error);
+        router.push("/jobs");
+      } finally {
+        done();
+      }
+    };
 
-        const fetchStudent = async () => {
-            try {
-                const res = await fetch(`/api/students/[id]`);
-                if (!res.ok) {
-                    console.error("Failed to fetch student");
-                    return;
-                }
-                const data: Student = await res.json();
-                setStudent(data);
-                setResumeExisting(data.documents.resume);
-                setPortfolioExisting(data.documents.portfolio);
+    const fetchStudent = async () => {
+      try {
+        begin();
+        const res = await fetch(`/api/students/[id]`);
+        if (!res.ok) {
+          console.error("Failed to fetch student");
+          return;
+        }
+        const data: Student = await res.json();
+        setStudent(data);
+        // API returns grouped documents; fall back to empty arrays when absent
+        setResumeExisting(data.documents?.resume || []);
+        setCvExisting(data.documents?.cv || []);
+        setPortfolioExisting(data.documents?.portfolio || []);
+        setTranscriptExisting(data.documents?.transcript || []);
 
-            } catch (error) {
-                console.error("Failed to fetch student:", error);
-            }
-        };
+      } catch (error) {
+        console.error("Failed to fetch student:", error);
+      } finally {
+        done();
+      }
+    };
 
-        fetchJob();
-        fetchStudent();
+    fetchJob();
+    fetchStudent();
     },  [params.id, router]);
 
     useEffect(() => {
@@ -104,13 +121,34 @@ export default function Page() {
 
     checkApplication();
   }, [student, job]);
+
     const handleSubmit = async () => {
-    if (!uploadedResume && !selectedResume) {
-      toast.error("Resume Missing", "Please select or upload your Resume before submitting.");
-      return;
-    }
-    if (!uploadedPortfolio && !selectedPortfolio) {
-      toast.error("Portfolio Missing", "Please select or upload your Portfolio before submitting.");
+    const requiredRaw: string[] = job?.documents && job.documents.length ? job.documents : [];
+
+    const required = requiredRaw.map((r) => (r || "").toString().trim().toLowerCase());
+
+    const hasDoc = (key: string) => {
+      switch (key) {
+        case "resume":
+          return !!(uploadedResume || selectedResume);
+        case "cv":
+          return !!(uploadedCv || selectedCv);
+        case "portfolio":
+          return !!(uploadedPortfolio || selectedPortfolio);
+        case "transcript":
+          return !!(uploadedTranscript || selectedTranscript);
+        default:
+          return true;
+      }
+    };
+
+    const missing = required.filter((req) => !hasDoc(req));
+    if (missing.length > 0) {
+      const display = missing.map((m) => {
+        if (m.toLowerCase() === "cv") return "CV";
+        return m.charAt(0).toUpperCase() + m.slice(1);
+      });
+      toast.error(`You must upload all required documents: ${display.join(", ")}`);
       return;
     }
 
@@ -129,10 +167,22 @@ export default function Page() {
       formData.append("resumeId", String(selectedResume.id));
     }
 
+    if (uploadedCv) {
+      formData.append("cv", uploadedCv);
+    } else if (selectedCv) {
+      formData.append("cvId", String(selectedCv.id));
+    }
+
     if (uploadedPortfolio) {
       formData.append("portfolio", uploadedPortfolio);
     } else if (selectedPortfolio) {
       formData.append("portfolioId", String(selectedPortfolio.id));
+    }
+
+    if (uploadedTranscript) {
+      formData.append("transcript", uploadedTranscript);
+    } else if (selectedTranscript) {
+      formData.append("transcriptId", String(selectedTranscript.id));
     }
 
     try {
@@ -142,6 +192,7 @@ export default function Page() {
       });
 
       const data = await res.json();
+      console.log("form: ", data);
 
       if (!res.ok) {
         console.error(data);
@@ -150,7 +201,17 @@ export default function Page() {
       }
 
       toast.success("Application submitted!", "Your job application has been sent successfully.");
-      router.push("/student/profile");
+      try {
+        const marker = {
+          jobId: job.id,
+          appliedAt: Date.now(),
+        };
+        localStorage.setItem("recentlyApplied", JSON.stringify(marker));
+      } catch (err) {
+        console.warn("Could not write recentlyApplied marker", err);
+      }
+
+      router.push("/student/my-application");
     } catch (err) {
       toast.error("An error occurred while submitting your application.", "Please try again later.");
     }
@@ -234,30 +295,50 @@ export default function Page() {
                 <IoDocumentTextOutline  className="w-7 h-7" />
                 <p className="text-lg font-semibold text-gray-800">Documents</p>
             </div>
-            <div className="flex flex-col md:flex-row gap-6 px-2 md:px-6 py-3">
-              <div className="w-full md:w-1/2 min-w-0">
-                <DocumentUploadSection
-                  title="Resume"
-                  description="Upload your most recent resume or select from previously uploaded files"
-                  uploadedFile={uploadedResume}
-                  setUploadedFile={setUploadedResume}
-                  selectedFile={selectedResume}
-                  setSelectedFile={setSelectedResume}
-                  existingFiles={existingResume}
-                />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 px-2 md:px-6 py-3">
+              <DocumentUploadSection
+                title="Resume"
+                description="Upload your most recent resume or select from previously uploaded files"
+                uploadedFile={uploadedResume}
+                setUploadedFile={setUploadedResume}
+                selectedFile={selectedResume}
+                setSelectedFile={setSelectedResume}
+                existingFiles={existingResume}
+                acceptedTypes={["pdf", "doc", "docx"]}
+              />
 
-              <div className="w-full md:w-1/2 min-w-0">
-                <DocumentUploadSection
-                  title="Portfolio"
-                  description="Upload your portfolio or select from previously uploaded files"
-                  uploadedFile={uploadedPortfolio}
-                  setUploadedFile={setUploadedPortfolio}
-                  selectedFile={selectedPortfolio}
-                  setSelectedFile={setSelectedPortfolio}
-                  existingFiles={existingPortfolio}
-                />
-              </div>
+              <DocumentUploadSection
+                title="CV"
+                description="Upload your CV or select from previously uploaded files"
+                uploadedFile={uploadedCv}
+                setUploadedFile={setUploadedCv}
+                selectedFile={selectedCv}
+                setSelectedFile={setSelectedCv}
+                existingFiles={existingCv}
+                acceptedTypes={["pdf", "doc", "docx"]}
+              />
+
+              <DocumentUploadSection
+                title="Portfolio"
+                description="Upload your portfolio or select from previously uploaded files"
+                uploadedFile={uploadedPortfolio}
+                setUploadedFile={setUploadedPortfolio}
+                selectedFile={selectedPortfolio}
+                setSelectedFile={setSelectedPortfolio}
+                existingFiles={existingPortfolio}
+                acceptedTypes={["pdf", "doc", "docx"]}
+              />
+
+              <DocumentUploadSection
+                title="Transcript"
+                description="Upload your academic transcript (PDF preferred)"
+                uploadedFile={uploadedTranscript}
+                setUploadedFile={setUploadedTranscript}
+                selectedFile={selectedTranscript}
+                setSelectedFile={setSelectedTranscript}
+                existingFiles={existingTranscript}
+                acceptedTypes={["pdf", "doc", "docx"]}
+              />
             </div>
           </div>
         </div>
@@ -312,6 +393,14 @@ export default function Page() {
                       <div>
                         <p className="text-xs font-medium">Portfolio</p>
                         <p className="text-xs">{uploadedPortfolio ? uploadedPortfolio.name : selectedPortfolio ? selectedPortfolio.name || `File #${selectedPortfolio.id}` : "(none)"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium">CV</p>
+                        <p className="text-xs">{uploadedCv ? uploadedCv.name : selectedCv ? selectedCv.name || `File #${selectedCv.id}` : "(none)"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium">Transcript</p>
+                        <p className="text-xs">{uploadedTranscript ? uploadedTranscript.name : selectedTranscript ? selectedTranscript.name || `File #${selectedTranscript.id}` : "(none)"}</p>
                       </div>
                     </div>
                   </section>

@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 interface ApplicantInfo {
   applicant_id: string;
-  profile_url: string;
+  profile_url: string | null;
   firstname: string;
   lastname: string;
   email: string;
@@ -60,8 +60,13 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
         }
 
         const result = await response.json();
+        console.log("Fetched applicant info:", result);
         if (result.success) {
-          setApplicantInfo(result.data);
+          const data = result.data;
+          if (data && (data.profile_url === "" || data.profile_url === "/default-avatar.png" || data.profile_url === "null")) {
+            data.profile_url = null;
+          }
+          setApplicantInfo(data);
         }
       } catch (error) {
         console.error("Error fetching applicant info:", error);

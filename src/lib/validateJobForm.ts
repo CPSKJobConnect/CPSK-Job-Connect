@@ -33,6 +33,8 @@ export const validateDetail = (formData: JobPostFormData) => {
         errors.push("Salary values must be numbers");
       } else if (min > max) {
         errors.push("Min Salary should be less than Max Salary");
+      } else if (min < 0 || max < 0) {
+        errors.push("Salary values cannot be negative");
       }
     }
 

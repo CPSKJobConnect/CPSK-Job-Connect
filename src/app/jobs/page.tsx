@@ -27,6 +27,7 @@ export default function Page() {
   const selectedJob = selectedCardId !== null ? jobToShow[selectedCardId] : null;
   const [role, setRole] = useState<string | null>(null);
   const [isCompanyView, setIsCompanyView] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -41,36 +42,72 @@ export default function Page() {
     };
     
     const fetchJobsAndFilters = async () => {
+      // Signal global loader that we're starting async work
       try {
-        // Include userId in the query to get saved status for bookmarked jobs
-        const userId = session?.user?.id;
-        const jobsUrl = userId ? `/api/jobs?userId=${userId}` : "/api/jobs";
+        // Use dynamic import to avoid hydration issues when loaderSignal isn't present
+        const { begin, done } = await import("@/lib/loaderSignal");
+        begin();
+        try {
+          // Include userId in the query to get saved status for bookmarked jobs
+          const userId = session?.user?.id;
+          const jobsUrl = userId ? `/api/jobs?userId=${userId}` : "/api/jobs";
 
-        const resJobs = await fetch(jobsUrl);
-        const dataJobs = await resJobs.json();
+          const resJobs = await fetch(jobsUrl);
+          const dataJobs = await resJobs.json();
 
-        const now = Date.now();
-        const activeJobs = Array.isArray(dataJobs)
-          ? dataJobs.filter((j: JobInfo) => {
-              if (!j.deadline) return true;
-              const d = Date.parse(j.deadline);
-              if (isNaN(d)) return true;
-              return d >= now;
-            })
-          : [];
-        setJobData(activeJobs);
+          const now = Date.now();
+          const activeJobs = Array.isArray(dataJobs)
+            ? dataJobs.filter((j: JobInfo) => {
+                if (!j.deadline) return true;
+                const d = Date.parse(j.deadline);
+                if (isNaN(d)) return true;
+                return d >= now;
+              })
+            : [];
+          setJobData(activeJobs);
 
-        const resFilters = await fetch("/api/jobs/filter");
-        const dataFilters = await resFilters.json();
-        console.log("Fetched filter info:", dataFilters);
-        setFilterInfo(dataFilters);
+          const resFilters = await fetch("/api/jobs/filter");
+          const dataFilters = await resFilters.json();
+          console.log("Fetched filter info:", dataFilters);
+          setFilterInfo(dataFilters);
+        } finally {
+          done();
+        }
       } catch (err) {
-        console.error("Error fetching jobs or filters:", err);
-      }
-    };
+        // If loaderSignal import fails for some reason, fallback to non-signalled fetch
+        try {
+          const userId = session?.user?.id;
+          const jobsUrl = userId ? `/api/jobs?userId=${userId}` : "/api/jobs";
 
-    fetchUserRole();
-    fetchJobsAndFilters();
+          const resJobs = await fetch(jobsUrl);
+          const dataJobs = await resJobs.json();
+
+          const now = Date.now();
+          const activeJobs = Array.isArray(dataJobs)
+            ? dataJobs.filter((j: JobInfo) => {
+                if (!j.deadline) return true;
+                const d = Date.parse(j.deadline);
+                if (isNaN(d)) return true;
+                return d >= now;
+              })
+            : [];
+          setJobData(activeJobs);
+
+          const resFilters = await fetch("/api/jobs/filter");
+          const dataFilters = await resFilters.json();
+          console.log("Fetched filter info:", dataFilters);
+          setFilterInfo(dataFilters);
+        } catch (err2) {
+          console.error("Error fetching jobs or filters (fallback):", err2);
+        }
+        } finally {
+          // mark page-level loaded so we only show "Not Found Jobs" after first fetch
+          setIsLoaded(true);
+        }
+      };
+
+      fetchUserRole();
+      fetchJobsAndFilters();
 
     if (typeof window !== "undefined") {
       const m = window.matchMedia("(max-width: 1024px)");
@@ -150,14 +187,14 @@ export default function Page() {
             {selectedJob ? (
               role === 'company' ? (
                 <JobDescriptionCard
-                  size="md"
+                  size="lg"
                   onApply={false}
                   onEdit={false}
                   job={selectedJob}
                 />
               ): (
                 <JobDescriptionCard
-                  size="md"
+                  size="lg"
                   onApply={true}
                   onEdit={false}
                   job={selectedJob}
@@ -193,14 +230,14 @@ export default function Page() {
                 {selectedJob !== null && (
                   role === 'company' ? (
                     <JobDescriptionCard
-                      size="md"
+                      size="lg"
                       onApply={false}
                       onEdit={false}
                       job={selectedJob}
                     />
                   ): (
                     <JobDescriptionCard
-                      size="md"
+                      size="lg"
                       onApply={true}
                       onEdit={false}
                       job={selectedJob}
@@ -212,14 +249,16 @@ export default function Page() {
           </Dialog>
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-4 py-44">
-          <div className="bg-[#ABE9D6] rounded-full w-[60px] h-[60px] flex items-center justify-center">
-            <IoMdSearch className="text-xl text-[#2BA17C]" />
+        isLoaded ? (
+          <div className="flex flex-col items-center gap-4 py-44">
+            <div className="bg-[#ABE9D6] rounded-full w-[60px] h-[60px] flex items-center justify-center">
+              <IoMdSearch className="text-xl text-[#2BA17C]" />
+            </div>
+            <p className="font-bold">
+              Not Found Jobs
+            </p>
           </div>
-          <p className="font-bold">
-            Not Found Jobs
-          </p>
-        </div>
+        ) : null
       )}
     </div>
   );
