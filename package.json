@@ -9,7 +9,7 @@
     "lint": "eslint . --ext .ts,.tsx",
     "lint:css": "stylelint \"**/*.{css,scss}\" --fix",
     "type-check": "tsc --noEmit",
-    "test": "NODE_NO_WARNINGS=1 jest",
+    "test": "jest",
     "test:coverage": "jest --coverage",
     "db:backup": "ts-node --project tsconfig.node.json scripts/backup-database.ts",
     "db:restore": "ts-node --project tsconfig.node.json scripts/restore-database.ts",
