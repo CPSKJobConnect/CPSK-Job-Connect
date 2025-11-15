@@ -1,7 +1,9 @@
-import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { fetchJobPost } from "./fetch.logic";
+import { updateJobPost } from "./update.logic";
+import { deleteJobPost } from "./delete.logic";
 
 // GET - Fetch single job post
 export async function GET(
@@ -16,43 +18,13 @@ export async function GET(
 
     // Check if user is admin (using session role)
     const userRole = (session.user as any).role?.toLowerCase();
+    // console.log("🔍 User role:", userRole);
 
     if (userRole !== "admin") {
-      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { id } = await params;
-    const jobPost = await prisma.jobPost.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        company: {
-          include: {
-            account: {
-              select: {
-                email: true
-              }
-            }
-          }
-        },
-        jobType: true,
-        jobArrangement: true,
-        category: true,
-        tags: true,
-        applications: {
-          include: {
-            student: {
-              include: {
-                account: {
-                  select: {
-                    email: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    });
+    const jobPost = await fetchJobPost({ id: params.id });
 
     if (!jobPost) {
       return NextResponse.json({ error: "Job post not found" }, { status: 404 });
@@ -79,66 +51,19 @@ export async function PUT(
 
     // Check if user is admin (using session role)
     const userRole = (session.user as any).role?.toLowerCase();
+    // console.log("🔍 User role:", userRole);
 
     if (userRole !== "admin") {
-      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { id } = await params;
     const data = await request.json();
-    const {
-      jobName,
-      location,
-      aboutRole,
-      requirements,
-      qualifications,
-      minSalary,
-      maxSalary,
-      deadline,
-      isPublished,
-      jobTypeId,
-      jobArrangementId,
-      categoryId,
-      tagIds
-    } = data;
+    const jobPost = await updateJobPost({ id: params.id }, data);
 
-    // First, disconnect existing tags
-    await prisma.jobPost.update({
-      where: { id: parseInt(id) },
-      data: {
-        tags: {
-          set: []
-        }
-      }
-    });
-
-    const jobPost = await prisma.jobPost.update({
-      where: { id: parseInt(id) },
-      data: {
-        jobName,
-        location,
-        aboutRole,
-        requirements,
-        qualifications,
-        min_salary: minSalary,
-        max_salary: maxSalary,
-        deadline: new Date(deadline),
-        is_Published: isPublished,
-        job_arrangement_id: jobArrangementId,
-        job_type_id: jobTypeId,
-        job_category_id: categoryId,
-        tags: {
-          connect: tagIds.map((id: number) => ({ id }))
-        }
-      },
-      include: {
-        company: true,
-        jobType: true,
-        jobArrangement: true,
-        category: true,
-        tags: true
-      }
-    });
+    if (!jobPost) {
+      return NextResponse.json({ error: "Job post not found" }, { status: 404 });
+    }
 
     return NextResponse.json(jobPost, { status: 200 });
 
@@ -161,17 +86,15 @@ export async function DELETE(
 
     // Check if user is admin (using session role)
     const userRole = (session.user as any).role?.toLowerCase();
+    // console.log("🔍 User role:", userRole);
 
     if (userRole !== "admin") {
-      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { id } = await params;
-    await prisma.jobPost.delete({
-      where: { id: parseInt(id) }
-    });
+    const deleted = await deleteJobPost({ id: params.id });
 
-    return NextResponse.json({ message: "Job post deleted successfully" }, { status: 200 });
+    return NextResponse.json({ message: "Successfully deleted", deleted }, { status: 200 });
 
   } catch (error) {
     console.error("API error:", error);

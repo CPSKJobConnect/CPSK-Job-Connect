@@ -50,6 +50,13 @@ export async function GET(request: Request) {
       whereClause.emailVerified = status === "active" ? { not: null } : null;
     }
 
+    // Exclude pending companies from Manage Users
+    whereClause.NOT = {
+      company: {
+        registration_status: "pending"
+      }
+    };
+
     const [accounts, totalCount] = await Promise.all([
       prisma.account.findMany({
         where: whereClause,
@@ -102,7 +109,6 @@ export async function GET(request: Request) {
       if (account.student) {
         user.profile = {
           phone: account.student.phone,
-          location: account.student.faculty, // Using faculty as location for students
           department: account.student.faculty,
           studentId: account.student.student_id
         };
