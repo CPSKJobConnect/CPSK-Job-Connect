@@ -1,10 +1,16 @@
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
-// GET single job
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+// =========================
+// GET SINGLE JOB
+// =========================
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const jobId = Number(params.id);
+    const { id } = await context.params; // FIX
+    const jobId = Number(id);
 
     const job = await prisma.jobPost.findUnique({
       where: { id: jobId },
@@ -18,13 +24,16 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       },
     });
 
-    if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    if (!job) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
 
-    const status = !job.is_Published
-      ? "draft"
-      : job.deadline && new Date(job.deadline) < new Date()
-      ? "expire"
-      : "active";
+    const status =
+      !job.is_Published
+        ? "draft"
+        : job.deadline && new Date(job.deadline) < new Date()
+        ? "expire"
+        : "active";
 
     return NextResponse.json({
       id: job.id,
@@ -55,20 +64,31 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-// DELETE job
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+// =========================
+// DELETE JOB
+// =========================
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const jobId = Number(params.id);
+    const { id } = await context.params; // FIX
+    const jobId = Number(id);
 
     const job = await prisma.jobPost.findUnique({
       where: { id: jobId },
       include: { company: true },
     });
 
-    if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    if (!job) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
 
-    // TODO: check ownership using session if needed
-    await prisma.jobPost.delete({ where: { id: jobId } });
+    // Ownership validation could be added here
+
+    await prisma.jobPost.delete({
+      where: { id: jobId },
+    });
 
     return NextResponse.json({ message: "Job deleted successfully" });
   } catch (err) {
@@ -77,14 +97,25 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   }
 }
 
-// PATCH / update job
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+// =========================
+// PATCH / UPDATE JOB
+// =========================
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const jobId = Number(params.id);
+    const { id } = await context.params; // FIX
+    const jobId = Number(id);
     const body = await request.json();
 
-    const existingJob = await prisma.jobPost.findUnique({ where: { id: jobId } });
-    if (!existingJob) return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    const existingJob = await prisma.jobPost.findUnique({
+      where: { id: jobId },
+    });
+
+    if (!existingJob) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
 
     const updatedJob = await prisma.jobPost.update({
       where: { id: jobId },
@@ -95,16 +126,27 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         max_salary: body.max_salary ?? existingJob.max_salary,
         aboutRole: body.description?.overview ?? existingJob.aboutRole,
         responsibilities: body.description?.responsibility ?? existingJob.responsibilities,
+
         requirements: body.description?.requirement
-          ? body.description.requirement.split("\n").map((line: string) => line.trim()).filter(Boolean)
+          ? body.description.requirement
+              .split("\n")
+              .map((x: string) => x.trim())
+              .filter(Boolean)
           : existingJob.requirements,
+
         qualifications: body.description?.qualification
-          ? body.description.qualification.split("\n").map((line: string) => line.trim()).filter(Boolean)
+          ? body.description.qualification
+              .split("\n")
+              .map((x: string) => x.trim())
+              .filter(Boolean)
           : existingJob.qualifications,
       },
     });
 
-    return NextResponse.json({ message: "Job updated successfully", job: updatedJob });
+    return NextResponse.json({
+      message: "Job updated successfully",
+      job: updatedJob,
+    });
   } catch (err) {
     console.error("PATCH /api/company/jobs/[id] error:", err);
     return NextResponse.json({ error: "Failed to update job" }, { status: 500 });

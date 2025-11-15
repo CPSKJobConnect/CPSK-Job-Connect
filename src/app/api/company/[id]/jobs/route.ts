@@ -1,15 +1,19 @@
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
+
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
-    const companyId = Number(id); // id from the route
+    const { id } = await params; // ← Required fix
+    const companyId = Number(id);
 
-    // Prisma query using correct field name: company_id
+    if (isNaN(companyId)) {
+      return NextResponse.json({ error: "Invalid company ID" }, { status: 400 });
+    }
+
     const jobs = await prisma.jobPost.findMany({
       where: { company_id: companyId },
       include: {
@@ -22,9 +26,8 @@ export async function GET(
       },
     });
 
-    // Map the jobs to match JobDescriptionCard expected format
-    const mappedJobs = jobs.map((job) => ({
-      id: job.id.toString(),
+    const mapped = jobs.map((job) => ({
+      id: String(job.id),
       title: job.jobName,
       category: job.category?.name ?? "",
       location: job.location,
@@ -35,16 +38,14 @@ export async function GET(
       deadline: job.deadline.toISOString(),
       status: !job.is_Published
         ? "draft"
-        : job.deadline && new Date(job.deadline) < new Date()
+        : new Date(job.deadline) < new Date()
         ? "expire"
         : "active",
       skills: job.tags.map((t) => t.name),
       applied: job.applications.length,
-
       companyName: job.company.name,
-      companyLogo: job.company.account?.logoUrl || "", // default empty string
-      companyBg: job.company.account?.backgroundUrl || "",
-
+      companyLogo: job.company.account?.logoUrl ?? "",
+      companyBg: job.company.account?.backgroundUrl ?? "",
       description: {
         overview: job.aboutRole ?? "",
         responsibility: job.responsibilities ?? "-",
@@ -53,10 +54,10 @@ export async function GET(
       },
     }));
 
-    return NextResponse.json(mappedJobs);
+    return NextResponse.json(mapped);
   } catch (error) {
-    console.error("GET /api/company/[id]/jobs error:", error);
-    // return empty array instead of 500 to avoid frontend errors
-    return NextResponse.json([]);
+    console.error("GET /api/company/[id]/jobs", error);
+    return NextResponse.json([], { status: 500 });
   }
 }
+
