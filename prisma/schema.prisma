@@ -33,13 +33,13 @@ model Account {
   logoUrl               String?
   accountRole           AccountRole?   @relation(fields: [role], references: [id])
   company               Company?
+  verifiedCompanies     Company[]      @relation("VerifiedCompanies")
   documents             Document[]
   receivedNotifications Notification[] @relation("NotificationReceiver")
   sentNotifications     Notification[] @relation("NotificationSender")
   reports               Report[]
   student               Student?       @relation("StudentAccount")
   verifiedStudents      Student[]      @relation("VerifiedStudents")
-  verifiedCompanies     Company[]      @relation("VerifiedCompanies")
   sessions              Session[]
 
   @@unique([provider, providerAccountId])
@@ -64,13 +64,13 @@ model Application {
   resume_id          Int?
   cv_id              Int?
   transcript_id      Int?
+  cvDocument         Document?         @relation("CvDocument", fields: [cv_id], references: [id])
   jobPost            JobPost           @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
   portfolioDocument  Document?         @relation("PortfolioDocument", fields: [portfolio_id], references: [id])
   resumeDocument     Document?         @relation("ResumeDocument", fields: [resume_id], references: [id])
-  cvDocument         Document?         @relation("CvDocument", fields: [cv_id], references: [id])
-  transcriptDocument Document?         @relation("TranscriptDocument", fields: [transcript_id], references: [id])
   applicationStatus  ApplicationStatus @relation(fields: [status], references: [id])
   student            Student           @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  transcriptDocument Document?         @relation("TranscriptDocument", fields: [transcript_id], references: [id])
 
   @@unique([student_id, job_post_id])
   @@index([job_post_id])
@@ -112,9 +112,9 @@ model Document {
   file_path              String
   created_at             DateTime      @default(now())
   file_name              String
+  cvApplications         Application[] @relation("CvDocument")
   portfolioApplications  Application[] @relation("PortfolioDocument")
   resumeApplications     Application[] @relation("ResumeDocument")
-  cvApplications         Application[] @relation("CvDocument")
   transcriptApplications Application[] @relation("TranscriptDocument")
   account                Account       @relation(fields: [account_id], references: [id], onDelete: Cascade)
   documentType           DocumentType  @relation(fields: [doc_type_id], references: [id])
@@ -182,10 +182,10 @@ model JobType {
 model Notification {
   id         Int      @id @default(autoincrement())
   account_id Int
-  sender_id  Int?
   message    String
-  is_read    Boolean  @default(false)
   created_at DateTime @default(now())
+  is_read    Boolean  @default(false)
+  sender_id  Int?
   account    Account  @relation("NotificationReceiver", fields: [account_id], references: [id], onDelete: Cascade)
   sender     Account? @relation("NotificationSender", fields: [sender_id], references: [id])
 

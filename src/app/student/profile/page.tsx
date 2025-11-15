@@ -1,17 +1,16 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { begin, done } from "@/lib/loaderSignal";
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { Student } from "@/types/user";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { IoCallOutline, IoCameraOutline, IoIdCardOutline, IoMailOutline, IoPersonCircleOutline, IoSchoolOutline } from "react-icons/io5";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
-import ApplicationsTab from "./ApplicationsTab";
 import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
-import { isValidImageUrl } from "@/lib/validateImageUrl";
 
 export default function StudentProfilePage() {
   const [student, setStudent] = useState<Student | null>(null);
@@ -21,6 +20,7 @@ export default function StudentProfilePage() {
   const { data: session, update: updateSession } = useSession();
 
   const fetchStudentProfile = async () => {
+    begin();
     try {
       // Session-based endpoint doesn't need ID parameter
       const res = await fetch("/api/students/profile");
@@ -34,6 +34,7 @@ export default function StudentProfilePage() {
       console.error("Failed to fetch student profile:", error);
       toast.error("Error loading profile");
     } finally {
+      done();
       setLoading(false);
     }
   };
@@ -76,13 +77,14 @@ export default function StudentProfilePage() {
       toast.success("Profile image updated successfully");
 
       // Update the session with new logoUrl to refresh navbar
-      await updateSession({
-        ...session,
-        user: {
-          ...session?.user,
-          logoUrl: data.profile_url,
-        },
-      });
+      if (data.profile_url) {
+        await updateSession({
+          user: {
+            ...session?.user,
+            logoUrl: data.profile_url,
+          },
+        });
+      }
 
       await fetchStudentProfile();
     } catch (error) {
@@ -98,15 +100,23 @@ export default function StudentProfilePage() {
 
   useEffect(() => {
     fetchStudentProfile();
+
+    // Refresh profile when page becomes visible (e.g., after switching tabs or navigating back)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchStudentProfile();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
+  // Rely on global loader for initial load; render nothing locally while fetching
+  if (!student) return null;
 
   if (!student) {
     return (
@@ -192,14 +202,18 @@ export default function StudentProfilePage() {
             </div>
             <div className="mt-3">
               <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                student.verification_status === "APPROVED"
+                student.verification_status === "APPROVED" && student.email_verified
                   ? "bg-green-500/30 backdrop-blur-sm"
+                  : student.verification_status === "APPROVED" && student.student_status === "ALUMNI" && !student.email_verified
+                  ? "bg-blue-500/30 backdrop-blur-sm"
                   : student.verification_status === "PENDING"
                   ? "bg-yellow-500/30 backdrop-blur-sm"
                   : "bg-red-500/30 backdrop-blur-sm"
               }`}>
-                {student.verification_status === "APPROVED"
+                {student.verification_status === "APPROVED" && student.email_verified
                   ? "Verified Student"
+                  : student.verification_status === "APPROVED" && student.student_status === "ALUMNI" && !student.email_verified
+                  ? "Email Verification Required"
                   : student.verification_status === "PENDING"
                   ? "Verification Pending"
                   : "Verification Rejected"}
@@ -211,10 +225,9 @@ export default function StudentProfilePage() {
 
       {/* Tabs */}
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-8">
+        <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="applications">Applications</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -225,9 +238,6 @@ export default function StudentProfilePage() {
           <DocumentsTab student={student} onUpdate={fetchStudentProfile} />
         </TabsContent>
 
-        <TabsContent value="applications">
-          <ApplicationsTab studentId={student.id} />
-        </TabsContent>
       </Tabs>
     </div>
   );

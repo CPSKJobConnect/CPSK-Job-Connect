@@ -35,26 +35,26 @@ export default function ApplicantTrendChart() {
     return null;
   }
 
-  const fetchTrend = async (period: "week" | "month" | "year") => {
-    setLoading(true);
-    try {
-      const resp = await fetch(`/api/company/analytics?type=trend&period=${period}`);
-      const result = await parseJsonSafe(resp);
-      if (result?.success) {
-        setData(result.data?.trend ?? []);
-      } else {
-        console.error("Failed to fetch application trend data:", result?.error);
-        setData([]);
-      }
-    } catch (err) {
-      console.error("Error fetching trend data:", err);
-      setData([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchTrend = async (period: "week" | "month" | "year") => {
+      setLoading(true);
+      try {
+        const resp = await fetch(`/api/company/analytics?type=trend&period=${period}`);
+        const result = await parseJsonSafe(resp);
+        if (result?.success) {
+          setData(result.data?.trend ?? []);
+        } else {
+          console.error("Failed to fetch application trend data:", result?.error);
+          setData([]);
+        }
+      } catch (err) {
+        console.error("Error fetching trend data:", err);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchTrend(trendPeriod);
   }, [trendPeriod]);
 

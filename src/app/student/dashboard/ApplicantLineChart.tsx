@@ -3,7 +3,7 @@
 import { LineChart } from "@mantine/charts";
 import { Card, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
-import { mockApplicantLine } from "@public/data/mockStudentStat";
+import { useSession } from "next-auth/react";
 
 interface ApplicantLineProps {
   date: string;
@@ -13,14 +13,50 @@ interface ApplicantLineProps {
 export default function ApplicantLineChart() {
   const [data, setData] = useState<ApplicantLineProps[]>([]);
   const [loading, setLoading] = useState(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setData(mockApplicantLine);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    if (!session?.user?.id) return;
+
+    const fetchApplicants = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/students/${session.user.id}/statistics/applied`
+        );
+
+        if (!res.ok) {
+          throw new Error(`API error: ${res.status}`);
+        }
+
+        const json: ApplicantLineProps[] = await res.json();
+
+        const aggregated = Object.values(
+          json.reduce((acc: Record<string, ApplicantLineProps>, cur) => {
+            const existing = acc[cur.date];
+            if (existing) {
+              existing.applicants += cur.applicants;
+            } else {
+              acc[cur.date] = { ...cur };
+            }
+            return acc;
+          }, {})
+        );
+
+        aggregated.sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+
+        setData(aggregated);
+      } catch (err) {
+        console.error("Error fetching applicant data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplicants();
+  }, [session?.user?.id]);
 
   return (
     <Card shadow="md" radius="lg" p="lg" className="w-full">
@@ -44,7 +80,7 @@ export default function ApplicantLineChart() {
         }}
       />
 
-      {loading && <div className="text-center mt-2 text-gray-500">Loading...</div>}
+  {/* Global loader handles page-level loading; internal loading state kept for visuals if needed */}
     </Card>
   );
 }

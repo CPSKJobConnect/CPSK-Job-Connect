@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import "@mantine/charts/styles.css";
+import ClientLayout from "./ClientLayout";
 import FloatingNotification from "@/components/FloatingNotification";
 
 const poppins = Poppins({
@@ -30,7 +31,7 @@ export default function RootLayout({
         <MantineProvider>
           <Toaster richColors closeButton position="top-right" />
           <AuthProvider>
-            {children}
+            <ClientLayout>{children}</ClientLayout>
             <FloatingNotification />
           </AuthProvider>
         </MantineProvider>

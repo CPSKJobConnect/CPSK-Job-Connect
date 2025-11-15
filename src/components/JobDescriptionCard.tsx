@@ -1,5 +1,5 @@
 "use client";
-
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { validateForm } from "@/lib/validateJobForm";
 import { JobInfo, JobPostFormData } from "@/types/job";
@@ -15,9 +15,10 @@ import { toast } from "sonner";
 import EditJobCard from "./EditJobCard";
 import { Button } from "./ui/button";
 
+
 interface JobDescriptionProps {
   job: JobInfo;
-  size: "sm" | "md";
+  size: "sm" | "md" | "lg";
   onApply: boolean;
   onEdit: boolean;
   tags?: string[];
@@ -47,7 +48,7 @@ const JobDescriptionCard = ({
 }: JobDescriptionProps) => {
   const router = useRouter();
   const isClosed = job.status === "expire";
-  const [isEditing, setIsEditing] = useState(false); // ✅ เพิ่ม state ที่ขาด
+
   const [formData, setFormData] = useState<JobPostFormData>(() => ({
     title: job.title,
     category: job.category,
@@ -59,6 +60,7 @@ const JobDescriptionCard = ({
     deadline: job.deadline,
     skills: job.skills,
     description: { ...job.description },
+    documents: job.documents,
   }));
 
   const baseStyle =
@@ -66,7 +68,8 @@ const JobDescriptionCard = ({
 
   const sizeStyle = {
     sm: "w-full sm:w-[400px]",
-    md: "w-full h-auto",
+    md: "w-full h-[600px]",
+    lg: "w-full h-[800px]",
   }[size];
 
   const handleApply = () => {
@@ -81,7 +84,10 @@ const JobDescriptionCard = ({
       return false;
     }
 
-    const confirmed = window.confirm("Are you sure you want to save these changes?");
+    const confirmed = await new Promise<boolean>((resolve) => {
+      confirmResolver.current = resolve;
+      setConfirmOpen(true);
+    });
     if (!confirmed) return false;
 
     try {
@@ -97,6 +103,8 @@ const JobDescriptionCard = ({
         qualifications: formData.description.qualification.split("\n"),
         tags: formData.skills,
         category: formData.category,
+        deadline: formData.deadline,
+        requiredDocuments: formData.documents,
       };
 
       const res = await fetch(`/api/jobs/${job.id}`, {
@@ -112,7 +120,6 @@ const JobDescriptionCard = ({
       }
 
       toast.success("Job updated successfully!");
-      setIsEditing(false);
 
       if (onUpdate) onUpdate();
       return true;
@@ -122,6 +129,37 @@ const JobDescriptionCard = ({
     }
   };
 
+  // Render a custom confirmation dialog (avoids browser native confirm with origin text)
+  const ConfirmationDialog = () => (
+    <Dialog open={confirmOpen} onOpenChange={(open) => {
+      setConfirmOpen(open);
+      if (!open && confirmResolver.current) {
+        // If closed without explicit choice, resolve as false
+        confirmResolver.current(false);
+        confirmResolver.current = null;
+      }
+    }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Confirm save</DialogTitle>
+        </DialogHeader>
+        <div className="text-sm text-gray-700">Are you sure you want to save these changes?</div>
+        <DialogFooter className="mt-4">
+          <Button variant="ghost" onClick={() => {
+            if (confirmResolver.current) confirmResolver.current(false);
+            confirmResolver.current = null;
+            setConfirmOpen(false);
+          }}>Cancel</Button>
+          <Button onClick={() => {
+            if (confirmResolver.current) confirmResolver.current(true);
+            confirmResolver.current = null;
+            setConfirmOpen(false);
+          }} className="bg-[#2BA17C]">Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   const handleDelete = async () => {
     const confirmed = window.confirm("Are you sure you want to delete this job post?");
     if (!confirmed) return;
@@ -130,6 +168,13 @@ const JobDescriptionCard = ({
       const res = await fetch(`/api/jobs/${job.id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Job deleted successfully!");
+        if (onUpdate) {
+          try { onUpdate(); } catch (e) { 
+            /* ignore */ 
+          }
+        } else {
+          router.refresh();
+        }
       } else {
         const data = await res.json();
         toast.error(data.error || "Failed to delete job.");
@@ -143,6 +188,11 @@ const JobDescriptionCard = ({
   const [responsibilityOpen, setResponsibilityOpen] = useState(false);
   const [requirementOpen, setRequirementOpen] = useState(false);
   const [qualificationOpen, setQualificationOpen] = useState(false);
+  const [hasBgError, setHasBgError] = useState(false);
+  const [hasLogoError, setHasLogoError] = useState(false);
+  // Confirmation modal state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const confirmResolver = useRef<((value: boolean) => void) | null>(null);
 
   const Section: React.FC<{
     title: string;
@@ -196,6 +246,8 @@ const JobDescriptionCard = ({
 
   return (
     <div className={`${baseStyle} ${sizeStyle}`}>
+      {/* Render confirmation dialog so handleEdit can await the user's choice */}
+      <ConfirmationDialog />
       <div className="relative w-full h-40">
         {isValidImageUrl(job.companyBg) ? (
           <Image
@@ -203,6 +255,7 @@ const JobDescriptionCard = ({
             alt={job.companyName || "companyBg"}
             fill
             className="object-cover"
+            onError={() => setHasBgError(true)}
           />
         ) : (
           <div className="absolute inset-0 bg-gray-100 rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
@@ -235,17 +288,17 @@ const JobDescriptionCard = ({
           </>
         )}
 
-        <div className="absolute -bottom-6 left-4 bg-white p-2 rounded-md shadow-md">
+        <div className="absolute -bottom-6 left-4 bg-white p-2 rounded-md shadow-md w-[84px] h-[84px]">
           {isValidImageUrl(job.companyLogo) ? (
             <Image
               src={job.companyLogo}
               alt={job.companyName || "companyLogo"}
-              width={60}
-              height={60}
-              className="w-[100px] h-[100px] object-contain"
+              width={80}
+              height={80}
+              className="w-full h-full object-cover rounded-md"
             />
           ) : (
-            <div className="h-[60px] w-[60px] bg-gray-100 rounded-md flex items-center justify-center text-sm font-medium text-gray-700">
+            <div className="w-full h-full bg-gray-100 rounded-md flex items-center justify-center text-2xl font-medium text-gray-700">
               {job.companyName ? job.companyName.charAt(0).toUpperCase() : "C"}
             </div>
           )}

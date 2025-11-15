@@ -1,6 +1,6 @@
-import { uploadDocument } from "@/lib/uploadDocument";
-import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
+import { prisma } from "@/lib/db";
+import { uploadDocument } from "@/lib/uploadDocument";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -21,7 +21,13 @@ export async function POST(request: NextRequest) {
     const portfolioFile = formData.get("portfolio") as File | null;
     const portfolioId = formData.get("portfolioId") as string | null;
 
-    let resumeDoc, portfolioDoc;
+    const cvFile = formData.get("cv") as File | null;
+    const cvId = formData.get("cvId") as string | null;
+
+    const transcriptFile = formData.get("transcript") as File | null;
+    const transcriptId = formData.get("transcriptId") as string | null;
+
+    let resumeDoc, portfolioDoc, cvDoc, transcriptDoc;
 
     if (resumeFile) {
       resumeDoc = await uploadDocument(resumeFile, session.user.id, 1);
@@ -29,10 +35,22 @@ export async function POST(request: NextRequest) {
       resumeDoc = { id: Number(resumeId) };
     }
 
+    if (cvFile) {
+      cvDoc = await uploadDocument(cvFile, session.user.id, 2);
+    } else if (cvId) {
+      cvDoc = { id: Number(cvId) };
+    }
+
     if (portfolioFile) {
       portfolioDoc = await uploadDocument(portfolioFile, session.user.id, 3);
     } else if (portfolioId) {
       portfolioDoc = { id: Number(portfolioId) };
+    }
+
+    if (transcriptFile) {
+      transcriptDoc = await uploadDocument(transcriptFile, session.user.id, 4);
+    } else if (transcriptId) {
+      transcriptDoc = { id: Number(transcriptId) };
     }
 
     const student = await prisma.student.findUnique({
@@ -133,6 +151,8 @@ export async function POST(request: NextRequest) {
         status: 1, // pending หรือ waiting
         resume_id: resumeDoc?.id,
         portfolio_id: portfolioDoc?.id,
+        cv_id: cvDoc?.id,
+        transcript_id: transcriptDoc?.id,
         updated_at: new Date(),
       },
       include: {

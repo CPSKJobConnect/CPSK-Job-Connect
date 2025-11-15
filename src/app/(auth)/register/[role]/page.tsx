@@ -19,7 +19,7 @@ const RegisterPage = ({params}: RegisterPageProps) => {
     notFound();
   }
   return (
-    <AuthLayout role={role as Role}>
+    <AuthLayout role={role as Role} mode="register">
       <AuthForm mode="register" role={role as Role} />
     </AuthLayout>
   )
