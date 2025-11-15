@@ -409,6 +409,9 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
             </Label>
             {isEditing ? (
               <Input
+                id="phone"
+                type="number"
+                inputMode="numeric"
                 value={formData.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
                 placeholder="Enter phone number"

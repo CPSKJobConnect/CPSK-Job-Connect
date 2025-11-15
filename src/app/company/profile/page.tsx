@@ -1,15 +1,28 @@
 "use client";
 
+import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Company } from "@/types/user";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { IoBusinessOutline, IoCallOutline, IoCameraOutline, IoLocationOutline, IoMailOutline } from "react-icons/io5";
+import { IoCallOutline, IoCameraOutline, IoGlobeOutline, IoMailOutline, IoBusinessOutline, IoLocationOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
-import { isValidImageUrl } from "@/lib/validateImageUrl";
+import CompanyJobPosts from "./CompanyJobPostTab";
+
+interface Company {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  website: string;
+  description: string;
+  logo_url?: string;
+  background_url?: string;
+}
+
 
 export default function CompanyProfilePage() {
   const [company, setCompany] = useState<Company | null>(null);
@@ -117,7 +130,7 @@ export default function CompanyProfilePage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Profile Header */}
-      <div className="bg-gradient-to-r from-[#006C67] to-[#00968F] rounded-lg shadow-lg p-8 mb-8 text-white">
+      <div className="bg-linear-to-r from-[#006C67] to-[#00968F] rounded-lg shadow-lg p-8 mb-8 text-white">
         <div className="flex items-center gap-6">
           {/* Profile Picture */}
           <div className="relative group">
@@ -202,9 +215,10 @@ export default function CompanyProfilePage() {
 
       {/* Tabs */}
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
+        <TabsList className="grid w-full grid-cols-3 mb-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="job-posts">Job Posts</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -213,6 +227,10 @@ export default function CompanyProfilePage() {
 
         <TabsContent value="documents">
           <DocumentsTab company={company} onUpdate={fetchCompanyProfile} />
+        </TabsContent>
+        
+        <TabsContent value="job-posts">
+          <CompanyJobPosts companyId={company.id} />
         </TabsContent>
       </Tabs>
     </div>
