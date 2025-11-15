@@ -37,7 +37,29 @@ export async function PATCH(
       );
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      const text = await request.text();
+      console.log("📨 Raw request body:", text);
+
+      if (!text || text.trim() === "") {
+        return NextResponse.json(
+          { error: "Request body is empty" },
+          { status: 400 }
+        );
+      }
+
+      body = JSON.parse(text);
+      console.log("✅ Parsed body:", body);
+    } catch (parseError) {
+      console.error("❌ JSON parse error:", parseError);
+      console.error("Request headers:", Object.fromEntries(request.headers.entries()));
+      return NextResponse.json(
+        { error: "Invalid JSON in request body", details: parseError instanceof Error ? parseError.message : "Unknown error" },
+        { status: 400 }
+      );
+    }
+
     const { status } = body;
 
     if (!status || typeof status !== "string") {
