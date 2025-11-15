@@ -234,7 +234,7 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
                   <button
                     onClick={() => applicantInfo.documents.resume_id && handleViewDocument(applicantInfo.documents.resume_id, applicantInfo.documents.resume_name || "Resume")}
                     disabled={!applicantInfo.documents.resume_id}
-                    className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex flex-row items-center gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <IoEyeOutline className="w-5 h-5"/>
                     <p>View Resume</p>
@@ -245,7 +245,7 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
                   <button
                     onClick={() => applicantInfo.documents.cv_id && handleViewDocument(applicantInfo.documents.cv_id, applicantInfo.documents.cv_name || "CV")}
                     disabled={!applicantInfo.documents.cv_id}
-                    className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex flex-row items-center gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <IoEyeOutline className="w-5 h-5"/>
                     <p>View CV</p>
@@ -256,7 +256,7 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
                   <button
                     onClick={() => applicantInfo.documents.portfolio_id && handleViewDocument(applicantInfo.documents.portfolio_id, applicantInfo.documents.portfolio_name || "Portfolio")}
                     disabled={!applicantInfo.documents.portfolio_id}
-                    className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex flex-row items-center gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <IoEyeOutline className="w-5 h-5"/>
                     <p>View Portfolio</p>
@@ -267,7 +267,7 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
                   <button
                     onClick={() => applicantInfo.documents.transcript_id && handleViewDocument(applicantInfo.documents.transcript_id, applicantInfo.documents.transcript_name || "Transcript")}
                     disabled={!applicantInfo.documents.transcript_id}
-                    className="flex flex-row gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex flex-row items-center gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <IoEyeOutline className="w-5 h-5"/>
                     <p>View Transcript</p>
