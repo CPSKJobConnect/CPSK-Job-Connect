@@ -202,6 +202,11 @@ model Report {
   account    Account  @relation(fields: [account_id], references: [id])
 }
 
+model ReportType {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+}
+
 model SavedJob {
   id          Int      @id @default(autoincrement())
   student_id  Int
