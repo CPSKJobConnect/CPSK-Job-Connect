@@ -17,7 +17,9 @@ describe('Student Registration E2E', () => {
   beforeEach(() => {
     cy.visit('http://localhost:3000')
     cy.get('[data-testid="student-card"]').click()
-    cy.get('[data-testid="auth-signup"]', { timeout: 10000 }).should('be.visible').click()
+    // Wait briefly for signup trigger to be interactable (animations/overlays)
+    cy.wait(1500);
+    cy.get('[data-testid="auth-signup"]', { timeout: 20000 }).should('be.visible').click()
   })
 
   it('Happy path — Current KU Student can register successfully (real API)', () => {

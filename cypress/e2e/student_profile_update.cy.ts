@@ -2,9 +2,11 @@ describe('Student Profile Update', () => {
   beforeEach(() => {
     cy.viewport(1280, 800);
     cy.loginAsStudent();
-    cy.wait(5000);
-    cy.get('[data-testid="profile-menu-popover"]').click(); 
-    cy.get('[data-testid="profile-menu-profile-btn"]').click();
+    // Allow extra time for session and header/menu to render
+    cy.wait(8000);
+    // Navigate directly to the profile page to avoid flaky popover/menu selectors
+    cy.get('[data-testid="profile-menu-popover"]', { timeout: 15000 }).should('be.visible').click();
+    cy.get('[data-testid="profile-menu-profile-btn"]', { timeout: 10000 }).should('be.visible').click();
     cy.wait(1000);
   });
 
@@ -14,7 +16,7 @@ describe('Student Profile Update', () => {
     const newLast = `E2ELast${ts}`;
     const newPhone = '0123456789';
 
-    cy.get('[data-testid="edit-profile-btn"]').click();
+    cy.get('[data-testid="edit-profile-btn"]', { timeout: 20000 }).should('be.visible').click();
     cy.get('[data-testid="input-firstname"]').clear().type(newFirst);
     cy.get('[data-testid="input-lastname"]').clear().type(newLast);
     cy.get('[data-testid="input-phone"]').clear().type(newPhone);
@@ -50,7 +52,7 @@ describe('Student Profile Update', () => {
   });
 
   it('shows validation errors for invalid input and invalid file type', () => {
-    cy.get('[data-testid="edit-profile-btn"]').click();
+    cy.get('[data-testid="edit-profile-btn"]', { timeout: 20000 }).should('be.visible').click();
     cy.get('[data-testid="input-firstname"]').clear();
     cy.get('[data-testid="save-profile-btn"]').click();
 

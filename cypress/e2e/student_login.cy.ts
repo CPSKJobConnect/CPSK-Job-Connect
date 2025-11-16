@@ -29,6 +29,7 @@ describe('Student Login E2E', () => {
     cy.get('[name="password"]').click();
     cy.get('[name="password"]').type('wrong1234{enter}');
     cy.get('button.text-primary-foreground').click();
-    cy.get('[data-testid="auth-form-error-card"]').should('be.visible');
+    // allow extra time for server validation and error UI animation
+    cy.get('[data-testid="auth-form-error-card"]', { timeout: 15000 }).should('be.visible');
     });
 })

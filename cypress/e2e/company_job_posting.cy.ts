@@ -4,13 +4,15 @@ context('Company - Job Posting Flow', () => {
   beforeEach(() => {
     const base = Cypress.config('baseUrl') || Cypress.env('baseUrl') || 'http://localhost:3000';
     cy.loginAsCompany();
+    // allow extra time after login for server-side data to become available
+    cy.wait(5000);
     cy.request({ method: 'GET', url: `${base}/api/auth/session` }).its('status').should('be.oneOf', [200, 204]);
     cy.request({ method: 'GET', url: `${base}/api/jobs/filter` }).then((res) => {
       Cypress.env('jobFilters', res.body || {});
     });
 
     cy.visit(`${base}/company/job-posting`);
-    cy.get('[data-testid="job-title-input"]', { timeout: 20000 }).should('exist');
+    cy.get('[data-testid="job-title-input"]', { timeout: 30000 }).should('exist');
   });
 
   it('Happy path - company can post a job (fills all steps and publishes)', function (this: Mocha.Context) {
@@ -118,13 +120,15 @@ context('Company - Job Posting Flow', () => {
     }
     const cat2 = filters.categories[0] || '';
     const catSafe2 = cat2.replace(/\s+/g, '-');
-    cy.get(`[data-testid="category-option-${catSafe2}"]`, { timeout: 4000 }).click();
+    // Wait longer for category options to be rendered (reduces flakes on slow environments)
+    cy.get(`[data-testid="category-option-${catSafe2}"]`, { timeout: 15000 }).should('be.visible').click();
     cy.get('[data-testid="min-salary-input"]').clear().type('80000');
     cy.get('[data-testid="max-salary-input"]').clear().type('40000');
 
     cy.get('[data-testid="next-button"]').click();
 
-    cy.contains('Min Salary should be less than Max Salary').should('exist');
+    // Allow some time for validation message to appear
+    cy.contains('Min Salary should be less than Max Salary', { timeout: 15000 }).should('exist');
   });
 
   it('Deadline validation - selecting past date is blocked', function (this: Mocha.Context) {

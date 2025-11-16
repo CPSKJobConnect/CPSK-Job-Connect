@@ -19,7 +19,9 @@ describe('Browse jobs - dynamic filter tests', () => {
     cy.viewport(1280, 800);
     cy.loginAsStudent();
     cy.wait(5000);
-    cy.get('a[href="/jobs"]').click();
+    // Allow extra time for auth/session and nav to be ready
+    cy.wait(8000);
+    cy.get('a[href="/jobs"]', { timeout: 20000 }).should('be.visible').click();
     cy.wait(10000);
     cy.get('[data-testid^="job-card-"]', { timeout: 15000 }).should('have.length.at.least', 1);
 

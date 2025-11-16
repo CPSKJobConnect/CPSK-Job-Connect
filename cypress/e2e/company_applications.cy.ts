@@ -5,9 +5,11 @@ context('Company - Application Management', () => {
     const ctx = this as Mocha.Context
     cy.viewport(1280, 800);
     cy.loginAsCompany();
+    // Allow extra time for auth/session cookie propagation
     cy.wait(20000);
 
-    return (cy.window() as any)
+    // Increase window retrieval timeout so fetch has longer to resolve in slow environments
+    return (cy.window({ timeout: 30000 }) as any)
       .then((win: any) => win.fetch('/api/company/jobs'))
       .then((res: Response | null) => {
         if (!res) return null

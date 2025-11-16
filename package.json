@@ -14,7 +14,8 @@
     "db:backup": "ts-node --project tsconfig.node.json scripts/backup-database.ts",
     "db:restore": "ts-node --project tsconfig.node.json scripts/restore-database.ts",
     "db:seed": "ts-node --project tsconfig.node.json prisma/seed.ts",
-    "storage:reset": "ts-node --project tsconfig.node.json scripts/reset-supabase-storage.ts"
+    "storage:reset": "ts-node --project tsconfig.node.json scripts/reset-supabase-storage.ts",
+    "test:e2e:report": "npx cypress run --reporter mochawesome --reporter-options reportDir=cypress/reports,overwrite=false,html=true,json=true"
   },
   "prisma": {
     "seed": "ts-node --project tsconfig.node.json prisma/seed.ts"
@@ -83,6 +84,9 @@
     "eslint-config-prettier": "^10.1.8",
     "jest": "^30.1.3",
     "jest-environment-jsdom": "^30.1.2",
+    "mochawesome": "^7.1.4",
+    "mochawesome-merge": "^5.0.0",
+    "mochawesome-report-generator": "^6.3.2",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "prisma": "^6.19.0",

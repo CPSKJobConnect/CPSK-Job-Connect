@@ -9,8 +9,9 @@ describe('Company Login E2E', () => {
     cy.get('[name="email"]').type('company_test@gmail.com');
     cy.get('[name="password"]').click();
     cy.get('[name="password"]').type('test1234{enter}');
-    cy.get('button.text-primary-foreground').click();
-    cy.location('pathname', { timeout: 10000 }).should('include', '/company/dashboard');
+    // wait until the submit button is enabled before clicking to avoid 'disabled' failures
+    cy.get('[data-testid="auth-submit"]', { timeout: 10000 }).should('not.be.disabled').click();
+    cy.location('pathname', { timeout: 20000 }).should('include', '/company/dashboard');
   });
 
   it('should show error message when email is invalid', function() {

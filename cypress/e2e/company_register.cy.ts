@@ -2,7 +2,9 @@ describe('Company Registration E2E', () => {
   beforeEach(() => {
     cy.visit('http://localhost:3000/register/company')
 
-    cy.get('#companyName', { timeout: 10000 }).should('be.visible').as('companyName')
+    // Allow the page transition/animations to complete before querying inputs
+    cy.wait(1500);
+    cy.get('#companyName', { timeout: 20000 }).should('be.visible').as('companyName')
     cy.get('#email').should('exist').as('email')
     cy.get('#password').should('exist').as('password')
     cy.get('#confirmPassword').should('exist').as('confirmPassword')

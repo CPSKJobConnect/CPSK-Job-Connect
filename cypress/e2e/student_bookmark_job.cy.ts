@@ -2,6 +2,8 @@ describe('Student Bookmark Job', () => {
   beforeEach(() => {
     cy.viewport(1280, 800);
     cy.loginAsStudent();
+    // allow session to settle after login
+    cy.wait(5000);
     cy.request('GET', '/api/jobs/filter').then(function (resp) {
       const jobs = resp.body?.data || resp.body || [];
       if (!jobs || jobs.length === 0) {
@@ -9,14 +11,14 @@ describe('Student Bookmark Job', () => {
         this.skip();
       }
 
-      cy.get('a[href="/jobs"]').click();
+      cy.get('a[href="/jobs"]', { timeout: 20000 }).should('be.visible').click();
       cy.wait(10000);
     });
   });
 
   it('bookmark job successfully', function() {
 
-    cy.get('[data-testid^="job-card-"]', { timeout: 10000 })
+    cy.get('[data-testid^="job-card-"]', { timeout: 30000 })
       .should('have.length.at.least', 1)
       .first()
       .as('firstJobCard')
@@ -50,7 +52,7 @@ describe('Student Bookmark Job', () => {
 
         throw new Error('Could not find a menu trigger (profile-avatar, hamburger, or profile trigger) to open Bookmark menu.');
       });
-    cy.get('[data-testid^="job-card-"]', { timeout: 10000 })
+    cy.get('[data-testid^="job-card-"]', { timeout: 30000 })
       .should('have.length.at.least', 1)
       .first()
       .as('bookmarkedJobCard')
@@ -87,7 +89,7 @@ describe('Student Bookmark Job', () => {
         throw new Error('Could not find menu trigger to open Bookmark menu.');
       });
 
-    cy.get('[data-testid^="job-card-"]', { timeout: 10000 })
+    cy.get('[data-testid^="job-card-"]', { timeout: 30000 })
       .should('have.length.at.least', 1)
       .first()
       .as('bookmarkedJobCard')

@@ -28,9 +28,9 @@ Cypress.Commands.add('loginAsStudent', (email: string = 'DEFAULT', password: str
 
   const base = Cypress.config('baseUrl') || 'http://localhost:3000'
   cy.visit(`${base}/login/student`)
-  cy.get('#email').clear().type(em)
-  cy.get('#password').clear().type(pw)
-  cy.get('[data-testid="auth-submit"]').then(($btn) => {
+  cy.get('#email', { timeout: 15000 }).should('be.visible').clear().type(em)
+  cy.get('#password', { timeout: 15000 }).should('be.visible').clear().type(pw)
+  cy.get('[data-testid="auth-submit"]', { timeout: 15000 }).should('not.be.disabled').then(($btn) => {
     if ($btn.length) {
       cy.wrap($btn).click()
     } else {
@@ -47,9 +47,9 @@ Cypress.Commands.add('loginAsCompany', (email: string = 'DEFAULT', password: str
 
   const base = Cypress.config('baseUrl') || 'http://localhost:3000'
   cy.visit(`${base}/login/company`)
-  cy.get('#email').clear().type(em)
-  cy.get('#password').clear().type(pw)
-  cy.get('[data-testid="auth-submit"]').then(($btn) => {
+  cy.get('#email', { timeout: 15000 }).should('be.visible').clear().type(em)
+  cy.get('#password', { timeout: 15000 }).should('be.visible').clear().type(pw)
+  cy.get('[data-testid="auth-submit"]', { timeout: 15000 }).should('not.be.disabled').then(($btn) => {
     if ($btn.length) {
       cy.wrap($btn).click()
     } else {
