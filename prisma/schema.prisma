@@ -208,6 +208,8 @@ model Report {
 model ReportType {
   id   Int    @id @default(autoincrement())
   name String @unique
+  target  String
+  reports Report[]
 }
 
 model SavedJob {
