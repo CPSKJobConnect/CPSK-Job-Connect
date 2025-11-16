@@ -226,8 +226,8 @@ export default function StudentProfilePage() {
       {/* Tabs */}
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-8">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="profile" data-testid="profile-tab">Profile</TabsTrigger>
+          <TabsTrigger value="documents" data-testid="document-tab">Documents</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">

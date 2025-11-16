@@ -150,7 +150,7 @@ const JobDescriptionCard = ({
             confirmResolver.current = null;
             setConfirmOpen(false);
           }}>Cancel</Button>
-          <Button onClick={() => {
+          <Button data-testid="confirm-save-button" onClick={() => {
             if (confirmResolver.current) confirmResolver.current(true);
             confirmResolver.current = null;
             setConfirmOpen(false);
@@ -279,6 +279,7 @@ const JobDescriptionCard = ({
             </div>
 
             <Button
+              data-testid="delete-job-button"
               onClick={handleDelete}
               className="absolute flex right-4 top-2 w-10 h-8 bg-gradient-to-b from-[#FF755D] to-[#F3573C]
               shadow-lg hover:bg-[#F9664C] transition"

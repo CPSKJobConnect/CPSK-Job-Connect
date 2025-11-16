@@ -25,9 +25,10 @@ interface CategoryComboboxProps {
   setSelectedCategory: (category: string) => void;
   placeholder: string;
   categoryList: string[]
+  dataTestId?: string;
 }
 
-const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder, categoryList, }: CategoryComboboxProps) => {
+const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder, categoryList, dataTestId }: CategoryComboboxProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [existingCategories, setExistingCategories] = useState<string[]>(categoryList);
@@ -54,6 +55,7 @@ const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder, 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            data-testid={dataTestId || "category-combobox"}
             variant="outline"
             role="combobox"
             aria-expanded={open}
@@ -116,21 +118,24 @@ const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder, 
                 return (
                   <>
                     <CommandGroup>
-                      {filtered.map((cat, idx) => (
-                        <CommandItem
-                          key={idx}
-                          value={cat}
-                          onSelect={() => handleSelectCategory(cat)}
-                        >
-                          {cat}
-                          <Check
-                            className={cn(
-                              "ml-auto",
-                              selectedCategory === cat ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                        </CommandItem>
-                      ))}
+                      {filtered.map((cat, idx) => {
+                          const safe = cat.replace(/\s+/g, '-');
+                          return (
+                          <CommandItem
+                            key={idx}
+                            value={cat}
+                            data-testid={`category-option-${safe}`}
+                            onSelect={() => handleSelectCategory(cat)}
+                          >
+                            {cat}
+                            <Check
+                              className={cn(
+                                "ml-auto",
+                                selectedCategory === cat ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        )})}
                     </CommandGroup>
 
                     {searchTerm.trim() !== "" && !hasExact && (

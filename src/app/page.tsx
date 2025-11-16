@@ -56,7 +56,7 @@ export default function Home() {
 
             {/* Company Card */}
             <Link href="/login/company" className="block">
-              <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-orange-100 border border-orange-200">
+              <Card data-testid="company-card" className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-orange-100 border border-orange-200">
                 <CardContent className="p-8 text-center">
                   <div>
                     <Image
@@ -90,7 +90,7 @@ export default function Home() {
 
             {/* Student Card */}
             <Link href="/login/student" className="block">
-              <Card className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-green-100 border border-green-200">
+              <Card data-testid="student-card" className="group hover:shadow-xl hover:scale-101 transition-all duration-300 ease-in-out cursor-pointer hover:bg-green-100 border border-green-200">
                 <CardContent className="p-8 text-center">
                   <div>
                     <Image
