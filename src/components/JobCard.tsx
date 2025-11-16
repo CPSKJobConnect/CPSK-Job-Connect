@@ -261,7 +261,11 @@ const JobCard = (job: JobCardProps) => {
         </div>
       </div>
 
-      <ReportJobDialog jobId={job.info.id} open={reportOpen} onOpenChange={setReportOpen} />
+      <ReportJobDialog
+          targetId={job.info.id}
+          targetType="POST"
+          open={reportOpen}
+          onOpenChange={setReportOpen} />
     </>
   );
 };
