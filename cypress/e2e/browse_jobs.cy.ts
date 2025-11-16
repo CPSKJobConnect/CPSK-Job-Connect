@@ -8,13 +8,10 @@ describe('Browse jobs - dynamic filter tests', () => {
 
   before(function () {
     cy.viewport(1280, 800);
-    // Install per-suite uncaught exception handler to ignore known benign app errors
     Cypress.on('uncaught:exception', _ignoreErr);
-    // keep before lightweight; data fetch happens per-test in beforeEach
   });
 
   after(function () {
-    // Remove the handler after suite so other suites are unaffected
     Cypress.off('uncaught:exception', _ignoreErr);
   });
 
@@ -26,13 +23,11 @@ describe('Browse jobs - dynamic filter tests', () => {
     cy.wait(10000);
     cy.get('[data-testid^="job-card-"]', { timeout: 15000 }).should('have.length.at.least', 1);
 
-    // fetch and alias job + filterInfo per-test so aliases are always available
     const base = Cypress.env('baseUrl') || Cypress.config('baseUrl') || 'http://localhost:3000';
     cy.request({ method: 'GET', url: `${base}/api/jobs` }).then((resp) => {
       const jobs = resp.body?.data || resp.body || [];
       if (!jobs || jobs.length === 0) {
         Cypress.log({ name: 'skip', message: 'No jobs found — skipping browse jobs tests.' });
-        // use this.skip in beforeEach can't skip whole suite; just return
         return;
       }
       const job = jobs.find((j: any) => j.title && j.category) || jobs[0];
@@ -51,10 +46,7 @@ describe('Browse jobs - dynamic filter tests', () => {
 
       cy.get('[data-testid="job-keyword-input"]').clear().type(keyword);
       cy.get('[data-testid="search-button"]').click();
-      // wait for results to settle
       cy.get('[data-testid^="job-card-"]', { timeout: 15000 }).first().should('contain.text', job.title.slice(0, Math.min(30, job.title.length)));
-
-      // opening first job should show details containing the full title
       cy.get('[data-testid^="job-card-"]').first().click();
       cy.contains(job.title, { timeout: 10000 }).should('be.visible');
     });
@@ -168,7 +160,6 @@ describe('Browse jobs - dynamic filter tests', () => {
   });
 
   it('filter: date posted returns recent jobs (2weeks) when option available', function () {
-    // Temporarily ignore ResizeObserver loop errors originating from the app
     const roHandler = (err: Error) => {
       if (err && err.message && err.message.includes('ResizeObserver loop completed with undelivered notifications')) {
         return false
@@ -180,7 +171,6 @@ describe('Browse jobs - dynamic filter tests', () => {
     cy.get('[data-testid="filters-trigger"]').click();
     cy.contains('Filter Jobs', { timeout: 5000 }).should('be.visible');
     cy.get('[data-testid="select-date-post"]').click({ force: true });
-    // Prefer selecting the option by stable test id; fall back to text if not present
     cy.get('body').then($body => {
       if ($body.find('[data-testid="date-post-2weeks"]').length) {
         cy.get('[data-testid="date-post-2weeks"]', { timeout: 5000 }).click({ force: true })
@@ -191,7 +181,6 @@ describe('Browse jobs - dynamic filter tests', () => {
     cy.get('[data-testid="apply-filters-button"]').click({ force: true });
     cy.get('[data-testid^="job-card-"]', { timeout: 10000 }).should('have.length.at.least', 1);
 
-    // Remove the temporary handler so other tests are unaffected
     Cypress.off('uncaught:exception', roHandler)
   });
 });

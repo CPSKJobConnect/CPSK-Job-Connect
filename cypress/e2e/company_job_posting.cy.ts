@@ -3,19 +3,12 @@
 context('Company - Job Posting Flow', () => {
   beforeEach(() => {
     const base = Cypress.config('baseUrl') || Cypress.env('baseUrl') || 'http://localhost:3000';
-
-    // Perform login and ensure session is established before navigating.
     cy.loginAsCompany();
-
-    // Ensure the auth session is present (will retry the assertion until it passes).
     cy.request({ method: 'GET', url: `${base}/api/auth/session` }).its('status').should('be.oneOf', [200, 204]);
-
-    // Fetch and stash job filters for tests.
     cy.request({ method: 'GET', url: `${base}/api/jobs/filter` }).then((res) => {
       Cypress.env('jobFilters', res.body || {});
     });
 
-    // Navigate directly to the job posting page (more reliable than clicking a link).
     cy.visit(`${base}/company/job-posting`);
     cy.get('[data-testid="job-title-input"]', { timeout: 20000 }).should('exist');
   });
