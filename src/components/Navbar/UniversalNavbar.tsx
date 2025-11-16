@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { User, Building2, Shield, Bookmark, LogOut } from 'lucide-react';
 import { isValidImageUrl } from '@/lib/validateImageUrl';
+import { LifeBuoy } from 'lucide-react';
+import { useState } from 'react';
+import { ReportJobDialog } from '@/components/ReportJobDialog';
 
 interface UniversalNavbarProps {
   links: Navbar01NavLink[];
@@ -19,6 +22,7 @@ interface UniversalNavbarProps {
 export default function UniversalNavbar({ links, showBookmarks = false, onSignInClick }: UniversalNavbarProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const [reportOpen, setReportOpen] = useState(false);
 
   const defaultSignInHandler = () => {
     const section = document.getElementById("role-selection");
@@ -138,7 +142,16 @@ export default function UniversalNavbar({ links, showBookmarks = false, onSignIn
                 </Button>
               )}
 
-              <div className="border-t border-gray-100 my-1"></div>
+                {/* Support Button */}
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-2 hover:bg-gray-100 text-gray-700 hover:text-gray-900 font-normal"
+                    onClick={() => setReportOpen(true)}>
+                    <LifeBuoy className="h-4 w-4" /> <span>Support</span>
+                </Button>
+
+                <div className="border-t border-gray-100 my-1"></div>
 
               {/* Sign Out Button */}
               <Button
@@ -189,7 +202,12 @@ export default function UniversalNavbar({ links, showBookmarks = false, onSignIn
     </div>
   );
 
-  return (
+return (
+  <>
     <Navbar01 rightContent={session ? rightContent : loggedOutContent} />
-  );
+    {session && (
+      <ReportJobDialog targetId={0} targetType="GENERAL" open={reportOpen} onOpenChange={setReportOpen} />
+    )}
+  </>
+);
 }

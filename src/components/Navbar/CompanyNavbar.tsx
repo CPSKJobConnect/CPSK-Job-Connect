@@ -11,11 +11,15 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { useRouter } from "next/navigation";
 import { Building2, LogOut } from 'lucide-react';
 import { isValidImageUrl } from '@/lib/validateImageUrl';
+import { LifeBuoy } from 'lucide-react';
+import { useState } from 'react';
+import { ReportJobDialog } from '@/components/ReportJobDialog';
 
 export default function CompanyNavbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const router = useRouter();
+  const [reportOpen, setReportOpen] = useState(false);
 
   const links: Navbar01NavLink[] = [
     { href: '/company/dashboard', label: 'Dashboard', active: pathname === '/company/dashboard' },
@@ -86,6 +90,15 @@ export default function CompanyNavbar() {
                 <span>Company Profile</span>
               </Button>
 
+              {/* Support Button */}
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-2 hover:bg-gray-100 text-gray-700 hover:text-gray-900 font-normal"
+                    onClick={() => setReportOpen(true)}>
+                    <LifeBuoy className="h-4 w-4" /> <span>Support</span>
+                </Button>
+
               <div className="border-t border-gray-100 my-1"></div>
 
               {/* Sign Out Button */}
@@ -133,7 +146,12 @@ export default function CompanyNavbar() {
     </div>
   );
 
-  return (
+return (
+  <>
     <Navbar01 rightContent={session ? rightContent : loggedOutContent} />
-  );
+    {session && (
+      <ReportJobDialog targetId={0} targetType="GENERAL" open={reportOpen} onOpenChange={setReportOpen} />
+    )}
+  </>
+);
 }
