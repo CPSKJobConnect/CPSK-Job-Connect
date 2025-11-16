@@ -8,7 +8,8 @@ import { Button } from "./ui/button";
 import { toast } from "sonner";
 
 interface ReportJobDialogProps {
-  jobId: string;
+  targetId: string | number;
+  targetType?: "POST" | "GENERAL";
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -16,10 +17,15 @@ interface ReportJobDialogProps {
 interface ReportType {
   id: number;
   name: string;
-  target: string; // JOB | POST | OTHER
+  target: string;
 }
 
-export const ReportJobDialog = ({ jobId, open, onOpenChange }: ReportJobDialogProps) => {
+export const ReportJobDialog = ({
+  targetId,
+  targetType,
+  open,
+  onOpenChange,
+}: ReportJobDialogProps) => {
   const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,10 +36,10 @@ export const ReportJobDialog = ({ jobId, open, onOpenChange }: ReportJobDialogPr
 
     const fetchReportTypes = async () => {
       try {
-        const res = await fetch("/api/reports/filter?target=POST");
+        const res = await fetch(`/api/reports/filter?target=${targetType}`);
         if (!res.ok) throw new Error("Failed to fetch report types");
         const data = await res.json();
-        setReportTypes(data); // คาดว่า API คืน [{id, name, target}, ...]
+        setReportTypes(data);
       } catch (err) {
         console.error(err);
         toast.error("Failed to load report reasons");
@@ -41,7 +47,7 @@ export const ReportJobDialog = ({ jobId, open, onOpenChange }: ReportJobDialogPr
     };
 
     fetchReportTypes();
-  }, [open]);
+  }, [open, targetType]);
 
   const handleSubmit = async () => {
     if (!reason) return toast.error("Please select a reason");
@@ -53,10 +59,10 @@ export const ReportJobDialog = ({ jobId, open, onOpenChange }: ReportJobDialogPr
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            target_type: "POST",
-            target_id: Number(jobId),
-            report_type_id: Number(reason),
-            description: description.trim(),
+          target_type: targetType,
+          target_id: Number(targetId),
+          report_type_id: Number(reason),
+          description: description.trim(),
         }),
       });
 
@@ -77,11 +83,13 @@ export const ReportJobDialog = ({ jobId, open, onOpenChange }: ReportJobDialogPr
     }
   };
 
+  const dialogTitle = targetType === "POST" ? "Report Job Post" : "Report General Problem";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onClick={(e) => e.stopPropagation()} className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Report Job Post</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
