@@ -25,6 +25,7 @@ export async function GET() {
     include: {
         category: { select: { name: true } },
         tags: true,
+        documents: true,
         applications: true,
         company: { include: { account: true } },
         jobType: true,
@@ -52,6 +53,7 @@ export async function GET() {
         arrangement: job.jobArrangement.name,
         category: job.category?.name ?? "",
         skills: job.tags.map((t) => t.name),
+        documents: Array.isArray(job.documents) ? job.documents.map((d: any) => d.name) : [],
         deadline: job.deadline.toISOString(),
         status,
         description: {
