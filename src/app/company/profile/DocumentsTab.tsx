@@ -6,8 +6,9 @@ import { FileMeta } from "@/types/file";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { IoDocumentTextOutline, IoTrashOutline } from "react-icons/io5";
+import { IoDocumentTextOutline, IoTrashOutline, IoEyeOutline } from "react-icons/io5";
 import FileUpload from "@/components/FileUpload";
+import { DocumentViewerModal } from "@/components/DocumentViewerModal";
 
 interface DocumentsTabProps {
   company: Company;
@@ -23,6 +24,7 @@ interface DocumentSectionProps {
   onDelete: (docId: number) => void;
   uploading: boolean;
   showReapplicationWarning?: boolean;
+  onViewDocument: (docId: number, fileName: string) => void;
 }
 
 function DocumentSection({
@@ -33,7 +35,8 @@ function DocumentSection({
   onUpload,
   onDelete,
   uploading,
-  showReapplicationWarning
+  showReapplicationWarning,
+  onViewDocument
 }: DocumentSectionProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -94,14 +97,24 @@ function DocumentSection({
                   </p>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDelete(doc.id)}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <IoTrashOutline className="w-5 h-5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onViewDocument(doc.id, doc.name)}
+                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                >
+                  <IoEyeOutline className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(doc.id)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <IoTrashOutline className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
           ))
         )}
@@ -112,6 +125,9 @@ function DocumentSection({
 
 export default function DocumentsTab({ company, onUpdate }: DocumentsTabProps) {
   const [uploading, setUploading] = useState(false);
+  const [isDocViewerOpen, setIsDocViewerOpen] = useState(false);
+  const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
+  const [selectedDocName, setSelectedDocName] = useState("");
 
   const handleUpload = async (file: File, docTypeId: number) => {
     setUploading(true);
@@ -191,24 +207,41 @@ export default function DocumentsTab({ company, onUpdate }: DocumentsTabProps) {
     }
   };
 
+  const handleViewDocument = (docId: number, fileName: string) => {
+    setSelectedDocId(docId);
+    setSelectedDocName(fileName);
+    setIsDocViewerOpen(true);
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Company Documents</CardTitle>
-        <CardDescription>Upload and manage your company verification evidence</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-8">
-        <DocumentSection
-          title="Company Evidence"
-          description="Upload official documents proving your company registration (e.g., business license, incorporation certificate)"
-          documents={company.documents.evidence}
-          docTypeId={7}
-          onUpload={handleUpload}
-          onDelete={handleDelete}
-          uploading={uploading}
-          showReapplicationWarning={company.registration_status === "REJECTED"}
-        />
-      </CardContent>
-    </Card>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Company Documents</CardTitle>
+          <CardDescription>Upload and manage your company verification evidence</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          <DocumentSection
+            title="Company Evidence"
+            description="Upload official documents proving your company registration (e.g., business license, incorporation certificate)"
+            documents={company.documents.evidence}
+            docTypeId={7}
+            onUpload={handleUpload}
+            onDelete={handleDelete}
+            uploading={uploading}
+            showReapplicationWarning={company.registration_status === "REJECTED"}
+            onViewDocument={handleViewDocument}
+          />
+        </CardContent>
+      </Card>
+
+      <DocumentViewerModal
+        isOpen={isDocViewerOpen}
+        onClose={() => setIsDocViewerOpen(false)}
+        documentId={selectedDocId}
+        fileName={selectedDocName}
+        apiEndpoint="company"
+      />
+    </>
   );
 }

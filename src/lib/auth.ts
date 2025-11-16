@@ -8,6 +8,10 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt"
   },
+  pages: {
+    signIn: "/", // Redirect to home page on sign-in error
+    error: "/", // Redirect OAuth errors to home page
+  },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -380,6 +384,8 @@ export const authOptions: NextAuthOptions = {
           return true;
         } catch (error) {
           console.error("Error in OAuth sign-in:", error);
+          // Return false will redirect to error page with error=OAuthSignin
+          // The error page is configured in pages.error above
           return false;
         }
       }

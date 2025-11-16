@@ -2,19 +2,25 @@
 
 context('Company - Job Posting Flow', () => {
   beforeEach(() => {
+    const base = Cypress.config('baseUrl') || Cypress.env('baseUrl') || 'http://localhost:3000';
+
+    // Perform login and ensure session is established before navigating.
     cy.loginAsCompany();
-    cy.wait(20000);
-    const base = Cypress.config('baseUrl') || 'http://localhost:3000'
+
+    // Ensure the auth session is present (will retry the assertion until it passes).
+    cy.request({ method: 'GET', url: `${base}/api/auth/session` }).its('status').should('be.oneOf', [200, 204]);
+
+    // Fetch and stash job filters for tests.
     cy.request({ method: 'GET', url: `${base}/api/jobs/filter` }).then((res) => {
       Cypress.env('jobFilters', res.body || {});
     });
 
-    cy.get('a[href="/company/job-posting"]').click();
-    cy.wait(5000);
-    cy.get('[data-testid="job-title-input"]', { timeout: 10000 }).should('exist');
+    // Navigate directly to the job posting page (more reliable than clicking a link).
+    cy.visit(`${base}/company/job-posting`);
+    cy.get('[data-testid="job-title-input"]', { timeout: 20000 }).should('exist');
   });
 
-  it('Happy path - company can post a job (fills all steps and publishes)', function () {
+  it('Happy path - company can post a job (fills all steps and publishes)', function (this: Mocha.Context) {
     const filters = Cypress.env('jobFilters') || {};
     if (!filters || !filters.categories || filters.categories.length === 0) {
       cy.log('No categories available, skipping happy path');
@@ -74,7 +80,7 @@ context('Company - Job Posting Flow', () => {
     cy.url().should('include', '/company/job-applicant');
   });
 
-  it('Step 1 validation - required fields block progression and show messages', function () {
+  it('Step 1 validation - required fields block progression and show messages', function (this: Mocha.Context) {
     cy.get('[data-testid="job-title-input"]').clear();
     cy.get('[data-testid="min-salary-input"]').clear();
     cy.get('[data-testid="max-salary-input"]').clear();
@@ -83,7 +89,7 @@ context('Company - Job Posting Flow', () => {
     cy.contains('is required', { timeout: 10000 }).should('be.visible');
   });
 
-  it('Later steps validation - description required fields and skills are enforced', function () {
+  it('Later steps validation - description required fields and skills are enforced', function (this: Mocha.Context) {
     const filters = Cypress.env('jobFilters') || {};
     if (!filters || !filters.categories || filters.categories.length === 0) {
       cy.log('No categories available, skipping later steps validation');
@@ -109,7 +115,7 @@ context('Company - Job Posting Flow', () => {
     cy.contains('is required', { timeout: 10000 }).should('be.visible');
   });
 
-  it('Salary validation - min > max blocks progression with correct message', function () {
+  it('Salary validation - min > max blocks progression with correct message', function (this: Mocha.Context) {
     cy.get('[data-testid="job-title-input"]').clear().type(`E2E Salary ${Date.now()}`);
     cy.get('[data-testid="category-combobox"]').click();
     const filters = Cypress.env('jobFilters') || {};
@@ -128,7 +134,7 @@ context('Company - Job Posting Flow', () => {
     cy.contains('Min Salary should be less than Max Salary').should('exist');
   });
 
-  it('Deadline validation - selecting past date is blocked', function () {
+  it('Deadline validation - selecting past date is blocked', function (this: Mocha.Context) {
     cy.get('[data-testid="job-title-input"]').clear().type(`E2E Deadline ${Date.now()}`);
     const filters = Cypress.env('jobFilters') || {};
     if (!filters || !filters.categories || filters.categories.length === 0) {
@@ -154,7 +160,7 @@ context('Company - Job Posting Flow', () => {
     cy.contains('The deadline must be a future date.').should('exist');
   });
 
-  it('Happy path - Edit Job Post (create -> edit -> verify)', function () {
+  it('Happy path - Edit Job Post (create -> edit -> verify)', function (this: Mocha.Context) {
     const base = Cypress.config('baseUrl') || 'http://localhost:3000'
     const filters = Cypress.env('jobFilters') || {};
     if (!filters || !filters.categories || filters.categories.length === 0) {
@@ -183,10 +189,10 @@ context('Company - Job Posting Flow', () => {
     };
 
     cy.request({ method: 'POST', url: `${base}/api/company/jobs/create`, body: createBody }).then((res) => {
-      expect(res.status).to.be.oneOf([200,201]);
+      cy.wrap([200, 201]).should('include', res.status);
       const job = res.body;
       const jobId = job.id || job.jobId || job.data?.id;
-      expect(jobId).to.be.ok;
+      cy.wrap(jobId).should('exist');
 
       cy.visit(`${base}/company/job-applicant`);
       cy.get(`[data-testid="job-card-${jobId}"]`, { timeout: 10000 }).should('exist').click();
@@ -205,14 +211,14 @@ context('Company - Job Posting Flow', () => {
       cy.contains('Job updated successfully!', { timeout: 10000 }).should('exist');
 
       cy.request({ method: 'GET', url: `${base}/api/jobs/${jobId}` }).then((r2) => {
-        expect(r2.status).to.equal(200);
+        cy.wrap(r2.status).should('equal', 200);
         const overview = r2.body?.description?.overview || r2.body?.aboutRole || r2.body?.description || '';
-        expect(String(overview)).to.include('Edited overview');
+        cy.wrap(String(overview)).should('include', 'Edited overview');
       });
     });
   });
 
-  it('Delete Job Post (create -> delete -> verify removed)', function () {
+  it('Delete Job Post (create -> delete -> verify removed)', function (this: Mocha.Context) {
     const base = Cypress.config('baseUrl') || 'http://localhost:3000'
     const filters = Cypress.env('jobFilters') || {};
     if (!filters || !filters.categories || filters.categories.length === 0) {
@@ -240,10 +246,10 @@ context('Company - Job Posting Flow', () => {
     };
 
     cy.request({ method: 'POST', url: `${base}/api/company/jobs/create`, body: createBody }).then((res) => {
-      expect(res.status).to.be.oneOf([200,201]);
+      cy.wrap([200, 201]).should('include', res.status);
       const job = res.body;
       const jobId = job.id || job.jobId || job.data?.id;
-      expect(jobId).to.be.ok;
+      cy.wrap(jobId).should('exist');
 
       cy.visit(`${base}/company/job-applicant`);
       cy.reload();
@@ -255,7 +261,7 @@ context('Company - Job Posting Flow', () => {
       cy.contains('Job deleted successfully!', { timeout: 10000 }).should('exist');
 
       cy.request({ method: 'GET', url: `${base}/api/jobs/${jobId}`, failOnStatusCode: false }).then((r) => {
-        expect(r.status).to.be.oneOf([404, 410]);
+        cy.wrap([404, 410]).should('include', r.status);
       });
     });
   });

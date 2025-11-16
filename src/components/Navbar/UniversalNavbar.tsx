@@ -135,7 +135,7 @@ export default function UniversalNavbar({ links, showBookmarks = false, onSignIn
                   onClick={() => router.push('/student/bookmark')}
                 >
                   <Bookmark className="h-4 w-4" />
-                  <span>Bookmarks</span>
+                  <span>Bookmark</span>
                 </Button>
               )}
 

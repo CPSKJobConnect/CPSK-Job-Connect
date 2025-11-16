@@ -13,6 +13,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         company: { include: { account: true } },
         jobType: true,
         jobArrangement: true,
+        documents: true,
       },
     });
 
@@ -53,6 +54,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       arrangement: job.jobArrangement.name,
       deadline: job.deadline ? job.deadline.toISOString() : null,
       status,
+      documents: job.documents.map((doc: { name: string }) => doc.name.toLowerCase()),
     };
     return NextResponse.json(mappedJob);
   } catch (error) {

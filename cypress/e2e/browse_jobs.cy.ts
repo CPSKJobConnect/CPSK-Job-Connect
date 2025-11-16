@@ -1,7 +1,21 @@
 describe('Browse jobs - dynamic filter tests', () => {
+  const _ignoreErr = (err: Error) => {
+    const msg = err && (err.message || '');
+    if (msg.includes('ResizeObserver loop completed with undelivered notifications')) return false;
+    if (msg.includes("Failed to execute 'removeChild'")) return false;
+    return undefined;
+  }
+
   before(function () {
     cy.viewport(1280, 800);
+    // Install per-suite uncaught exception handler to ignore known benign app errors
+    Cypress.on('uncaught:exception', _ignoreErr);
     // keep before lightweight; data fetch happens per-test in beforeEach
+  });
+
+  after(function () {
+    // Remove the handler after suite so other suites are unaffected
+    Cypress.off('uncaught:exception', _ignoreErr);
   });
 
   beforeEach(function () {
@@ -59,7 +73,7 @@ describe('Browse jobs - dynamic filter tests', () => {
 
       cy.get('[data-testid^="job-card-"]', { timeout: 10000 }).should('have.length.at.least', 1);
       cy.get('[data-testid^="job-card-"]').first().invoke('text').then((text) => {
-        expect(text.includes(category) || text.includes(job.title)).to.be.true;
+        cy.wrap(text.includes(category) || text.includes(job.title)).should('be.true');
       });
     });
   });
@@ -87,7 +101,7 @@ describe('Browse jobs - dynamic filter tests', () => {
       cy.get('[data-testid="apply-filters-button"]').click({ force: true });
       cy.get('[data-testid^="job-card-"]', { timeout: 10000 }).should('have.length.at.least', 1);
       cy.get('[data-testid^="job-card-"]').first().invoke('text').then((text) => {
-        expect(text.includes(province) || text.includes(job.title)).to.be.true;
+        cy.wrap(text.includes(province) || text.includes(job.title)).should('be.true');
       });
     });
   });

@@ -24,6 +24,7 @@ interface DocumentViewerModalProps {
   onClose: () => void;
   documentId: number | null;
   fileName: string;
+  apiEndpoint?: "students" | "company" | "admin";
 }
 
 export function DocumentViewerModal({
@@ -31,6 +32,7 @@ export function DocumentViewerModal({
   onClose,
   documentId,
   fileName,
+  apiEndpoint = "admin",
 }: DocumentViewerModalProps) {
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -64,7 +66,7 @@ export function DocumentViewerModal({
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/documents/view/${documentId}`);
+      const response = await fetch(`/api/${apiEndpoint}/documents/view/${documentId}`);
 
       if (!response.ok) {
         toast.error("Failed to get document URL");

@@ -17,6 +17,7 @@ export default function Page() {
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [applicants, setApplicants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [applicantsLoading, setApplicantsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [allDepartment, setAllDepartment] = useState<string[]>([]);
@@ -97,10 +98,12 @@ export default function Page() {
   useEffect(() => {
     if (!selectedCardId) {
       setApplicants([]);
+      setApplicantsLoading(false);
       return;
     }
 
     const fetchApplicants = async () => {
+      setApplicantsLoading(true);
       try {
         const res = await fetch(`/api/jobs/${selectedCardId}/applicants`);
         if (!res.ok) throw new Error("Failed to fetch applicants");
@@ -108,6 +111,8 @@ export default function Page() {
         setApplicants(data.applicants || []);
       } catch (error) {
         console.error("Error fetching applicants:", error);
+      } finally {
+        setApplicantsLoading(false);
       }
     };
 
@@ -177,7 +182,7 @@ export default function Page() {
                       arrangements={arrangementList}
                       tags={allTags}
                   />
-                  <ApplicationList applicants={applicants} isCompanyVerified={isCompanyVerified} />
+                  <ApplicationList applicants={applicants} isCompanyVerified={isCompanyVerified} loading={applicantsLoading} />
                 </>
               ) : (
                 <div className="flex flex-col items-center gap-4 py-44">
@@ -212,7 +217,7 @@ export default function Page() {
                   {selectedJob && (
                 <div className="space-y-4">
                   <JobDescriptionCard size="md" onApply={false} onEdit={true} job={selectedJob} />
-                  <ApplicationList applicants={applicants} isCompanyVerified={isCompanyVerified} />
+                  <ApplicationList applicants={applicants} isCompanyVerified={isCompanyVerified} loading={applicantsLoading} />
                 </div>
               )}
             </div>
