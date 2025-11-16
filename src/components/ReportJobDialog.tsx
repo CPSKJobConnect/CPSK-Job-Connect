@@ -1,21 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
-
-const REPORT_REASONS = [
-  "Spam or misleading",
-  "Inappropriate content",
-  "Fraudulent job posting",
-  "Discrimination",
-  "Already filled position",
-  "Salary misrepresentation",
-  "Other",
-];
 
 interface ReportJobDialogProps {
   jobId: string;
@@ -23,10 +13,35 @@ interface ReportJobDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface ReportType {
+  id: number;
+  name: string;
+  target: string; // JOB | POST | OTHER
+}
+
 export const ReportJobDialog = ({ jobId, open, onOpenChange }: ReportJobDialogProps) => {
   const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reportTypes, setReportTypes] = useState<ReportType[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const fetchReportTypes = async () => {
+      try {
+        const res = await fetch("/api/reports/filter?target=POST");
+        if (!res.ok) throw new Error("Failed to fetch report types");
+        const data = await res.json();
+        setReportTypes(data); // คาดว่า API คืน [{id, name, target}, ...]
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load report reasons");
+      }
+    };
+
+    fetchReportTypes();
+  }, [open]);
 
   const handleSubmit = async () => {
     if (!reason) return toast.error("Please select a reason");
@@ -37,7 +52,12 @@ export const ReportJobDialog = ({ jobId, open, onOpenChange }: ReportJobDialogPr
       const res = await fetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId, reason, description }),
+        body: JSON.stringify({
+            target_type: "POST",
+            target_id: Number(jobId),
+            report_type_id: Number(reason),
+            description: description.trim(),
+        }),
       });
 
       if (res.ok) {
@@ -74,8 +94,10 @@ export const ReportJobDialog = ({ jobId, open, onOpenChange }: ReportJobDialogPr
                 <SelectValue placeholder="Select a reason" />
               </SelectTrigger>
               <SelectContent>
-                {REPORT_REASONS.map((r) => (
-                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                {reportTypes.map((r) => (
+                  <SelectItem key={r.id} value={r.id.toString()}>
+                    {r.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -100,7 +122,11 @@ export const ReportJobDialog = ({ jobId, open, onOpenChange }: ReportJobDialogPr
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !reason || !description.trim()} className="bg-red-600 hover:bg-red-700">
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || !reason || !description.trim()}
+            className="bg-red-600 hover:bg-red-700"
+          >
             {isSubmitting ? "Submitting..." : "Submit Report"}
           </Button>
         </div>
