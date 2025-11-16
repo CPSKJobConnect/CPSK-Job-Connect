@@ -12,27 +12,37 @@ export async function POST(req: NextRequest) {
     const account_id = Number(session.user.id);
     const { target_type, target_id, report_type_id, description } = await req.json();
 
-    if (!target_type) return NextResponse.json({ error: "target_type is required" }, { status: 400 });
-    if (!target_id) return NextResponse.json({ error: "target_id is required" }, { status: 400 });
+    if (!target_type)
+      return NextResponse.json({ error: "target_type is required" }, { status: 400 });
 
-    const existingReport = await prisma.report.findFirst({
-      where: {
-        account_id,
-        target_type,
-        target_id,
-      },
-    });
+    if (target_id === undefined || target_id === null)
+      return NextResponse.json({ error: "target_id is required" }, { status: 400 });
 
-    if (existingReport) {
-      return NextResponse.json({ error: "You have already reported this item." }, { status: 400 });
+    let existingReport = null;
+
+    if (Number(target_id) !== 0) {
+      existingReport = await prisma.report.findFirst({
+        where: {
+          account_id,
+          target_type,
+          target_id: Number(target_id),
+        },
+      });
+
+      if (existingReport) {
+        return NextResponse.json(
+          { error: "You have already reported this item." },
+          { status: 400 }
+        );
+      }
     }
 
     const report = await prisma.report.create({
       data: {
         target_type,
-        target_id,
-        report_type_id: report_type_id || null,
-        description: description || null,
+        target_id: Number(target_id),
+        report_type_id,
+        description,
         account_id,
       },
       include: {
@@ -44,15 +54,17 @@ export async function POST(req: NextRequest) {
     let targetName = "";
     if (target_type === "POST") {
       const post = await prisma.jobPost.findUnique({
-        where: { id: target_id },
+        where: { id: Number(target_id) },
         select: { jobName: true },
       });
       targetName = post?.jobName || "";
+    } else if (target_type === "GENERAL") {
+      targetName = "General Issue";
     }
 
     const message = `User "${report.account.username}" Reported "${targetName}"` +
-                    `${report.reportType ? `, Type: "${report.reportType.name}"` : ""}` +
-                    `${report.description ? `, Reason: "${report.description}"` : ""}`;
+      `${report.reportType ? `, Type: "${report.reportType.name}"` : ""}` +
+      `${report.description ? `, Reason: "${report.description}"` : ""}`;
 
     await prisma.notification.create({
       data: {
