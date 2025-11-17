@@ -137,6 +137,7 @@ export default function RecentApplicationsTable({ applications, loading, isCompa
                     disabled={!isCompanyVerified}
                   >
                     <SelectTrigger
+                      data-testid={`application-status-trigger-${student.id}`}
                       className={`rounded-full text-sm transition-all duration-200 border-none p-2 h-5 w-[110px] ${statusColor[currentStatus]} ${!isCompanyVerified ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                       <SelectValue />

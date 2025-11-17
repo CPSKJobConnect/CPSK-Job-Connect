@@ -69,6 +69,7 @@ const ApplicationList = ({ applicants, isCompanyVerified = true, loading = false
   }, [applicants]);
 
   const handleStatusChange = async (application_id: number, newStatusId: number) => {
+    console.log("handleStatusChange called", { application_id, newStatusId });
     const s = statusList.find((st) => st.id === newStatusId);
     if (!s) return;
     const previous = statusMap[application_id];
@@ -192,6 +193,7 @@ const ApplicationList = ({ applicants, isCompanyVerified = true, loading = false
                         disabled={!isCompanyVerified}
                       >
                         <SelectTrigger
+                          data-testid={`application-status-trigger-${student.application_id}`}
                           className={`rounded-full w-full text-sm transition-all duration-200 border-none p-3 ${statusColors[currentStatus.type as StatusType]} ${!isCompanyVerified ? 'opacity-60 cursor-not-allowed' : ''}`}
                         >
                           <SelectValue placeholder="Select status">

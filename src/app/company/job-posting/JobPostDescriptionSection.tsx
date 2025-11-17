@@ -19,6 +19,7 @@ const JobPostDescriptionSection = ({ formData, setFormData, tags }: JobPostDescr
             <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Skills</p>
                 <SkillCombobox
+                    dataTestId="skill-combobox"
                     selectedSkill={formData.skills}
                     setSelectedSkill={(skills) =>
                     setFormData({ ...formData, skills })}
@@ -29,6 +30,7 @@ const JobPostDescriptionSection = ({ formData, setFormData, tags }: JobPostDescr
             <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Job Summary / Overview</p>
                 <Textarea
+                data-testid="overview-textarea"
                 name="overview"
                 value={formData.description.overview}
                 onChange={(e) => setFormData({ ...formData, 
@@ -46,6 +48,7 @@ const JobPostDescriptionSection = ({ formData, setFormData, tags }: JobPostDescr
             <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Responsibilities</p>
                 <Textarea
+                data-testid="responsibility-textarea"
                 name="responsibilities"
                 value={formData.description.responsibility}
                 onChange={(e) => setFormData({ ...formData, 
@@ -63,6 +66,7 @@ const JobPostDescriptionSection = ({ formData, setFormData, tags }: JobPostDescr
             <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Requirements</p>
                 <Textarea
+                data-testid="requirement-textarea"
                 name="requirements"
                 value={formData.description.requirement}
                 onChange={(e) => setFormData({ ...formData, 
@@ -80,6 +84,7 @@ const JobPostDescriptionSection = ({ formData, setFormData, tags }: JobPostDescr
             <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Qualifications</p>
                 <Textarea
+                data-testid="qualification-textarea"
                 name="qualifications"
                 value={formData.description.qualification}
                 onChange={(e) => setFormData({ ...formData, 

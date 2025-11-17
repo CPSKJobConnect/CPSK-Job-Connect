@@ -211,13 +211,13 @@ export default function Page() {
           <div className="flex justify-between mt-4">
             <div>
               {step > 1 && (
-                <Button variant="ghost" onClick={() => setStep((s) => Math.max(1, s - 1))}>Back</Button>
+                <Button data-testid="back-button" variant="ghost" onClick={() => setStep((s) => Math.max(1, s - 1))}>Back</Button>
               )}
             </div>
 
             <div className="flex gap-3">
               {step < 3 ? (
-                <Button onClick={() => {
+                <Button data-testid="next-button" onClick={() => {
                   if (step === 1) {
                     const errors = validateDetail(formData);
                     if (errors.length > 0) {
@@ -239,6 +239,7 @@ export default function Page() {
               ) : (
                 <>
                   <Button
+                    data-testid="publish-button"
                     className="bg-[#34BFA3] hover:bg-[#2DA68C] font-semibold"
                     onClick={() => {
                       const errors = validateForm(formData);
@@ -253,6 +254,7 @@ export default function Page() {
                   </Button>
 
                   <Button
+                    data-testid="draft-button"
                     className="bg-gray-200 text-gray-700 hover:bg-gray-300 font-semibold"
                     onClick={() => {
                       const errors = validateForm(formData);

@@ -96,6 +96,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                 <Input
                     type="text"
                     placeholder="Job title or keyword"
+                    data-testid="job-keyword-input"
                     value={filters.keyword}
                     onChange={(e) => updateFilter("keyword", e.target.value)}
                     onKeyDown={handleKeyDown}
@@ -105,14 +106,16 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
 
             <div className="hidden sm:flex items-center h-10 border-l border-gray-200 pl-4 mr-4 min-w-[220px]">
                 <IoLocationOutline className="text-gray-400 mr-3" />
-                <LocationCombobox
-                    value={filters.location}
-                    showIcon={true}
-                    onChange={(val) => updateFilter("location", val)}
-                />
+                    <LocationCombobox
+                        dataTestId="location-combobox"
+                        value={filters.location}
+                        showIcon={true}
+                        onChange={(val) => updateFilter("location", val)}
+                    />
             </div>
 
             <button
+                data-testid="search-button"
                 onClick={handleSearch}
                 className="ml-auto bg-[#2BA17C] text-white font-semibold rounded-full px-6 py-2 shadow-lg hover:brightness-95 transition"
             >
@@ -121,6 +124,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
             <Sheet>
                 <SheetTrigger asChild>
                     <button
+                        data-testid="filters-trigger"
                         onClick={() => setIsOpen((prev) => !prev)}
                         className="p-2 rounded-xl flex items-center justify-center gap-1 cursor-pointer"
                         >
@@ -141,7 +145,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                             <BiCategory className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"/>
                             <Select value={filters.jobCategory} 
                             onValueChange={(val) => updateFilter("jobCategory", val)}>
-                                <SelectTrigger className="pl-10 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full cursor-pointer">
+                                <SelectTrigger data-testid="select-job-category" className="pl-10 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full cursor-pointer">
                                     <SelectValue placeholder="Job Category" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -159,7 +163,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                             <TbCurrencyBaht className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                             <Select value={filters.minSalary} 
                             onValueChange={(val) => updateFilter("minSalary", val)}>
-                                <SelectTrigger className="pl-8 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
+                                <SelectTrigger data-testid="select-min-salary" className="pl-8 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
                                     <SelectValue placeholder="Min Salary" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -177,7 +181,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                             <TbCurrencyBaht className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                             <Select value={filters.maxSalary} 
                             onValueChange={(val) => updateFilter("maxSalary", val)}>
-                                <SelectTrigger className="pl-8 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
+                                <SelectTrigger data-testid="select-max-salary" className="pl-8 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
                                     <SelectValue placeholder="Max Salary" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -195,7 +199,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                             <LuTags className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                             <Select value={filters.jobType} 
                             onValueChange={(val) => updateFilter("jobType", val)}>
-                                <SelectTrigger className="pl-9 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
+                                <SelectTrigger data-testid="select-job-type" className="pl-9 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
                                     <SelectValue placeholder="Job Type" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -213,7 +217,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                             <LuTags className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                             <Select value={filters.jobArrangement} 
                             onValueChange={(val) => updateFilter("jobArrangement", val)}>
-                                <SelectTrigger className="pl-9 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
+                                <SelectTrigger data-testid="select-job-arrangement" className="pl-9 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
                                     <SelectValue placeholder="Job Arrangement" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -231,17 +235,17 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                             <MdOutlineDateRange className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                             <Select value={filters.datePost} 
                             onValueChange={(val) => updateFilter("datePost", val)}>
-                                <SelectTrigger className="pl-9 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
+                                <SelectTrigger data-testid="select-date-post" className="pl-9 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
                                     <SelectValue placeholder="Date Posted" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectGroup>
                                     <SelectLabel>Date Posted</SelectLabel>
-                                    <SelectItem value="today">Today</SelectItem>
-                                    <SelectItem value="3days">Last 3 Days</SelectItem>
-                                    <SelectItem value="5days">Last 5 Days</SelectItem>
-                                    <SelectItem value="week">This Week</SelectItem>
-                                    <SelectItem value="2weeks">Last 2 Weeks</SelectItem>
+                                    <SelectItem data-testid="date-post-today" value="today">Today</SelectItem>
+                                    <SelectItem data-testid="date-post-3days" value="3days">Last 3 Days</SelectItem>
+                                    <SelectItem data-testid="date-post-5days" value="5days">Last 5 Days</SelectItem>
+                                    <SelectItem data-testid="date-post-week" value="week">This Week</SelectItem>
+                                    <SelectItem data-testid="date-post-2weeks" value="2weeks">Last 2 Weeks</SelectItem>
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
@@ -250,6 +254,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                     <SheetFooter>
                         <div className="max-w-4xl mx-auto w-full flex items-center justify-end gap-3 p-4">
                             <button
+                                data-testid="clear-filters-btn"
                                 onClick={handleClearAll}
                                 className="px-4 py-2 rounded-full w-full border border-green-600 text-green-600 bg-white hover:bg-green-50 transition"
                             >
@@ -258,6 +263,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
 
                             <SheetClose asChild>
                                 <button
+                                data-testid="apply-filters-button"
                                 onClick={handleSearch}
                                 className="px-5 py-2 rounded-full w-full bg-[#2BA17C] text-white font-semibold shadow-md hover:brightness-95 transition"
                                 >
