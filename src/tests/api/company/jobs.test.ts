@@ -1,13 +1,29 @@
 /**
  * Tests for Company Jobs API
- * GET /api/company/jobs - Fetch company's job posts
+ *
+ * Endpoints:
+ * - GET /api/company/jobs - Fetch company's job posts
+ *
+ * ASVS Coverage:
+ * - V2: Authentication
+ * - V4: Access Control
+ * - V7: Error Handling
  */
 
 import { GET } from "@/app/api/company/jobs/route";
 import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 
-// Mock modules
+// Import fixtures
+import { mockCompany, createMockJobPost } from "@/tests/fixtures";
+
+// Import mocks
+import { silenceConsole, resetAllMocks } from "@/tests/setup/mocks";
+
+// ============================================================================
+// MOCK SETUP
+// ============================================================================
+
 jest.mock("@/lib/db", () => ({
   prisma: {
     company: {
@@ -34,16 +50,13 @@ jest.mock("next/server", () => ({
 }));
 
 // Silence console logs
-jest.spyOn(console, "log").mockImplementation(() => {});
-jest.spyOn(console, "error").mockImplementation(() => {});
+silenceConsole();
+
+// ============================================================================
+// GET /api/company/jobs
+// ============================================================================
 
 describe("GET /api/company/jobs", () => {
-  const mockCompany = {
-    id: 1,
-    account_id: 1,
-    name: "Tech Corp",
-  };
-
   const mockJobs = [
     {
       id: 1,
@@ -126,8 +139,12 @@ describe("GET /api/company/jobs", () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    resetAllMocks();
   });
+
+  // ==========================================================================
+  // AUTHENTICATION TESTS
+  // ==========================================================================
 
   describe("Authentication", () => {
     it("returns 401 if not authenticated", async () => {
@@ -153,6 +170,10 @@ describe("GET /api/company/jobs", () => {
       expect(data.error).toBe("Company not found");
     });
   });
+
+  // ==========================================================================
+  // BUSINESS LOGIC TESTS
+  // ==========================================================================
 
   describe("Jobs Retrieval", () => {
     beforeEach(() => {
@@ -251,6 +272,10 @@ describe("GET /api/company/jobs", () => {
     });
   });
 
+  // ==========================================================================
+  // COMPANY ASSETS TESTS
+  // ==========================================================================
+
   describe("Company Logo and Background", () => {
     beforeEach(() => {
       (getServerSession as jest.Mock).mockResolvedValue({
@@ -289,6 +314,10 @@ describe("GET /api/company/jobs", () => {
     });
   });
 
+  // ==========================================================================
+  // ERROR HANDLING TESTS
+  // ==========================================================================
+
   describe("Error Handling", () => {
     beforeEach(() => {
       (getServerSession as jest.Mock).mockResolvedValue({
@@ -309,6 +338,10 @@ describe("GET /api/company/jobs", () => {
       expect(data.error).toBe("Failed to fetch jobs");
     });
   });
+
+  // ==========================================================================
+  // EDGE CASES TESTS
+  // ==========================================================================
 
   describe("Empty Results", () => {
     beforeEach(() => {

@@ -1,14 +1,38 @@
 /**
  * Tests for Company Profile API
- * GET /api/company/profile - Fetch company profile
- * PATCH /api/company/profile - Update company profile
+ *
+ * Endpoints:
+ * - GET /api/company/profile - Fetch company profile
+ * - PATCH /api/company/profile - Update company profile
+ *
+ * ASVS Coverage:
+ * - V2: Authentication
+ * - V4: Access Control
+ * - V5: Validation, Sanitization and Encoding
+ * - V7: Error Handling and Logging
  */
 
 import { GET, PATCH } from "@/app/api/company/profile/route";
 import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
+import { NextRequest } from "next/server";
 
-// Mock modules
+// Import fixtures
+import {
+  mockCompany,
+  mockCompanyAccount,
+  mockCompanyEvidenceDocument,
+  createMockCompany,
+  createMockCompanyAccount,
+} from "@/tests/fixtures";
+
+// Import mocks
+import { silenceConsole, resetAllMocks } from "@/tests/setup/mocks";
+
+// ============================================================================
+// MOCK SETUP
+// ============================================================================
+
 jest.mock("@/lib/db", () => ({
   prisma: {
     account: {
@@ -38,61 +62,24 @@ jest.mock("next/server", () => ({
       json: async () => body,
     }),
   },
-  NextRequest: class {
-    url: string;
-    method: string;
-    body: any;
-
-    constructor(url: string, init?: any) {
-      this.url = url || "http://localhost";
-      this.method = init?.method || "GET";
-      this.body = init?.body;
-    }
-
-    async formData() {
-      return this.body;
-    }
-  },
+  NextRequest: jest.requireActual("next/server").NextRequest,
 }));
 
 // Silence console logs
-jest.spyOn(console, "log").mockImplementation(() => {});
-jest.spyOn(console, "error").mockImplementation(() => {});
+silenceConsole();
+
+// ============================================================================
+// GET /api/company/profile
+// ============================================================================
 
 describe("GET /api/company/profile", () => {
-  const mockAccount = {
-    id: 1,
-    email: "company@example.com",
-    logoUrl: "https://example.com/logo.png",
-    backgroundUrl: "https://example.com/bg.png",
-    accountRole: { name: "company" },
-  };
-
-  const mockCompany = {
-    id: 1,
-    account_id: 1,
-    name: "Tech Corp",
-    address: "123 Tech Street",
-    description: "A tech company",
-    phone: "1234567890",
-    registration_status: "APPROVED",
-    verification_notes: null,
-    account: {
-      documents: [
-        {
-          id: 1,
-          file_name: "company_evidence.pdf",
-          file_path: "https://example.com/doc.pdf",
-          created_at: new Date("2024-01-01"),
-          documentType: { name: "Company Evidence" },
-        },
-      ],
-    },
-  };
-
   beforeEach(() => {
-    jest.clearAllMocks();
+    resetAllMocks();
   });
+
+  // ==========================================================================
+  // AUTHENTICATION TESTS
+  // ==========================================================================
 
   describe("Authentication", () => {
     it("returns 401 if not authenticated", async () => {
@@ -122,7 +109,7 @@ describe("GET /api/company/profile", () => {
       (getServerSession as jest.Mock).mockResolvedValue({
         user: { email: "company@example.com" },
       });
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockAccount);
+      (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockCompanyAccount);
       (prisma.company.findUnique as jest.Mock).mockResolvedValue(null);
 
       const res = await GET();
@@ -133,48 +120,113 @@ describe("GET /api/company/profile", () => {
     });
   });
 
+  // ==========================================================================
+  // BUSINESS LOGIC TESTS
+  // ==========================================================================
+
   describe("Profile Retrieval", () => {
     beforeEach(() => {
       (getServerSession as jest.Mock).mockResolvedValue({
         user: { email: "company@example.com" },
       });
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockAccount);
-      (prisma.company.findUnique as jest.Mock).mockResolvedValue(mockCompany);
+      (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockCompanyAccount);
     });
 
     it("returns company profile successfully", async () => {
+      const companyWithDocuments = {
+        ...mockCompany,
+        account: {
+          ...mockCompanyAccount,
+          documents: [mockCompanyEvidenceDocument],
+        },
+      };
+
+      (prisma.company.findUnique as jest.Mock).mockResolvedValue(companyWithDocuments);
+
       const res = await GET();
       const data = await res.json();
 
       expect(res.status).toBe(200);
-      expect(data.id).toBe(1);
-      expect(data.name).toBe("Tech Corp");
-      expect(data.email).toBe("company@example.com");
+      expect(data.id).toBe(mockCompany.id);
+      expect(data.name).toBe(mockCompany.name);
+      expect(data.email).toBe(mockCompanyAccount.email);
     });
 
     it("includes profile images", async () => {
+      const companyWithDocuments = {
+        ...mockCompany,
+        account: {
+          ...mockCompanyAccount,
+          documents: [],
+        },
+      };
+
+      (prisma.company.findUnique as jest.Mock).mockResolvedValue(companyWithDocuments);
+
       const res = await GET();
       const data = await res.json();
 
-      expect(data.profile_url).toBe("https://example.com/logo.png");
-      expect(data.bg_profile_url).toBe("https://example.com/bg.png");
+      expect(data.profile_url).toBe(mockCompanyAccount.logoUrl);
+      expect(data.bg_profile_url).toBe(mockCompanyAccount.backgroundUrl);
     });
 
     it("includes company documents", async () => {
+      const companyWithDocuments = {
+        ...mockCompany,
+        account: {
+          ...mockCompanyAccount,
+          documents: [mockCompanyEvidenceDocument],
+        },
+      };
+
+      (prisma.company.findUnique as jest.Mock).mockResolvedValue(companyWithDocuments);
+
       const res = await GET();
       const data = await res.json();
 
       expect(data.documents.evidence).toHaveLength(1);
-      expect(data.documents.evidence[0].name).toBe("company_evidence.pdf");
+      expect(data.documents.evidence[0].name).toBe(mockCompanyEvidenceDocument.file_name);
     });
 
     it("includes registration status", async () => {
+      const companyWithDocuments = {
+        ...mockCompany,
+        account: {
+          ...mockCompanyAccount,
+          documents: [],
+        },
+      };
+
+      (prisma.company.findUnique as jest.Mock).mockResolvedValue(companyWithDocuments);
+
       const res = await GET();
       const data = await res.json();
 
-      expect(data.registration_status).toBe("APPROVED");
+      expect(data.registration_status).toBe(mockCompany.registration_status);
+    });
+
+    it("handles empty documents array", async () => {
+      const companyWithNoDocuments = {
+        ...mockCompany,
+        account: {
+          ...mockCompanyAccount,
+          documents: [],
+        },
+      };
+
+      (prisma.company.findUnique as jest.Mock).mockResolvedValue(companyWithNoDocuments);
+
+      const res = await GET();
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.documents.evidence).toHaveLength(0);
     });
   });
+
+  // ==========================================================================
+  // ERROR HANDLING TESTS
+  // ==========================================================================
 
   describe("Error Handling", () => {
     beforeEach(() => {
@@ -194,21 +246,31 @@ describe("GET /api/company/profile", () => {
       expect(res.status).toBe(500);
       expect(data.error).toBe("Failed to fetch company profile");
     });
+
+    it("handles unexpected errors", async () => {
+      (prisma.account.findUnique as jest.Mock).mockRejectedValue(
+        new Error("Unexpected error")
+      );
+
+      const res = await GET();
+
+      expect(res.status).toBe(500);
+    });
   });
 });
 
-describe("PATCH /api/company/profile", () => {
-  const mockAccount = {
-    id: 1,
-    email: "company@example.com",
-    logoUrl: null,
-    backgroundUrl: null,
-    company: { id: 1, name: "Old Name" },
-  };
+// ============================================================================
+// PATCH /api/company/profile
+// ============================================================================
 
+describe("PATCH /api/company/profile", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    resetAllMocks();
   });
+
+  // ==========================================================================
+  // AUTHENTICATION TESTS
+  // ==========================================================================
 
   describe("Authentication", () => {
     it("returns 401 if not authenticated", async () => {
@@ -217,10 +279,10 @@ describe("PATCH /api/company/profile", () => {
       const formData = new FormData();
       formData.append("name", "New Name");
 
-      const req = new (require("next/server").NextRequest)(
-        "http://localhost/api/company/profile",
-        { method: "PATCH", body: formData }
-      );
+      const req = new NextRequest("http://localhost/api/company/profile", {
+        method: "PATCH",
+        body: formData as any,
+      });
 
       const res = await PATCH(req);
       const data = await res.json();
@@ -241,10 +303,10 @@ describe("PATCH /api/company/profile", () => {
       const formData = new FormData();
       formData.append("name", "New Name");
 
-      const req = new (require("next/server").NextRequest)(
-        "http://localhost/api/company/profile",
-        { method: "PATCH", body: formData }
-      );
+      const req = new NextRequest("http://localhost/api/company/profile", {
+        method: "PATCH",
+        body: formData as any,
+      });
 
       const res = await PATCH(req);
       const data = await res.json();
@@ -254,22 +316,29 @@ describe("PATCH /api/company/profile", () => {
     });
   });
 
-  describe("Validation", () => {
+  // ==========================================================================
+  // INPUT VALIDATION TESTS
+  // ==========================================================================
+
+  describe("Input Validation", () => {
     beforeEach(() => {
       (getServerSession as jest.Mock).mockResolvedValue({
         user: { email: "company@example.com" },
       });
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockAccount);
+      (prisma.account.findUnique as jest.Mock).mockResolvedValue({
+        ...mockCompanyAccount,
+        company: mockCompany,
+      });
     });
 
     it("validates company name length", async () => {
       const formData = new FormData();
       formData.append("name", "AB"); // Too short
 
-      const req = new (require("next/server").NextRequest)(
-        "http://localhost/api/company/profile",
-        { method: "PATCH", body: formData }
-      );
+      const req = new NextRequest("http://localhost/api/company/profile", {
+        method: "PATCH",
+        body: formData as any,
+      });
 
       const res = await PATCH(req);
       const data = await res.json();
@@ -282,10 +351,10 @@ describe("PATCH /api/company/profile", () => {
       const formData = new FormData();
       formData.append("phone", "123"); // Too short
 
-      const req = new (require("next/server").NextRequest)(
-        "http://localhost/api/company/profile",
-        { method: "PATCH", body: formData }
-      );
+      const req = new NextRequest("http://localhost/api/company/profile", {
+        method: "PATCH",
+        body: formData as any,
+      });
 
       const res = await PATCH(req);
       const data = await res.json();
@@ -298,10 +367,10 @@ describe("PATCH /api/company/profile", () => {
       const formData = new FormData();
       formData.append("description", "Short"); // Too short
 
-      const req = new (require("next/server").NextRequest)(
-        "http://localhost/api/company/profile",
-        { method: "PATCH", body: formData }
-      );
+      const req = new NextRequest("http://localhost/api/company/profile", {
+        method: "PATCH",
+        body: formData as any,
+      });
 
       const res = await PATCH(req);
       const data = await res.json();
@@ -309,25 +378,56 @@ describe("PATCH /api/company/profile", () => {
       expect(res.status).toBe(400);
       expect(data.error).toContain("at least 10 characters");
     });
+
+    it("accepts valid input data", async () => {
+      (prisma.company.update as jest.Mock).mockResolvedValue({
+        ...mockCompany,
+        name: "Valid Company Name",
+      });
+
+      const formData = new FormData();
+      formData.append("name", "Valid Company Name");
+      formData.append("phone", "0212345678");
+      formData.append("description", "A valid company description with sufficient length");
+
+      const req = new NextRequest("http://localhost/api/company/profile", {
+        method: "PATCH",
+        body: formData as any,
+      });
+
+      const res = await PATCH(req);
+
+      expect(res.status).toBe(200);
+    });
   });
+
+  // ==========================================================================
+  // BUSINESS LOGIC TESTS
+  // ==========================================================================
 
   describe("Profile Update", () => {
     beforeEach(() => {
       (getServerSession as jest.Mock).mockResolvedValue({
         user: { email: "company@example.com" },
       });
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockAccount);
-      (prisma.company.update as jest.Mock).mockResolvedValue({
-        id: 1,
-        name: "New Company Name",
-        address: "New Address",
-        phone: "1234567890",
-        description: "New Description",
-        website: "https://example.com",
+      (prisma.account.findUnique as jest.Mock).mockResolvedValue({
+        ...mockCompanyAccount,
+        company: mockCompany,
       });
     });
 
     it("updates company profile successfully", async () => {
+      const updatedCompany = {
+        ...mockCompany,
+        name: "New Company Name",
+        address: "New Address",
+        phone: "1234567890",
+        description: "New Description for the company",
+        website: "https://example.com",
+      };
+
+      (prisma.company.update as jest.Mock).mockResolvedValue(updatedCompany);
+
       const formData = new FormData();
       formData.append("name", "New Company Name");
       formData.append("address", "New Address");
@@ -335,10 +435,10 @@ describe("PATCH /api/company/profile", () => {
       formData.append("description", "New Description for the company");
       formData.append("website", "https://example.com");
 
-      const req = new (require("next/server").NextRequest)(
-        "http://localhost/api/company/profile",
-        { method: "PATCH", body: formData }
-      );
+      const req = new NextRequest("http://localhost/api/company/profile", {
+        method: "PATCH",
+        body: formData as any,
+      });
 
       const res = await PATCH(req);
       const data = await res.json();
@@ -349,13 +449,18 @@ describe("PATCH /api/company/profile", () => {
     });
 
     it("updates only provided fields", async () => {
+      (prisma.company.update as jest.Mock).mockResolvedValue({
+        ...mockCompany,
+        name: "Just New Name",
+      });
+
       const formData = new FormData();
       formData.append("name", "Just New Name");
 
-      const req = new (require("next/server").NextRequest)(
-        "http://localhost/api/company/profile",
-        { method: "PATCH", body: formData }
-      );
+      const req = new NextRequest("http://localhost/api/company/profile", {
+        method: "PATCH",
+        body: formData as any,
+      });
 
       await PATCH(req);
 
@@ -367,14 +472,41 @@ describe("PATCH /api/company/profile", () => {
         })
       );
     });
+
+    it("handles partial updates correctly", async () => {
+      (prisma.company.update as jest.Mock).mockResolvedValue({
+        ...mockCompany,
+        description: "Updated description only",
+      });
+
+      const formData = new FormData();
+      formData.append("description", "Updated description only");
+
+      const req = new NextRequest("http://localhost/api/company/profile", {
+        method: "PATCH",
+        body: formData as any,
+      });
+
+      const res = await PATCH(req);
+
+      expect(res.status).toBe(200);
+      expect(prisma.company.update).toHaveBeenCalled();
+    });
   });
+
+  // ==========================================================================
+  // ERROR HANDLING TESTS
+  // ==========================================================================
 
   describe("Error Handling", () => {
     beforeEach(() => {
       (getServerSession as jest.Mock).mockResolvedValue({
         user: { email: "company@example.com" },
       });
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockAccount);
+      (prisma.account.findUnique as jest.Mock).mockResolvedValue({
+        ...mockCompanyAccount,
+        company: mockCompany,
+      });
     });
 
     it("handles database errors gracefully", async () => {
@@ -385,16 +517,34 @@ describe("PATCH /api/company/profile", () => {
       const formData = new FormData();
       formData.append("name", "New Name");
 
-      const req = new (require("next/server").NextRequest)(
-        "http://localhost/api/company/profile",
-        { method: "PATCH", body: formData }
-      );
+      const req = new NextRequest("http://localhost/api/company/profile", {
+        method: "PATCH",
+        body: formData as any,
+      });
 
       const res = await PATCH(req);
       const data = await res.json();
 
       expect(res.status).toBe(500);
       expect(data.error).toBe("Failed to update company profile");
+    });
+
+    it("handles unexpected errors", async () => {
+      (prisma.company.update as jest.Mock).mockRejectedValue(
+        new Error("Unexpected error")
+      );
+
+      const formData = new FormData();
+      formData.append("name", "New Name");
+
+      const req = new NextRequest("http://localhost/api/company/profile", {
+        method: "PATCH",
+        body: formData as any,
+      });
+
+      const res = await PATCH(req);
+
+      expect(res.status).toBe(500);
     });
   });
 });
