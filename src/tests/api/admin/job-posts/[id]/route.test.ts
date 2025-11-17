@@ -1,13 +1,34 @@
+/**
+ * Tests for Admin Job Posts [id] Route
+ *
+ * Endpoints:
+ * - GET /api/admin/job-posts/[id] - Fetch job post by ID
+ * - PUT /api/admin/job-posts/[id] - Update job post
+ * - DELETE /api/admin/job-posts/[id] - Delete job post
+ *
+ * ASVS Coverage:
+ * - V2: Authentication
+ * - V4: Access Control (Admin-only)
+ */
+
 import { NextResponse } from "next/server";
 import { GET, PUT, DELETE } from "@/app/api/admin/job-posts/[id]/route";
 import { fetchJobPost } from "@/app/api/admin/job-posts/[id]/fetch.logic";
 import { updateJobPost } from "@/app/api/admin/job-posts/[id]/update.logic";
 import { deleteJobPost } from "@/app/api/admin/job-posts/[id]/delete.logic";
 
+// Import fixtures
+import { mockAdminSession } from "@/tests/fixtures";
+
+// Import mocks
+import { silenceConsole, resetAllMocks } from "@/tests/setup/mocks";
+
+// ============================================================================
+// MOCK SETUP
+// ============================================================================
+
 jest.mock("next-auth/next", () => ({
-  getServerSession: jest.fn().mockResolvedValue({
-    user: { email: "test@example.com", role: "admin" },
-  }),
+  getServerSession: jest.fn(),
 }));
 
 jest.mock("next/server", () => ({
@@ -20,11 +41,20 @@ jest.mock("@/app/api/admin/job-posts/[id]/fetch.logic");
 jest.mock("@/app/api/admin/job-posts/[id]/update.logic");
 jest.mock("@/app/api/admin/job-posts/[id]/delete.logic");
 
+// Silence console logs
+silenceConsole();
+
+// ============================================================================
+// GET /api/admin/job-posts/[id]
+// ============================================================================
+
 describe("API Admin Job Posts [id] Route", () => {
   const mockParams = { id: "1" };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    resetAllMocks();
+    const { getServerSession } = require("next-auth/next");
+    (getServerSession as jest.Mock).mockResolvedValue(mockAdminSession);
   });
 
   describe("GET", () => {
