@@ -31,7 +31,7 @@ describe("API Admin Job Posts [id] Route", () => {
     it("should fetch a job post successfully", async () => {
       const mockJobPost = { id: 1, jobName: "Test Job" };
       (fetchJobPost as jest.Mock).mockResolvedValue(mockJobPost);
-      const response = await GET(new Request(""), { params: mockParams });
+      const response = await GET(new Request("http://localhost/api/admin/job-posts/1"), { params: mockParams });
       expect(fetchJobPost).toHaveBeenCalledWith({ id: "1" });
       expect(NextResponse.json).toHaveBeenCalledWith(mockJobPost, { status: 200 });
     });
@@ -41,7 +41,7 @@ describe("API Admin Job Posts [id] Route", () => {
     it("should update a job post successfully", async () => {
       const mockUpdatedJobPost = { id: 1, jobName: "Updated Job" };
       (updateJobPost as jest.Mock).mockResolvedValue(mockUpdatedJobPost);
-      const mockRequest = new Request("", {
+      const mockRequest = new Request("http://localhost/api/admin/job-posts/1", {
         method: "PUT",
         body: JSON.stringify({ jobName: "Updated Job" }),
         headers: { "Content-Type": "application/json" }
@@ -54,7 +54,7 @@ describe("API Admin Job Posts [id] Route", () => {
 
   describe("DELETE", () => {
     it("should delete a job post successfully", async () => {
-      const mockRequest = new Request("", { method: "DELETE" });
+      const mockRequest = new Request("http://localhost/api/admin/job-posts/1", { method: "DELETE" });
       const response = await DELETE(mockRequest, { params: mockParams });
       expect(deleteJobPost).toHaveBeenCalledWith({ id: "1" });
       expect(NextResponse.json).toHaveBeenCalledWith(
