@@ -1,0 +1,25 @@
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Dependencies
+node_modules/
+
+# Testing
+coverage/
+
+# Environment files
+.env
+.env.*
+
+# Generated files
+*.tsbuildinfo
+
+# Prisma generated
+prisma/generated/
+
+# Cache
+.turbo/
+.cache/
