@@ -34,6 +34,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
               <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Job Title</p>
                 <Input
+                  data-testid="job-title-input"
                   type="text"
                   name="title"
                   value={formData.title}
@@ -46,6 +47,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
               <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Job Category</p>
                 <CategoryCombobox
+                  dataTestId="category-combobox"
                   selectedCategory={formData.category}
                   setSelectedCategory={(category) => setFormData({ ...formData, category })}
                   placeholder="e.g. Engineer, Finance"
@@ -58,6 +60,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
               <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Location</p>
                 <LocationCombobox
+                  dataTestId="location-combobox"
                   value={formData.location}
                   showIcon={false}
                   onChange={(value) => setFormData({ ...formData, location: value })}
@@ -70,9 +73,9 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
                 <div className="flex flex-col gap-2 w-full">
                     <p className="text-sm font-semibold text-gray-800">Type</p>
                     <Select onValueChange={(value) => handleSelect("type", value)}>
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger data-testid="select-job-type" className="w-full">
                             <SelectValue placeholder={formData.type || "Select Type"} />
-                        </SelectTrigger>
+                          </SelectTrigger>
                         <SelectContent>
                             {types.map((type) => (
                             <SelectItem key={type} value={type}>
@@ -86,7 +89,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
               <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Arrangement</p>
                 <Select onValueChange={(value) => handleSelect("arrangement", value)}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger data-testid="select-arrangement" className="w-full">
                     <SelectValue placeholder={formData.arrangement || "Select Arrangement"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -104,6 +107,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">฿</span>
                   <Input
+                    data-testid="min-salary-input"
                     type="number"
                     min={0}
                     name="minSalary"
@@ -124,6 +128,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">฿</span>
                   <Input
+                    data-testid="max-salary-input"
                     type="number"
                     min={0}
                     name="maxSalary"
@@ -144,6 +149,7 @@ const JobPostDetailSection = ({ formData, setFormData, categories, types, arrang
             <div className="flex flex-col gap-2 w-full">
                 <p className="text-sm font-semibold text-gray-800">Deadline</p>
                 <Input
+                  data-testid="deadline-input"
                   type="date"
                   name="deadline"
                   value={formData.deadline}

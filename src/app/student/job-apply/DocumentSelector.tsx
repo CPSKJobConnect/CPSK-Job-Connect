@@ -19,6 +19,7 @@ interface DocumentSelectorProps {
   existingFiles: FileMeta[];
   onFileSelect: (file: FileMeta | null) => void;
   selectedFile: FileMeta | null;
+  triggerTestId?: string;
 }
 
 
@@ -46,8 +47,9 @@ const DocumentSelector = (props: DocumentSelectorProps) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div 
-        className="flex shadow-md justify-center items-center w-full rounded-sm px-4 py-1 cursor-pointer bg-[#ABE9D6] hover:bg-[#2DA68C] hover:text-white text-gray-700 text-sm font-semibold"
+        <div
+          data-testid={props.triggerTestId}
+          className="flex shadow-md justify-center items-center w-full rounded-sm px-4 py-1 cursor-pointer bg-[#ABE9D6] hover:bg-[#2DA68C] hover:text-white text-gray-700 text-sm font-semibold"
         >
           <p>{props.title}</p>
         </div>

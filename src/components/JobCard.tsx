@@ -150,7 +150,7 @@ const JobCard = (job: JobCardProps) => {
   };
 
   return (
-    <div className={`${baseStyle} ${sizeStyle}`}>
+    <div data-testid={`job-card-${job.info.id}`} className={`${baseStyle} ${sizeStyle}`}>
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
           {isValidImageUrl(job.info.companyLogo) ? (
@@ -181,12 +181,14 @@ const JobCard = (job: JobCardProps) => {
               }}
               disabled={isLoading || isCheckingStatus}
               className="transition-colors disabled:opacity-50"
+              data-testid="bookmark-job"
               aria-label={isSaved ? "Unsave job" : "Save job"}
+              aria-pressed={isSaved}
               type="button"
             >
               {isCheckingStatus ? (
                 // Show outline star while checking status
-                <FaRegStar className="w-5 h-5 text-gray-400 animate-pulse" />
+                <FaRegStar data-testid="bookmark-button" className="w-5 h-5 text-gray-400 animate-pulse" />
               ) : isSaved ? (
                 // Show filled yellow star if saved
                 <FaStar className="w-5 h-5 text-yellow-500 hover:text-yellow-600" />

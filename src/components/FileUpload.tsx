@@ -82,6 +82,7 @@ const FileUpload = (props: FileUploadProps) => {
         type="file"
         ref={fileInput}
         accept={props.acceptedTypes.map((t) => `.${t}`).join(",")}
+        data-testid="file-upload-input"
         className="hidden"
         onChange={handleChange}
       />

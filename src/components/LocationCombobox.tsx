@@ -28,9 +28,10 @@ interface LocationComboboxProps {
   onChange: (val: string) => void;
   showIcon?: boolean;
   className?: string;
+  dataTestId?: string;
 }
 
-export default function LocationCombobox({ value, onChange, showIcon = false, className }: LocationComboboxProps) {
+export default function LocationCombobox({ value, onChange, showIcon = false, className, dataTestId }: LocationComboboxProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -111,6 +112,7 @@ export default function LocationCombobox({ value, onChange, showIcon = false, cl
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          data-testid={dataTestId}
           className={
             className
               ? className
@@ -163,6 +165,7 @@ export default function LocationCombobox({ value, onChange, showIcon = false, cl
                 .map((province) => (
                   <li
                     key={province.provinceCode}
+                    data-testid={`province-option-${province.provinceNameEn}`}
                     className="px-2 py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
                     onClick={() => handleSelectProvince(province)}
                   >
@@ -177,6 +180,7 @@ export default function LocationCombobox({ value, onChange, showIcon = false, cl
                 .map((district) => (
                   <li
                     key={district.districtCode}
+                    data-testid={`district-option-${district.districtNameEn}`}
                     className="px-2 py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
                     onClick={() => handleSelectDistrict(district)}
                   >
@@ -193,6 +197,7 @@ export default function LocationCombobox({ value, onChange, showIcon = false, cl
                 .map((sub) => (
                   <li
                     key={sub.subdistrictCode}
+                    data-testid={`subdistrict-option-${sub.subdistrictNameEn}`}
                     className="px-2 py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
                     onClick={() => handleSelectSubdistrict(sub)}
                   >
