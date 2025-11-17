@@ -20,6 +20,22 @@ module.exports = {
     '/node_modules/',
     '/.next/'
   ],
+  collectCoverageFrom: [
+    'src/app/api/**/*.{ts,tsx}',
+    'src/lib/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/*.test.{ts,tsx}',
+    '!src/**/*.spec.{ts,tsx}',
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 70,
+      lines: 75,
+      statements: 75,
+    },
+  },
+  coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
   projects: [
     {
       displayName: 'components',
