@@ -1,9 +1,7 @@
 /**
  * Email Service
- * Handles sending emails using SMTP (Gmail) or Resend
+ * Handles sending emails using SMTP (Gmail)
  */
-
-import { Resend } from 'resend';
 
 interface EmailOptions {
   to: string;
@@ -13,19 +11,14 @@ interface EmailOptions {
 }
 
 /**
- * Initialize Resend client
- */
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-/**
  * Track recent emails to prevent duplicates (in-memory cache)
  * Key: email+subject hash, Value: timestamp
  */
 const recentEmails = new Map<string, number>();
 
 /**
- * Send an email using SMTP or Resend
- * Priority: SMTP → Resend → Console Logging
+ * Send an email using SMTP or Console Logging
+ * Priority: SMTP → Console Logging
  * @param options - Email options (to, subject, html, text)
  * @returns Promise that resolves when email is sent
  */
@@ -50,7 +43,7 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
     }
   }
   try {
-    // 1. SMTP (Gmail/Mailtrap) - HIGHEST PRIORITY
+    // 1. SMTP (Gmail/Mailtrap) - PRODUCTION
     if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
       console.log(`📧 Sending email via SMTP to ${options.to}...`);
 
@@ -78,39 +71,17 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
       return;
     }
 
-    // 2. Resend (if configured and has verified domain)
-    if (process.env.RESEND_API_KEY && process.env.EMAIL_DEV_MODE !== 'true') {
-      console.log(`📧 Sending email via Resend to ${options.to}...`);
+    // 2. Console Logging (Development fallback)
+    console.log('\n' + '='.repeat(80));
+    console.log('📧 EMAIL (Development Mode - Not Actually Sent)');
+    console.log('='.repeat(80));
+    console.log(`To: ${options.to}`);
+    console.log(`Subject: ${options.subject}`);
+    console.log('-'.repeat(80));
+    console.log(options.text || 'No text content');
+    console.log('='.repeat(80) + '\n');
+    return;
 
-      await resend.emails.send({
-        from: 'CPSK Job Connect <onboarding@resend.dev>',
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-        text: options.text,
-      });
-
-      console.log(`✅ Email sent via Resend to ${options.to}`);
-      return;
-    }
-
-    // 3. Console Logging (Development fallback)
-    if (process.env.EMAIL_DEV_MODE === 'true') {
-      console.log('\n' + '='.repeat(80));
-      console.log('📧 EMAIL (Console Mode - Not Actually Sent)');
-      console.log('='.repeat(80));
-      console.log(`To: ${options.to}`);
-      console.log(`Subject: ${options.subject}`);
-      console.log('-'.repeat(80));
-      console.log(options.text || 'No text content');
-      console.log('='.repeat(80) + '\n');
-      return;
-    }
-
-    // No email service configured
-    console.error('⚠️ No email service configured!');
-    console.log('Configure SMTP_HOST or RESEND_API_KEY, or set EMAIL_DEV_MODE=true');
-    throw new Error('Email service is not configured');
   } catch (error) {
     console.error('❌ Error sending email:', error);
     throw new Error(`Failed to send email: ${error instanceof Error ? error.message : String(error)}`);
