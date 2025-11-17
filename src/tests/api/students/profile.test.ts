@@ -1,25 +1,33 @@
 /**
  * API Tests: Student Profile
  *
- * Endpoint: GET/PUT /api/students/profile
- * Purpose: Manage authenticated student's profile data
- * Authentication: Required (Student role)
- * Authorization: Student can only access their own profile
+ * Endpoints:
+ * - GET /api/students/profile - Get authenticated student's profile
+ * - PUT /api/students/profile - Update authenticated student's profile
  *
  * ASVS Coverage:
- * - V7.2.1: Session token verification
- * - V8.2.1: Function-level access control
- * - V8.2.2: Data-specific access control (IDOR protection)
- * - V4.1.1: Content-Type header validation
+ * - V2: Authentication
+ * - V4: Access Control
+ * - V5: Input Validation
+ * - V7: Error Handling
+ * - V8: Data Protection (IDOR prevention)
  */
 
 import { NextRequest } from "next/server";
 import { GET, PUT } from "@/app/api/students/profile/route";
 import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
-import { mockSession, createMockStudent, createMockDocument } from "@/tests/utils/test-helpers";
 
-// Mock dependencies
+// Import fixtures
+import { mockStudentSession, mockStudent, createMockStudent } from "@/tests/fixtures";
+
+// Import mocks
+import { silenceConsole, resetAllMocks } from "@/tests/setup/mocks";
+
+// ============================================================================
+// MOCK SETUP
+// ============================================================================
+
 jest.mock("@/lib/api-auth");
 jest.mock("@/lib/db", () => ({
   prisma: {
@@ -30,13 +38,29 @@ jest.mock("@/lib/db", () => ({
   },
 }));
 
-describe("Student Profile API", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+// Silence console logs
+silenceConsole();
 
-  afterEach(() => {
-    jest.restoreAllMocks();
+// ============================================================================
+// GET /api/students/profile
+// ============================================================================
+
+describe("Student Profile API", () => {
+  // Helper to create mock document
+  const createMockDocument = (docTypeId: number = 1, overrides: any = {}) => {
+    return {
+      id: 1,
+      account_id: 1,
+      doc_type_id: docTypeId,
+      file_path: `uploads/1/document-${docTypeId}.pdf`,
+      file_name: `document-${docTypeId}.pdf`,
+      created_at: new Date("2025-01-01"),
+      ...overrides
+    };
+  };
+
+  beforeEach(() => {
+    resetAllMocks();
   });
 
   // ============================================
@@ -73,7 +97,7 @@ describe("Student Profile API", () => {
       });
 
       it("should accept valid authentication", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
 
         const request = new NextRequest("http://localhost:3000/api/students/profile");
@@ -86,7 +110,7 @@ describe("Student Profile API", () => {
     // Group 2: Success Cases
     describe("Success Cases", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
       });
 
       it("should return complete profile data with all required fields", async () => {
@@ -279,7 +303,7 @@ describe("Student Profile API", () => {
     // Group 3: Error Handling
     describe("Error Handling", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
       });
 
       it("should return 404 when student not found", async () => {
@@ -313,7 +337,7 @@ describe("Student Profile API", () => {
     // Group 4: Content-Type Validation (ASVS V4.1.1)
     describe("Content-Type Header", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
       });
 
@@ -329,7 +353,7 @@ describe("Student Profile API", () => {
     // Group 5: Performance Tests
     describe("Performance", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
       });
 
@@ -431,7 +455,7 @@ describe("Student Profile API", () => {
     // Group 2: Input Validation Tests
     describe("Input Validation", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
       });
 
@@ -576,7 +600,7 @@ describe("Student Profile API", () => {
     // Group 3: Success Cases
     describe("Success Cases", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(
           createMockStudent({ id: 1 })
         );
@@ -683,7 +707,7 @@ describe("Student Profile API", () => {
     // Group 4: Error Handling
     describe("Error Handling", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
       });
 
       it("should return 404 when student not found", async () => {

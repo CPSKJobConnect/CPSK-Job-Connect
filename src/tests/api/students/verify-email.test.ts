@@ -22,9 +22,17 @@ import { POST, GET } from "@/app/api/students/verify-email/route";
 import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
 import { isVerificationExpired } from "@/lib/email-validation";
-import { mockSession } from "@/tests/utils/test-helpers";
 
-// Mock dependencies
+// Import fixtures
+import { mockStudentSession } from "@/tests/fixtures";
+
+// Import mocks
+import { silenceConsole, resetAllMocks } from "@/tests/setup/mocks";
+
+// ============================================================================
+// MOCK SETUP
+// ============================================================================
+
 jest.mock("@/lib/api-auth");
 jest.mock("@/lib/email-validation", () => ({
   isVerificationExpired: jest.fn(),
@@ -44,14 +52,18 @@ jest.mock("@/lib/db", () => ({
   },
 }));
 
+// Silence console logs
+silenceConsole();
+
+// ============================================================================
+// POST /api/students/verify-email
+// ============================================================================
+
 describe("Student Email Verification API", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    resetAllMocks();
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
 
   // ============================================
   // POST /api/students/verify-email
@@ -526,7 +538,7 @@ describe("Student Email Verification API", () => {
       });
 
       it("should accept valid authentication", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({
           id: 1,
           email: "student@ku.th",
@@ -548,7 +560,7 @@ describe("Student Email Verification API", () => {
     // Group 2: Authorization Tests (ASVS V8.2.2)
     describe("Authorization", () => {
       it("should return 404 when student not found", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
 
         const request = new NextRequest("http://localhost:3000/api/students/verify-email");
@@ -560,7 +572,7 @@ describe("Student Email Verification API", () => {
       });
 
       it("should return 404 when account exists but no student profile", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({
           id: 1,
           email: "student@ku.th",
@@ -576,7 +588,7 @@ describe("Student Email Verification API", () => {
       });
 
       it("should query account using session user ID", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({
           id: 1,
           student: {
@@ -590,7 +602,7 @@ describe("Student Email Verification API", () => {
         await GET(request);
 
         expect(prisma.account.findUnique).toHaveBeenCalledWith({
-          where: { id: parseInt(mockSession.student.user.id) },
+          where: { id: parseInt(mockStudentSession.user.id) },
           include: { student: true },
         });
       });
@@ -599,7 +611,7 @@ describe("Student Email Verification API", () => {
     // Group 3: Success Cases
     describe("Success Cases", () => {
       it("should return verification status for verified student", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({
           id: 1,
           email: "student@ku.th",
@@ -623,7 +635,7 @@ describe("Student Email Verification API", () => {
       });
 
       it("should return verification status for unverified student", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({
           id: 1,
           email: "student@ku.th",
@@ -647,7 +659,7 @@ describe("Student Email Verification API", () => {
       });
 
       it("should return verification status for alumni", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({
           id: 1,
           email: "alumni@ku.th",
@@ -674,7 +686,7 @@ describe("Student Email Verification API", () => {
     // Group 4: Error Handling
     describe("Error Handling", () => {
       it("should handle database errors gracefully", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockRejectedValue(
           new Error("Database connection lost")
         );

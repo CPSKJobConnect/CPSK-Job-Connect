@@ -17,9 +17,16 @@ import { NextRequest } from "next/server";
 import { GET } from "@/app/api/students/applications/route";
 import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
-import { mockSession, createMockStudent } from "@/tests/utils/test-helpers";
+// Import fixtures
+import { mockStudentSession, createMockStudent } from "@/tests/fixtures";
 
-// Mock dependencies
+// Import mocks
+import { silenceConsole, resetAllMocks } from "@/tests/setup/mocks";
+
+// ============================================================================
+// MOCK SETUP
+// ============================================================================
+
 jest.mock("@/lib/api-auth");
 jest.mock("@/lib/db", () => ({
   prisma: {
@@ -32,14 +39,18 @@ jest.mock("@/lib/db", () => ({
   },
 }));
 
+// Silence console logs
+silenceConsole();
+
+// ============================================================================
+// GET /api/students/applications
+// ============================================================================
+
 describe("Student Applications API", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    resetAllMocks();
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
 
   // ============================================
   // GET /api/students/applications
@@ -74,7 +85,7 @@ describe("Student Applications API", () => {
       });
 
       it("should accept valid authentication", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
         (prisma.application.findMany as jest.Mock).mockResolvedValue([]);
 
@@ -88,7 +99,7 @@ describe("Student Applications API", () => {
     // Group 2: Authorization Tests (ASVS V8.2.1, V8.2.2)
     describe("Authorization", () => {
       it("should return 404 when student not found", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(null);
 
         const request = new NextRequest("http://localhost:3000/api/students/applications");
@@ -100,7 +111,7 @@ describe("Student Applications API", () => {
       });
 
       it("V8.2.2: should only fetch applications for authenticated student", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         const mockStudent = createMockStudent({ id: 1 });
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(mockStudent);
         (prisma.application.findMany as jest.Mock).mockResolvedValue([]);
@@ -124,7 +135,7 @@ describe("Student Applications API", () => {
       });
 
       it("should query student using session user ID", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
         (prisma.application.findMany as jest.Mock).mockResolvedValue([]);
 
@@ -132,7 +143,7 @@ describe("Student Applications API", () => {
         await GET(request);
 
         expect(prisma.student.findUnique).toHaveBeenCalledWith({
-          where: { account_id: parseInt(mockSession.student.user.id) }
+          where: { account_id: parseInt(mockStudentSession.user.id) }
         });
       });
     });
@@ -140,7 +151,7 @@ describe("Student Applications API", () => {
     // Group 3: Business Logic Tests
     describe("Business Logic", () => {
       it("should return empty array when student has no applications", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
         (prisma.application.findMany as jest.Mock).mockResolvedValue([]);
 
@@ -154,7 +165,7 @@ describe("Student Applications API", () => {
       });
 
       it("should return formatted application data with all required fields", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
 
         const mockApplication = {
@@ -231,7 +242,7 @@ describe("Student Applications API", () => {
       });
 
       it("should return multiple applications in descending order by applied_at", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
 
         const mockApplications = [
@@ -292,7 +303,7 @@ describe("Student Applications API", () => {
       });
 
       it("should handle applications with all document types", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
 
         const mockApplication = {
@@ -331,7 +342,7 @@ describe("Student Applications API", () => {
       });
 
       it("should handle applications with no documents", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
 
         const mockApplication = {
@@ -373,7 +384,7 @@ describe("Student Applications API", () => {
     // Group 4: Error Handling (ASVS V9.1.1)
     describe("Error Handling", () => {
       it("V9.1.1: should handle database errors gracefully without leaking details", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockRejectedValue(
           new Error("Database connection lost")
         );
@@ -390,7 +401,7 @@ describe("Student Applications API", () => {
       });
 
       it("should handle application query errors gracefully", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
         (prisma.application.findMany as jest.Mock).mockRejectedValue(
           new Error("Query timeout")
@@ -409,7 +420,7 @@ describe("Student Applications API", () => {
     // Group 5: Performance Tests
     describe("Performance", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.student.findUnique as jest.Mock).mockResolvedValue(createMockStudent());
       });
 

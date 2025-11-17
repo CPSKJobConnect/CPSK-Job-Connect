@@ -24,7 +24,13 @@ import {
   getVerificationExpiry,
 } from "@/lib/email-validation";
 
-// Mock dependencies
+// Import mocks
+import { silenceConsole, resetAllMocks } from "@/tests/setup/mocks";
+
+// ============================================================================
+// MOCK SETUP
+// ============================================================================
+
 jest.mock("@/lib/email");
 jest.mock("@/lib/email-validation", () => ({
   isValidKUEmail: jest.fn(),
@@ -43,18 +49,22 @@ jest.mock("@/lib/db", () => ({
   },
 }));
 
+// Silence console logs
+silenceConsole();
+
+// ============================================================================
+// POST /api/students/send-verification
+// ============================================================================
+
 describe("Send Email Verification API", () => {
   // Use unique emails per test to avoid rate limiting conflicts
   let emailCounter = 0;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    resetAllMocks();
     emailCounter++;
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
 
   // Helper to generate unique email for each test to avoid rate limiting
   const getUniqueEmail = () => `test${emailCounter}@ku.th`;

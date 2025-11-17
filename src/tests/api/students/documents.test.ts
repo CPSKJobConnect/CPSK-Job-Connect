@@ -20,9 +20,17 @@ import { POST } from "@/app/api/students/documents/route";
 import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
 import { uploadDocument } from "@/lib/uploadDocument";
-import { mockSession, createMockDocument } from "@/tests/utils/test-helpers";
 
-// Mock dependencies
+// Import fixtures
+import { mockStudentSession } from "@/tests/fixtures";
+
+// Import mocks
+import { silenceConsole, resetAllMocks } from "@/tests/setup/mocks";
+
+// ============================================================================
+// MOCK SETUP
+// ============================================================================
+
 jest.mock("@/lib/api-auth");
 jest.mock("@/lib/uploadDocument");
 jest.mock("@/lib/db", () => ({
@@ -33,13 +41,29 @@ jest.mock("@/lib/db", () => ({
   },
 }));
 
-describe("Student Documents API", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+// Silence console logs
+silenceConsole();
 
-  afterEach(() => {
-    jest.restoreAllMocks();
+// ============================================================================
+// POST /api/students/documents
+// ============================================================================
+
+describe("Student Documents API", () => {
+  // Helper to create mock document data
+  const createMockDocument = (docTypeId: number = 1, overrides: any = {}) => {
+    return {
+      id: 1,
+      account_id: 1,
+      doc_type_id: docTypeId,
+      file_path: `uploads/1/document-${docTypeId}.pdf`,
+      file_name: `document-${docTypeId}.pdf`,
+      created_at: new Date("2025-01-01"),
+      ...overrides
+    };
+  };
+
+  beforeEach(() => {
+    resetAllMocks();
   });
 
   // ============================================
@@ -102,7 +126,7 @@ describe("Student Documents API", () => {
       });
 
       it("should accept valid authentication", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({
           id: 1,
           email: "student@ku.th",
@@ -123,7 +147,7 @@ describe("Student Documents API", () => {
     // Group 2: Input Validation Tests
     describe("Input Validation", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({
           id: 1,
           email: "student@ku.th",
@@ -215,7 +239,7 @@ describe("Student Documents API", () => {
     // Group 3: File Validation Tests (ASVS V5.2)
     describe("File Validation (ASVS V5.2)", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({
           id: 1,
           email: "student@ku.th",
@@ -358,7 +382,7 @@ describe("Student Documents API", () => {
     // Group 4: Success Cases
     describe("Success Cases", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({
           id: 1,
           email: "student@ku.th",
@@ -525,7 +549,7 @@ describe("Student Documents API", () => {
     // Group 5: Error Handling
     describe("Error Handling", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
       });
 
       it("should return 404 when account not found", async () => {
@@ -592,7 +616,7 @@ describe("Student Documents API", () => {
     // Group 6: Authorization Tests (ASVS V8.2.2)
     describe("Authorization", () => {
       it("should only upload documents for authenticated user's account", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({
           id: 1,
           email: "student@ku.th",
@@ -617,7 +641,7 @@ describe("Student Documents API", () => {
       });
 
       it("should use session user ID for account lookup", async () => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({ id: 1 });
         (uploadDocument as jest.Mock).mockResolvedValue(createMockDocument(1));
 
@@ -631,7 +655,7 @@ describe("Student Documents API", () => {
         await POST(request);
 
         expect(prisma.account.findUnique).toHaveBeenCalledWith({
-          where: { id: parseInt(mockSession.student.user.id) }
+          where: { id: parseInt(mockStudentSession.user.id) }
         });
       });
     });
@@ -639,7 +663,7 @@ describe("Student Documents API", () => {
     // Group 7: Performance Tests
     describe("Performance", () => {
       beforeEach(() => {
-        (getApiSession as jest.Mock).mockResolvedValue(mockSession.student);
+        (getApiSession as jest.Mock).mockResolvedValue(mockStudentSession);
         (prisma.account.findUnique as jest.Mock).mockResolvedValue({
           id: 1,
           email: "student@ku.th",
