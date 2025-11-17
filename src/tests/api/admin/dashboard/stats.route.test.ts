@@ -1,13 +1,31 @@
 /**
- * Tests for GET /api/admin/dashboard/stats
- * Tests dashboard statistics retrieval with proper authentication
+ * Tests for Admin Dashboard Statistics Route
+ *
+ * Endpoint:
+ * - GET /api/admin/dashboard/stats - Fetch dashboard statistics
+ *
+ * ASVS Coverage:
+ * - V2: Authentication
+ * - V4: Access Control (Admin-only)
+ *
+ * Note: Business logic testing is in stats.logic.test.ts
+ * This file focuses on route-level concerns (auth, authorization)
  */
 
 import { GET } from "@/app/api/admin/dashboard/stats/route";
 import { getServerSession } from "next-auth/next";
 import { prisma } from "@/lib/db";
 
-// Mock prisma
+// Import fixtures
+import { mockAdminSession, mockStudentSession } from "@/tests/fixtures";
+
+// Import mocks
+import { silenceConsole, resetAllMocks } from "@/tests/setup/mocks";
+
+// ============================================================================
+// MOCK SETUP
+// ============================================================================
+
 jest.mock("@/lib/db", () => ({
   prisma: {
     company: {
@@ -34,12 +52,10 @@ jest.mock("@/lib/db", () => ({
   },
 }));
 
-// Mock NextAuth
 jest.mock("next-auth/next", () => ({
   getServerSession: jest.fn(),
 }));
 
-// Mock Next Response
 jest.mock("next/server", () => ({
   NextResponse: {
     json: (body: any, opts?: { status?: number }) => ({
@@ -51,14 +67,22 @@ jest.mock("next/server", () => ({
 }));
 
 // Silence console logs
-jest.spyOn(console, "error").mockImplementation(() => {});
+silenceConsole();
+
+// ============================================================================
+// GET /api/admin/dashboard/stats
+// ============================================================================
 
 describe("GET /api/admin/dashboard/stats", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    resetAllMocks();
   });
 
-  describe("Authentication & Authorization", () => {
+  // ==========================================================================
+  // AUTHENTICATION TESTS
+  // ==========================================================================
+
+  describe("Authentication", () => {
     it("returns 401 if user is not authenticated", async () => {
       (getServerSession as jest.Mock).mockResolvedValue(null);
 
@@ -68,10 +92,26 @@ describe("GET /api/admin/dashboard/stats", () => {
       expect(res.status).toBe(401);
       expect(data.error).toBe("Unauthorized");
     });
+  });
 
+  // ==========================================================================
+  // AUTHORIZATION TESTS
+  // ==========================================================================
+
+  describe("Authorization", () => {
     it("returns 403 if user is not admin", async () => {
+      (getServerSession as jest.Mock).mockResolvedValue(mockStudentSession);
+
+      const res = await GET();
+      const data = await res.json();
+
+      expect(res.status).toBe(403);
+      expect(data.error).toBe("Forbidden - Admin access required");
+    });
+
+    it("returns 403 for company users", async () => {
       (getServerSession as jest.Mock).mockResolvedValue({
-        user: { email: "user@example.com", role: "student" },
+        user: { email: "company@example.com", role: "company" },
       });
 
       const res = await GET();
@@ -80,9 +120,45 @@ describe("GET /api/admin/dashboard/stats", () => {
       expect(res.status).toBe(403);
       expect(data.error).toBe("Forbidden - Admin access required");
     });
+
+    it("allows access for admin users", async () => {
+      (getServerSession as jest.Mock).mockResolvedValue(mockAdminSession);
+
+      // Mock all required database calls to return minimal data
+      (prisma.company.count as jest.Mock).mockResolvedValue(0);
+      (prisma.jobPost.count as jest.Mock).mockResolvedValue(0);
+      (prisma.student.count as jest.Mock).mockResolvedValue(0);
+      (prisma.report.count as jest.Mock).mockResolvedValue(0);
+      (prisma.jobTag.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.application.count as jest.Mock).mockResolvedValue(0);
+      (prisma.jobPost.aggregate as jest.Mock).mockResolvedValue({ _avg: { min_salary: 0 } });
+      (prisma.company.findMany as jest.Mock).mockResolvedValue([]);
+
+      const res = await GET();
+
+      expect(res.status).not.toBe(403);
+      expect(res.status).not.toBe(401);
+    });
   });
 
-  // Note: Stats calculation logic is tested in stats.logic.test.ts
-  // This route test focuses on authentication and authorization
-  // Full integration tests would require database connection
+  // ==========================================================================
+  // NOTE ON BUSINESS LOGIC TESTING
+  // ==========================================================================
+
+  /*
+   * Business Logic Tests:
+   *
+   * The actual statistics calculation logic is tested in:
+   * - stats.logic.test.ts (unit tests for getDashboardStats function)
+   *
+   * This route test file focuses on:
+   * - Authentication (401 for unauthenticated)
+   * - Authorization (403 for non-admin users)
+   * - Route-level concerns
+   *
+   * Full integration tests with real data would require:
+   * - Test database connection
+   * - Seeded test data
+   * - Integration test suite (future enhancement)
+   */
 });
