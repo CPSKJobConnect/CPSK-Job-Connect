@@ -3,17 +3,21 @@ import { prisma } from "@/lib/db";
 import { mockCompanySession } from "@/tests/fixtures/sessions";
 
 // Mock Supabase
-jest.mock("@supabase/supabase-js", () => ({
-  createClient: jest.fn(() => ({
-    storage: {
-      from: jest.fn(() => ({
-        upload: jest.fn((path, file) => ({
-          error: null,
-        })),
-      })),
-    },
-  })),
-}));
+jest.mock("@supabase/supabase-js", () => {
+  const storageFromMock = jest.fn(() => ({
+    upload: jest.fn(() => ({
+      error: null,
+    })),
+  }));
+
+  return {
+    createClient: jest.fn(() => ({
+      storage: {
+        from: storageFromMock,
+      },
+    })),
+  };
+});
 
 // Mock dependencies
 jest.mock("next-auth/next", () => ({
@@ -57,6 +61,12 @@ describe("POST /api/company/documents", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    const supabase = createClient();
+    (supabase.storage.from as jest.Mock).mockImplementation(() => ({
+      upload: jest.fn(() => ({
+        error: null,
+      })),
+    }));
   });
 
   describe("Authentication", () => {
