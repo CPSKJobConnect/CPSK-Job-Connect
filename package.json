@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "postinstall": "prisma generate",
+    "postinstall": "node scripts/postinstall.cjs",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:css": "stylelint \"**/*.{css,scss}\" --fix",
     "type-check": "tsc --noEmit",
@@ -25,7 +25,8 @@
     "db:restore": "ts-node --project tsconfig.node.json scripts/restore-database.ts",
     "db:seed": "ts-node --project tsconfig.node.json prisma/seed.ts",
     "storage:reset": "ts-node --project tsconfig.node.json scripts/reset-supabase-storage.ts",
-    "test:e2e:report": "npx cypress run --reporter mochawesome --reporter-options reportDir=cypress/reports,overwrite=false,html=true,json=true"
+    "test:e2e:report": "npx cypress run --reporter mochawesome --reporter-options reportDir=cypress/reports,overwrite=false,html=true,json=true",
+    "cypress:install": "npx cypress install"
   },
   "prisma": {
     "seed": "ts-node --project tsconfig.node.json prisma/seed.ts"
