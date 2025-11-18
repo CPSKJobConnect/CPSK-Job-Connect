@@ -99,7 +99,8 @@ export async function GET() {
       // Recent reports
       prisma.report.findMany({
         include: {
-          account: true
+          account: true,
+          reportType: true
         },
         orderBy: {
           created_at: "desc"
@@ -144,9 +145,10 @@ export async function GET() {
     // Process recent reports
     const processedRecentReports = recentReports.map(report => ({
       id: report.id,
-      type: report.type,
       createdAt: report.created_at,
-      reporterEmail: report.account.email
+      reporterEmail: report.account.email,
+      reportName: report.reportType?.name || "Unknown",
+      isResolved: report.is_resolved
     }));
 
     const stats = {
