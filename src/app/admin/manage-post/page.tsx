@@ -767,6 +767,51 @@ export default function ManagePostPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Job Post Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Job Post</DialogTitle>
+            <DialogDescription>
+              Update the details for this job post
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Example */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Job Title</Label>
+                <Input
+                  value={formData.jobName}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, jobName: e.target.value }))
+                  }
+                />
+              </div>
+              <div>
+                <Label>Location</Label>
+                <Input
+                  value={formData.location}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, location: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+
+            {/* The rest of your form fields… */}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateJobPost}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
