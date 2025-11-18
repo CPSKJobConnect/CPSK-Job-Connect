@@ -41,6 +41,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
     handleSubmit,
     formState: { errors },
     setValue,
+    setError: setFieldError,
     watch,
   } = useForm<AuthFormData>({
     // Remove Zod resolver for frontend - validation happens on backend
@@ -222,6 +223,21 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         }
 
         if (!response.ok) {
+          // If server returned Zod issues or structured details, map them to field errors
+          try {
+            if (result && result.details && Array.isArray(result.details)) {
+              // details are Zod issues
+              result.details.forEach((issue: any) => {
+                const path = Array.isArray(issue.path) && issue.path.length ? String(issue.path[0]) : null
+                if (path) {
+                  setFieldError(path as any, { type: 'server', message: issue.message })
+                }
+              })
+            }
+          } catch (e) {
+            console.warn('Failed to map server validation details to fields', e)
+          }
+
           setError(result.error || "Registration failed")
         } else {
           // For OAuth users, update session and redirect
@@ -346,7 +362,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
           </Alert>
         )}
         {error && (
-          <Alert className="mb-4" variant="destructive">
+          <Alert data-testid="auth-form-error-card" className="mb-4" variant="destructive">
             <AlertDescription>
               <div className="flex flex-col gap-2">
                 <p>{error}</p>
@@ -394,6 +410,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             </Label>
             <Input
               id="email"
+              data-testid="email"
               type="email"
               {...register("email")}
               className="mt-1 bg-gray-50"
@@ -406,7 +423,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
               readOnly={isOAuthCompletion}
             />
             {errors.email && (
-              <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
+              <p data-testid="error-email" className="text-sm text-red-600 mt-1">{errors.email.message}</p>
             )}
             {mode === "register" && role === "student" && studentStatus === "CURRENT" && emailValue && !emailValue.toLowerCase().endsWith("@ku.th") && !isOAuthCompletion && (
               <p className="text-sm text-amber-600 mt-1">
@@ -435,13 +452,14 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                 <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
+                  data-testid="password"
                   type="password"
                   {...register("password")}
                   className="mt-1 bg-gray-50"
                   placeholder="Enter your password"
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
+                  <p data-testid="error-password" className="text-sm text-red-600 mt-1">{errors.password.message}</p>
                 )}
               </div>
 
@@ -450,13 +468,14 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <Input
                     id="confirmPassword"
+                    data-testid="confirmPassword"
                     type="password"
                     {...register("confirmPassword")}
                     className="mt-1 bg-gray-50"
                     placeholder="Confirm your password"
                   />
                   {errors.confirmPassword && (
-                    <p className="text-sm text-red-600 mt-1">{errors.confirmPassword.message}</p>
+                    <p data-testid="error-confirmPassword" className="text-sm text-red-600 mt-1">{errors.confirmPassword.message}</p>
                   )}
                 </div>
               )}
@@ -555,14 +574,14 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                       onValueChange={(value) => setValue("faculty", value, { shouldValidate: true })}
                       defaultValue={watch("faculty")}
                     >
-                      <SelectTrigger className="mt-1 bg-gray-50">
+                      <SelectTrigger data-testid="faculty-select" className="mt-1 bg-gray-50">
                         <SelectValue placeholder="Select faculty" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Software and Knowledge Engineering (SKE)">
+                        <SelectItem data-testid="ske" value="Software and Knowledge Engineering (SKE)">
                           Software and Knowledge Engineering (SKE)
                         </SelectItem>
-                        <SelectItem value="Computer Engineering (CPE)">
+                        <SelectItem data-testid="cpe" value="Computer Engineering (CPE)">
                           Computer Engineering (CPE)
                         </SelectItem>
                       </SelectContent>
@@ -580,20 +599,20 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                       value={yearValue?.toString()}
                       defaultValue={yearValue?.toString()}
                     >
-                      <SelectTrigger className="mt-1 bg-gray-50">
+                      <SelectTrigger data-testid="year-select" className="mt-1 bg-gray-50">
                         <SelectValue placeholder="Select year" />
                       </SelectTrigger>
                       <SelectContent>
                         {studentStatus === "CURRENT" ? (
                           // Current students: Only show year 1-8
                           [1, 2, 3, 4, 5, 6, 7, 8].map((year) => (
-                            <SelectItem key={year} value={year.toString()}>
+                            <SelectItem key={year} data-testid={`year-${year}`} value={year.toString()}>
                               Year {year}
                             </SelectItem>
                           ))
                         ) : (
                           // Alumni: Only show "Alumni" option
-                          <SelectItem value="Alumni">
+                          <SelectItem data-testid="year-alumni" value="Alumni">
                             Alumni
                           </SelectItem>
                         )}
@@ -652,12 +671,13 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                     <Label htmlFor="companyName">Company Name</Label>
                     <Input
                       id="companyName"
+                      data-testid="companyName"
                       {...register("companyName")}
                       className="mt-1 bg-gray-50"
                       placeholder="Enter company name"
                     />
                     {errors.companyName && (
-                      <p className="text-sm text-red-600 mt-1">{errors.companyName.message}</p>
+                      <p data-testid="error-companyName" className="text-sm text-red-600 mt-1">{errors.companyName.message}</p>
                     )}
                   </div>
 
@@ -665,13 +685,14 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                     <Label htmlFor="address">Address</Label>
                     <Textarea
                       id="address"
+                      data-testid="address"
                       {...register("address")}
                       className="mt-1 bg-gray-50"
                       rows={3}
                       placeholder="Enter company address"
                     />
                     {errors.address && (
-                      <p className="text-sm text-red-600 mt-1">{errors.address.message}</p>
+                      <p data-testid="error-address" className="text-sm text-red-600 mt-1">{errors.address.message}</p>
                     )}
                   </div>
 
@@ -679,13 +700,14 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                     <Label htmlFor="website">Website (Optional)</Label>
                     <Input
                       id="website"
+                      data-testid="website"
                       type="url"
                       {...register("website")}
                       className="mt-1 bg-gray-50"
                       placeholder="https://example.com"
                     />
                     {errors.website && (
-                      <p className="text-sm text-red-600 mt-1">{errors.website.message}</p>
+                      <p data-testid="error-website" className="text-sm text-red-600 mt-1">{errors.website.message}</p>
                     )}
                   </div>
 
@@ -693,13 +715,14 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                     <Label htmlFor="description">Company Description</Label>
                     <Textarea
                       id="description"
+                      data-testid="description"
                       {...register("description")}
                       className="mt-1 bg-gray-50"
                       rows={4}
                       placeholder="Describe your company..."
                     />
                     {errors.description && (
-                      <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>
+                      <p data-testid="error-description" className="text-sm text-red-600 mt-1">{errors.description.message}</p>
                     )}
                   </div>
 
@@ -707,12 +730,13 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                     <Label htmlFor="phone">Phone Number</Label>
                     <Input
                       id="phone"
+                      data-testid="phone"
                       {...register("phone")}
                       className="mt-1 bg-gray-50"
                       placeholder="e.g., 0812345XXX"
                     />
                     {errors.phone && (
-                      <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
+                      <p data-testid="error-phone" className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
                     )}
                   </div>
 
@@ -721,6 +745,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                     <div className="mt-1 flex items-center space-x-2 bg-gray-50">
                       <Input
                         id="evidence"
+                        data-testid="evidence"
                         type="file"
                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                         onChange={handleFileChange}
@@ -737,12 +762,12 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                       </Label>
                     </div>
                     {!selectedFile && (
-                      <p className="text-sm text-red-600 mt-1">
+                      <p data-testid="error-evidence-required" className="text-sm text-red-600 mt-1">
                         Company evidence document is required
                       </p>
                     )}
                     {errors.evidence && (
-                      <p className="text-sm text-red-600 mt-1">{errors.evidence.message}</p>
+                      <p data-testid="error-evidence" className="text-sm text-red-600 mt-1">{errors.evidence.message}</p>
                     )}
                     <p className="text-xs text-gray-500 mt-1">
                       Upload documents like business license, registration certificate, or other proof of company legitimacy
@@ -769,6 +794,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
           )}
 
           <Button
+            data-testid="auth-submit"
             type="submit"
             className={`w-full ${roleConfig.primaryColor} cursor-pointer`}
             disabled={isLoading}
@@ -834,6 +860,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             <p className="text-sm">
               Don&apos;t have an account?{" "}
               <a
+                data-testid="auth-signup"
                 href={`/register/${role}`}
                 className={`${roleConfig.secondaryColor.split(' ').slice(1, 3).join(' ')} hover:opacity-80 font-medium`}
               >

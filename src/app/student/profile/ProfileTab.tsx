@@ -205,16 +205,16 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
           </div>
           <div className="flex gap-2">
             {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)}>
+              <Button onClick={() => setIsEditing(true)} data-testid="edit-profile-btn">
                 Edit Profile
               </Button>
             ) : (
               <>
-                <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
+                <Button variant="outline" onClick={handleCancel} disabled={isSaving} data-testid="cancel-profile-btn">
                   <IoClose className="w-4 h-4 mr-2" />
                   Cancel
                 </Button>
-                <Button onClick={handleSave} disabled={isSaving}>
+                <Button onClick={handleSave} disabled={isSaving} data-testid="save-profile-btn">
                   <IoSave className="w-4 h-4 mr-2" />
                   {isSaving ? "Saving..." : "Save Changes"}
                 </Button>
@@ -255,6 +255,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
                     ref={logoInputRef}
                     type="file"
                     accept="image/*"
+                    data-testid="profile-picture-input"
                     className="hidden"
                     onChange={handleImageChange}
                   />
@@ -262,6 +263,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
                     type="button"
                     variant="outline"
                     size="sm"
+                    data-testid="change-picture-btn"
                     onClick={() => logoInputRef.current?.click()}
                   >
                     <IoCamera className="w-4 h-4 mr-2" />
@@ -317,6 +319,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
               <Input
                 value={formData.firstname}
                 onChange={(e) => handleChange("firstname", e.target.value)}
+                data-testid="input-firstname"
                 placeholder="Enter first name"
                 className="pl-6"
               />
@@ -335,6 +338,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
               <Input
                 value={formData.lastname}
                 onChange={(e) => handleChange("lastname", e.target.value)}
+                data-testid="input-lastname"
                 placeholder="Enter last name"
                 className="pl-6"
               />
@@ -354,14 +358,14 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
                 value={formData.faculty}
                 onValueChange={(value) => handleChange("faculty", value)}
               >
-                <SelectTrigger className="pl-6">
+                <SelectTrigger className="pl-6" data-testid="select-faculty">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Software and Knowledge Engineering (SKE)">
+                  <SelectItem value="Software and Knowledge Engineering (SKE)" data-testid="ske">
                     Software and Knowledge Engineering (SKE)
                   </SelectItem>
-                  <SelectItem value="Computer Engineering (CPE)">
+                  <SelectItem value="Computer Engineering (CPE)" data-testid="cpe">
                     Computer Engineering (CPE)
                   </SelectItem>
                 </SelectContent>
@@ -382,16 +386,16 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
                 value={String(formData.year)}
                 onValueChange={(value) => handleChange("year", value === "Alumni" ? value : parseInt(value))}
               >
-                <SelectTrigger className="pl-6">
+                <SelectTrigger className="pl-6" data-testid="select-year">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {[1, 2, 3, 4, 5, 6, 7, 8].map((year) => (
-                    <SelectItem key={year} value={String(year)}>
+                    <SelectItem key={year} value={String(year)} data-testid={`year-${year}`}>
                       Year {year}
                     </SelectItem>
                   ))}
-                  <SelectItem value="Alumni">Alumni</SelectItem>
+                  <SelectItem value="Alumni" data-testid="year-alumni">Alumni</SelectItem>
                 </SelectContent>
               </Select>
             ) : (
@@ -411,6 +415,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
               <Input
                 value={formData.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
+                data-testid="input-phone"
                 placeholder="Enter phone number"
                 className="pl-6"
               />

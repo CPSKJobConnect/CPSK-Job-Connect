@@ -26,6 +26,7 @@ interface SkillComboboxProps {
   selectedSkill: string[];
   setSelectedSkill: (skills: string[]) => void;
   existingSkills?: string[];
+  dataTestId?: string;
 }
 
 const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }: SkillComboboxProps) => {
@@ -84,8 +85,9 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
             </div>
         )}
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+        <PopoverTrigger asChild>
         <Button
+          data-testid={"skill-combobox"}
           variant="outline"
           role="combobox"
           aria-expanded={open}

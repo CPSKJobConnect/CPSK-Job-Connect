@@ -50,7 +50,7 @@ const DocumentUploadSection = ({
       </div>
       <div className="px-10 py-3">
       {(selectedFile || uploadedFile) && (
-        <div className="flex flex-col justify-center bg-[#F3FEFA] rounded-md p-2">
+        <div data-testid={`selected-${title.toLowerCase()}`} className="flex flex-col justify-center bg-[#F3FEFA] rounded-md p-2">
           <div className="flex flex-row justify-between items-center">
             <p className="text-sm text-gray-700 max-w-[80%] truncate">
               Selected: <span className="font-medium">{selectedFile ? selectedFile.name : uploadedFile?.name}</span>
@@ -70,6 +70,7 @@ const DocumentUploadSection = ({
           existingFiles={existingFiles}
           onFileSelect={handleSelectExistingFile}
           selectedFile={selectedFile}
+          triggerTestId={`select-existing-${title.toLowerCase()}`}
         />
         <FileUpload
           title={`Upload ${title}`}

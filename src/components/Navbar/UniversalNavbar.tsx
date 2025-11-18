@@ -81,6 +81,7 @@ export default function UniversalNavbar({ links, showBookmarks = false, onSignIn
         <Popover>
           <PopoverTrigger asChild>
             <div
+              data-testid="profile-menu-popover"
               role="button"
               tabIndex={0}
               aria-haspopup="menu"

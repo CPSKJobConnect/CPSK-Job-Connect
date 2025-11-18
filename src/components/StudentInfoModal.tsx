@@ -111,12 +111,12 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className={`${baseStyle} ${sizeStyle}`}>
+        <Button data-testid={`view-applicant-${applicant_id}`} className={`${baseStyle} ${sizeStyle}`}>
           <MdOutlinePersonOutline size={20} />
           <p>Profile</p>
         </Button>
       </DialogTrigger>
-      <DialogContent className="md:min-w-[700px] sm:min-w-[400px] h-[500px] overflow-hidden overflow-y-auto">
+      <DialogContent data-testid="applicant-modal" className="md:min-w-[700px] sm:min-w-[400px] h-[500px] overflow-hidden overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {applicantInfo ? `${applicantInfo.firstname} ${applicantInfo.lastname} Profile` : "Loading..."}
