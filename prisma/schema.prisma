@@ -200,6 +200,8 @@ model Report {
   description    String?
   report_type_id Int?
   created_at     DateTime    @default(now())
+  updated_at DateTime @updatedAt
+  is_resolved Boolean @default(false)
 
   account     Account     @relation(fields: [account_id], references: [id])
   reportType  ReportType? @relation(fields: [report_type_id], references: [id])
