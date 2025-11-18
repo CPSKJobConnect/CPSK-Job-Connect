@@ -130,7 +130,7 @@ export default function StudentProfilePage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Profile Header */}
-      <div className="bg-gradient-to-r from-[#006C67] to-[#00968F] rounded-lg shadow-lg p-8 mb-8 text-white">
+      <div className="bg-linear-to-r from-[#006C67] to-[#00968F] rounded-lg shadow-lg p-8 mb-8 text-white">
         <div className="flex items-center gap-6">
           {/* Profile Picture */}
           <div className="relative group">
