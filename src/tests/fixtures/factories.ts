@@ -5,7 +5,6 @@
  * Use these instead of duplicating mock data in test files.
  */
 
-import { RegistrationStatus } from "@prisma/client";
 import * as models from "./models";
 
 // ============================================================================
@@ -73,7 +72,7 @@ export function createMockPendingStudent(overrides: any = {}) {
 export function createMockApprovedStudent(overrides: any = {}) {
   return {
     ...models.mockStudent,
-    verification_status: "APPROVED" as RegistrationStatus,
+    verification_status: "APPROVED",
     ...overrides,
   };
 }
@@ -106,7 +105,7 @@ export function createMockPendingCompany(overrides: any = {}) {
 export function createMockApprovedCompany(overrides: any = {}) {
   return {
     ...models.mockCompany,
-    registration_status: "APPROVED" as RegistrationStatus,
+    registration_status: "APPROVED",
     ...overrides,
   };
 }

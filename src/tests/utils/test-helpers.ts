@@ -8,6 +8,9 @@
  */
 
 import { sign } from "jsonwebtoken";
+import type ms from "ms";
+
+type TokenExpiry = ms.StringValue | number;
 
 /**
  * Generate a valid JWT token for testing
@@ -16,7 +19,7 @@ export function generateTestToken(
   userId: string = "1",
   email: string = "test@ku.th",
   role: string = "student",
-  expiresIn: string = "1h"
+  expiresIn: TokenExpiry = "1h"
 ): string {
   const secret = process.env.NEXTAUTH_SECRET || "test-secret";
 

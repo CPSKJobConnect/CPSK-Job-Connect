@@ -5,8 +5,6 @@
  * Use factories.ts for creating variations of these models.
  */
 
-import { RegistrationStatus } from "@prisma/client";
-
 // ============================================================================
 // ACCOUNTS
 // ============================================================================
@@ -73,7 +71,7 @@ export const mockStudent = {
   gpa: 3.75,
   phone: "0812345678",
   student_status: "CURRENT",
-  verification_status: "APPROVED" as RegistrationStatus,
+  verification_status: "APPROVED",
   verification_notes: null,
   email_verified: true,
   created_at: new Date("2024-01-01"),
@@ -87,7 +85,7 @@ export const mockPendingStudent = {
   account_id: 4,
   name: "Jane Smith",
   student_id: "b6410000001",
-  verification_status: "PENDING" as RegistrationStatus,
+  verification_status: "PENDING",
   account: {
     ...mockStudentAccount,
     id: 4,
@@ -101,7 +99,7 @@ export const mockRejectedStudent = {
   account_id: 5,
   name: "Bob Johnson",
   student_id: "b6410000002",
-  verification_status: "REJECTED" as RegistrationStatus,
+  verification_status: "REJECTED",
   verification_notes: "Invalid student ID",
   account: {
     ...mockStudentAccount,
@@ -122,7 +120,7 @@ export const mockCompany = {
   description: "Leading technology company in Thailand",
   phone: "0212345678",
   website: "https://techcorp.example.com",
-  registration_status: "APPROVED" as RegistrationStatus,
+  registration_status: "APPROVED",
   verification_notes: null,
   created_at: new Date("2024-01-01"),
   updated_at: new Date("2024-01-01"),
@@ -134,7 +132,7 @@ export const mockPendingCompany = {
   id: 2,
   account_id: 6,
   name: "StartUp Inc",
-  registration_status: "PENDING" as RegistrationStatus,
+  registration_status: "PENDING",
   account: {
     ...mockCompanyAccount,
     id: 6,
@@ -147,7 +145,7 @@ export const mockRejectedCompany = {
   id: 3,
   account_id: 7,
   name: "Fake Company",
-  registration_status: "REJECTED" as RegistrationStatus,
+  registration_status: "REJECTED",
   verification_notes: "Invalid business registration",
   account: {
     ...mockCompanyAccount,

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TEST TEMPLATE - Copy this file when creating new tests
  *
