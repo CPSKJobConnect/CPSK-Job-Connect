@@ -92,7 +92,7 @@ const JobCard = (job: JobCardProps) => {
 
   const handleSaveToggle = async () => {
     if (!session?.user?.id) {
-      alert("Please login to save jobs");
+      toast.error("Please login to save jobs");
       return;
     }
 
@@ -107,17 +107,22 @@ const JobCard = (job: JobCardProps) => {
 
       if (response.ok) {
         setIsSaved(!isSaved);
-        if (method === "DELETE" && typeof job.onUnbookmark === "function") {
-          job.onUnbookmark(job.info.id);
+        if (method === "DELETE") {
+          toast.success("Job removed from bookmarks");
+          if (typeof job.onUnbookmark === "function") {
+            job.onUnbookmark(job.info.id);
+          }
+        } else {
+          toast.success("Job saved to bookmarks!");
         }
       } else {
         const error = await response.json();
         console.error("Failed to toggle save:", error);
-        alert("Failed to save job. Please try again.");
+        toast.error("Failed to save job. Please try again.");
       }
     } catch (error) {
       console.error("Error toggling save:", error);
-      alert("An error occurred. Please try again.");
+      toast.error("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
