@@ -165,12 +165,25 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid arrangement or type" }, { status: 400 });
     }
 
-    const tagIds = body.tags?.length
-      ? await prisma.jobTag.findMany({
-          where: { name: { in: body.tags } },
-          select: { id: true },
-        })
-      : [];
+    // Handle tags: find existing or create new ones
+    const tagIds: { id: number }[] = [];
+    if (body.tags?.length) {
+      for (const tagName of body.tags) {
+        // Try to find existing tag
+        let tag = await prisma.jobTag.findUnique({
+          where: { name: tagName },
+        });
+
+        // If tag doesn't exist, create it
+        if (!tag) {
+          tag = await prisma.jobTag.create({
+            data: { name: tagName },
+          });
+        }
+
+        tagIds.push({ id: tag.id });
+      }
+    }
 
     const documentIds = body.requiredDocuments?.length
       ? await prisma.documentType.findMany({

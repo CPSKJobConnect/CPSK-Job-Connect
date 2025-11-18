@@ -31,6 +31,19 @@ interface SecurityReport {
   };
 }
 
+interface EslintMessage {
+  line: number;
+  column: number;
+  severity: number;
+  message: string;
+  ruleId?: string;
+}
+
+interface EslintFileResult {
+  filePath: string;
+  messages: EslintMessage[];
+}
+
 const OUTPUT_DIR = path.join(process.cwd(), 'docs', 'security-reports');
 const SAST_REPORT_PATH = path.join(OUTPUT_DIR, 'SAST_REPORT.md');
 const SAST_JSON_PATH = path.join(OUTPUT_DIR, 'sast-results.json');
@@ -79,10 +92,10 @@ try {
   runEslintSecurityScan(SAST_JSON_PATH);
 
   // Read and parse ESLint results
-  let eslintResults: any[] = [];
+  let eslintResults: EslintFileResult[] = [];
   if (fs.existsSync(SAST_JSON_PATH)) {
     const rawData = fs.readFileSync(SAST_JSON_PATH, 'utf-8');
-    eslintResults = JSON.parse(rawData);
+    eslintResults = JSON.parse(rawData) as EslintFileResult[];
   }
 
   // Process results
@@ -91,7 +104,7 @@ try {
   let totalWarnings = 0;
 
   eslintResults.forEach((fileResult) => {
-    fileResult.messages.forEach((message: any) => {
+    fileResult.messages.forEach((message) => {
       issues.push({
         file: path.relative(process.cwd(), fileResult.filePath),
         line: message.line,

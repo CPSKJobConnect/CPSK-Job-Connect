@@ -4,6 +4,21 @@ import { useEffect, useState, Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { getPending, subscribe } from "@/lib/loaderSignal";
 
+type IdleRequestCallback = (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void;
+type IdleCallbackHandle = number;
+type IdleWindow = Window &
+  typeof globalThis & {
+    requestIdleCallback?: (callback: IdleRequestCallback) => IdleCallbackHandle;
+    cancelIdleCallback?: (handle: IdleCallbackHandle) => void;
+  };
+
+const getIdleWindow = (): IdleWindow | undefined => {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+  return window as IdleWindow;
+};
+
 function GlobalLoader() {
   return (
     <div className="fixed inset-0 bg-white z-50 flex items-center justify-center transition-opacity duration-300">
@@ -32,9 +47,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       if (getPending() <= 0) setIsLoading(false);
     };
 
-    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-      const id = (window as any).requestIdleCallback(onIdle);
-      return () => { try { (window as any).cancelIdleCallback(id); } catch {} };
+    const idleWindow = getIdleWindow();
+    if (idleWindow?.requestIdleCallback) {
+      const id = idleWindow.requestIdleCallback(onIdle);
+      return () => {
+        idleWindow.cancelIdleCallback?.(id);
+      };
     }
 
     const t = setTimeout(onIdle, 50);
@@ -46,12 +64,14 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     setIsLoading(true);
 
     const tryHide = () => {
-      if (pendingCount <= 0) {
-        if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-          (window as any).requestIdleCallback(() => setIsLoading(false));
-        } else {
-          setTimeout(() => setIsLoading(false), 50);
-        }
+      if (pendingCount > 0) {
+        return;
+      }
+      const idleWindow = getIdleWindow();
+      if (idleWindow?.requestIdleCallback) {
+        idleWindow.requestIdleCallback(() => setIsLoading(false));
+      } else {
+        setTimeout(() => setIsLoading(false), 50);
       }
     };
 

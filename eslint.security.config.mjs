@@ -2,7 +2,7 @@ import security from 'eslint-plugin-security';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 
-export default [
+const securityConfig = [
   {
     ignores: [
       '.next/**',
@@ -56,3 +56,5 @@ export default [
     },
   },
 ];
+
+export default securityConfig;
