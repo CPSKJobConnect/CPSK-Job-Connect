@@ -27,26 +27,26 @@ import {
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
-// import { Badge } from "@/components/ui/badge";
 import {
   Plus,
   Search,
   Edit,
   Trash2,
   Eye,
-  Filter,
   Calendar,
   MapPin,
   DollarSign,
   Building2,
   Users,
   CheckCircle,
-  XCircle,
   Briefcase,
   AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 
+/**
+ * Types
+ */
 interface JobPost {
   id: number;
   jobName: string;
@@ -66,8 +66,8 @@ interface JobPost {
   updatedAt: string;
   jobType: string;
   jobArrangement: string;
-  categories: string[];
-  tags: string[];
+  categories: string[] | null;
+  tags: string[] | null;
   applicationsCount: number;
   acceptedApplications: number;
 }
@@ -87,6 +87,26 @@ interface Pagination {
   totalPages: number;
 }
 
+interface JobPostFormData {
+  companyId: string;
+  jobName: string;
+  location: string;
+  minSalary: string;
+  maxSalary: string;
+  deadline: string;
+  jobTypeId: string;
+  jobArrangementId: string;
+  categoryIds: number[];
+  tagIds: number[];
+  description: {
+    overview: string;
+    responsibility: string;
+    requirement: string;
+    qualification: string;
+  };
+}
+
+
 export default function ManagePostPage() {
   const [jobPosts, setJobPosts] = useState<JobPost[]>([]);
   const [referenceData, setReferenceData] = useState<ReferenceData | null>(null);
@@ -104,35 +124,39 @@ export default function ManagePostPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedJobPost, setSelectedJobPost] = useState<JobPost | null>(null);
 
-  // Form states
-  const [formData, setFormData] = useState({
-    companyId: "",
-    jobName: "",
-    location: "",
-    aboutRole: "",
-    requirements: [] as string[],
-    qualifications: [] as string[],
-    minSalary: "",
-    maxSalary: "",
-    deadline: "",
-    jobTypeId: "",
-    jobArrangementId: "",
-    categoryIds: [] as number[],
-    tagIds: [] as number[]
-  });
+  // Form states (OLD shape)
+const [formData, setFormData] = useState<JobPostFormData>({
+  companyId: "",
+  jobName: "",
+  location: "",
+  minSalary: "",
+  maxSalary: "",
+  deadline: "",
+  jobTypeId: "",
+  jobArrangementId: "",
+  categoryIds: [],
+  tagIds: [],
+  description: {
+    overview: "",
+    responsibility: "",
+    requirement: "",
+    qualification: "",
+  },
+});
+
   const [requirementText, setRequirementText] = useState("");
   const [qualificationText, setQualificationText] = useState("");
 
   useEffect(() => {
-    // Check if we came from dashboard with reported filter
-    const filterParam = searchParams.get('filter');
-    if (filterParam === 'reported') {
+    const filterParam = searchParams.get("filter");
+    if (filterParam === "reported") {
       setReportedFilter(true);
     }
 
     fetchJobPosts();
     fetchReferenceData();
-  }, [currentPage, searchTerm, statusFilter, reportedFilter, searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, searchTerm, statusFilter, reportedFilter, searchParams.toString()]);
 
   const fetchJobPosts = async () => {
     try {
@@ -147,8 +171,8 @@ export default function ManagePostPage() {
       const response = await fetch(`/api/admin/job-posts?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setJobPosts(data.jobPosts);
-        setPagination(data.pagination);
+        setJobPosts(data.jobPosts ?? []);
+        setPagination(data.pagination ?? null);
       } else {
         toast.error("Failed to fetch job posts");
       }
@@ -173,19 +197,23 @@ export default function ManagePostPage() {
 
   const handleCreateJobPost = async () => {
     try {
+      const payload = {
+        ...formData,
+        companyId: parseInt(formData.companyId || "0"),
+        minSalary: parseInt(formData.minSalary || "0"),
+        maxSalary: parseInt(formData.maxSalary || "0"),
+        jobTypeId: parseInt(formData.jobTypeId || "0"),
+        jobArrangementId: parseInt(formData.jobArrangementId || "0"),
+        categoryIds: formData.categoryIds,
+        tagIds: formData.tagIds
+      };
+
       const response = await fetch("/api/admin/job-posts", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          ...formData,
-          companyId: parseInt(formData.companyId),
-          minSalary: parseInt(formData.minSalary),
-          maxSalary: parseInt(formData.maxSalary),
-          jobTypeId: parseInt(formData.jobTypeId),
-          jobArrangementId: parseInt(formData.jobArrangementId)
-        }),
+        body: JSON.stringify(payload)
       });
 
       if (response.ok) {
@@ -197,7 +225,7 @@ export default function ManagePostPage() {
         toast.error("Failed to create job post");
       }
     } catch (error) {
-      toast.error("Error creating job post");
+      toast.error("Error creating job posts");
     }
   };
 
@@ -205,20 +233,24 @@ export default function ManagePostPage() {
     if (!selectedJobPost) return;
 
     try {
+      const payload = {
+        ...formData,
+        companyId: parseInt(formData.companyId || "0"),
+        minSalary: parseInt(formData.minSalary || "0"),
+        maxSalary: parseInt(formData.maxSalary || "0"),
+        jobTypeId: parseInt(formData.jobTypeId || "0"),
+        jobArrangementId: parseInt(formData.jobArrangementId || "0"),
+        categoryIds: formData.categoryIds,
+        tagIds: formData.tagIds,
+        isPublished: selectedJobPost.isPublished
+      };
+
       const response = await fetch(`/api/admin/job-posts/${selectedJobPost.id}`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          ...formData,
-          companyId: parseInt(formData.companyId),
-          minSalary: parseInt(formData.minSalary),
-          maxSalary: parseInt(formData.maxSalary),
-          jobTypeId: parseInt(formData.jobTypeId),
-          jobArrangementId: parseInt(formData.jobArrangementId),
-          isPublished: selectedJobPost.isPublished
-        }),
+        body: JSON.stringify(payload)
       });
 
       if (response.ok) {
@@ -239,7 +271,7 @@ export default function ManagePostPage() {
 
     try {
       const response = await fetch(`/api/admin/job-posts/${id}`, {
-        method: "DELETE",
+        method: "DELETE"
       });
 
       if (response.ok) {
@@ -258,16 +290,19 @@ export default function ManagePostPage() {
       companyId: "",
       jobName: "",
       location: "",
-      aboutRole: "",
-      requirements: [],
-      qualifications: [],
       minSalary: "",
       maxSalary: "",
       deadline: "",
       jobTypeId: "",
       jobArrangementId: "",
       categoryIds: [],
-      tagIds: []
+      tagIds: [],
+      description: {
+        overview: "",
+        responsibility: "",
+        requirement: "",
+        qualification: "",
+      },
     });
     setRequirementText("");
     setQualificationText("");
@@ -275,21 +310,44 @@ export default function ManagePostPage() {
 
   const openEditDialog = (jobPost: JobPost) => {
     setSelectedJobPost(jobPost);
+
+    const mappedJobTypeId =
+      referenceData?.jobTypes.find((t) => t.name === jobPost.jobType)?.id.toString() ?? "";
+    const mappedJobArrangementId =
+      referenceData?.jobArrangements.find((a) => a.name === jobPost.jobArrangement)?.id.toString() ?? "";
+
+    const mappedCategoryIds =
+      (jobPost.categories ?? [])
+        .map((c) => referenceData?.categories.find((x) => x.name === c)?.id)
+        .filter(Boolean) as number[];
+
+    const mappedTagIds =
+      (jobPost.tags ?? [])
+        .map((t) => referenceData?.tags.find((x) => x.name === t)?.id)
+        .filter(Boolean) as number[];
+
     setFormData({
-      companyId: jobPost.company.id.toString(),
-      jobName: jobPost.jobName,
-      location: jobPost.location,
-      aboutRole: "",
-      requirements: [],
-      qualifications: [],
-      minSalary: jobPost.minSalary.toString(),
-      maxSalary: jobPost.maxSalary.toString(),
-      deadline: jobPost.deadline.split('T')[0],
-      jobTypeId: "",
-      jobArrangementId: "",
-      categoryIds: [],
-      tagIds: []
+      companyId: jobPost.company?.id?.toString() ?? "",
+      jobName: jobPost.jobName ?? "",
+      location: jobPost.location ?? "",
+      minSalary: jobPost.minSalary?.toString() ?? "",
+      maxSalary: jobPost.maxSalary?.toString() ?? "",
+      deadline: jobPost.deadline ? jobPost.deadline.split("T")[0] : "",
+      jobTypeId: mappedJobTypeId,
+      jobArrangementId: mappedJobArrangementId,
+      categoryIds: mappedCategoryIds ?? [],
+      tagIds: mappedTagIds ?? [],
+      description: {
+        overview: jobPost.aboutRole ?? "",
+        responsibility: jobPost.responsibilities ?? "", // optional, if available
+        requirement: (jobPost.requirements ?? []).join("\n"),
+        qualification: (jobPost.qualifications ?? []).join("\n"),
+      },
     });
+
+    setRequirementText("");
+    setQualificationText("");
+
     setIsEditDialogOpen(true);
   };
 
@@ -299,10 +357,10 @@ export default function ManagePostPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('th-TH', {
-      style: 'currency',
-      currency: 'THB',
-      minimumFractionDigits: 0,
+    return new Intl.NumberFormat("th-TH", {
+      style: "currency",
+      currency: "THB",
+      minimumFractionDigits: 0
     }).format(amount);
   };
 
@@ -310,39 +368,19 @@ export default function ManagePostPage() {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
-      day: "numeric",
+      day: "numeric"
     });
   };
 
-  const addRequirement = () => {
-    if (requirementText.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        requirements: [...prev.requirements, requirementText.trim()]
-      }));
-      setRequirementText("");
-    }
-  };
-
-  const addQualification = () => {
-    if (qualificationText.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        qualifications: [...prev.qualifications, qualificationText.trim()]
-      }));
-      setQualificationText("");
-    }
-  };
-
   const removeRequirement = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       requirements: prev.requirements.filter((_, i) => i !== index)
     }));
   };
 
   const removeQualification = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       qualifications: prev.qualifications.filter((_, i) => i !== index)
     }));
@@ -364,9 +402,7 @@ export default function ManagePostPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Manage Job Posts</h1>
-          <p className="text-muted-foreground mt-2">
-            Create, edit, and manage job postings
-          </p>
+          <p className="text-muted-foreground mt-2">Create, edit, and manage job postings</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -382,13 +418,7 @@ export default function ManagePostPage() {
               <Label htmlFor="search">Search</Label>
               <div className="relative mt-1">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Search by job title, company, or location..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                <Input id="search" placeholder="Search by job title, company, or location..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
             </div>
             <div className="w-48">
@@ -409,13 +439,7 @@ export default function ManagePostPage() {
                 <AlertTriangle className="w-4 h-4 text-orange-500" />
                 Reported Posts Only
               </Label>
-              <input
-                id="reported-filter"
-                type="checkbox"
-                checked={reportedFilter}
-                onChange={(e) => setReportedFilter(e.target.checked)}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-              />
+              <input id="reported-filter" type="checkbox" checked={reportedFilter} onChange={(e) => setReportedFilter(e.target.checked)} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
             </div>
           </div>
         </CardContent>
@@ -441,10 +465,11 @@ export default function ManagePostPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-xl font-semibold">{jobPost.jobName}</h3>
-                      <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${jobPost.isPublished
-                        ? "border-transparent bg-primary text-primary-foreground"
-                        : "border-transparent bg-secondary text-secondary-foreground"
-                        }`}>
+                      <div
+                        className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                          jobPost.isPublished ? "border-transparent bg-primary text-primary-foreground" : "border-transparent bg-secondary text-secondary-foreground"
+                        }`}
+                      >
                         {jobPost.isPublished ? "Published" : "Draft"}
                       </div>
                     </div>
@@ -479,31 +504,20 @@ export default function ManagePostPage() {
                         <CheckCircle className="w-4 h-4 text-green-500" />
                         <span>{jobPost.acceptedApplications} accepted</span>
                       </div>
-                      <span>{jobPost.jobType} • {jobPost.jobArrangement}</span>
+                      <span>
+                        {jobPost.jobType} • {jobPost.jobArrangement}
+                      </span>
                     </div>
                   </div>
 
                   <div className="flex gap-2 ml-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openViewDialog(jobPost)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => openViewDialog(jobPost)}>
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEditDialog(jobPost)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => openEditDialog(jobPost)}>
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteJobPost(jobPost.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
+                    <Button variant="outline" size="sm" onClick={() => handleDeleteJobPost(jobPost.id)} className="text-red-600 hover:text-red-700">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -521,20 +535,10 @@ export default function ManagePostPage() {
             Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.totalCount)} of {pagination.totalCount} results
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-            >
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1}>
               Previous
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
-              disabled={currentPage === pagination.totalPages}
-            >
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage((prev) => Math.min(pagination.totalPages, prev + 1))} disabled={currentPage === pagination.totalPages}>
               Next
             </Button>
           </div>
@@ -546,16 +550,14 @@ export default function ManagePostPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Job Post</DialogTitle>
-            <DialogDescription>
-              Fill in the details to create a new job posting
-            </DialogDescription>
+            <DialogDescription>Fill in the details to create a new job posting</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="company">Company</Label>
-                <Select value={formData.companyId} onValueChange={(value) => setFormData(prev => ({ ...prev, companyId: value }))}>
+                <Select value={formData.companyId} onValueChange={(value) => setFormData((prev) => ({ ...prev, companyId: value }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select company" />
                   </SelectTrigger>
@@ -570,52 +572,30 @@ export default function ManagePostPage() {
               </div>
               <div>
                 <Label htmlFor="jobName">Job Title</Label>
-                <Input
-                  id="jobName"
-                  value={formData.jobName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, jobName: e.target.value }))}
-                  placeholder="e.g. Software Engineer"
-                />
+                <Input id="jobName" value={formData.jobName} onChange={(e) => setFormData((prev) => ({ ...prev, jobName: e.target.value }))} placeholder="e.g. Software Engineer" />
               </div>
             </div>
 
             <div>
               <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                placeholder="e.g. Bangkok, Thailand"
-              />
+              <Input id="location" value={formData.location} onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))} placeholder="e.g. Bangkok, Thailand" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="minSalary">Minimum Salary</Label>
-                <Input
-                  id="minSalary"
-                  type="number"
-                  value={formData.minSalary}
-                  onChange={(e) => setFormData(prev => ({ ...prev, minSalary: e.target.value }))}
-                  placeholder="30000"
-                />
+                <Input id="minSalary" type="number" value={formData.minSalary} onChange={(e) => setFormData((prev) => ({ ...prev, minSalary: e.target.value }))} placeholder="30000" />
               </div>
               <div>
                 <Label htmlFor="maxSalary">Maximum Salary</Label>
-                <Input
-                  id="maxSalary"
-                  type="number"
-                  value={formData.maxSalary}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maxSalary: e.target.value }))}
-                  placeholder="50000"
-                />
+                <Input id="maxSalary" type="number" value={formData.maxSalary} onChange={(e) => setFormData((prev) => ({ ...prev, maxSalary: e.target.value }))} placeholder="50000" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="jobType">Job Type</Label>
-                <Select value={formData.jobTypeId} onValueChange={(value) => setFormData(prev => ({ ...prev, jobTypeId: value }))}>
+                <Select value={formData.jobTypeId} onValueChange={(value) => setFormData((prev) => ({ ...prev, jobTypeId: value }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select job type" />
                   </SelectTrigger>
@@ -630,7 +610,7 @@ export default function ManagePostPage() {
               </div>
               <div>
                 <Label htmlFor="jobArrangement">Work Arrangement</Label>
-                <Select value={formData.jobArrangementId} onValueChange={(value) => setFormData(prev => ({ ...prev, jobArrangementId: value }))}>
+                <Select value={formData.jobArrangementId} onValueChange={(value) => setFormData((prev) => ({ ...prev, jobArrangementId: value }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select arrangement" />
                   </SelectTrigger>
@@ -647,23 +627,12 @@ export default function ManagePostPage() {
 
             <div>
               <Label htmlFor="deadline">Application Deadline</Label>
-              <Input
-                id="deadline"
-                type="date"
-                value={formData.deadline}
-                onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
-              />
+              <Input id="deadline" type="date" value={formData.deadline} onChange={(e) => setFormData((prev) => ({ ...prev, deadline: e.target.value }))} />
             </div>
 
             <div>
-              <Label htmlFor="aboutRole">About the Role</Label>
-              <Textarea
-                id="aboutRole"
-                value={formData.aboutRole}
-                onChange={(e) => setFormData(prev => ({ ...prev, aboutRole: e.target.value }))}
-                placeholder="Describe the role and responsibilities..."
-                rows={4}
-              />
+              <Label>About the Role</Label>
+              <Textarea value={formData.aboutRole} onChange={(e) => setFormData(prev => ({ ...prev, aboutRole: e.target.value }))} rows={4} />
             </div>
           </div>
 
@@ -671,9 +640,7 @@ export default function ManagePostPage() {
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreateJobPost}>
-              Create Job Post
-            </Button>
+            <Button onClick={handleCreateJobPost}>Create Job Post</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -683,9 +650,7 @@ export default function ManagePostPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedJobPost?.jobName}</DialogTitle>
-            <DialogDescription>
-              Job post details and applications
-            </DialogDescription>
+            <DialogDescription>Job post details and applications</DialogDescription>
           </DialogHeader>
 
           {selectedJobPost && (
@@ -732,7 +697,7 @@ export default function ManagePostPage() {
                 </p>
               </div>
 
-              {selectedJobPost?.categories?.length > 0 && (
+              {selectedJobPost?.categories && selectedJobPost.categories.length > 0 && (
                 <div>
                   <Label>Categories</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
@@ -745,7 +710,7 @@ export default function ManagePostPage() {
                 </div>
               )}
 
-              {selectedJobPost.tags.length > 0 && (
+              {selectedJobPost?.tags && selectedJobPost.tags.length > 0 && (
                 <div>
                   <Label>Tags</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
@@ -768,40 +733,137 @@ export default function ManagePostPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Job Post Dialog */}
+      {/* Edit Job Post Dialog (uses OLD fields) */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Job Post</DialogTitle>
-            <DialogDescription>
-              Update the details for this job post
-            </DialogDescription>
+            <DialogDescription>Update the details for this job post</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Example */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Job Title</Label>
-                <Input
-                  value={formData.jobName}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, jobName: e.target.value }))
-                  }
-                />
+                <Label>Company</Label>
+                <Select value={formData.companyId} onValueChange={(value) => setFormData((prev) => ({ ...prev, companyId: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select company" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {referenceData?.companies.map((company) => (
+                      <SelectItem key={company.id} value={company.id.toString()}>
+                        {company.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
               <div>
-                <Label>Location</Label>
-                <Input
-                  value={formData.location}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, location: e.target.value }))
-                  }
-                />
+                <Label>Job Title</Label>
+                <Input value={formData.jobName} onChange={(e) => setFormData((prev) => ({ ...prev, jobName: e.target.value }))} />
               </div>
             </div>
 
-            {/* The rest of your form fields… */}
+            <div>
+              <Label>Location</Label>
+              <Input value={formData.location} onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Minimum Salary</Label>
+                <Input type="number" value={formData.minSalary} onChange={(e) => setFormData((prev) => ({ ...prev, minSalary: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Maximum Salary</Label>
+                <Input type="number" value={formData.maxSalary} onChange={(e) => setFormData((prev) => ({ ...prev, maxSalary: e.target.value }))} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Job Type</Label>
+                <Select value={formData.jobTypeId} onValueChange={(value) => setFormData((prev) => ({ ...prev, jobTypeId: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select job type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {referenceData?.jobTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Work Arrangement</Label>
+                <Select value={formData.jobArrangementId} onValueChange={(value) => setFormData((prev) => ({ ...prev, jobArrangementId: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select arrangement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {referenceData?.jobArrangements.map((arrangement) => (
+                      <SelectItem key={arrangement.id} value={arrangement.id.toString()}>
+                        {arrangement.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label>Application Deadline</Label>
+              <Input type="date" value={formData.deadline} onChange={(e) => setFormData((prev) => ({ ...prev, deadline: e.target.value }))} />
+            </div>
+
+            {/* About Role */}
+            <div>
+              <Label>About the Role</Label>
+              <Textarea
+                value={formData.description.overview}
+                onChange={(e) =>
+                  setFormData(prev => ({
+                    ...prev,
+                    description: { ...prev.description, overview: e.target.value }
+                  }))
+                }
+                rows={4}
+              />
+            </div>
+
+            {/* Requirements */}
+            <div>
+              <Label>Requirements</Label>
+              <Textarea
+                value={formData.description.requirement}
+                onChange={(e) =>
+                  setFormData(prev => ({
+                    ...prev,
+                    description: { ...prev.description, requirement: e.target.value }
+                  }))
+                }
+                rows={4}
+              />
+            </div>
+
+            {/* Qualifications */}
+            <div>
+              <Label>Qualifications</Label>
+              <Textarea
+                value={formData.description.qualification}
+                onChange={(e) =>
+                  setFormData(prev => ({
+                    ...prev,
+                    description: { ...prev.description, qualification: e.target.value }
+                  }))
+                }
+                rows={4}
+              />
+            </div>
           </div>
 
           <DialogFooter>
