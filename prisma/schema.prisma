@@ -31,6 +31,7 @@ model Account {
   providerAccountId     String?
   backgroundUrl         String?
   logoUrl               String?
+  is_active             Boolean        @default(true)
   accountRole           AccountRole?   @relation(fields: [role], references: [id])
   company               Company?
   verifiedCompanies     Company[]      @relation("VerifiedCompanies")
