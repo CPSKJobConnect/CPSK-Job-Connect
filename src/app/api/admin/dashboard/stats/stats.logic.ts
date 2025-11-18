@@ -12,10 +12,10 @@ export async function getDashboardStats() {
     topSkills,
     recentReports,
   ] = await Promise.all([
-    prisma.company.count({ where: { registration_status: "pending" } }),
+    prisma.company.count({ where: { registration_status: "PENDING" } }),
     prisma.jobPost.count(),
     prisma.student.count(),
-    prisma.company.count({ where: { registration_status: "approved" } }),
+    prisma.company.count({ where: { registration_status: "APPROVED" } }),
     prisma.report.count(),
     prisma.jobPost.aggregate({
       _avg: { min_salary: true, max_salary: true },
@@ -68,7 +68,7 @@ export async function getDashboardStats() {
     ["Software and Knowledge Engineering (SKE)", "Computer Engineering (CPE)"].map(async (faculty) => {
       const totalStudents = await prisma.student.count({ where: { faculty } });
       const acceptedApplications = await prisma.application.count({
-        where: { student: { faculty }, status: 3 },
+        where: { student: { faculty }, status: 4 }, // 4 = Offered (accepted)
       });
 
       return {

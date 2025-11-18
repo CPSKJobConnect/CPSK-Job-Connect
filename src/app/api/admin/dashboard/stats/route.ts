@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { getDashboardStats } from "./stats.logic";
+import { prisma } from "@/lib/db";
 
 export async function GET() {
   try {
@@ -11,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userRole = (session.user as any).role?.toLowerCase();
+    const userRole = (session.user as { role?: string }).role?.toLowerCase();
     // console.log("🔍 User role:", userRole);
     if (userRole !== "admin") {
       return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
@@ -32,7 +32,7 @@ export async function GET() {
     ] = await Promise.all([
       // Pending company verification
       prisma.company.count({
-        where: { registration_status: "pending" }
+        where: { registration_status: "PENDING" }
       }),
 
       // Total job posts
@@ -43,7 +43,7 @@ export async function GET() {
 
       // Total companies
       prisma.company.count({
-        where: { registration_status: "approved" }
+        where: { registration_status: "APPROVED" }
       }),
 
       // Reported posts
@@ -57,22 +57,12 @@ export async function GET() {
         }
       }),
 
-      // Top hiring companies (Top 10)
-      prisma.company.findMany({
-        where: { registration_status: "approved" },
-        include: {
-          jobPosts: {
-            include: {
-              applications: true
-            }
-          }
-        },
-        orderBy: {
-          jobPosts: {
-            _count: "desc"
-          }
-        },
-        take: 10
+      // Top hiring companies - get grouped data first
+      prisma.jobPost.groupBy({
+        by: ["company_id"],
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
+        take: 10,
       }),
 
       // Success rate by department - we'll calculate this separately
@@ -119,7 +109,7 @@ export async function GET() {
             student: {
               faculty
             },
-            status: 3 // Accepted
+            status: 4 // Offered (the actual accepted status)
           }
         });
 
@@ -133,15 +123,28 @@ export async function GET() {
     );
 
     // Process top hiring companies data
-    const processedTopCompanies = topHiringCompanies.map(company => ({
-      id: company.id,
-      name: company.name,
-      jobPostsCount: company.jobPosts.length,
-      totalApplications: company.jobPosts.reduce((sum, post) => sum + post.applications.length, 0)
-    }));
+    const processedTopCompanies = await Promise.all(
+      topHiringCompanies.map(async (entry) => {
+        const company = await prisma.company.findUnique({
+          where: { id: entry.company_id },
+          select: { id: true, name: true },
+        });
+
+        const totalApplications = await prisma.application.count({
+          where: { jobPost: { company_id: entry.company_id } },
+        });
+
+        return {
+          id: company?.id ?? 0,
+          name: company?.name ?? "Unknown",
+          jobPostsCount: entry._count.id,
+          totalApplications,
+        };
+      })
+    );
 
     // Process recent reports
-    const processedRecentReports = recentReports.map(report => ({
+    const processedRecentReports = recentReports.map((report) => ({
       id: report.id,
       createdAt: report.created_at,
       reporterEmail: report.account.email,
@@ -162,9 +165,9 @@ export async function GET() {
       },
       topHiringCompanies: processedTopCompanies,
       successRateByDepartment: departmentSuccessRate,
-      topSkills: topSkills.map(skill => ({
+      topSkills: topSkills.map((skill) => ({
         name: skill.name,
-        count: (skill as any)._count?.jobPosts || 0
+        count: (skill as { _count?: { posts?: number } })._count?.posts || 0
       })),
       recentReports: processedRecentReports
     };
