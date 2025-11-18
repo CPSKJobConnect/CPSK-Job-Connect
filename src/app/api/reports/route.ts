@@ -106,11 +106,11 @@ export async function GET(req: NextRequest) {
     });
 
     const jobIds = reports
-      .filter(r => r.target_type === "POST" && r.target_id !== 0)
-      .map(r => r.target_id);
+      .filter(r => r.target_type === "POST" && r.target_id !== null && r.target_id !== 0)
+      .map(r => r.target_id as number);
 
-    let jobsMap = new Map<number, any>();
-    let applicationsMap = new Map<number, number>();
+    const jobsMap = new Map<number, any>();
+    const applicationsMap = new Map<number, number>();
     if (jobIds.length > 0) {
       const jobs = await prisma.jobPost.findMany({
         where: { id: { in: jobIds } },
@@ -143,7 +143,7 @@ export async function GET(req: NextRequest) {
     }
 
     reports = reports.map(r => {
-      if (r.target_type === "POST" && r.target_id !== 0) {
+      if (r.target_type === "POST" && r.target_id !== null && r.target_id !== 0) {
         const job = jobsMap.get(r.target_id) || null;
         if (job) job.applied = applicationsMap.get(r.target_id) || 0;
         return { ...r, jobPost: job };

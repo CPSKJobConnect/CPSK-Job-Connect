@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
+    "postinstall": "prisma generate",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:css": "stylelint \"**/*.{css,scss}\" --fix",
     "type-check": "tsc --noEmit",

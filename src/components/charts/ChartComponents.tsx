@@ -15,8 +15,14 @@ import {
   Line
 } from 'recharts';
 
+interface ChartDataItem {
+  name: string;
+  value: number;
+  [key: string]: string | number;
+}
+
 interface ChartProps {
-  data: any[];
+  data: ChartDataItem[];
   width?: number;
   height?: number;
 }
@@ -48,7 +54,7 @@ export function PieChartComponent({ data, width = 400, height = 300 }: ChartProp
           cx="50%"
           cy="50%"
           labelLine={false}
-          label={({ name, percent }: any) => `${name} ${((percent as number) * 100).toFixed(0)}%`}
+          label={({ name, percent }: { name: string; percent: number }) => `${name} ${(percent * 100).toFixed(0)}%`}
           outerRadius={80}
           fill="#8884d8"
           dataKey="value"

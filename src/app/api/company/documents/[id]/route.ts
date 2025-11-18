@@ -11,9 +11,10 @@ const supabase = createClient(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -28,7 +29,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
-    const docId = parseInt(params.id);
+    const docId = parseInt(id);
 
     // Get the document to verify ownership and get file path
     const document = await prisma.document.findFirst({

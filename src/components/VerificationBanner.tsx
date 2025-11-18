@@ -140,7 +140,7 @@ export function VerificationBanner({
               <strong className="text-blue-900 cursor-pointer">✅ Verification Approved - Email Verification Required</strong>
             </Link>
             <p className="text-blue-800 mt-1">
-              Your alumni status has been approved! Click "Verify Email" to receive a verification code and complete registration.
+              Your alumni status has been approved! Click &quot;Verify Email&quot; to receive a verification code and complete registration.
             </p>
           </div>
           <Link href={`/student/verify-email?email=${encodeURIComponent(email || "")}`}>

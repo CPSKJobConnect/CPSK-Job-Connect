@@ -11,6 +11,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,7 +25,7 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const jobPost = await fetchJobPost({ id: params.id });
+    const jobPost = await fetchJobPost({ id });
 
     if (!jobPost) {
       return NextResponse.json({ error: "Job post not found" }, { status: 404 });
@@ -59,7 +60,7 @@ export async function PUT(
 
     const { id } = await params;
     const data = await request.json();
-    const jobPost = await updateJobPost({ id: params.id }, data);
+    const jobPost = await updateJobPost({ id }, data);
 
     if (!jobPost) {
       return NextResponse.json({ error: "Job post not found" }, { status: 404 });
@@ -92,7 +93,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const deleted = await deleteJobPost({ id: params.id });
+    const { id } = await params;
+    const deleted = await deleteJobPost({ id });
 
     return NextResponse.json({ message: "Successfully deleted", deleted }, { status: 200 });
 

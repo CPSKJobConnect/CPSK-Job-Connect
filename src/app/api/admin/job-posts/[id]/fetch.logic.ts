@@ -15,7 +15,7 @@ export async function fetchJobPost(params: { id: string }) {
       },
       jobType: true,
       jobArrangement: true,
-      categories: true,
+      category: true,
       tags: true,
       applications: {
         include: {

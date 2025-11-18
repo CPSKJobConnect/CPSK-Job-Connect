@@ -4,7 +4,7 @@ import { NextResponse, NextRequest } from "next/server";
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
-    const job = await prisma.jobPost.findUnique({
+    const job = await prisma.jobPost.findFirst({
       where: { id: Number(id) },
       include: {
         category: true,
@@ -79,7 +79,7 @@ export async function DELETE(
     const { id } = await context.params;
     const jobId = Number(id);
 
-    const existingJob = await prisma.jobPost.findUnique({
+    const existingJob = await prisma.jobPost.findFirst({
       where: { id: jobId },
       include: { company: true },
     });
@@ -128,7 +128,7 @@ export async function PATCH(
     const { id } = await context.params;
     const jobId = Number(id);
 
-    const existingJob = await prisma.jobPost.findUnique({
+    const existingJob = await prisma.jobPost.findFirst({
       where: { id: jobId },
       include: { tags: true, category: true, company: true },
     });
@@ -153,12 +153,12 @@ export async function PATCH(
     const body = await request.json();
 
     const arrangement = body.arrangement
-      ? await prisma.jobArrangement.findUnique({ where: { name: body.arrangement } })
+      ? await prisma.jobArrangement.findFirst({ where: { name: body.arrangement } })
       : null;
 
 
     const type = body.type
-      ? await prisma.jobType.findUnique({ where: { name: body.type } })
+      ? await prisma.jobType.findFirst({ where: { name: body.type } })
       : null;
 
     if ((body.arrangement && !arrangement) || (body.type && !type)) {
@@ -170,7 +170,7 @@ export async function PATCH(
     if (body.tags?.length) {
       for (const tagName of body.tags) {
         // Try to find existing tag
-        let tag = await prisma.jobTag.findUnique({
+        let tag = await prisma.jobTag.findFirst({
           where: { name: tagName },
         });
 
@@ -194,7 +194,7 @@ export async function PATCH(
 
     let categoryId = existingJob.job_category_id;
     if (body.category) {
-      const category = await prisma.jobCategory.findUnique({ where: { name: body.category } });
+      const category = await prisma.jobCategory.findFirst({ where: { name: body.category } });
       if (!category) {
         return NextResponse.json({ error: "Category not found" }, { status: 400 });
       }

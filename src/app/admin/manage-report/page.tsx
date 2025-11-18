@@ -196,6 +196,7 @@ export default function ManageReportsPage() {
       companyName: r.jobPost.company?.name || "N/A",
       companyLogo: r.jobPost.company?.account?.logoUrl || "",
       companyBg: r.jobPost.company?.account?.backgroundUrl || "",
+      category: typeof r.jobPost.category === 'string' ? r.jobPost.category : r.jobPost.category?.name || "General",
       location: r.jobPost.location,
       type: r.jobPost.jobType?.name.toLowerCase() || "fulltime",
       arrangement: r.jobPost.jobArrangement?.name || "N/A",

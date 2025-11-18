@@ -23,9 +23,9 @@ export async function getDashboardStats() {
     prisma.jobTag.findMany({
       select: {
         name: true,
-        _count: { select: { jobPosts: true } },
+        _count: { select: { posts: true } },
       },
-      orderBy: { jobPosts: { _count: "desc" } },
+      orderBy: { posts: { _count: "desc" } },
       take: 10,
     }),
     prisma.report.findMany({
@@ -86,7 +86,7 @@ export async function getDashboardStats() {
   // --- Process Recent Reports ---
   const processedRecentReports = recentReports.map((report) => ({
     id: report.id,
-    type: report.type,
+    type: report.target_type,
     createdAt: report.created_at,
     reporterEmail: report.account.email,
   }));
@@ -110,7 +110,7 @@ export async function getDashboardStats() {
     successRateByDepartment: departmentSuccessRate,
     topSkills: topSkills.map((skill) => ({
       name: skill.name,
-      count: (skill as any)._count?.jobPosts || 0,
+      count: skill._count?.posts || 0,
     })),
     recentReports: processedRecentReports,
   };

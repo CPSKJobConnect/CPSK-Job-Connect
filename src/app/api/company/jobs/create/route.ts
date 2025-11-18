@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     if (body.skills?.length) {
       for (const skillName of body.skills) {
         // Try to find existing tag
-        let tag = await prisma.jobTag.findUnique({
+        let tag = await prisma.jobTag.findFirst({
           where: { name: skillName },
         });
 

@@ -33,6 +33,6 @@ function notify() {
 
 // Optional global access for quick usage in non-module code
 if (typeof window !== "undefined") {
-  // @ts-ignore
+  // @ts-expect-error - Adding global loader to window object
   window.__GLOBAL_LOADER = { begin, done, getPending };
 }

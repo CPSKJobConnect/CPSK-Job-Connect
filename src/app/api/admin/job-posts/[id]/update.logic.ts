@@ -17,13 +17,10 @@ export async function updateJobPost(params: { id: string }, data: any) {
     tagIds
   } = data;
 
-  // First, disconnect existing categories and tags
+  // First, disconnect existing tags
   await prisma.jobPost.update({
     where: { id: parseInt(params.id) },
     data: {
-      categories: {
-        set: []
-      },
       tags: {
         set: []
       }
@@ -44,9 +41,7 @@ export async function updateJobPost(params: { id: string }, data: any) {
       is_Published: isPublished,
       job_arrangement_id: jobArrangementId,
       job_type_id: jobTypeId,
-      categories: {
-        connect: categoryIds.map((id: number) => ({ id }))
-      },
+      job_category_id: categoryIds ? categoryIds[0] : null,
       tags: {
         connect: tagIds.map((id: number) => ({ id }))
       }
@@ -55,7 +50,7 @@ export async function updateJobPost(params: { id: string }, data: any) {
       company: true,
       jobType: true,
       jobArrangement: true,
-      categories: true,
+      category: true,
       tags: true
     }
   });

@@ -227,10 +227,10 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
           try {
             if (result && result.details && Array.isArray(result.details)) {
               // details are Zod issues
-              result.details.forEach((issue: any) => {
+              result.details.forEach((issue: { path: unknown[]; message: string }) => {
                 const path = Array.isArray(issue.path) && issue.path.length ? String(issue.path[0]) : null
                 if (path) {
-                  setFieldError(path as any, { type: 'server', message: issue.message })
+                  setFieldError(path as keyof AuthFormData, { type: 'server', message: issue.message })
                 }
               })
             }
@@ -355,7 +355,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                   <strong>Completing registration for:</strong> {session.user.email}
                 </p>
                 <p className="text-xs text-blue-700">
-                  Not your account? Click "Use a different Google account" below the email field.
+                  Not your account? Click &quot;Use a different Google account&quot; below the email field.
                 </p>
               </div>
             </AlertDescription>

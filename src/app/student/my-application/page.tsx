@@ -54,10 +54,6 @@ interface Application {
   };
 }
 
-interface ApplicationsTabProps {
-  studentId: number;
-}
-
 const statusColors: Record<string, string> = {
   Pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
   Reviewed: "bg-blue-100 text-blue-800 border-blue-200",
@@ -66,7 +62,7 @@ const statusColors: Record<string, string> = {
   Rejected: "bg-red-100 text-red-800 border-red-200",
 };
 
-export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
+export default function ApplicationsTab() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [filteredApplications, setFilteredApplications] = useState<Application[]>(applications);
   const [recentApplied, setRecentApplied] = useState<{ jobId: number; appliedAt: number } | null>(null);
@@ -95,7 +91,7 @@ export default function ApplicationsTab({ studentId }: ApplicationsTabProps) {
     };
 
     fetchApplications();
-  }, [studentId]);
+  }, []);
 
   useEffect(() => {
     setFilteredApplications(applications);
