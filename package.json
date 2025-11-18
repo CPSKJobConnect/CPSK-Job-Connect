@@ -13,6 +13,7 @@
     "test:api": "jest src/tests/api",
     "test:unit": "jest src/tests/unit",
     "test:admin": "jest src/tests/api/admin",
+    "test:company": "jest src/tests/api/company",
     "test:students": "jest src/tests/api/students",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
