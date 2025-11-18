@@ -40,23 +40,29 @@ jest.mock("@/lib/api-auth");
 jest.mock("@/lib/db", () => ({
   prisma: {
     jobPost: {
+      findFirst: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
     },
     jobArrangement: {
+      findFirst: jest.fn(),
       findUnique: jest.fn(),
     },
     jobType: {
+      findFirst: jest.fn(),
       findUnique: jest.fn(),
     },
     jobTag: {
       findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
     },
     documentType: {
       findMany: jest.fn(),
     },
     jobCategory: {
+      findFirst: jest.fn(),
       findUnique: jest.fn(),
     },
   },
@@ -74,6 +80,25 @@ jest.mock("next/server", () => ({
 }));
 
 silenceConsole();
+
+const defaultJobTags = [
+  { id: 1, name: "TypeScript" },
+  { id: 2, name: "React" },
+];
+
+const setupJobTagLookup = (availableTags = defaultJobTags) => {
+  let nextTagId = availableTags.length + 1;
+  (prisma.jobTag.findFirst as jest.Mock).mockImplementation(
+    async ({ where }: { where: { name: string } }) =>
+      availableTags.find((tag) => tag.name === where?.name) ?? null
+  );
+  (prisma.jobTag.create as jest.Mock).mockImplementation(
+    async ({ data }: { data: { name: string } }) => ({
+      id: nextTagId++,
+      name: data.name,
+    })
+  );
+};
 
 // ============================================================================
 // GET /api/jobs/[id]
@@ -119,7 +144,7 @@ describe("GET /api/jobs/[id]", () => {
 
   describe("Job Retrieval", () => {
     it("fetches job by ID successfully", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue(mockJobData);
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue(mockJobData);
 
       const req = new Request("http://localhost/api/jobs/1");
       const res = await GET(req, { params: Promise.resolve({ id: "1" }) });
@@ -131,7 +156,7 @@ describe("GET /api/jobs/[id]", () => {
     });
 
     it("maps job data correctly", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue(mockJobData);
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue(mockJobData);
 
       const req = new Request("http://localhost/api/jobs/1");
       const res = await GET(req, { params: Promise.resolve({ id: "1" }) });
@@ -146,7 +171,7 @@ describe("GET /api/jobs/[id]", () => {
     });
 
     it("includes job description fields", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue(mockJobData);
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue(mockJobData);
 
       const req = new Request("http://localhost/api/jobs/1");
       const res = await GET(req, { params: Promise.resolve({ id: "1" }) });
@@ -159,7 +184,7 @@ describe("GET /api/jobs/[id]", () => {
     });
 
     it("calculates status as active for published job", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue(mockJobData);
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue(mockJobData);
 
       const req = new Request("http://localhost/api/jobs/1");
       const res = await GET(req, { params: Promise.resolve({ id: "1" }) });
@@ -169,7 +194,7 @@ describe("GET /api/jobs/[id]", () => {
     });
 
     it("calculates status as draft for unpublished job", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue({
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue({
         ...mockJobData,
         is_Published: false,
       });
@@ -182,7 +207,7 @@ describe("GET /api/jobs/[id]", () => {
     });
 
     it("calculates status as expire for past deadline", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue({
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue({
         ...mockJobData,
         deadline: new Date("2020-01-01"),
       });
@@ -195,7 +220,7 @@ describe("GET /api/jobs/[id]", () => {
     });
 
     it("includes application count", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue(mockJobData);
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue(mockJobData);
 
       const req = new Request("http://localhost/api/jobs/1");
       const res = await GET(req, { params: Promise.resolve({ id: "1" }) });
@@ -205,7 +230,7 @@ describe("GET /api/jobs/[id]", () => {
     });
 
     it("includes required documents", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue(mockJobData);
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue(mockJobData);
 
       const req = new Request("http://localhost/api/jobs/1");
       const res = await GET(req, { params: Promise.resolve({ id: "1" }) });
@@ -221,7 +246,7 @@ describe("GET /api/jobs/[id]", () => {
 
   describe("Error Handling", () => {
     it("returns 404 if job not found", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue(null);
 
       const req = new Request("http://localhost/api/jobs/999");
       const res = await GET(req, { params: Promise.resolve({ id: "999" }) });
@@ -232,7 +257,7 @@ describe("GET /api/jobs/[id]", () => {
     });
 
     it("handles database errors gracefully", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockRejectedValue(new Error("DB error"));
+      (prisma.jobPost.findFirst as jest.Mock).mockRejectedValue(new Error("DB error"));
 
       const req = new Request("http://localhost/api/jobs/1");
       const res = await GET(req, { params: Promise.resolve({ id: "1" }) });
@@ -243,7 +268,7 @@ describe("GET /api/jobs/[id]", () => {
     });
 
     it("does not expose internal error details", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockRejectedValue(
+      (prisma.jobPost.findFirst as jest.Mock).mockRejectedValue(
         new Error("Internal server details")
       );
 
@@ -315,7 +340,7 @@ describe("DELETE /api/jobs/[id]", () => {
     });
 
     it("returns 404 if job not found", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue(null);
 
       const req = new NextRequest("http://localhost/api/jobs/999", { method: "DELETE" });
       const res = await DELETE(req, { params: Promise.resolve({ id: "999" }) });
@@ -326,7 +351,7 @@ describe("DELETE /api/jobs/[id]", () => {
     });
 
     it("returns 403 if company does not own the job", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue({
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue({
         ...mockExistingJob,
         company: {
           ...mockExistingJob.company,
@@ -343,7 +368,7 @@ describe("DELETE /api/jobs/[id]", () => {
     });
 
     it("returns 403 if company is not verified", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue({
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue({
         ...mockExistingJob,
         company: {
           id: 1,
@@ -368,7 +393,7 @@ describe("DELETE /api/jobs/[id]", () => {
   describe("Job Deletion", () => {
     beforeEach(() => {
       (getApiSession as jest.Mock).mockResolvedValue(mockCompanySessionWithId1);
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue({
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue({
         ...mockExistingJob,
         company: {
           id: 1,
@@ -400,7 +425,7 @@ describe("DELETE /api/jobs/[id]", () => {
     });
 
     it("handles database errors gracefully", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockRejectedValue(new Error("DB error"));
+      (prisma.jobPost.findFirst as jest.Mock).mockRejectedValue(new Error("DB error"));
 
       const req = new NextRequest("http://localhost/api/jobs/1", { method: "DELETE" });
       const res = await DELETE(req, { params: Promise.resolve({ id: "1" }) });
@@ -411,7 +436,7 @@ describe("DELETE /api/jobs/[id]", () => {
     });
 
     it("does not expose internal error details", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockRejectedValue(
+      (prisma.jobPost.findFirst as jest.Mock).mockRejectedValue(
         new Error("Internal database details")
       );
 
@@ -432,6 +457,7 @@ describe("DELETE /api/jobs/[id]", () => {
 describe("PATCH /api/jobs/[id]", () => {
   beforeEach(() => {
     resetAllMocks();
+    setupJobTagLookup();
   });
 
   const mockExistingJob = {
@@ -501,7 +527,7 @@ describe("PATCH /api/jobs/[id]", () => {
     });
 
     it("returns 404 if job not found", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue(null);
 
       const req = new NextRequest("http://localhost/api/jobs/999", {
         method: "PATCH",
@@ -515,7 +541,7 @@ describe("PATCH /api/jobs/[id]", () => {
     });
 
     it("returns 403 if company does not own the job", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue({
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue({
         ...mockExistingJob,
         company: {
           ...mockExistingJob.company,
@@ -535,7 +561,7 @@ describe("PATCH /api/jobs/[id]", () => {
     });
 
     it("returns 403 if company is not verified", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue({
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue({
         ...mockExistingJob,
         company: {
           id: 1,
@@ -563,7 +589,7 @@ describe("PATCH /api/jobs/[id]", () => {
   describe("Input Validation", () => {
     beforeEach(() => {
       (getApiSession as jest.Mock).mockResolvedValue(mockCompanySessionWithId1);
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue({
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue({
         ...mockExistingJob,
         company: {
           id: 1,
@@ -574,7 +600,7 @@ describe("PATCH /api/jobs/[id]", () => {
     });
 
     it("returns 400 for invalid arrangement", async () => {
-      (prisma.jobArrangement.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.jobArrangement.findFirst as jest.Mock).mockResolvedValue(null);
 
       const req = new NextRequest("http://localhost/api/jobs/1", {
         method: "PATCH",
@@ -588,7 +614,7 @@ describe("PATCH /api/jobs/[id]", () => {
     });
 
     it("returns 400 for invalid job type", async () => {
-      (prisma.jobType.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.jobType.findFirst as jest.Mock).mockResolvedValue(null);
 
       const req = new NextRequest("http://localhost/api/jobs/1", {
         method: "PATCH",
@@ -602,7 +628,7 @@ describe("PATCH /api/jobs/[id]", () => {
     });
 
     it("returns 400 for invalid category", async () => {
-      (prisma.jobCategory.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.jobCategory.findFirst as jest.Mock).mockResolvedValue(null);
 
       const req = new NextRequest("http://localhost/api/jobs/1", {
         method: "PATCH",
@@ -623,7 +649,7 @@ describe("PATCH /api/jobs/[id]", () => {
   describe("Job Update", () => {
     beforeEach(() => {
       (getApiSession as jest.Mock).mockResolvedValue(mockCompanySessionWithId1);
-      (prisma.jobPost.findUnique as jest.Mock).mockResolvedValue({
+      (prisma.jobPost.findFirst as jest.Mock).mockResolvedValue({
         ...mockExistingJob,
         company: {
           id: 1,
@@ -631,12 +657,12 @@ describe("PATCH /api/jobs/[id]", () => {
           registration_status: "APPROVED",
         },
       });
-      (prisma.jobArrangement.findUnique as jest.Mock).mockResolvedValue({ id: 2, name: "Remote" });
-      (prisma.jobType.findUnique as jest.Mock).mockResolvedValue({ id: 2, name: "Part-time" });
-      (prisma.jobCategory.findUnique as jest.Mock).mockResolvedValue({ id: 2, name: "Design" });
-      (prisma.jobTag.findMany as jest.Mock).mockResolvedValue([{ id: 1 }, { id: 2 }]);
+      (prisma.jobArrangement.findFirst as jest.Mock).mockResolvedValue({ id: 2, name: "Remote" });
+      (prisma.jobType.findFirst as jest.Mock).mockResolvedValue({ id: 2, name: "Part-time" });
+      (prisma.jobCategory.findFirst as jest.Mock).mockResolvedValue({ id: 2, name: "Design" });
       (prisma.documentType.findMany as jest.Mock).mockResolvedValue([{ id: 1 }]);
       (prisma.jobPost.update as jest.Mock).mockResolvedValue({ id: 1, jobName: "Updated Job" });
+      setupJobTagLookup();
     });
 
     it("updates job successfully", async () => {
@@ -663,7 +689,7 @@ describe("PATCH /api/jobs/[id]", () => {
       });
       await PATCH(req, { params: Promise.resolve({ id: "1" }) });
 
-      expect(prisma.jobArrangement.findUnique).toHaveBeenCalledWith({
+      expect(prisma.jobArrangement.findFirst).toHaveBeenCalledWith({
         where: { name: "Remote" },
       });
     });
@@ -675,7 +701,7 @@ describe("PATCH /api/jobs/[id]", () => {
       });
       await PATCH(req, { params: Promise.resolve({ id: "1" }) });
 
-      expect(prisma.jobType.findUnique).toHaveBeenCalledWith({
+      expect(prisma.jobType.findFirst).toHaveBeenCalledWith({
         where: { name: "Part-time" },
       });
     });
@@ -687,7 +713,7 @@ describe("PATCH /api/jobs/[id]", () => {
       });
       await PATCH(req, { params: Promise.resolve({ id: "1" }) });
 
-      expect(prisma.jobCategory.findUnique).toHaveBeenCalledWith({
+      expect(prisma.jobCategory.findFirst).toHaveBeenCalledWith({
         where: { name: "Design" },
       });
     });
@@ -699,10 +725,14 @@ describe("PATCH /api/jobs/[id]", () => {
       });
       await PATCH(req, { params: Promise.resolve({ id: "1" }) });
 
-      expect(prisma.jobTag.findMany).toHaveBeenCalledWith({
-        where: { name: { in: ["TypeScript", "React"] } },
-        select: { id: true },
-      });
+      expect(prisma.jobTag.findFirst).toHaveBeenCalledTimes(2);
+      expect(prisma.jobPost.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            tags: { set: [{ id: 1 }, { id: 2 }] },
+          }),
+        })
+      );
     });
 
     it("updates required documents", async () => {
@@ -741,7 +771,7 @@ describe("PATCH /api/jobs/[id]", () => {
     });
 
     it("handles database errors gracefully", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockRejectedValue(new Error("DB error"));
+      (prisma.jobPost.findFirst as jest.Mock).mockRejectedValue(new Error("DB error"));
 
       const req = new NextRequest("http://localhost/api/jobs/1", {
         method: "PATCH",
@@ -755,7 +785,7 @@ describe("PATCH /api/jobs/[id]", () => {
     });
 
     it("does not expose internal error details", async () => {
-      (prisma.jobPost.findUnique as jest.Mock).mockRejectedValue(
+      (prisma.jobPost.findFirst as jest.Mock).mockRejectedValue(
         new Error("Internal database schema")
       );
 
@@ -772,3 +802,7 @@ describe("PATCH /api/jobs/[id]", () => {
     });
   });
 });
+
+
+
+

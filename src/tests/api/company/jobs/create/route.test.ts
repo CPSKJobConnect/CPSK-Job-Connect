@@ -20,6 +20,8 @@ jest.mock("@/lib/db", () => ({
     },
     jobTag: {
       findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
     },
     documentType: {
       findMany: jest.fn(),
@@ -77,8 +79,23 @@ describe("POST /api/company/jobs/create", () => {
     is_published: true,
   };
 
+  const setupJobTagLookup = (availableTags = mockTags) => {
+    let nextTagId = availableTags.length + 1;
+    (prisma.jobTag.findFirst as jest.Mock).mockImplementation(
+      async ({ where }: { where: { name: string } }) =>
+        availableTags.find((tag) => tag.name === where?.name) ?? null
+    );
+    (prisma.jobTag.create as jest.Mock).mockImplementation(
+      async ({ data }: { data: { name: string } }) => ({
+        id: nextTagId++,
+        name: data.name,
+      })
+    );
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
+    setupJobTagLookup();
   });
 
   describe("Authentication", () => {
@@ -173,7 +190,6 @@ describe("POST /api/company/jobs/create", () => {
       (prisma.jobArrangement.findUnique as jest.Mock).mockResolvedValue(mockJobArrangement);
       (prisma.jobType.findUnique as jest.Mock).mockResolvedValue(mockJobType);
       (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockCompanyAccount);
-      (prisma.jobTag.findMany as jest.Mock).mockResolvedValue(mockTags);
       (prisma.documentType.findMany as jest.Mock).mockResolvedValue(mockDocTypes);
       (prisma.jobCategory.findUnique as jest.Mock).mockResolvedValue(null);
 
@@ -195,9 +211,9 @@ describe("POST /api/company/jobs/create", () => {
       (prisma.jobArrangement.findUnique as jest.Mock).mockResolvedValue(mockJobArrangement);
       (prisma.jobType.findUnique as jest.Mock).mockResolvedValue(mockJobType);
       (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockCompanyAccount);
-      (prisma.jobTag.findMany as jest.Mock).mockResolvedValue(mockTags);
       (prisma.documentType.findMany as jest.Mock).mockResolvedValue(mockDocTypes);
       (prisma.jobCategory.findUnique as jest.Mock).mockResolvedValue(mockCategory);
+      setupJobTagLookup();
     });
 
     it("should create job successfully", async () => {
@@ -323,7 +339,6 @@ describe("POST /api/company/jobs/create", () => {
 
     it("should handle job without tags", async () => {
       (prisma.jobPost.create as jest.Mock).mockResolvedValue({ id: 1 });
-      (prisma.jobTag.findMany as jest.Mock).mockResolvedValue([]);
       const jobDataWithoutTags = { ...validJobData, skills: [] };
 
       const request = new Request("http://localhost/api/company/jobs/create", {
@@ -400,9 +415,9 @@ describe("POST /api/company/jobs/create", () => {
       (prisma.jobArrangement.findUnique as jest.Mock).mockResolvedValue(mockJobArrangement);
       (prisma.jobType.findUnique as jest.Mock).mockResolvedValue(mockJobType);
       (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockCompanyAccount);
-      (prisma.jobTag.findMany as jest.Mock).mockResolvedValue(mockTags);
       (prisma.jobCategory.findUnique as jest.Mock).mockResolvedValue(mockCategory);
       (prisma.jobPost.create as jest.Mock).mockResolvedValue({ id: 1 });
+      setupJobTagLookup();
     });
 
     it("should match document types case-insensitively", async () => {
