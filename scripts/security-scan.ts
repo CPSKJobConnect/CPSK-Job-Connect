@@ -5,7 +5,7 @@
  * using ESLint security rules and generates a detailed report.
  */
 
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -35,6 +35,36 @@ const OUTPUT_DIR = path.join(process.cwd(), 'docs', 'security-reports');
 const SAST_REPORT_PATH = path.join(OUTPUT_DIR, 'SAST_REPORT.md');
 const SAST_JSON_PATH = path.join(OUTPUT_DIR, 'sast-results.json');
 
+function writeFileAtomic(filePath: string, data: string) {
+  const tempFile = path.join(
+    path.dirname(filePath),
+    `${path.basename(filePath)}.${process.pid}.${Date.now()}.tmp`
+  );
+  fs.writeFileSync(tempFile, data, 'utf-8');
+  fs.renameSync(tempFile, filePath);
+}
+
+function runEslintSecurityScan(outputFile: string) {
+  const args = [
+    'eslint',
+    '.',
+    '--ext',
+    '.ts,.tsx',
+    '--config',
+    'eslint.security.config.mjs',
+    '--format',
+    'json',
+    '--output-file',
+    outputFile,
+  ];
+
+  try {
+    execFileSync('npx', args, { stdio: 'inherit' });
+  } catch (error) {
+    console.log('�o" ESLint scan completed (issues may have been found)\n');
+  }
+}
+
 // Ensure output directory exists
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -46,14 +76,7 @@ try {
   // Run ESLint with security configuration
   console.log('📊 Running ESLint Security Scan...');
 
-  const eslintCommand = 'npx eslint . --ext .ts,.tsx --config eslint.security.config.mjs --format json --output-file ' + SAST_JSON_PATH;
-
-  try {
-    execSync(eslintCommand, { stdio: 'inherit' });
-  } catch (error) {
-    // ESLint exits with error code if issues are found, which is expected
-    console.log('✓ ESLint scan completed (issues may have been found)\n');
-  }
+  runEslintSecurityScan(SAST_JSON_PATH);
 
   // Read and parse ESLint results
   let eslintResults: any[] = [];
@@ -132,10 +155,10 @@ try {
 
   // Generate Markdown report
   const markdownReport = generateMarkdownReport(report);
-  fs.writeFileSync(SAST_REPORT_PATH, markdownReport);
+  writeFileAtomic(SAST_REPORT_PATH, markdownReport);
 
   // Save JSON report
-  fs.writeFileSync(SAST_JSON_PATH, JSON.stringify(report, null, 2));
+  writeFileAtomic(SAST_JSON_PATH, JSON.stringify(report, null, 2));
 
   console.log('✅ SAST Analysis Complete!\n');
   console.log(`📄 Reports generated:`);
@@ -312,3 +335,4 @@ function calculateSecurityScore(report: SecurityReport): number {
 
   return Math.max(0, 100 - totalPenalty);
 }
+

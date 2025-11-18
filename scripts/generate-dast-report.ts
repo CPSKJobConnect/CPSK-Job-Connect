@@ -340,18 +340,40 @@ This DAST scan evaluated the following ASVS requirements:
   return report;
 }
 
-// Clean HTML tags from text
 function cleanHtml(text: string): string {
-  return text
-    .replace(/<p>/g, '')
-    .replace(/<\/p>/g, '\n')
-    .replace(/<br\s*\/?>/g, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .trim();
+  const replaceUntilStable = (value: string, pattern: RegExp, replacement: string) => {
+    let previous: string;
+    let current = value;
+    do {
+      previous = current;
+      current = current.replace(pattern, replacement);
+    } while (current !== previous);
+    return current;
+  };
+
+  const entityReplacements: Array<[RegExp, string]> = [
+    [/&nbsp;/gi, ' '],
+    [/&lt;/gi, '<'],
+    [/&gt;/gi, '>'],
+    [/&amp;/gi, '&'],
+  ];
+  const decoded = entityReplacements.reduce(
+    (acc, [pattern, replacement]) => acc.replace(pattern, replacement),
+    text
+  );
+
+  const tagPatterns: Array<[RegExp, string]> = [
+    [/<p>/gi, ''],
+    [/<\/p>/gi, '\n'],
+    [/<br\s*\/?>/gi, '\n'],
+    [/<[^>]+>/g, ''],
+  ];
+  const stripped = tagPatterns.reduce(
+    (acc, [pattern, replacement]) => replaceUntilStable(acc, pattern, replacement),
+    decoded
+  );
+
+  return stripped.replace(/\n{3,}/g, '\n\n').trim();
 }
 
 // Main execution
