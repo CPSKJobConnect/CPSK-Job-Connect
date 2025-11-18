@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'javascript', 'typescript' ]
+        language: [  'typescript' ]
 
     steps:
     - name: Checkout repository
@@ -52,9 +52,3 @@ jobs:
         category: "/language:${{matrix.language}}"
         output: sarif-results
         upload: true
-
-    - name: Upload SARIF results
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
-      with:
-        sarif_file: sarif-results/${{ matrix.language }}.sarif
