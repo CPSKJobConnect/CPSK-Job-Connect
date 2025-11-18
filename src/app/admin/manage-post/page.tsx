@@ -732,7 +732,7 @@ export default function ManagePostPage() {
                 </p>
               </div>
 
-              {selectedJobPost.categories.length > 0 && (
+              {selectedJobPost?.categories?.length > 0 && (
                 <div>
                   <Label>Categories</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
