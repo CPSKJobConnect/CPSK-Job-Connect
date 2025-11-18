@@ -35,8 +35,7 @@ const AllJobPost = ({ info, onSelectCard, allDepartment = [] }: AllJobPostProps)
   }, [info]);
 
   useEffect(() => {
-    let result = [...info];
-    result = [...jobPost];
+    let result = [...jobPost];
 
     result = result.filter((job) => {
       if (selectedType === "All Posts") return true;

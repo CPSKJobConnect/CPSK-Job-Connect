@@ -24,8 +24,10 @@ import {
   DollarSign,
   Target,
   Award,
-  BarChart3
+  BarChart3,
+  ArrowRight
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface DashboardStats {
   pendingCompanies: number;
@@ -59,6 +61,8 @@ interface DashboardStats {
     type: string;
     createdAt: string;
     reporterEmail: string;
+    reportName: string;
+    isResolved: boolean
   }>;
 }
 
@@ -325,11 +329,22 @@ export default function AdminDashboard() {
       {/* Recent Reports */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5" />
-            Recent Reports
-          </CardTitle>
-        </CardHeader>
+    <div className="flex justify-between items-center">
+      <CardTitle className="flex items-center gap-2">
+        <AlertTriangle className="w-5 h-5" />
+        Recent Reports
+      </CardTitle>
+      {/* ปุ่มไปยังหน้า manage reports */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="p-1"
+        onClick={() => router.push("/admin/manage-report")}
+      >
+        <ArrowRight className="w-4 h-4" />
+      </Button>
+    </div>
+  </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {stats.recentReports.length === 0 ? (
@@ -338,9 +353,9 @@ export default function AdminDashboard() {
               stats.recentReports.map((report) => (
                 <div key={report.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <div className={`w-2 h-2 rounded-full ${report.isResolved ? 'bg-green-500' : 'bg-red-500'}`}></div>
                     <div>
-                      <p className="font-medium">{report.type}</p>
+                      <p className="font-medium">{report.reportName}</p>
                       <p className="text-sm text-muted-foreground">
                         Reported by {report.reporterEmail}
                       </p>

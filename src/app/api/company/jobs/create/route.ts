@@ -47,10 +47,25 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
-    const tagIds = await prisma.jobTag.findMany({
-      where: { name: { in: body.skills } },
-      select: { id: true },
-    });
+    // Handle tags: find existing or create new ones
+    const tagIds: { id: number }[] = [];
+    if (body.skills?.length) {
+      for (const skillName of body.skills) {
+        // Try to find existing tag
+        let tag = await prisma.jobTag.findFirst({
+          where: { name: skillName },
+        });
+
+        // If tag doesn't exist, create it
+        if (!tag) {
+          tag = await prisma.jobTag.create({
+            data: { name: skillName },
+          });
+        }
+
+        tagIds.push({ id: tag.id });
+      }
+    }
 
     let documentIds: Array<{ id: number }> = [];
     if (Array.isArray(body.requiredDocuments) && body.requiredDocuments.length) {

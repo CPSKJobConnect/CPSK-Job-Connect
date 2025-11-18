@@ -42,15 +42,16 @@ export async function GET(request: Request) {
       whereClause.is_Published = status === "published";
     }
 
-    if (reported === "true") {
-      // Filter for job posts that have reports
-      whereClause.id = {
-        in: await prisma.report.findMany({
-          select: { post_id: true },
-          distinct: ['post_id']
-        }).then(reports => reports.map(r => r.post_id))
-      };
-    }
+if (reported === "true") {
+  // Filter for job posts that have reports
+  const reportedJobIds = await prisma.report.findMany({
+    where: { target_type: "POST" },
+    select: { target_id: true },
+    distinct: ['target_id']
+  }).then(reports => reports.map(r => r.target_id!).filter(Boolean));
+
+  whereClause.id = { in: reportedJobIds };
+}
 
     const [jobPosts, totalCount] = await Promise.all([
       prisma.jobPost.findMany({

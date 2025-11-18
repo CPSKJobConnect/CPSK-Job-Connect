@@ -18,7 +18,7 @@ export const validateDetail = (formData: JobPostFormData) => {
     ];
 
     requiredFields.forEach((field) => {
-      const value = (formData as any)[field.key];
+      const value = formData[field.key];
       if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) {
         errors.push(`${field.label} is required`);
       }

@@ -31,6 +31,7 @@ model Account {
   providerAccountId     String?
   backgroundUrl         String?
   logoUrl               String?
+  is_active             Boolean        @default(true)
   accountRole           AccountRole?   @relation(fields: [role], references: [id])
   company               Company?
   verifiedCompanies     Company[]      @relation("VerifiedCompanies")
@@ -193,13 +194,25 @@ model Notification {
 }
 
 model Report {
-  id         Int      @id @default(autoincrement())
-  account_id Int
-  report_id  Int
-  post_id    Int
-  type       String
-  created_at DateTime @default(now())
-  account    Account  @relation(fields: [account_id], references: [id])
+  id             Int         @id @default(autoincrement())
+  account_id     Int
+  target_type    String
+  target_id      Int?
+  description    String?
+  report_type_id Int?
+  created_at     DateTime    @default(now())
+  updated_at DateTime @updatedAt
+  is_resolved Boolean @default(false)
+
+  account     Account     @relation(fields: [account_id], references: [id])
+  reportType  ReportType? @relation(fields: [report_type_id], references: [id])
+}
+
+model ReportType {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  target  String
+  reports Report[]
 }
 
 model SavedJob {

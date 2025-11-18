@@ -46,14 +46,24 @@ export async function PATCH(
     }
 
     // Update user status
-    // Since there's no isActive field in the schema, I'll use emailVerified as a proxy
     const updatedUser = await prisma.account.update({
       where: { id: userId },
       data: {
-        emailVerified: isActive ? new Date() : null
+        is_active: isActive,
+        // Force session update by changing updated_at timestamp
+        updated_at: new Date()
       },
-      include: {
-        accountRole: true,
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        is_active: true,
+        accountRole: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
         student: {
           select: {
             id: true,
@@ -85,7 +95,7 @@ export async function PATCH(
         name: updatedUser.username || updatedUser.email.split('@')[0],
         email: updatedUser.email,
         role: updatedUser.accountRole?.name?.toLowerCase() || "unknown",
-        isActive: !!updatedUser.emailVerified
+        isActive: updatedUser.is_active
       }
     }, { status: 200 });
 

@@ -235,6 +235,25 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
                   </div>
 
                   <div className="flex flex-col">
+                    <label className="text-sm text-gray-700 mb-1">Category</label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    >
+                      <SelectTrigger data-testid="edit-job-category" className="w-full">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categoryList.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex flex-col">
                     <label className="text-sm text-gray-700 mb-1">Deadline</label>
                     <Input
                       data-testid="edit-job-deadline"

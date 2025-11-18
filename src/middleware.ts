@@ -9,6 +9,20 @@ export default withAuth(
     const role = token?.role?.toLowerCase()
 
     console.log("🔍 Middleware hit:", pathname, "Role:", role)
+
+    // Check if account is disabled (from JWT token)
+    if (token && token.isActive === false) {
+      console.log("🚫 Account is disabled, redirecting to login")
+      // Redirect to appropriate login page based on role
+      if (role === "student") {
+        return NextResponse.redirect(new URL("/login/student?error=account_disabled", req.url))
+      } else if (role === "company") {
+        return NextResponse.redirect(new URL("/login/company?error=account_disabled", req.url))
+      } else if (role === "admin") {
+        return NextResponse.redirect(new URL("/login/admin?error=account_disabled", req.url))
+      }
+      return NextResponse.redirect(new URL("/?error=account_disabled", req.url))
+    }
     // TEMPORARY BYPASS for admin routes
     // if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
     //   console.log("⚙️ Skipping middleware for admin routes (temporary)")

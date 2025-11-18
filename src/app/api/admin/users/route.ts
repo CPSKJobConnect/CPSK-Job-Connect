@@ -46,15 +46,32 @@ export async function GET(request: Request) {
     }
 
     if (status && status !== "all") {
-      // For now, all accounts will be considered as active since there's no isActive field
-      whereClause.emailVerified = status === "active" ? { not: null } : null;
+      whereClause.is_active = status === "active";
     }
+
+    // Exclude pending companies from Manage Users
+    whereClause.NOT = {
+      company: {
+        registration_status: "pending"
+      }
+    };
 
     const [accounts, totalCount] = await Promise.all([
       prisma.account.findMany({
         where: whereClause,
-        include: {
-          accountRole: true,
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          created_at: true,
+          updated_at: true,
+          is_active: true,
+          accountRole: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
           student: {
             select: {
               id: true,
@@ -92,7 +109,7 @@ export async function GET(request: Request) {
         name: account.username || account.email.split('@')[0],
         email: account.email,
         role: account.accountRole?.name?.toLowerCase() || "unknown",
-        isActive: !!account.emailVerified, // Consider verified accounts as active
+        isActive: account.is_active,
         createdAt: account.created_at,
         updatedAt: account.updated_at,
         profile: {}
@@ -102,7 +119,6 @@ export async function GET(request: Request) {
       if (account.student) {
         user.profile = {
           phone: account.student.phone,
-          location: account.student.faculty, // Using faculty as location for students
           department: account.student.faculty,
           studentId: account.student.student_id
         };
