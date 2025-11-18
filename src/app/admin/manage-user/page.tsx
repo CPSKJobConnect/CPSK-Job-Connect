@@ -81,7 +81,9 @@ export default function ManageUserPage() {
 
   // Dialog states
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isDisableDialogOpen, setIsDisableDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userToToggle, setUserToToggle] = useState<{ id: number; name: string; isActive: boolean } | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -112,19 +114,28 @@ export default function ManageUserPage() {
     }
   };
 
-  const handleToggleUserStatus = async (userId: number, currentStatus: boolean) => {
+  const openDisableDialog = (user: User) => {
+    setUserToToggle({ id: user.id, name: user.name, isActive: user.isActive });
+    setIsDisableDialogOpen(true);
+  };
+
+  const handleToggleUserStatus = async () => {
+    if (!userToToggle) return;
+
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const response = await fetch(`/api/admin/users/${userToToggle.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ isActive: !currentStatus }),
+        body: JSON.stringify({ isActive: !userToToggle.isActive }),
       });
 
       if (response.ok) {
-        toast.success(`User ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+        toast.success(`User ${!userToToggle.isActive ? 'activated' : 'deactivated'} successfully`);
         fetchUsers();
+        setIsDisableDialogOpen(false);
+        setUserToToggle(null);
       } else {
         toast.error("Failed to update user status");
       }
@@ -345,7 +356,7 @@ export default function ManageUserPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleToggleUserStatus(user.id, user.isActive)}
+                      onClick={() => openDisableDialog(user)}
                       className={user.isActive ? "text-orange-600 hover:text-orange-700" : "text-green-600 hover:text-green-700"}
                     >
                       {user.isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
@@ -490,6 +501,59 @@ export default function ManageUserPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Disable/Enable User Confirmation Dialog */}
+      <Dialog open={isDisableDialogOpen} onOpenChange={setIsDisableDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {userToToggle?.isActive ? "Disable User Account" : "Enable User Account"}
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div>
+                {userToToggle?.isActive ? (
+                  <>
+                    <p className="mb-4">
+                      Are you sure you want to disable <strong>{userToToggle?.name}</strong>&apos;s account?
+                    </p>
+                    <p className="mb-2">This will:</p>
+                    <ul className="list-disc list-inside mb-4 space-y-1">
+                      <li>Immediately log them out of the system</li>
+                      <li>Prevent them from logging in</li>
+                      <li>Block access to all their data and features</li>
+                    </ul>
+                    <p>You can re-enable their account at any time.</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="mb-4">
+                      Are you sure you want to enable <strong>{userToToggle?.name}</strong>&apos;s account?
+                    </p>
+                    <p>This will allow them to log in and access the system again.</p>
+                  </>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDisableDialogOpen(false);
+                setUserToToggle(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={userToToggle?.isActive ? "destructive" : "default"}
+              onClick={handleToggleUserStatus}
+            >
+              {userToToggle?.isActive ? "Disable Account" : "Enable Account"}
             </Button>
           </DialogFooter>
         </DialogContent>

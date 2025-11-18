@@ -59,6 +59,7 @@ export const authOptions: NextAuthOptions = {
             role: true,
             logoUrl: true,
             backgroundUrl: true,
+            is_active: true,
             accountRole: {
               select: {
                 name: true
@@ -81,6 +82,11 @@ export const authOptions: NextAuthOptions = {
 
         if (!user) {
           throw new Error("Invalid credentials");
+        }
+
+        // Check if account is disabled
+        if (!user.is_active) {
+          throw new Error("ACCOUNT_DISABLED:Your account has been disabled. Please contact support for assistance.");
         }
 
         // Check if this is an OAuth account (no password set)
@@ -112,6 +118,7 @@ export const authOptions: NextAuthOptions = {
           role: user.accountRole?.name,
           logoUrl: user.logoUrl,
           backgroundUrl: user.backgroundUrl,
+          isActive: user.is_active,
           emailVerified: user.student?.email_verified,
           studentStatus: user.student?.student_status,
           verificationStatus: user.student?.verification_status,
@@ -141,6 +148,7 @@ export const authOptions: NextAuthOptions = {
         token.username = (user as User & { name?: string; username?: string }).name || (user as User & { username?: string }).username;
         token.logoUrl = user.logoUrl;
         token.backgroundUrl = user.backgroundUrl;
+        token.isActive = typeof user.isActive === 'boolean' ? user.isActive : true;
         token.emailVerified = typeof user.emailVerified === 'boolean' ? user.emailVerified : undefined;
         token.studentStatus = user.studentStatus;
         token.verificationStatus = user.verificationStatus;
@@ -162,6 +170,7 @@ export const authOptions: NextAuthOptions = {
                   username: true,
                   logoUrl: true,
                   backgroundUrl: true,
+                  is_active: true,
                   student: {
                     select: {
                       email_verified: true,
@@ -185,6 +194,7 @@ export const authOptions: NextAuthOptions = {
                 token.username = existing.username || token.username
                 token.logoUrl = existing.logoUrl || token.logoUrl
                 token.backgroundUrl = existing.backgroundUrl || token.backgroundUrl
+                token.isActive = existing.is_active
                 token.emailVerified = existing.student?.email_verified
                 token.studentStatus = existing.student?.student_status
                 token.verificationStatus = existing.student?.verification_status
@@ -222,6 +232,7 @@ export const authOptions: NextAuthOptions = {
             username: true,
             logoUrl: true,
             backgroundUrl: true,
+            is_active: true,
             accountRole: {
               select: {
                 name: true
@@ -242,12 +253,18 @@ export const authOptions: NextAuthOptions = {
           }
         })
         if (existingUser) {
+          // Check if account is disabled
+          if (!existingUser.is_active) {
+            throw new Error("ACCOUNT_DISABLED:Your account has been disabled. Please contact support for assistance.");
+          }
+
           // Use database ID instead of provider ID to avoid integer overflow
           token.sub = existingUser.id.toString()
           token.role = existingUser.accountRole?.name
           token.username = existingUser.username || undefined
           token.logoUrl = existingUser.logoUrl || undefined
           token.backgroundUrl = existingUser.backgroundUrl || undefined
+          token.isActive = existingUser.is_active
           token.emailVerified = existingUser.student?.email_verified
           token.studentStatus = existingUser.student?.student_status
           token.verificationStatus = existingUser.student?.verification_status
@@ -269,6 +286,7 @@ export const authOptions: NextAuthOptions = {
                 username: true,
                 logoUrl: true,
                 backgroundUrl: true,
+                is_active: true,
                 student: {
                   select: {
                     email_verified: true,
@@ -294,6 +312,7 @@ export const authOptions: NextAuthOptions = {
               token.username = existing.username || token.username
               token.logoUrl = existing.logoUrl || token.logoUrl
               token.backgroundUrl = existing.backgroundUrl || token.backgroundUrl
+              token.isActive = existing.is_active
               token.emailVerified = existing.student?.email_verified
               token.studentStatus = existing.student?.student_status
               token.verificationStatus = existing.student?.verification_status
@@ -313,6 +332,7 @@ export const authOptions: NextAuthOptions = {
         session.user.username = token.username as string
         session.user.logoUrl = token.logoUrl as string
         session.user.backgroundUrl = token.backgroundUrl as string
+        session.user.isActive = token.isActive
         session.user.emailVerified = token.emailVerified
         session.user.studentStatus = token.studentStatus
         session.user.verificationStatus = token.verificationStatus

@@ -11,6 +11,7 @@ declare module "next-auth" {
       profileComplete: boolean;
       logoUrl?: string;
       backgroundUrl?: string;
+      isActive?: boolean;
       emailVerified?: boolean;
       studentStatus?: StudentStatus;
       verificationStatus?: VerificationStatus;
@@ -23,6 +24,7 @@ declare module "next-auth" {
     username?: string;
     logoUrl?: string;
     backgroundUrl?: string;
+    isActive?: boolean;
     emailVerified?: boolean;
     studentStatus?: StudentStatus;
     verificationStatus?: VerificationStatus;
@@ -36,6 +38,7 @@ declare module "next-auth/jwt" {
     username?:string
     logoUrl?:string
     backgroundUrl?:string
+    isActive?: boolean;
     emailVerified?: boolean;
     studentStatus?: StudentStatus;
     verificationStatus?: VerificationStatus;

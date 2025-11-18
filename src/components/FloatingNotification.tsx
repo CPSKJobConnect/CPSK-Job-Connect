@@ -65,8 +65,13 @@ export default function FloatingNotification() {
     // Initial fetch
     fetchSummaries();
 
-    // Poll every 30 seconds (reduced from 5 seconds)
-    const interval = setInterval(fetchSummaries, 30000);
+    // Only poll when notification panel is OPEN (drastically reduces server load)
+    let interval: NodeJS.Timeout | null = null;
+
+    if (isOpen) {
+      // Poll every 60 seconds when panel is open
+      interval = setInterval(fetchSummaries, 60000);
+    }
 
     // Fetch when tab becomes visible
     const handleVisibilityChange = () => {
@@ -77,10 +82,10 @@ export default function FloatingNotification() {
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [isLoggedIn]);
+  }, [isLoggedIn, isOpen]); // Re-run when isOpen changes
 
   if (!isLoggedIn) return null;
 
