@@ -6,7 +6,9 @@ import GoogleProvider from "next-auth/providers/google";
 
 export const authOptions: NextAuthOptions = {
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
+    maxAge: 2 * 60 * 60, // 2 hours (7200 seconds)
+    updateAge: 15 * 60, // Update session every 15 minutes (900 seconds)
   },
   pages: {
     signIn: "/", // Redirect to home page on sign-in error
