@@ -4,6 +4,72 @@ import { NextAuthOptions, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 
+// Rate limiting for login attempts
+interface LoginAttempt {
+  count: number;
+  firstAttempt: number;
+  lastAttempt: number;
+}
+
+const loginAttemptsMap = new Map<string, LoginAttempt>();
+const MAX_ATTEMPTS = 5;
+const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkRateLimit(email: string): { allowed: boolean; remainingMinutes?: number } {
+  const identifier = email.toLowerCase().trim();
+  const now = Date.now();
+  const attemptRecord = loginAttemptsMap.get(identifier);
+
+  if (attemptRecord) {
+    // Reset if window has passed
+    if (now - attemptRecord.firstAttempt > WINDOW_MS) {
+      loginAttemptsMap.delete(identifier);
+      return { allowed: true };
+    }
+
+    // Check if locked out
+    if (attemptRecord.count >= MAX_ATTEMPTS) {
+      const timeSinceLastAttempt = now - attemptRecord.lastAttempt;
+      if (timeSinceLastAttempt < LOCKOUT_MS) {
+        const remainingMinutes = Math.ceil((LOCKOUT_MS - timeSinceLastAttempt) / 60000);
+        return { allowed: false, remainingMinutes };
+      } else {
+        // Lockout expired
+        loginAttemptsMap.delete(identifier);
+        return { allowed: true };
+      }
+    }
+  }
+
+  return { allowed: true };
+}
+
+function recordFailedAttempt(email: string): number {
+  const identifier = email.toLowerCase().trim();
+  const now = Date.now();
+  const existing = loginAttemptsMap.get(identifier);
+
+  if (existing) {
+    existing.count += 1;
+    existing.lastAttempt = now;
+  } else {
+    loginAttemptsMap.set(identifier, {
+      count: 1,
+      firstAttempt: now,
+      lastAttempt: now,
+    });
+  }
+
+  const updated = loginAttemptsMap.get(identifier);
+  return updated ? Math.max(0, MAX_ATTEMPTS - updated.count) : MAX_ATTEMPTS;
+}
+
+function clearFailedAttempts(email: string) {
+  const identifier = email.toLowerCase().trim();
+  loginAttemptsMap.delete(identifier);
+}
+
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
@@ -49,6 +115,12 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
+        // Check rate limit
+        const rateLimitCheck = checkRateLimit(credentials.email);
+        if (!rateLimitCheck.allowed) {
+          throw new Error(`RATE_LIMIT:Account temporarily locked. Please try again in ${rateLimitCheck.remainingMinutes} minute(s).`);
+        }
+
         const user = await prisma.account.findUnique({
           where: {
             email: credentials.email,
@@ -83,7 +155,8 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) {
-          throw new Error("Invalid credentials");
+          const attemptsRemaining = recordFailedAttempt(credentials.email);
+          throw new Error(`INVALID_CREDENTIALS:${attemptsRemaining}`);
         }
 
         // Check if account is disabled
@@ -98,8 +171,12 @@ export const authOptions: NextAuthOptions = {
 
         const isPasswordValid = await bycrypt.compare(credentials.password, user.password);
         if (!isPasswordValid) {
-          throw new Error("Invalid credentials");
+          const attemptsRemaining = recordFailedAttempt(credentials.email);
+          throw new Error(`INVALID_CREDENTIALS:${attemptsRemaining}`);
         }
+
+        // Successful login - clear failed attempts
+        clearFailedAttempts(credentials.email);
 
         // Validate role matches (if role is provided in credentials)
         if (credentials.role) {

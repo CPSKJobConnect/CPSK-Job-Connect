@@ -26,6 +26,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false)
   const [isCompletingRegistration, setIsCompletingRegistration] = useState(false)
   const [error, setError] = useState("")
+  const [attemptsRemaining, setAttemptsRemaining] = useState<number | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [awaitingSession, setAwaitingSession] = useState(false)
   const [studentStatus, setStudentStatus] = useState<"CURRENT" | "ALUMNI">("CURRENT")
@@ -102,6 +103,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
     // console.log("Form submitted with data:", data)
     setIsLoading(true)
     setError("")
+    setAttemptsRemaining(null) // Clear previous attempts counter
 
     try {
       // Validate KU email for current students
@@ -140,8 +142,16 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         })
 
         if (result?.error) {
+          // Check if it's a rate limit error
+          if (result.error.startsWith("RATE_LIMIT:")) {
+            const message = result.error.split(":")[1];
+            setActualUserRole(null)
+            setError(message)
+            setAttemptsRemaining(0) // Locked out
+            setIsLoading(false)
+          }
           // Check if it's a role mismatch error
-          if (result.error.startsWith("ROLE_MISMATCH:")) {
+          else if (result.error.startsWith("ROLE_MISMATCH:")) {
             const parts = result.error.split(":");
             const actualRole = parts[1]; // student or company
             const message = parts[2]; // The error message
@@ -154,9 +164,19 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             setActualUserRole(null)
             setError(message)
             setIsLoading(false)
-          } else {
+          } else if (result.error.startsWith("INVALID_CREDENTIALS:")) {
+            // Invalid credentials with attempt counter from backend
+            const [, attemptsStr] = result.error.split(":")
+            const parsedAttempts = Number(attemptsStr)
             setActualUserRole(null)
             setError("Invalid email or password")
+            setAttemptsRemaining(Number.isFinite(parsedAttempts) ? Math.max(0, parsedAttempts) : null)
+            setIsLoading(false)
+          } else {
+            // Generic error fallback
+            setActualUserRole(null)
+            setError(result.error === "Invalid credentials" ? "Invalid email or password" : result.error)
+            setAttemptsRemaining(null)
             setIsLoading(false)
           }
         } else {
@@ -366,6 +386,16 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             <AlertDescription>
               <div className="flex flex-col gap-2">
                 <p>{error}</p>
+                {mode === "login" && attemptsRemaining !== null && attemptsRemaining > 0 && (
+                  <p className="text-sm text-red-800 mt-1">
+                    ⚠️ <strong>{attemptsRemaining}</strong> {attemptsRemaining === 1 ? 'attempt' : 'attempts'} remaining before account lockout
+                  </p>
+                )}
+                {mode === "login" && attemptsRemaining === 0 && (
+                  <p className="text-sm text-red-900 font-semibold mt-1">
+                    🔒 Account locked. Please wait before trying again.
+                  </p>
+                )}
                 {actualUserRole && mode === "login" && (
                   <Button
                     type="button"
