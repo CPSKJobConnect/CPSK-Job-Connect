@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 
-export async function POST(request: NextRequest) {
+async function POST_impl(request: NextRequest) {
   try {
     const session = await getApiSession(request);
 
@@ -40,3 +41,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withResponseCsrfGuard(POST_impl as any);

@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
+import apiFetch from "@/lib/apiClient";
 
 interface ReportJobDialogProps {
   targetId: string | number;
@@ -55,7 +56,7 @@ export const ReportJobDialog = ({
 
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/reports", {
+      const res = await apiFetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

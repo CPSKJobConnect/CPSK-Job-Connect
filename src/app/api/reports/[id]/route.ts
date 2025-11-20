@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 
-export async function PATCH(
+async function PATCH_impl(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -33,3 +34,5 @@ export async function PATCH(
     );
   }
 }
+
+export const PATCH = withResponseCsrfGuard(PATCH_impl as any);

@@ -7,6 +7,7 @@ import JobDescriptionCard from "@/components/JobDescriptionCard";
 import { JobInfo, JobPostFormData } from "@/types/job";
 import { defaultJobPostForm } from "@/types/job";
 import { toast } from "@/lib/toastTemplate";
+import apiFetch from '@/lib/apiClient';
 import { validateForm, validateDetail, validateDescription } from "@/lib/validateJobForm";
 import { useRouter } from "next/navigation";
 import { CompanyVerificationBanner } from "@/components/CompanyVerificationBanner";
@@ -93,9 +94,8 @@ export default function Page() {
   
   const handlePost = async () => {
     try {
-      const res = await fetch("/api/company/jobs/create", {
+      const res = await apiFetch("/api/company/jobs/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           requiredDocuments: formData.documents,
@@ -120,9 +120,8 @@ export default function Page() {
 
   const handleDraft = async () => {
     try {
-      const res = await fetch("/api/company/jobs/create", {
+      const res = await apiFetch("/api/company/jobs/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           // ensure required documents are passed to API

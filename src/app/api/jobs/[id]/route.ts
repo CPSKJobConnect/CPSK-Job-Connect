@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { NextResponse, NextRequest } from "next/server";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -64,7 +65,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 }
 
 
-export async function DELETE(
+async function DELETE_impl(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -112,8 +113,10 @@ export async function DELETE(
   }
 }
 
+export const DELETE = withResponseCsrfGuard(DELETE_impl as any);
 
-export async function PATCH(
+
+async function PATCH_impl(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -229,3 +232,5 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to update job" }, { status: 500 });
   }
 }
+
+export const PATCH = withResponseCsrfGuard(PATCH_impl as any);

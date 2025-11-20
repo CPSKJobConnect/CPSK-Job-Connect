@@ -14,6 +14,7 @@ import { MdOutlinePeopleAlt } from "react-icons/md";
 import { RiDeleteBinFill } from "react-icons/ri";
 import { toast } from "sonner";
 import EditJobCard from "./EditJobCard";
+import apiFetch from '@/lib/apiClient';
 import { Button } from "./ui/button";
 
 
@@ -108,7 +109,7 @@ const JobDescriptionCard = ({
         requiredDocuments: formData.documents,
       };
 
-      const res = await fetch(`/api/jobs/${job.id}`, {
+      const res = await apiFetch(`/api/jobs/${job.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -166,7 +167,7 @@ const JobDescriptionCard = ({
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/jobs/${job.id}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/jobs/${job.id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Job deleted successfully!");
         if (onUpdate) {

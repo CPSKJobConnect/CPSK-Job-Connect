@@ -15,6 +15,7 @@ import { RecentApplicationsTableProps } from "@/types/companyStat";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
+import apiFetch from "@/lib/apiClient";
 
 
 type StatusType = "pending" | "reviewed" | "interview" | "offered" | "rejected";
@@ -44,7 +45,7 @@ export default function RecentApplicationsTable({ applications, loading, isCompa
     setStatusMap((prev) => ({ ...prev, [application_id]: newStatus }));
 
     try {
-      const response = await fetch(`/api/company/applications/${application_id}`, {
+      const response = await apiFetch(`/api/company/applications/${application_id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

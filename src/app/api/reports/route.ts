@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { getApiSession } from "@/lib/api-auth";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 
-export async function POST(req: NextRequest) {
+async function POST_impl(req: NextRequest) {
   try {
     const session = await getApiSession(req);
     if (!session?.user?.id) {
@@ -80,6 +81,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to create report" }, { status: 500 });
   }
 }
+
+export const POST = withResponseCsrfGuard(POST_impl as any);
 
 
 export async function GET(req: NextRequest) {

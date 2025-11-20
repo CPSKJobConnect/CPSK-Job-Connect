@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import StudentInfoModal from "@/components/StudentInfoModal";
 import { toast } from "sonner";
+import apiFetch from "@/lib/apiClient";
 
 interface Applicant {
   application_id: number;
@@ -80,7 +81,7 @@ const ApplicationList = ({ applicants, isCompanyVerified = true, loading = false
     }));
 
     try {
-      const response = await fetch(`/api/applications/${application_id}/status`, {
+      const response = await apiFetch(`/api/applications/${application_id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status_id: newStatusId }),

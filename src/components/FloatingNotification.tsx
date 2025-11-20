@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import apiFetch from "@/lib/apiClient";
 import { useSession } from "next-auth/react";
 import { FaBell, FaArrowLeft } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
@@ -111,7 +112,7 @@ export default function FloatingNotification() {
     const senderParam = senderId === null ? "system" : senderId;
 
     try {
-      const res = await fetch(`/api/notification/${senderParam}/${notificationId}`, {
+      const res = await apiFetch(`/api/notification/${senderParam}/${notificationId}`, {
         method: "PATCH",
       });
 
@@ -197,7 +198,7 @@ export default function FloatingNotification() {
             ) : (
               displayedSummaries.map((n) => (
                 <div
-                  key={n.senderId ?? Math.random()}
+                  key={`${String(n.senderId ?? 'system')}-${n.created_at}`}
                   onClick={() => openDetail(n.senderId)}
                   className={`p-3 border-b cursor-pointer ${
                     n.is_read ? "bg-white" : "bg-green-50 border-l-4 border-green-500"

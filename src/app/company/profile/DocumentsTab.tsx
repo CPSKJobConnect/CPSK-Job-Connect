@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { IoDocumentTextOutline, IoTrashOutline, IoEyeOutline } from "react-icons/io5";
 import FileUpload from "@/components/FileUpload";
 import { DocumentViewerModal } from "@/components/DocumentViewerModal";
+import apiFetch from "@/lib/apiClient";
 
 interface DocumentsTabProps {
   company: Company;
@@ -142,7 +143,7 @@ export default function DocumentsTab({ company, onUpdate }: DocumentsTabProps) {
         const reapplyFormData = new FormData();
         reapplyFormData.append("evidence", file);
 
-        const res = await fetch("/api/company/reapply-verification", {
+        const res = await apiFetch("/api/company/reapply-verification", {
           method: "POST",
           body: reapplyFormData,
         });
@@ -161,7 +162,7 @@ export default function DocumentsTab({ company, onUpdate }: DocumentsTabProps) {
         formData.append("file", file);
         formData.append("docTypeId", String(docTypeId));
 
-        const res = await fetch("/api/company/documents", {
+        const res = await apiFetch("/api/company/documents", {
           method: "POST",
           body: formData,
         });
@@ -189,7 +190,7 @@ export default function DocumentsTab({ company, onUpdate }: DocumentsTabProps) {
     }
 
     try {
-      const res = await fetch(`/api/company/documents/${docId}`, {
+      const res = await apiFetch(`/api/company/documents/${docId}`, {
         method: "DELETE",
       });
 

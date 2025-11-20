@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { IoBusinessOutline, IoCallOutline, IoGlobeOutline, IoLocationOutline, IoMailOutline, IoShieldCheckmarkOutline, IoCamera, IoSave, IoClose } from "react-icons/io5";
 import { useState, useRef } from "react";
+import apiFetch from '@/lib/apiClient';
 import { toast } from "sonner";
 import Image from "next/image";
 import { isValidImageUrl } from "@/lib/validateImageUrl";
@@ -126,7 +127,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
         form.append("background", backgroundFile);
       }
 
-      const response = await fetch("/api/company/profile", {
+      const response = await apiFetch("/api/company/profile", {
         method: "PATCH",
         body: form,
       });

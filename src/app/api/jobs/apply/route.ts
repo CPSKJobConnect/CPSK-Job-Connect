@@ -2,8 +2,9 @@ import { getApiSession } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { uploadDocument } from "@/lib/uploadDocument";
 import { NextRequest, NextResponse } from "next/server";
+import { withResponseCsrfGuard } from "@/lib/csrfGuard";
 
-export async function POST(request: NextRequest) {
+async function POST_impl(request: NextRequest) {
   try {
     const session = await getApiSession(request);
     if (!session?.user?.id) {
@@ -181,3 +182,8 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withResponseCsrfGuard(POST_impl as any);
+
+// Export the raw implementation for tests to import and call directly.
+export { POST_impl };

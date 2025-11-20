@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 
 export async function GET() {
   try {
@@ -88,7 +89,7 @@ export async function GET() {
   }
 }
 
-export async function PATCH(request: NextRequest) {
+async function PATCH_impl(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
@@ -187,3 +188,5 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Failed to update company profile" }, { status: 500 });
   }
 }
+
+export const PATCH = withResponseCsrfGuard(PATCH_impl as any);
