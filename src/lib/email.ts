@@ -22,6 +22,8 @@ const recentEmails = new Map<string, number>();
  * @param options - Email options (to, subject, html, text)
  * @returns Promise that resolves when email is sent
  */
+import { escapeHtml } from './htmlEscape';
+
 export async function sendEmail(options: EmailOptions): Promise<void> {
   // Prevent duplicate emails within 10 seconds
   const emailKey = `${options.to}:${options.subject}`;
@@ -95,6 +97,8 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
  * @returns HTML string
  */
 export function generateVerificationEmailHTML(code: string, recipientName?: string): string {
+  const safeRecipient = escapeHtml(recipientName);
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -158,7 +162,7 @@ export function generateVerificationEmailHTML(code: string, recipientName?: stri
   <div class="container">
     <h1 class="header">🎓 CPSK Job Connect</h1>
 
-    ${recipientName ? `<p>Hello ${recipientName},</p>` : '<p>Hello,</p>'}
+    ${recipientName ? `<p>Hello ${safeRecipient},</p>` : '<p>Hello,</p>'}
 
     <p>Thank you for registering with CPSK Job Connect. To complete your registration and verify your KU email address, please use the verification code below:</p>
 
@@ -189,10 +193,12 @@ export function generateVerificationEmailHTML(code: string, recipientName?: stri
  * @returns Plain text string
  */
 export function generateVerificationEmailText(code: string, recipientName?: string): string {
+  const safeRecipientText = escapeHtml(recipientName);
+
   return `
 CPSK Job Connect - Email Verification
 
-${recipientName ? `Hello ${recipientName},` : 'Hello,'}
+${recipientName ? `Hello ${safeRecipientText},` : 'Hello,'}
 
 Thank you for registering with CPSK Job Connect. To complete your registration and verify your KU email address, please use the verification code below:
 
@@ -237,6 +243,7 @@ export function generateAlumniApprovalEmailHTML(studentName: string, approved: b
     ? 'Your alumni verification has been approved! Please log in to your dashboard and click on the "Account Pending Admin Approval" badge to verify your KU email address. You can browse jobs now, but you\'ll need to complete email verification before applying.'
     : 'Unfortunately, your alumni verification has been rejected. Please contact support if you believe this is an error.';
 
+  const safeStudent = escapeHtml(studentName);
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -298,7 +305,7 @@ export function generateAlumniApprovalEmailHTML(studentName: string, approved: b
   <div class="container">
     <h1 class="header">🎓 CPSK Job Connect</h1>
 
-    <p>Hello ${studentName},</p>
+    <p>Hello ${safeStudent},</p>
 
     <div class="status">
       <div class="status-text">${emoji} Verification ${approvalStatus}</div>
@@ -329,16 +336,19 @@ export async function sendAlumniStatusEmail(
 ): Promise<void> {
   const approvalStatus = approved ? 'Approved' : 'Rejected';
 
+  const safeStudent = escapeHtml(studentName);
+  const safeNotes = notes ? escapeHtml(notes) : undefined;
+
   let textContent = `
 CPSK Job Connect - Alumni Verification ${approvalStatus}
 
-Hello ${studentName},
+Hello ${safeStudent},
 
 Your alumni verification has been ${approved ? 'approved' : 'rejected'}.
 `;
 
-  if (notes) {
-    textContent += `\n\nAdmin notes: ${notes}`;
+  if (safeNotes) {
+    textContent += `\n\nAdmin notes: ${safeNotes}`;
   }
 
   if (approved) {
@@ -359,9 +369,19 @@ Your alumni verification has been ${approved ? 'approved' : 'rejected'}.
 export function generateCompanyApprovalEmailHTML(companyName: string, approved: boolean, notes?: string): string {
   const approvalStatus = approved ? 'Approved' : 'Rejected';
   const emoji = approved ? '✅' : '❌';
+  const safeCompany = escapeHtml(companyName);
+  const safeNotes = notes ? escapeHtml(notes) : undefined;
   const message = approved
     ? 'Your company registration has been approved! You can now post job openings and manage applications.'
-    : `Unfortunately, your company registration has been rejected.${notes ? ` Reason: ${notes}` : ' Please contact support if you believe this is an error.'}`;
+    : `Unfortunately, your company registration has been rejected.${safeNotes ? ` Reason: ${safeNotes}` : ' Please contact support if you believe this is an error.'}`;
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  let dashboardHref = '';
+  try {
+    dashboardHref = new URL('/company/dashboard', baseUrl).toString();
+  } catch (e) {
+    dashboardHref = baseUrl + '/company/dashboard';
+  }
 
   return `
 <!DOCTYPE html>
@@ -427,7 +447,7 @@ export function generateCompanyApprovalEmailHTML(companyName: string, approved: 
   <div class="container">
     <h1 class="header">🏢 CPSK Job Connect</h1>
 
-    <p>Hello ${companyName},</p>
+    <p>Hello ${safeCompany},</p>
 
     <div class="status">
       <div class="status-text">${emoji} Registration ${approvalStatus}</div>
@@ -435,7 +455,7 @@ export function generateCompanyApprovalEmailHTML(companyName: string, approved: 
 
     <p>${message}</p>
 
-    ${approved ? '<a href="' + (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/company/dashboard" class="button">Go to Dashboard</a>' : ''}
+    ${approved ? '<a href="' + dashboardHref + '" class="button">Go to Dashboard</a>' : ''}
 
     <div class="footer">
       <p>CPSK Job Connect - Kasetsart University</p>
@@ -458,16 +478,19 @@ export async function sendCompanyStatusEmail(
 ): Promise<void> {
   const approvalStatus = approved ? 'Approved' : 'Rejected';
 
+const safeCompany = escapeHtml(companyName);
+  const safeNotes = notes ? escapeHtml(notes) : undefined;
+
   let textContent = `
 CPSK Job Connect - Company Registration ${approvalStatus}
 
-Hello ${companyName},
+Hello ${safeCompany},
 
 Your company registration has been ${approved ? 'approved' : 'rejected'}.
 `;
 
-  if (notes) {
-    textContent += `\n\nAdmin notes: ${notes}`;
+  if (safeNotes) {
+    textContent += `\n\nAdmin notes: ${safeNotes}`;
   }
 
   if (approved) {
@@ -489,6 +512,7 @@ export async function sendAlumniRegistrationEmail(
   email: string,
   studentName: string
 ): Promise<void> {
+  const safeStudent = escapeHtml(studentName);
   const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -550,7 +574,7 @@ export async function sendAlumniRegistrationEmail(
   <div class="container">
     <h1 class="header">🎓 CPSK Job Connect</h1>
 
-    <p>Hello ${studentName},</p>
+    <p>Hello ${safeStudent},</p>
 
     <div class="status">
       <div class="status-text">📝 Registration Received</div>
@@ -586,7 +610,7 @@ export async function sendAlumniRegistrationEmail(
   const textContent = `
 CPSK Job Connect - Alumni Registration Received
 
-Hello ${studentName},
+Hello ${safeStudent},
 
 Thank you for registering with CPSK Job Connect as an alumni!
 
