@@ -8,19 +8,19 @@ function toArray(header: any): string[] {
   return [String(header)];
 }
 
-function parseNameValue(cookieHeader: string): { name: string; value: string } | null {
+function parseNameValue(cookieHeader: string): { cookieName: string; cookieValue: string } | null {
   // cookieHeader expected like: name=value; Path=/; HttpOnly
   const pair = cookieHeader.split(';')[0] || '';
   const eq = pair.indexOf('=');
   if (eq <= 0) return null;
-  const name = pair.slice(0, eq).trim();
-  const value = pair.slice(eq + 1).trim();
-  return { name, value };
+  const cookieName = pair.slice(0, eq).trim();
+  const cookieValue = pair.slice(eq + 1).trim();
+  return { cookieName, cookieValue };
 }
 
 export function validateSetCookieHeaders(header: any) {
   const arr = toArray(header);
-  const violations: Array<{ index: number; header: string; name?: string; value?: string; bytes?: number }> = [];
+  const violations: Array<{ index: number; header: string; cookieName?: string; cookieValue?: string; bytes?: number }> = [];
   for (let i = 0; i < arr.length; i++) {
     const h = arr[i];
     const nv = parseNameValue(h);
@@ -29,9 +29,9 @@ export function validateSetCookieHeaders(header: any) {
       violations.push({ index: i, header: h });
       continue;
     }
-    const bytes = Buffer.byteLength(nv.name + nv.value, 'utf8');
+    const bytes = Buffer.byteLength(nv.cookieName + nv.cookieValue, 'utf8');
     if (bytes > MAX_BYTES) {
-      violations.push({ index: i, header: h, name: nv.name, value: nv.value, bytes });
+      violations.push({ index: i, header: h, cookieName: nv.cookieName, cookieValue: nv.cookieValue, bytes });
     }
   }
   return violations;
@@ -57,7 +57,7 @@ export function withCookieSizeGuard(handler: (req: IncomingMessage, res: ServerR
     const violations = validateSetCookieHeaders(header);
     if (violations.length > 0) {
       const msgs = violations.map(v => {
-        if (v.bytes) return `cookie[${v.index}]: name=${v.name} bytes=${v.bytes}`;
+        if (v.bytes) return `cookie[${v.index}]: name=${v.cookieName} bytes=${v.bytes}`;
         return `cookie[${v.index}]: unable to parse header (${String(v.header).slice(0,80)})`;
       });
       const err = new Error(`Cookie size violations: ${msgs.join('; ')}`);
@@ -111,7 +111,7 @@ export function withResponseCookieSizeGuard(handler: (...args: any[]) => Promise
 
     const violations = validateSetCookieHeaders(header);
     if (violations.length > 0) {
-      const msgs = violations.map(v => v.bytes ? `cookie[${v.index}]: name=${v.name} bytes=${v.bytes}` : `cookie[${v.index}]: unable to parse header`);
+      const msgs = violations.map(v => v.bytes ? `cookie[${v.index}]: name=${v.cookieName} bytes=${v.bytes}` : `cookie[${v.index}]: unable to parse header`);
       throw new Error(`Cookie size violations: ${msgs.join('; ')}`);
     }
 

@@ -5,20 +5,20 @@ function createMockRes() {
   const headers: Record<string, any> = {};
   return {
     _headers: headers,
-    setHeader(name: string, value: any) {
-      headers[name] = value;
+    setHeader(headerName: string, value: any) {
+      headers[headerName] = value;
     },
-    getHeader(name: string) {
-      return headers[name];
+    getHeader(headerName: string) {
+      return headers[headerName];
     }
   } as any;
 }
 
 describe('cookieGuard', () => {
   test('validateSetCookieHeaders returns violation for large literal', () => {
-    const name = 'a';
-    const value = 'x'.repeat(4096); // name + value = 4097 bytes
-    const header = `${name}=${value}; Path=/; HttpOnly`;
+    const cookieName = 'a';
+    const cookieValue = 'x'.repeat(4096); // name + value = 4097 bytes
+    const header = `${cookieName}=${cookieValue}; Path=/; HttpOnly`;
     const v = validateSetCookieHeaders([header]);
     if (v.length === 0) throw new Error('expected at least one violation');
     if (!v[0].bytes || v[0].bytes <= 4096) throw new Error('expected bytes > 4096');
@@ -28,9 +28,9 @@ describe('cookieGuard', () => {
     const res = createMockRes();
     const req = {} as any;
     const handler = async (req: any, res: any) => {
-      const name = 'a';
-      const value = 'x'.repeat(4096);
-      res.setHeader('Set-Cookie', `${name}=${value}; Path=/; HttpOnly`);
+      const cookieName = 'a';
+      const cookieValue = 'x'.repeat(4096);
+      res.setHeader('Set-Cookie', `${cookieName}=${cookieValue}; Path=/; HttpOnly`);
       return { ok: true };
     };
 

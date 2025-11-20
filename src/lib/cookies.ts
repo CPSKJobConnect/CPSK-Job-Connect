@@ -15,12 +15,12 @@ export interface CookieOptions {
  * byte length (UTF-8) does not exceed 4096 bytes. Throws an Error when
  * the combined length is too large.
  */
-export function buildSetCookieHeader(name: string, value: string, opts: CookieOptions = {}): string {
-  if (!name || typeof name !== 'string') throw new TypeError('Cookie name must be a non-empty string');
-  if (typeof value !== 'string') value = String(value ?? '');
+export function buildSetCookieHeader(cookieName: string, cookieValue: string, opts: CookieOptions = {}): string {
+  if (!cookieName || typeof cookieName !== 'string') throw new TypeError('Cookie name must be a non-empty string');
+  if (typeof cookieValue !== 'string') cookieValue = String(cookieValue ?? '');
 
   // Per requirement: combined name + value length (in bytes) must be <= 4096
-  const combinedBytes = Buffer.byteLength(name + value, 'utf8');
+  const combinedBytes = Buffer.byteLength(cookieName + cookieValue, 'utf8');
   if (combinedBytes > 4096) {
     throw new Error(`Cookie too large: name+value is ${combinedBytes} bytes (max 4096)`);
   }
@@ -36,7 +36,7 @@ export function buildSetCookieHeader(name: string, value: string, opts: CookieOp
     sameSite = 'Lax',
   } = opts;
 
-  let header = `${name}=${value}`;
+  let header = `${cookieName}=${cookieValue}`;
 
   if (maxAge !== undefined) header += `; Max-Age=${Math.floor(Number(maxAge))}`;
   if (expires instanceof Date) header += `; Expires=${expires.toUTCString()}`;
@@ -73,9 +73,9 @@ export default buildSetCookieHeader;
  * Usage (NextResponse):
  *   setCookieSafe(res, 'sid', jwt, { httpOnly: true });
  */
-export function setCookieSafe(res: any, name: string, value: string, opts: CookieOptions = {}) {
+export function setCookieSafe(res: any, cookieName: string, cookieValue: string, opts: CookieOptions = {}) {
   // build header value (this enforces byte-length)
-  const headerValue = buildSetCookieHeader(name, value, opts);
+  const headerValue = buildSetCookieHeader(cookieName, cookieValue, opts);
 
   // Prefer express/Node style res.setHeader
   try {
