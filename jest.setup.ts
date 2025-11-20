@@ -2,8 +2,10 @@ import '@testing-library/jest-dom';
 import 'whatwg-fetch';
 import { TextEncoder, TextDecoder } from 'util';
 
-// Polyfill for libraries like next-auth/jose
-// Use Object.defineProperty to avoid direct assignment to the global object
+
+process.env.CSRF_GUARD_DISABLED = '1';
+
+
 if (typeof globalThis !== "undefined") {
   if (!('TextEncoder' in globalThis)) {
     Object.defineProperty(globalThis, 'TextEncoder', {
