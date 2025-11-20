@@ -38,4 +38,7 @@ export const POST = withResponseCsrfGuard(POST_impl as any);
 export const PATCH = withResponseCsrfGuard(PATCH_impl as any);
 export const DELETE = withResponseCsrfGuard(DELETE_impl as any);
 
-export { POST_impl, PATCH_impl, DELETE_impl };
+// Note: do not export raw `_impl` handlers from Next.js route modules.
+// Exporting extra named symbols breaks Next.js route typing requirements
+// in production builds. Tests should import implementations from
+// separate test helpers if they need the raw functions.

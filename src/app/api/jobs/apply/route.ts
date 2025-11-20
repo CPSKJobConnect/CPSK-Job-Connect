@@ -186,4 +186,7 @@ async function POST_impl(request: NextRequest) {
 export const POST = withResponseCsrfGuard(POST_impl as any);
 
 // Export the raw implementation for tests to import and call directly.
-export { POST_impl };
+// Note: do not export raw `_impl` handlers from Next.js route modules.
+// Exporting extra named symbols breaks Next.js route typing requirements
+// in production builds. Tests should import implementations from
+// separate test helpers if they need the raw functions.
