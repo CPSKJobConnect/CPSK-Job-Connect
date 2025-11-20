@@ -2,7 +2,7 @@ import enforceCookieSecurity from '@/lib/cookieSecurity';
 import { expect } from '@jest/globals';
 
 describe('enforceCookieSecurity', () => {
-  it('adds Secure attribute and prefixes cookie with __Secure- when no __Host- present', () => {
+  it('adds Secure attribute and preserves cookie name when no __Host- present', () => {
     const rawCookie = 'sid=abc123; Path=/; HttpOnly';
     const headers = new Headers();
     headers.append('set-cookie', rawCookie);
@@ -15,7 +15,8 @@ describe('enforceCookieSecurity', () => {
     expect(sc.length).toBeGreaterThan(0);
     const out = String(sc[0]);
     expect(out).toMatch(/(^|;\s*)Secure(\b|$)/i);
-    expect(out.startsWith('__Secure-sid=')).toBe(true);
+    // Name should be preserved (no automatic prefixing)
+    expect(out.startsWith('sid=')).toBe(true);
   });
 
   it('does not add __Secure- when cookie already uses __Host- prefix, but ensures Secure attribute', () => {

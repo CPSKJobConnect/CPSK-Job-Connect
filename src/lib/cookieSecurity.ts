@@ -34,11 +34,8 @@ export function enforceCookieSecurity(res: Response): Response {
 			attrs = (attrs ? attrs + '; ' : '; ') + 'Secure';
 		}
 
-		const newName = cookieName.startsWith('__Host-') || cookieName.startsWith('__Secure-')
-			? cookieName
-			: `__Secure-${cookieName}`;
-
-		const newHeader = `${newName}=${value}${attrs}`;
+		// Do NOT rename cookie names. Only enforce security attributes.
+		const newHeader = `${cookieName}=${value}${attrs}`;
 		newHeaders.append('Set-Cookie', newHeader);
 	}
 
