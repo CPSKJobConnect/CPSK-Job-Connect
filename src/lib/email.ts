@@ -231,7 +231,7 @@ export async function sendVerificationEmail(
  * Generate HTML template for alumni approval notification
  */
 export function generateAlumniApprovalEmailHTML(studentName: string, approved: boolean): string {
-  const status = approved ? 'Approved' : 'Rejected';
+  const approvalStatus = approved ? 'Approved' : 'Rejected';
   const emoji = approved ? '✅' : '❌';
   const message = approved
     ? 'Your alumni verification has been approved! Please log in to your dashboard and click on the "Account Pending Admin Approval" badge to verify your KU email address. You can browse jobs now, but you\'ll need to complete email verification before applying.'
@@ -243,7 +243,7 @@ export function generateAlumniApprovalEmailHTML(studentName: string, approved: b
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alumni Verification ${status}</title>
+  <title>Alumni Verification ${approvalStatus}</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -301,7 +301,7 @@ export function generateAlumniApprovalEmailHTML(studentName: string, approved: b
     <p>Hello ${studentName},</p>
 
     <div class="status">
-      <div class="status-text">${emoji} Verification ${status}</div>
+      <div class="status-text">${emoji} Verification ${approvalStatus}</div>
     </div>
 
     <p>${message}</p>
@@ -327,10 +327,10 @@ export async function sendAlumniStatusEmail(
   approved: boolean,
   notes?: string
 ): Promise<void> {
-  const status = approved ? 'Approved' : 'Rejected';
+  const approvalStatus = approved ? 'Approved' : 'Rejected';
 
   let textContent = `
-CPSK Job Connect - Alumni Verification ${status}
+CPSK Job Connect - Alumni Verification ${approvalStatus}
 
 Hello ${studentName},
 
@@ -347,7 +347,7 @@ Your alumni verification has been ${approved ? 'approved' : 'rejected'}.
 
   await sendEmail({
     to: email,
-    subject: `Alumni Verification ${status} - CPSK Job Connect`,
+    subject: `Alumni Verification ${approvalStatus} - CPSK Job Connect`,
     html: generateAlumniApprovalEmailHTML(studentName, approved),
     text: textContent.trim(),
   });
@@ -357,7 +357,7 @@ Your alumni verification has been ${approved ? 'approved' : 'rejected'}.
  * Generate HTML template for company approval notification
  */
 export function generateCompanyApprovalEmailHTML(companyName: string, approved: boolean, notes?: string): string {
-  const status = approved ? 'Approved' : 'Rejected';
+  const approvalStatus = approved ? 'Approved' : 'Rejected';
   const emoji = approved ? '✅' : '❌';
   const message = approved
     ? 'Your company registration has been approved! You can now post job openings and manage applications.'
@@ -369,7 +369,7 @@ export function generateCompanyApprovalEmailHTML(companyName: string, approved: 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Company Registration ${status}</title>
+  <title>Company Registration ${approvalStatus}</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -430,7 +430,7 @@ export function generateCompanyApprovalEmailHTML(companyName: string, approved: 
     <p>Hello ${companyName},</p>
 
     <div class="status">
-      <div class="status-text">${emoji} Registration ${status}</div>
+      <div class="status-text">${emoji} Registration ${approvalStatus}</div>
     </div>
 
     <p>${message}</p>
@@ -456,10 +456,10 @@ export async function sendCompanyStatusEmail(
   approved: boolean,
   notes?: string
 ): Promise<void> {
-  const status = approved ? 'Approved' : 'Rejected';
+  const approvalStatus = approved ? 'Approved' : 'Rejected';
 
   let textContent = `
-CPSK Job Connect - Company Registration ${status}
+CPSK Job Connect - Company Registration ${approvalStatus}
 
 Hello ${companyName},
 
@@ -476,7 +476,7 @@ Your company registration has been ${approved ? 'approved' : 'rejected'}.
 
   await sendEmail({
     to: email,
-    subject: `Company Registration ${status} - CPSK Job Connect`,
+    subject: `Company Registration ${approvalStatus} - CPSK Job Connect`,
     html: generateCompanyApprovalEmailHTML(companyName, approved, notes),
     text: textContent.trim(),
   });

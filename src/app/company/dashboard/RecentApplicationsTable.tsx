@@ -145,9 +145,9 @@ export default function RecentApplicationsTable({ applications, loading, isCompa
                     <SelectContent>
                       <SelectGroup>
                         <SelectLabel>Status</SelectLabel>
-                        {statusTypes.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status}
+                        {statusTypes.map((statusOption) => (
+                          <SelectItem key={statusOption} value={statusOption}>
+                            {statusOption}
                           </SelectItem>
                         ))}
                       </SelectGroup>

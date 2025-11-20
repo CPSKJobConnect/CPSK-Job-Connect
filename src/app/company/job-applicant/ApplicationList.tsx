@@ -203,13 +203,13 @@ const ApplicationList = ({ applicants, isCompanyVerified = true, loading = false
                         <SelectContent>
                           <SelectGroup>
                             <SelectLabel>Status</SelectLabel>
-                            {statusList.map((status) => (
+                            {statusList.map((statusItem) => (
                               <SelectItem
-                                  key={status.id}
-                                  value={status.id.toString()}
+                                  key={statusItem.id}
+                                  value={statusItem.id.toString()}
                                 >
-                                  {status.name.charAt(0).toUpperCase() + status.name.slice(1)}
-                                </SelectItem>
+                                  {statusItem.name.charAt(0).toUpperCase() + statusItem.name.slice(1)}
+                            </SelectItem>
                             ))}
                           </SelectGroup>
                         </SelectContent>

@@ -22,11 +22,11 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     }
 
     // Derive status from is_Published and deadline
-    let status = "active";
+    let jobStatus = "active";
     if (!job.is_Published) {
-      status = "draft";
+      jobStatus = "draft";
     } else if (job.deadline && new Date(job.deadline) < new Date()) {
-      status = "expire";
+      jobStatus = "expire";
     }
 
     const mappedJob = {
@@ -53,7 +53,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       skills: job.tags.map((tag: { name: string }) => tag.name),
       arrangement: job.jobArrangement.name,
       deadline: job.deadline ? job.deadline.toISOString() : null,
-      status,
+      status: jobStatus,
       documents: job.documents.map((doc: { name: string }) => doc.name.toLowerCase()),
     };
     return NextResponse.json(mappedJob);

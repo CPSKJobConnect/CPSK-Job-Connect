@@ -74,11 +74,11 @@ export async function GET(req: Request) {
 
   const mappedData = jobs.map((job) => {
       // Derive status from is_Published and deadline
-      let status = "active";
+      let jobStatus = "active";
       if (!job.is_Published) {
-        status = "draft";
+        jobStatus = "draft";
       } else if (job.deadline && new Date(job.deadline) < new Date()) {
-        status = "expire";
+        jobStatus = "expire";
       }
 
       // Check if the job is saved by the current user
@@ -109,7 +109,7 @@ export async function GET(req: Request) {
         requiredDocuments: Array.isArray(job.documents) ? job.documents.map((d: { name: string }) => d.name) : [],
         arrangement: job.jobArrangement.name,
         deadline: job.deadline ? job.deadline.toISOString() : null,
-        status,
+        status: jobStatus,
         isSaved,
       };
     });

@@ -15,7 +15,7 @@ export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const { data: session, update } = useSession();
   const email = searchParams.get("email");
-  const name = searchParams.get("name");
+  const studentName = searchParams.get("name");
 
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +31,7 @@ export default function VerifyEmailPage() {
       setHasSentInitialCode(true);
       sendVerificationCode();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // Countdown timer for resend button
@@ -57,7 +57,7 @@ export default function VerifyEmailPage() {
       const response = await fetch("/api/students/send-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, studentName: name }),
+        body: JSON.stringify({ email, studentName }),
       });
 
       const data = await response.json();

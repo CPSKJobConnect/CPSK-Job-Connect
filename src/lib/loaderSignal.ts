@@ -32,7 +32,22 @@ function notify() {
 }
 
 // Optional global access for quick usage in non-module code
-if (typeof window !== "undefined") {
-  // @ts-expect-error - Adding global loader to window object
-  window.__GLOBAL_LOADER = { begin, done, getPending };
+// Avoid direct assignment to `window`/`globalThis` (may clobber DOM globals).
+// Use a uniquely-named property and `Object.defineProperty` if needed.
+if (typeof globalThis !== "undefined") {
+  const globalKey = "__CPSK_JOB_CONNECT_LOADER";
+  try {
+    const g = globalThis as any;
+    if (!g[globalKey]) {
+      Object.defineProperty(g, globalKey, {
+        value: { begin, done, getPending },
+        writable: true,
+        configurable: true,
+        enumerable: false,
+      });
+    }
+  } catch (e) {
+    // best-effort: if defineProperty fails, do nothing
+    // the module exports still provide the functions for imports
+  }
 }

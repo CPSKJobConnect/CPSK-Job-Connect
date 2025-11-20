@@ -24,9 +24,9 @@ export function filterByCategory(jobs: JobInfo[], category?: string) {
   return jobs.filter(job => job.category == category);
 }
 
-export function filterByLocation(jobs: JobInfo[], location?: string) {
-  if (!location) return jobs;
-  return jobs.filter(job => job.location === location);
+export function filterByLocation(jobs: JobInfo[], loc?: string) {
+  if (!loc) return jobs;
+  return jobs.filter(job => job.location === loc);
 }
 
 export function filterByType(jobs: JobInfo[], type?: string) {

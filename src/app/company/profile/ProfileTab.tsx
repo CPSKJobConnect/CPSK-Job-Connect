@@ -40,8 +40,8 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusColor = (statusKey: string) => {
+    switch (statusKey) {
       case "APPROVED":
         return "bg-green-100 text-green-800 border-green-300";
       case "PENDING":
@@ -53,8 +53,8 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
+  const getStatusText = (statusKey: string) => {
+    switch (statusKey) {
       case "APPROVED":
         return "Verified";
       case "PENDING":
@@ -62,7 +62,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
       case "REJECTED":
         return "Verification Rejected";
       default:
-        return status;
+        return statusKey;
     }
   };
 

@@ -64,13 +64,13 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
     }
   };
 
-  const getStatusColor = (status: string, emailVerified: boolean) => {
+  const getStatusColor = (statusKey: string, emailVerified: boolean) => {
     // For alumni who are approved but haven't verified email, show blue (pending email verification)
-    if (status === "APPROVED" && student.student_status === "ALUMNI" && !emailVerified) {
+    if (statusKey === "APPROVED" && student.student_status === "ALUMNI" && !emailVerified) {
       return "bg-blue-100 text-blue-800 border-blue-300";
     }
 
-    switch (status) {
+    switch (statusKey) {
       case "APPROVED":
         return "bg-green-100 text-green-800 border-green-300";
       case "PENDING":
@@ -82,13 +82,13 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
     }
   };
 
-  const getStatusText = (status: string, emailVerified: boolean) => {
+  const getStatusText = (statusKey: string, emailVerified: boolean) => {
     // For alumni who are approved but haven't verified email
-    if (status === "APPROVED" && student.student_status === "ALUMNI" && !emailVerified) {
+    if (statusKey === "APPROVED" && student.student_status === "ALUMNI" && !emailVerified) {
       return "Email Verification Required";
     }
 
-    switch (status) {
+    switch (statusKey) {
       case "APPROVED":
         return "Verified";
       case "PENDING":
@@ -96,7 +96,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
       case "REJECTED":
         return "Verification Rejected";
       default:
-        return status;
+        return statusKey;
     }
   };
 
