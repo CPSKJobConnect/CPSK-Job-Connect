@@ -11,6 +11,8 @@
     "lint:dom": "eslint --config ./eslint.dom.config.mjs --ext .ts,.tsx,.js,.jsx .",
     "lint:dom:fix": "eslint --config ./eslint.dom.config.mjs --ext .ts,.tsx,.js,.jsx . --fix",
     "lint:css": "stylelint \"**/*.{css,scss}\" --fix",
+    "lint:text-safety": "node ./scripts/check-text-safety.mjs",
+    "lint:text-safety:eslint": "eslint --config ./eslint.text-safety.config.mjs --ext .ts,.tsx,.js,.jsx src/",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:api": "jest src/tests/api",
