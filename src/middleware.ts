@@ -30,7 +30,7 @@ export default withAuth(
     // }
 
     // Public routes
-    const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/jobs", "/student/verify-email"]
+    const publicRoutes = ["/", "/login", "/register", "/jobs", "/api/jobs", "/student/verify-email", "/forgot-password", "/reset-password"]
     const isPublicRoute = publicRoutes.some(route =>
       pathname === route || pathname.startsWith(`${route}/`)
     )
