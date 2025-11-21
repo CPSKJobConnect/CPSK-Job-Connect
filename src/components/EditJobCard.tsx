@@ -29,7 +29,7 @@ interface EditJobCardProps {
 }
 
 interface CompanyProps {
-  name: string;
+  companyName: string;
   profile_url: string;
   bg_profile_url: string;
 }
@@ -55,7 +55,16 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
       const res = await fetch("/api/auth/session");
       const data = await res.json();
       console.log("Session data:", data);
-      setCompany(data.user || null)
+      const u = data?.user || null;
+      if (u) {
+        setCompany({
+          companyName: u.name || "",
+          profile_url: u.profile_url || "",
+          bg_profile_url: u.bg_profile_url || "",
+        });
+      } else {
+        setCompany(null);
+      }
     };
     fetchCompany();
   }, [categories, jobTypes, arrangements]);
@@ -81,12 +90,12 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
     setOpen(false);
   }
 
-  const toggleDocument = (name: string) => {
+  const toggleDocument = (docName: string) => {
     const current = formData.documents || [];
-    if (current.includes(name)) {
-      setFormData({ ...formData, documents: current.filter((d) => d !== name) });
+    if (current.includes(docName)) {
+      setFormData({ ...formData, documents: current.filter((d) => d !== docName) });
     } else {
-      setFormData({ ...formData, documents: [...current, name] });
+      setFormData({ ...formData, documents: [...current, docName] });
     }
   };
 
@@ -107,7 +116,7 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
 
   const previewJob = useMemo<JobInfo>(() => ({
       title: formData.title,
-      companyName: company?.name || "Your Company",
+      companyName: company?.companyName || "Your Company",
       companyLogo: company?.profile_url || "/assets/images/companyLogo.png",
       companyBg: company?.bg_profile_url || "/assets/images/companyBg.jpg",
       category: formData.category,

@@ -59,7 +59,7 @@ async function backupDatabase() {
 
     // Try to fetch savedJobs if the table exists
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       data.savedJobs = await (prisma as any).savedJob.findMany();
     } catch (error) {
       console.log('⚠️  SavedJob table not found, skipping...');

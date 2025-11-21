@@ -1,8 +1,9 @@
 import { getApiSession } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 
-export async function POST(request: NextRequest) {
+async function POST_impl(request: NextRequest) {
   try {
     const session = await getApiSession(request);
 
@@ -135,3 +136,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export const POST = withResponseCsrfGuard(POST_impl as any);

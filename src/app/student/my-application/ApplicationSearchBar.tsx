@@ -22,7 +22,7 @@ interface ApplicationSearchBarProps {
 const ApplicationSearchBar = ({ applications, setFilteredApplications }: ApplicationSearchBarProps) => {
   const [query, setQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const status: string[] = ["all", "pending", "reviewed", "interview", "offered", "rejected"];
+  const statusOptions: string[] = ["all", "pending", "reviewed", "interview", "offered", "rejected"];
   
   useEffect(() => {
     try {
@@ -80,7 +80,7 @@ const ApplicationSearchBar = ({ applications, setFilteredApplications }: Applica
                         <DropdownMenuContent className="w-56 p-2">
                         <div className="px-2 py-1 text-xs text-gray-500">Filter by status</div>
                         <DropdownMenuRadioGroup value={selectedStatus} onValueChange={(value) => {setSelectedStatus(value)}}>
-                          {status.map((s) => (
+                          {statusOptions.map((s) => (
                             <DropdownMenuRadioItem
                               key={s}
                               value={s}

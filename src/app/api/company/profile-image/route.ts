@@ -1,13 +1,20 @@
+import { getApiSession } from "@/lib/api-auth";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import { NextRequest, NextResponse } from "next/server";
-import { uploadImage } from "@/lib/uploadImage";
 import { FileValidationError } from "@/lib/filePolicy";
+import { uploadImage } from "@/lib/uploadImage";
+import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+async function POST_impl(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getApiSession(request);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -57,3 +64,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to upload profile image" }, { status: 500 });
   }
 }
+
+export const POST = withResponseCsrfGuard(POST_impl as any);

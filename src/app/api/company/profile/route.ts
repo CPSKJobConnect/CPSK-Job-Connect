@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 
 export async function GET() {
   try {
@@ -88,7 +89,7 @@ export async function GET() {
   }
 }
 
-export async function PATCH(request: NextRequest) {
+async function PATCH_impl(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
@@ -108,7 +109,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Extract form data
-    const name = formData.get("name") as string | null;
+    const companyName = formData.get("name") as string | null;
     const address = formData.get("address") as string | null;
     const phone = formData.get("phone") as string | null;
     const description = formData.get("description") as string | null;
@@ -117,7 +118,7 @@ export async function PATCH(request: NextRequest) {
     const backgroundFile = formData.get("background") as File | null;
 
     // Validate required fields
-    if (name && name.trim().length < 3) {
+    if (companyName && companyName.trim().length < 3) {
       return NextResponse.json({ error: "Company name must be at least 3 characters" }, { status: 400 });
     }
     if (phone && !/^\d{10,}$/.test(phone)) {
@@ -166,7 +167,7 @@ export async function PATCH(request: NextRequest) {
     const updatedCompany = await prisma.company.update({
       where: { id: account.company.id },
       data: {
-        ...(name && { name: name.trim() }),
+        ...(companyName && { name: companyName.trim() }),
         ...(address && { address: address.trim() }),
         ...(phone && { phone: phone.trim() }),
         ...(description && { description: description.trim() }),
@@ -187,3 +188,5 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Failed to update company profile" }, { status: 500 });
   }
 }
+
+export const PATCH = withResponseCsrfGuard(PATCH_impl as any);

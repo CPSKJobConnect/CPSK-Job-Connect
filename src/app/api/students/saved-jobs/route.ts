@@ -212,7 +212,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform data to match BookmarkJobInfo format for frontend
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const transformedJobs = savedJobs.map((savedJob: any) => ({
       job: {
         id: String(savedJob.jobPost.id),

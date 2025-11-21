@@ -35,9 +35,9 @@ export async function GET() {
   });
 
     const mappedJobs = jobs.map((job) => {
-      let status = "active";
-      if (!job.is_Published) status = "draft";
-      else if (job.deadline && new Date(job.deadline) < new Date()) status = "expire";
+      let jobStatus = "active";
+      if (!job.is_Published) jobStatus = "draft";
+      else if (job.deadline && new Date(job.deadline) < new Date()) jobStatus = "expire";
 
       return {
         id: job.id,
@@ -55,7 +55,7 @@ export async function GET() {
         skills: job.tags.map((t) => t.name),
         documents: Array.isArray(job.documents) ? job.documents.map((d: any) => d.name) : [],
         deadline: job.deadline.toISOString(),
-        status,
+        status: jobStatus,
         description: {
             overview: job.aboutRole ?? "",
             responsibility: job.responsibilities ?? "-",

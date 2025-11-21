@@ -30,13 +30,13 @@ export async function GET(
 
     const result = await Promise.all(
       statusData.map(async (item) => {
-        const status = await prisma.applicationStatus.findUnique({
-          where: { id: item.status },
-        });
-        return {
-          name: status?.name || "Unknown",
-          value: item._count.id,
-        };
+        const statusRecord = await prisma.applicationStatus.findUnique({
+            where: { id: item.status },
+          });
+          return {
+            name: statusRecord?.name || "Unknown",
+            value: item._count.id,
+          };
       })
     );
 

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
+import apiFetch from "@/lib/apiClient";
 import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { PasswordChangeCard } from "@/components/security/PasswordChangeCard";
 
@@ -58,7 +59,7 @@ export default function CompanyProfilePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("/api/company/profile-image", {
+      const res = await apiFetch("/api/company/profile-image", {
         method: "POST",
         body: formData,
       });

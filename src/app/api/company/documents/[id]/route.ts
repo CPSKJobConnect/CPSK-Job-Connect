@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -9,7 +10,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function DELETE(
+async function DELETE_impl(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -64,3 +65,5 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to delete document" }, { status: 500 });
   }
 }
+
+export const DELETE = withResponseCsrfGuard(DELETE_impl as any);

@@ -1,15 +1,14 @@
+import { getApiSession } from "@/lib/api-auth";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import { NextRequest, NextResponse } from "next/server";
-import { uploadDocument } from "@/lib/uploadDocument";
 import { FileValidationError, getPolicyForDocType } from "@/lib/filePolicy";
-
+import { uploadDocument } from "@/lib/uploadDocument";
+import { NextRequest, NextResponse } from "next/server";
 const ALLOWED_COMPANY_DOC_TYPES = new Set([7]);
 
-export async function POST(request: NextRequest) {
+async function POST_impl(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getApiSession(request);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -60,3 +59,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to upload document" }, { status: 500 });
   }
 }
+
+export const POST = withResponseCsrfGuard(POST_impl as any);

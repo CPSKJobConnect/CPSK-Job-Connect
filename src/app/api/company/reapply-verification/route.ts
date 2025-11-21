@@ -2,12 +2,13 @@ import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
 import { uploadDocument } from "@/lib/uploadDocument";
 import { NextRequest, NextResponse } from "next/server";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 
 /**
  * POST /api/company/reapply-verification
  * Allow rejected companies to re-upload evidence and reset status to PENDING
  */
-export async function POST(request: NextRequest) {
+async function POST_impl(request: NextRequest) {
   try {
     const session = await getApiSession(request);
 
@@ -105,3 +106,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withResponseCsrfGuard(POST_impl as any);

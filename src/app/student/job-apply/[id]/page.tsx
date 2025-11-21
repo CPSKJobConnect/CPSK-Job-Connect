@@ -24,6 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/lib/toastTemplate";
+import apiFetch from '@/lib/apiClient';
 import { isValidImageUrl } from "@/lib/validateImageUrl";
 
 
@@ -107,7 +108,7 @@ export default function Page() {
 
     const checkApplication = async () => {
       try {
-        const res = await fetch("/api/jobs/check-application", {
+        const res = await apiFetch("/api/jobs/check-application", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ studentId: student.id, jobId: job.id }),
@@ -186,10 +187,7 @@ export default function Page() {
     }
 
     try {
-      const res = await fetch("/api/jobs/apply", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await apiFetch("/api/jobs/apply", { method: "POST", body: formData });
 
       const data = await res.json();
       console.log("form: ", data);

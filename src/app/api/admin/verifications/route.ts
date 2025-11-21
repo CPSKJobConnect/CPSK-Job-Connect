@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 
     // Get query parameters
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status') || 'PENDING';
+    const statusParam = searchParams.get('status') || 'PENDING';
 
     // Build where clause
     const whereClause: {
@@ -44,8 +44,8 @@ export async function GET(req: NextRequest) {
       student_status: StudentStatus.ALUMNI,
     };
 
-    if (status && ['PENDING', 'APPROVED', 'REJECTED'].includes(status)) {
-      whereClause.verification_status = status as VerificationStatus;
+    if (statusParam && ['PENDING', 'APPROVED', 'REJECTED'].includes(statusParam)) {
+      whereClause.verification_status = statusParam as VerificationStatus;
     }
 
     // Fetch students

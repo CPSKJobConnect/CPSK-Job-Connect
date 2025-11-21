@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
-    const status = searchParams.get("status") || "";
+    const statusParam = searchParams.get("status") || "";
     const reported = searchParams.get("reported") || "";
 
     const skip = (page - 1) * limit;
@@ -38,8 +38,8 @@ export async function GET(request: Request) {
       ];
     }
 
-    if (status) {
-      whereClause.is_Published = status === "published";
+    if (statusParam) {
+      whereClause.is_Published = statusParam === "published";
     }
 
 if (reported === "true") {

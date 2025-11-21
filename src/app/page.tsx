@@ -4,6 +4,7 @@ import { Building, GraduationCap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import '@/app/globals.css';
+import PrivacyBanner from "@/components/PrivacyBanner";
 
 
 export default function Home() {
@@ -13,17 +14,13 @@ export default function Home() {
       <Navbar01 />
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
         <div className="flex flex-col w-full">
-
-          {/* Header */}
           <div>
-            {/* Hero Section */}
               <div
                 id='hero-bg'
                 className="mt-20 flex flex-row justify-center items-start w-[90%] mb-[20px] min-h-[500px] px-0 py-[90px] bg-gradient-to-b from-[#ffffff26] via-[#f2fdfa26] to-[#e6fcf526] rounded-[40px] shadow-[0px_4px_4px_#0000003f] bg-cover bg-center bg-no-repeat max-w-[1440px] mx-auto"
                 style={{ backgroundImage: "url('/assets/images/Kasetsart_Uni_View.png')" }}
               >
                 <div className="flex flex-row justify-center items-center w-[94%]">
-                  {/* Hero Text */}
                   <div className="flex flex-col gap-[24px] justify-start items-start flex-1 mb-[60px] ml-[24px]">
                     <h1 className="text-[27px] sm:text-[40px] md:text-[54px] font-poppins font-bold leading-[40px] sm:leading-[60px] md:leading-[81px] text-left bg-gradient-to-b from-[#2ba07c] to-[#0f3a2d] bg-clip-text text-transparent w-[60%]">
                       Start Your Journey with
@@ -32,7 +29,6 @@ export default function Home() {
                       CPSK Job Connect
                     </h1>
                   </div>
-                  {/* Hero Image */}
                   <div className="w-[44%]">
                     <Image
                       src="/assets/images/people_connect_illustration.png"
@@ -72,18 +68,6 @@ export default function Home() {
                   <p className="body-1 text-gray-600">
                     Connect with talented students and find the perfect candidates for your team
                   </p>
-                  {/* <div className="space-y-3"> */}
-                    {/* <Link href="/login/company" className="block">
-                      <Button className="w-full button bg-orange-600 hover:bg-orange-700">
-                        Company Login
-                      </Button>
-                    </Link> */}
-                    {/* <Link href="/register/company" className="block">
-                      <Button variant="outline" className="w-full border-orange-200 text-orange-700 hover:bg-orange-69 button">
-                        Create Company Account
-                      </Button>
-                    </Link> */}
-                  {/* </div> */}
                 </CardContent>
               </Card>
             </Link>
@@ -110,31 +94,13 @@ export default function Home() {
                   <p className="text-gray-600 body-1">
                     Find internships and job opportunities that match your skills and interests
                   </p>
-                  {/* <div className="space-y-3"> */}
-                    {/* <Link href="/login/student" className="block">
-                      <Button className="button w-full bg-green-600 hover:bg-green-700">
-                        Student Login
-                      </Button>
-                    </Link> */}
-                    {/* <Link href="/register/student" className="block">
-                      <Button variant="outline" className="button w-full border-green-200 text-green-700 hover:bg-green-50">
-                        Create Student Account
-                      </Button>
-                    </Link> */}
-                  {/* </div> */}
                 </CardContent>
               </Card>
             </Link>
           </div>
-
-          {/* Illustration
-          <div className="mt-12 text-center">
-            <div className="inline-flex items-center justify-center w-64 h-32 bg-white rounded-lg shadow-sm">
-              <div className="text-4xl">🔍</div>
-            </div>
-          </div> */}
         </div>
       </div>
+      <PrivacyBanner/>
     </div>
   );
 }

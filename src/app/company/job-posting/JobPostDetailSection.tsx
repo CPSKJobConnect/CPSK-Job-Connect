@@ -23,8 +23,8 @@ interface JobPostDetailProps {
 
 const JobPostDetailSection = ({ formData, setFormData, categories, types, arrangements }: JobPostDetailProps) => {
 
-    const handleSelect = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const handleSelect = (fieldName: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [fieldName]: value }));
   };
 
     return (
