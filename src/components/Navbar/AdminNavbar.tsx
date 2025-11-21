@@ -55,32 +55,27 @@ export default function AdminNavbar() {
             </div>
           </PopoverTrigger>
           <PopoverContent className="w-56 p-2">
-            <div className="flex flex-col space-y-1">
-              {/* Admin Profile Section */}
-              <div className="px-3 py-2 mb-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <Shield className="h-4 w-4 text-blue-600" />
-                  <p className="text-xs font-semibold text-blue-600 uppercase">Admin</p>
-                </div>
-                <p className="text-sm font-semibold text-gray-900">{session.user?.name}</p>
-                <p className="text-xs text-gray-500">{session.user?.email}</p>
+            <div className="flex flex-col space-y-1 px-3 py-2">
+              <div className="flex items-center gap-2 mb-1">
+                <Shield className="h-4 w-4 text-blue-600" />
+                <p className="text-xs font-semibold text-blue-600 uppercase">Admin</p>
               </div>
-
-              <div className="border-t border-gray-100 my-1"></div>
-
-              {/* Sign Out Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start gap-2 hover:bg-red-50 text-red-600 hover:text-red-700 font-normal"
-                onClick={() => signOut({ callbackUrl: "/" })}
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Sign out</span>
-              </Button>
+              <p className="text-sm font-semibold text-gray-900">{session.user?.name}</p>
+              <p className="text-xs text-gray-500">{session.user?.email}</p>
             </div>
           </PopoverContent>
         </Popover>
+      )}
+
+      {session && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="ml-1 h-9 w-10 border-white/40 bg-white/10 text-white hover:border-white/70 hover:bg-white/20 transition-colors"
+          onClick={() => signOut({ callbackUrl: "/" })}
+        >
+          <LogOut className="h-4 w-4" />
+        </Button>
       )}
     </div>
   );
