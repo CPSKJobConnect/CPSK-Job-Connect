@@ -614,3 +614,145 @@ Connecting KU students with career opportunities
     text: textContent,
   });
 }
+
+type PasswordResetEmailOptions = {
+  email: string;
+  name?: string;
+  resetLink: string;
+  expiresMinutes?: number;
+};
+
+export async function sendPasswordResetEmail({
+  email,
+  name,
+  resetLink,
+  expiresMinutes = 15,
+}: PasswordResetEmailOptions) {
+  const safeName = name || "there";
+  const primary = "#1C4E80";
+  const accent = "#0F9D58";
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Password Reset Requested</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #f5f7fb;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #1f2937;
+    }
+    .email-wrapper {
+      max-width: 640px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 18px;
+      border: 1px solid #e4e8f5;
+      box-shadow: 0 15px 30px rgba(28, 78, 128, 0.08);
+      overflow: hidden;
+    }
+    .banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 28px 32px;
+      background: #f2f6ff;
+      border-bottom: 1px solid #d9e4ff;
+    }
+    .banner-icon {
+      font-size: 32px;
+    }
+    .banner h1 {
+      font-size: 22px;
+      margin: 0;
+      color: ${primary};
+    }
+    .content {
+      padding: 32px;
+      line-height: 1.6;
+    }
+    .cta {
+      display: inline-block;
+      padding: 12px 28px;
+      margin: 24px 0;
+      border-radius: 50px;
+      background: ${primary};
+      color: white !important;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .cta:hover {
+      background: #163a60;
+    }
+    .info-box {
+      margin-top: 24px;
+      padding: 16px;
+      border-radius: 12px;
+      background: #fdf7e7;
+      border: 1px solid #f4d38c;
+      font-size: 14px;
+      color: #775520;
+    }
+    .footer {
+      border-top: 1px solid #e5e7eb;
+      padding: 20px 32px;
+      text-align: center;
+      font-size: 13px;
+      color: #6b7280;
+      background: #fafbfd;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="banner">
+      <span class="banner-icon">🔐</span>
+      <div>
+        <h1>Password Reset Requested</h1>
+        <p style="margin: 2px 0 0; color: #4b5563;">CPSK Job Connect</p>
+      </div>
+    </div>
+    <div class="content">
+      <p>Hello ${safeName},</p>
+      <p>We received a request to reset the password for your CPSK Job Connect account. Click the button below to create a new password.</p>
+      <p><strong>Security notice:</strong> this link expires in ${expiresMinutes} minutes.</p>
+      <p style="text-align:center;">
+        <a href="${resetLink}" class="cta">Reset Password</a>
+      </p>
+      <div class="info-box">
+        If you didn&apos;t request this change, you can safely ignore this email. Your current password will remain active unless you follow the link above.
+      </div>
+    </div>
+    <div class="footer">
+      CPSK Job Connect · Kasetsart University<br />
+      Connecting KU talents with career opportunities
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+Password Reset Requested
+
+Hello ${safeName},
+
+We received a request to reset your CPSK Job Connect password.
+Use the link below to create a new password. This link expires in ${expiresMinutes} minutes.
+
+${resetLink}
+
+If you didn't request this, you can safely ignore this email.
+  `.trim();
+
+  await sendEmail({
+    to: email,
+    subject: "Reset your CPSK Job Connect password",
+    html,
+    text,
+  });
+}

@@ -10,10 +10,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { ROLE_CONFIGS } from "@/lib/role-config"
 import { AuthFormData, Role } from "@/types/auth"
 import { Upload } from "lucide-react"
-import { signIn, useSession } from "next-auth/react"
+import { signIn, signOut, useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
+import Link from "next/link"
 
 interface AuthFormProps {
   role: Role
@@ -96,6 +97,14 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
     }
   }, [session, awaitingSession, router, callbackUrl])
 
+  // Clear stale session cookie after auto-logout redirects
+  useEffect(() => {
+    const errorParam = searchParams.get("error")
+    if (mode === "login" && errorParam === "session_expired") {
+      signOut({ redirect: false })
+    }
+  }, [mode, searchParams, signOut])
+
   const roleConfig = useMemo(() => ROLE_CONFIGS[role], [role])
   const Icon = roleConfig.icon
 
@@ -163,6 +172,12 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             const message = result.error.split(":")[1];
             setActualUserRole(null)
             setError(message)
+            setIsLoading(false)
+          } else if (result.error.toLowerCase().includes("tokenexpired")) {
+            await signOut({ redirect: false })
+            setActualUserRole(null)
+            setError("Your previous session expired. Please sign in again.")
+            setAttemptsRemaining(null)
             setIsLoading(false)
           } else if (result.error.startsWith("INVALID_CREDENTIALS:")) {
             // Invalid credentials with attempt counter from backend
@@ -490,6 +505,16 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                 />
                 {errors.password && (
                   <p data-testid="error-password" className="text-sm text-red-600 mt-1">{errors.password.message}</p>
+                )}
+                {mode === "login" && (
+                  <div className="mt-2 text-right">
+                    <Link
+                      href="/forgot-password"
+                      className="text-sm text-primary hover:underline focus-visible:underline"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
                 )}
               </div>
 
