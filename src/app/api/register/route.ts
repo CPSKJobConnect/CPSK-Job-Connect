@@ -19,9 +19,23 @@ type CompanyOAuthData = z.infer<typeof companyOAuthRegisterSchema>;
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    const role = formData.get("role") as string;
-    const isOAuth = formData.get("isOAuth") === "true";
+    // Support both multipart/form-data (forms with files) and application/json bodies
+    const contentType = req.headers.get("content-type") || "";
+    let formData: FormData | null = null;
+    let jsonBody: Record<string, unknown> | null = null;
+    if (contentType.includes("application/json")) {
+      try {
+        jsonBody = await req.json();
+      } catch (err) {
+        console.error("Failed to parse JSON request body:", err);
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      }
+    } else {
+      formData = await req.formData();
+    }
+
+    const role = formData ? (formData.get("role") as string) : (String(jsonBody?.role || ""));
+    const isOAuth = formData ? formData.get("isOAuth") === "true" : Boolean(jsonBody?.isOAuth === true || jsonBody?.isOAuth === "true");
 
     if (!["student", "company"].includes(role)) {
       return NextResponse.json(
@@ -41,29 +55,38 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Convert FormData to object
-    const data: Record<string, unknown> = {}
-    for (const [key, value] of formData.entries()) {
-      if (key !== "transcript" && key !== "evidence" && key !== "role") {
-        if (key === "year") {
-          // Handle both numeric years and "Alumni"
-          const yearValue = value as string;
-          data[key] = yearValue === "Alumni" ? "Alumni" : parseInt(yearValue);
-        } else {
-          data[key] = value
+    // Convert incoming data (FormData or JSON) to an object for validation
+    const data: Record<string, unknown> = {};
+    if (formData) {
+      for (const [key, value] of formData.entries()) {
+        if (key !== "transcript" && key !== "evidence" && key !== "role") {
+          if (key === "year") {
+            const yearValue = String(value);
+            data[key] = yearValue === "Alumni" ? "Alumni" : parseInt(yearValue);
+          } else {
+            data[key] = value;
+          }
         }
+      }
+    } else if (jsonBody) {
+      Object.assign(data, jsonBody);
+      // normalize year if provided as string
+      if (data.year !== undefined) {
+        const yearVal = data.year as string | number;
+        if (String(yearVal) === "Alumni") data.year = "Alumni";
+        else data.year = Number(yearVal);
       }
     }
 
-    // Handle studentStatus from form
-    const studentStatus = formData.get("studentStatus") as string | null;
+    // Handle studentStatus from form or JSON
+    const studentStatus = formData ? (formData.get("studentStatus") as string | null) : (jsonBody?.studentStatus as string | undefined);
     if (studentStatus) {
       data.studentStatus = studentStatus;
     }
 
     // Add transcript file to data for validation
     if (role === "student") {
-      const transcriptFile = formData.get("transcript") as File | null;
+      const transcriptFile = formData ? (formData.get("transcript") as File | null) : null;
       if (transcriptFile && transcriptFile.size > 0) {
         // For OAuth, pass File directly; for regular registration, create FileList-like object
         if (isOAuth) {
@@ -85,7 +108,7 @@ export async function POST(req: NextRequest) {
 
     // Add evidence file to data for validation (required for companies)
     if (role === "company") {
-      const evidenceFile = formData.get("evidence") as File | null;
+      const evidenceFile = formData ? (formData.get("evidence") as File | null) : null;
       if (evidenceFile && evidenceFile.size > 0) {
         // For OAuth, pass File directly; for regular registration, create FileList-like object
         if (isOAuth) {
@@ -179,10 +202,34 @@ export async function POST(req: NextRequest) {
       roleId = roleRecord.id;
     }
 
-    // Handle file upload for transcript and evidence
-    let transcriptPath: string | null = null
-    const transcriptFile = role === "student" ? formData.get("transcript") as File : null;
-    const evidenceFile = role === "company" ? formData.get("evidence") as File : null;
+    // Handle file upload for transcript and evidence (only available for formData requests)
+    let transcriptPath: string | null = null;
+    const transcriptFile = role === "student" ? (formData ? (formData.get("transcript") as File) : null) : null;
+    const evidenceFile = role === "company" ? (formData ? (formData.get("evidence") as File) : null) : null;
+
+    // Parse consent if present (form or JSON). Undefined if not provided.
+    let consentValue: boolean | undefined = undefined;
+    try {
+      const truthy = (v: unknown) => {
+        if (typeof v === "boolean") return v;
+        const s = String(v).toLowerCase();
+        return s === "true" || s === "on" || s === "1";
+      };
+
+      if (formData) {
+        const consentField = formData.get("consent");
+        if (consentField !== null) consentValue = truthy(consentField);
+      } else if (jsonBody && typeof jsonBody.consent !== "undefined") {
+        const c = jsonBody.consent;
+        consentValue = truthy(c);
+      }
+    } catch (err) {
+      console.error("Failed to parse consent field:", err);
+      consentValue = undefined;
+    }
+
+    // Log consent parsing result for debugging
+    console.log("Registration: consent parsed:", { consentValue });
 
     // Use transaction to ensure atomic account + role-specific record creation
     const account = await prisma.$transaction(async (tx) => {
@@ -245,6 +292,22 @@ export async function POST(req: NextRequest) {
             registration_status: "PENDING",
           }
         })
+      }
+
+      // If consent was provided in the registration request, record it atomically
+      if (typeof consentValue !== "undefined") {
+        try {
+          await tx.accountConsentLog.create({
+            data: {
+              account_id: account.id,
+              consent: consentValue,
+            }
+          });
+        } catch (consentErr) {
+          // Log and rethrow so transaction can be rolled back and caller informed
+          console.error("Failed to create AccountConsentLog inside transaction:", consentErr);
+          throw consentErr;
+        }
       }
 
       return account;

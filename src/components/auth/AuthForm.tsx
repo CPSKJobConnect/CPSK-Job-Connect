@@ -155,6 +155,16 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         }
       }
 
+      // Attach consent value from localStorage (safely). Backend expects 'consent' field.
+      try {
+        const stored = typeof window !== 'undefined' ? localStorage.getItem('pdpaConsent') : null
+        const consentToSend = stored === 'true'
+        formData.append('consent', String(consentToSend))
+      } catch (e) {
+        // If localStorage unavailable, send false (backend will handle missing/false gracefully)
+        formData.append('consent', 'false')
+      }
+
       const response = await fetch("/api/register", {
         method: "POST",
         body: formData,
