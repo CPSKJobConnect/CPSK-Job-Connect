@@ -2,6 +2,7 @@
 
 import CompanyNavbar from "@/components/Navbar/CompanyNavbar";
 import FloatingNotification from "@/components/FloatingNotification";
+import ConsentProvider from "@/providers/ConsentProvider";
 
 type Props = {
   children: React.ReactNode;
@@ -13,7 +14,9 @@ export default function StudentLayout({ children }: Props) {
       <div className="fixed top-0 left-0 w-full z-50">
         <CompanyNavbar />
       </div>
-      <main className="flex-1 p-4 mt-16">{children}</main>
+      <main className="flex-1 p-4 mt-16">
+        <ConsentProvider>{children}</ConsentProvider>
+      </main>
       <FloatingNotification />
     </div>
   );
