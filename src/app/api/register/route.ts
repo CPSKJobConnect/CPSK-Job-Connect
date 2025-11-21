@@ -390,10 +390,27 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       message: "Account created successfully",
       redirectTo: `/${role}/dashboard`
-    }, { status: 201 })
+    }, { status: 201 });
+
+    try {
+      if (consentValue === true) {
+        const maxAge = 30 * 24 * 60 * 60; // 30 days
+        res.cookies.set("pdpa_consent", "true", {
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+          maxAge,
+          secure: process.env.NODE_ENV === "production",
+        });
+      }
+    } catch (cookieErr) {
+      console.error("Failed to set pdpa_consent cookie:", cookieErr);
+    }
+
+    return res;
   } catch (error) {
     console.error("Registration error:", error)
     console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace')

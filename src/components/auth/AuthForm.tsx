@@ -1,12 +1,11 @@
 "use client"
-
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ROLE_CONFIGS } from "@/lib/role-config"
 import { AuthFormData, Role } from "@/types/auth"
 import { Upload } from "lucide-react"
@@ -197,6 +196,14 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
 
         setError(result.error || "Registration failed")
       } else {
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('pdpaConsent')
+          }
+        } catch (e) {
+          console.warn('Failed to remove pdpaConsent from localStorage', e)
+        }
+
         if (isOAuthCompletion) {
           console.log("OAuth registration complete, updating session...")
 
