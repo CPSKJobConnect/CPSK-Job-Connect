@@ -11,6 +11,8 @@ import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { PasswordPolicyError } from "@/lib/passwordPolicy";
+import { assertPasswordMeetsPolicy } from "@/lib/passwordPolicyEnforcer";
 
 type StudentData = z.infer<typeof studentRegisterSchema>;
 type CompanyData = z.infer<typeof companyRegisterSchema>;
@@ -157,6 +159,13 @@ export async function POST(req: NextRequest) {
     let hashedPassword: string | null = null;
     if (!isOAuth) {
       const dataWithPassword = validatedData.data as StudentData | CompanyData;
+      assertPasswordMeetsPolicy(dataWithPassword.password, {
+        email: dataWithPassword.email,
+        name:
+          role === "student"
+            ? (dataWithPassword as StudentData).name
+            : (dataWithPassword as CompanyData).companyName,
+      });
       hashedPassword = await bcrypt.hash(dataWithPassword.password, 12);
     }
 
@@ -334,6 +343,13 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Registration error:", error)
     console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace')
+
+    if (error instanceof PasswordPolicyError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

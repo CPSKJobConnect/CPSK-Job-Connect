@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { ROLE_CONFIGS } from "@/lib/role-config"
+import { PASSWORD_REQUIREMENTS, evaluatePasswordPolicy } from "@/lib/passwordPolicy"
 import { AuthFormData, Role } from "@/types/auth"
-import { Upload } from "lucide-react"
+import { Upload, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react"
 import { signIn, signOut, useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -32,6 +33,8 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   const [awaitingSession, setAwaitingSession] = useState(false)
   const [studentStatus, setStudentStatus] = useState<"CURRENT" | "ALUMNI">("CURRENT")
   const [actualUserRole, setActualUserRole] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session, update } = useSession()
@@ -51,6 +54,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   })
 
   const emailValue = watch("email")
+  const passwordValue = watch("password") || ""
   const yearValue = watch("year")
 
   // Auto-select "Alumni" year when student status is ALUMNI
@@ -104,6 +108,14 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
       signOut({ redirect: false })
     }
   }, [mode, searchParams, signOut])
+
+  const passwordPolicyResults = useMemo(
+    () =>
+      mode === "register" && !isOAuthCompletion
+        ? evaluatePasswordPolicy(passwordValue, { email: emailValue })
+        : [],
+    [emailValue, mode, passwordValue, isOAuthCompletion]
+  )
 
   const roleConfig = useMemo(() => ROLE_CONFIGS[role], [role])
   const Icon = roleConfig.icon
@@ -495,14 +507,24 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             <>
               <div>
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  data-testid="password"
-                  type="password"
-                  {...register("password")}
-                  className="mt-1 bg-gray-50"
-                  placeholder="Enter your password"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    data-testid="password"
+                    type={showPassword ? "text" : "password"}
+                    {...register("password")}
+                    className="mt-1 bg-gray-50 pr-10"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.password && (
                   <p data-testid="error-password" className="text-sm text-red-600 mt-1">{errors.password.message}</p>
                 )}
@@ -521,17 +543,50 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
               {mode === "register" && (
                 <div>
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    data-testid="confirmPassword"
-                    type="password"
-                    {...register("confirmPassword")}
-                    className="mt-1 bg-gray-50"
-                    placeholder="Confirm your password"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      data-testid="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      {...register("confirmPassword")}
+                      className="mt-1 bg-gray-50 pr-10"
+                      placeholder="Confirm your password"
+                    />
+                    <button
+                      type="button"
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                   {errors.confirmPassword && (
                     <p data-testid="error-confirmPassword" className="text-sm text-red-600 mt-1">{errors.confirmPassword.message}</p>
                   )}
+                </div>
+              )}
+
+              {mode === "register" && !isOAuthCompletion && (
+                <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <p className="text-sm font-semibold mb-2">Password requirements</p>
+                  <ul className="space-y-1 text-sm">
+                    {PASSWORD_REQUIREMENTS.map((label) => {
+                      const result = passwordPolicyResults.find((item) => item.label === label)
+                      const hasInput = passwordValue.length > 0
+                      const passed = hasInput && (result?.passed ?? false)
+                      return (
+                        <li key={label} className="flex items-center gap-2">
+                          {passed ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-gray-400" />
+                          )}
+                          <span className={passed ? "text-emerald-700" : "text-gray-700"}>{label}</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
                 </div>
               )}
             </>
