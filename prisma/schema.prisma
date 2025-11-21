@@ -19,29 +19,32 @@ model Session {
 }
 
 model Account {
-  id                    Int            @id @default(autoincrement())
-  username              String?        @unique
-  email                 String         @unique
+  id                    Int                  @id @default(autoincrement())
+  username              String?              @unique
+  email                 String               @unique
   password              String?
   role                  Int?
-  created_at            DateTime       @default(now())
-  updated_at            DateTime       @updatedAt
+  created_at            DateTime             @default(now())
+  updated_at            DateTime             @updatedAt
   emailVerified         DateTime?
   provider              String?
   providerAccountId     String?
   backgroundUrl         String?
   logoUrl               String?
-  is_active             Boolean        @default(true)
-  accountRole           AccountRole?   @relation(fields: [role], references: [id])
+  is_active             Boolean              @default(true)
+  accountRole           AccountRole?         @relation(fields: [role], references: [id])
   company               Company?
-  verifiedCompanies     Company[]      @relation("VerifiedCompanies")
+  verifiedCompanies     Company[]            @relation("VerifiedCompanies")
   documents             Document[]
-  receivedNotifications Notification[] @relation("NotificationReceiver")
-  sentNotifications     Notification[] @relation("NotificationSender")
+  receivedNotifications Notification[]       @relation("NotificationReceiver")
+  sentNotifications     Notification[]       @relation("NotificationSender")
   reports               Report[]
-  student               Student?       @relation("StudentAccount")
-  verifiedStudents      Student[]      @relation("VerifiedStudents")
+  student               Student?             @relation("StudentAccount")
+  verifiedStudents      Student[]            @relation("VerifiedStudents")
   sessions              Session[]
+  passwordResetTokens   PasswordResetToken[]
+  oauthRefreshTokens    OAuthRefreshToken[]
+  accountConsentLogs    AccountConsentLog[]
 
   @@unique([provider, providerAccountId])
   @@index([email])
@@ -52,6 +55,14 @@ model AccountRole {
   id       Int       @id @default(autoincrement())
   name     String
   accounts Account[]
+}
+
+model AccountConsentLog {
+  id         Int      @id @default(autoincrement())
+  account_id Int
+  consent    Boolean
+  created_at DateTime @default(now())
+  account    Account  @relation(fields: [account_id], references: [id], onDelete: Cascade)
 }
 
 model Application {
@@ -194,23 +205,23 @@ model Notification {
 }
 
 model Report {
-  id             Int         @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   account_id     Int
   target_type    String
   target_id      Int?
   description    String?
   report_type_id Int?
-  created_at     DateTime    @default(now())
-  updated_at     DateTime    @updatedAt
-  is_resolved    Boolean     @default(false)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  is_resolved    Boolean  @default(false)
 
   account    Account     @relation(fields: [account_id], references: [id], onDelete: Cascade)
   reportType ReportType? @relation(fields: [report_type_id], references: [id])
 }
 
 model ReportType {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
   target  String
   reports Report[]
 }
@@ -253,6 +264,39 @@ model Student {
   @@index([account_id])
   @@index([student_status])
   @@index([verification_status])
+}
+
+model PasswordResetToken {
+  id         Int       @id @default(autoincrement())
+  account_id Int
+  email      String
+  token      String    @unique
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+
+  account Account @relation(fields: [account_id], references: [id], onDelete: Cascade)
+
+  @@index([account_id])
+  @@index([email])
+  @@index([token])
+}
+
+model OAuthRefreshToken {
+  id                 Int       @id @default(autoincrement())
+  account_id         Int
+  provider           String
+  token_hash         String    @unique
+  created_at         DateTime  @default(now())
+  rotated_at         DateTime?
+  revoked_at         DateTime?
+  replay_detected_at DateTime?
+
+  account Account @relation(fields: [account_id], references: [id], onDelete: Cascade)
+
+  @@index([account_id])
+  @@index([provider])
+  @@map("oauth_refresh_tokens")
 }
 
 model email_verification_tokens {
