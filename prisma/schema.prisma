@@ -3,7 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Session {
@@ -30,6 +32,7 @@ model Account {
   backgroundUrl         String?
   logoUrl               String?
   is_active             Boolean              @default(true)
+  token_version         Int                  @default(0)
   accountRole           AccountRole?         @relation(fields: [role], references: [id])
   company               Company?
   verifiedCompanies     Company[]            @relation("VerifiedCompanies")
