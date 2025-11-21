@@ -14,6 +14,7 @@ import { signIn, useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
+import PrivacyModal from "@/components/PrivacyModal"
 
 interface AuthFormProps {
   role: Role
@@ -30,6 +31,9 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   const [awaitingSession, setAwaitingSession] = useState(false)
   const [studentStatus, setStudentStatus] = useState<"CURRENT" | "ALUMNI">("CURRENT")
   const [actualUserRole, setActualUserRole] = useState<string | null>(null)
+  const [showConsentModal, setShowConsentModal] = useState(false)
+  const [pendingFormData, setPendingFormData] = useState<AuthFormData | null>(null)
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session, update } = useSession()
@@ -51,40 +55,33 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   const emailValue = watch("email")
   const yearValue = watch("year")
 
-  // Auto-select "Alumni" year when student status is ALUMNI
   useEffect(() => {
     if (mode === "register" && role === "student" && studentStatus === "ALUMNI") {
       setValue("year", "Alumni")
     }
   }, [studentStatus, mode, role, setValue])
 
-  // Pre-fill email for OAuth completion
   useEffect(() => {
     if (isOAuthCompletion && session?.user?.email) {
       setValue("email", session.user.email)
     }
   }, [isOAuthCompletion, session, setValue])
 
-  // Auto-lock student status based on OAuth email domain
   useEffect(() => {
     if (isOAuthCompletion && session?.user?.email && role === "student") {
       const email = session.user.email.toLowerCase()
-      // If OAuth email is not @ku.th, force ALUMNI status
       if (!email.endsWith("@ku.th")) {
         setStudentStatus("ALUMNI")
-        // Also set year to "Alumni" immediately
         setValue("year", "Alumni", { shouldValidate: true })
       }
     }
   }, [isOAuthCompletion, session, role, setValue])
 
-  // Handle session-based redirection after login
   useEffect(() => {
     if (awaitingSession && session?.user?.role) {
       setAwaitingSession(false)
       setIsLoading(false)
 
-      // Redirect to callbackUrl if provided, otherwise to dashboard
       if (callbackUrl) {
         router.push(callbackUrl)
       } else {
@@ -98,13 +95,150 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   const roleConfig = useMemo(() => ROLE_CONFIGS[role], [role])
   const Icon = roleConfig.icon
 
+  const performRegistration = async (data: AuthFormData, file?: File | null) => {
+    try {
+      if (mode === "register" && role === "student" && studentStatus === "CURRENT") {
+        if (!data.email.toLowerCase().endsWith("@ku.th")) {
+          setError("Current students must use a KU email address (@ku.th). If you don't have access to your KU email, please register as Alumni instead and provide your transcript for verification.")
+          return
+        }
+      }
+
+      if (mode === "register" && role === "student" && studentStatus === "ALUMNI") {
+        if (!file) {
+          setError("Alumni must upload a transcript")
+          return
+        }
+      }
+
+      if (mode === "register" && role === "company") {
+        if (!file) {
+          setError("Company evidence document is required")
+          return
+        }
+      }
+      
+      console.log("Starting registration, isOAuthCompletion:", isOAuthCompletion)
+      const formData = new FormData()
+      formData.append("role", role)
+      formData.append("email", data.email)
+
+      if (isOAuthCompletion) {
+        console.log("OAuth registration - skipping password fields")
+        formData.append("isOAuth", "true")
+      } else {
+        console.log("Credentials registration - including password fields")
+        formData.append("password", data.password!)
+        formData.append("confirmPassword", data.confirmPassword!)
+      }
+
+      if (role === "student") {
+        formData.append("studentId", data.studentId!)
+        formData.append("name", data.name!)
+        formData.append("faculty", data.faculty!)
+        formData.append("year", data.year!.toString())
+        formData.append("phone", data.phone!)
+        formData.append("studentStatus", studentStatus)
+
+        if (file) {
+          formData.append("transcript", file)
+        }
+      } else {
+        formData.append("companyName", data.companyName!)
+        formData.append("address", data.address!)
+        formData.append("website", data.website || "")
+        formData.append("description", data.description!)
+        formData.append("phone", data.phone!)
+
+        if (file) {
+          formData.append("evidence", file)
+        }
+      }
+
+      const response = await fetch("/api/register", {
+        method: "POST",
+        body: formData,
+      })
+
+      const responseText = await response.text()
+
+      let result
+      try {
+        result = JSON.parse(responseText)
+      } catch (jsonError) {
+        setError(`Server returned invalid response. Status: ${response.status}`)
+        console.log(`Server returned invalid response when registering: ${jsonError}`)
+        return
+      }
+
+      if (!response.ok) {
+        try {
+          if (result && result.details && Array.isArray(result.details)) {
+            result.details.forEach((issue: { path: unknown[]; message: string }) => {
+              const path = Array.isArray(issue.path) && issue.path.length ? String(issue.path[0]) : null
+              if (path) {
+                setFieldError(path as keyof AuthFormData, { type: 'server', message: issue.message })
+              }
+            })
+          }
+        } catch (e) {
+          console.warn('Failed to map server validation details to fields', e)
+        }
+
+        setError(result.error || "Registration failed")
+      } else {
+        if (isOAuthCompletion) {
+          console.log("OAuth registration complete, updating session...")
+
+          setIsCompletingRegistration(true)
+          setError("")
+
+          await new Promise(resolve => setTimeout(resolve, 500))
+
+          await update()
+
+          router.push(result.redirectTo)
+        } else {
+          const loginResult = await signIn("credentials", {
+            email: data.email,
+            password: data.password,
+            redirect: false,
+          })
+
+          if (loginResult?.error) {
+            setError("Registration successful but login failed. Please try logging in.")
+          } else {
+            router.push(result.redirectTo)
+          }
+        }
+      }
+    } catch (error) {
+      setError("An unexpected error occurred. Please try again later.")
+      console.log("Error during registration submission:", error)
+    }
+  }
+
   const onSubmit = async (data: AuthFormData) => {
-    // console.log("Form submitted with data:", data)
     setIsLoading(true)
     setError("")
+    if (mode === "register") {
+      try {
+        const consent = typeof window !== 'undefined' ? localStorage.getItem('pdpaConsent') : null
+        if (consent !== 'true') {
+          setPendingFormData(data)
+          setPendingFile(selectedFile)
+          setShowConsentModal(true)
+          setIsLoading(false)
+          return
+        }
+      } catch (e) {
+        setError("Unable to verify privacy consent. Please enable browser storage and accept the privacy policy before registering.")
+        setIsLoading(false)
+        return
+      }
+    }
 
     try {
-      // Validate KU email for current students
       if (mode === "register" && role === "student" && studentStatus === "CURRENT") {
         if (!data.email.toLowerCase().endsWith("@ku.th")) {
           setError("Current students must use a KU email address (@ku.th). If you don't have access to your KU email, please register as Alumni instead and provide your transcript for verification.")
@@ -113,7 +247,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         }
       }
 
-      // Validate transcript for alumni
       if (mode === "register" && role === "student" && studentStatus === "ALUMNI") {
         if (!selectedFile) {
           setError("Alumni must upload a transcript")
@@ -122,7 +255,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         }
       }
 
-      // Validate evidence for company
       if (mode === "register" && role === "company") {
         if (!selectedFile) {
           setError("Company evidence document is required")
@@ -135,21 +267,19 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         const result = await signIn("credentials", {
           email: data.email,
           password: data.password,
-          role: role, // Pass the role from URL
+          role: role,
           redirect: false,
         })
 
         if (result?.error) {
-          // Check if it's a role mismatch error
           if (result.error.startsWith("ROLE_MISMATCH:")) {
             const parts = result.error.split(":");
-            const actualRole = parts[1]; // student or company
-            const message = parts[2]; // The error message
+            const actualRole = parts[1];
+            const message = parts[2];
             setActualUserRole(actualRole)
             setError(message)
             setIsLoading(false)
           } else if (result.error.startsWith("OAUTH_ACCOUNT:")) {
-            // OAuth account trying to login with credentials
             const message = result.error.split(":")[1];
             setActualUserRole(null)
             setError(message)
@@ -160,118 +290,12 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             setIsLoading(false)
           }
         } else {
-          // Wait for session to be established before redirecting
           setAwaitingSession(true)
         }
       } else {
-        // Registration
-        console.log("Starting registration, isOAuthCompletion:", isOAuthCompletion)
-        const formData = new FormData()
-        formData.append("role", role)
-        formData.append("email", data.email)
-
-        // For OAuth completion, mark as OAuth and skip password
-        if (isOAuthCompletion) {
-          console.log("OAuth registration - skipping password fields")
-          formData.append("isOAuth", "true")
-        } else {
-          console.log("Credentials registration - including password fields")
-          formData.append("password", data.password!)
-          formData.append("confirmPassword", data.confirmPassword!)
-        }
-
-        if (role === "student") {
-          formData.append("studentId", data.studentId!)
-          formData.append("name", data.name!)
-          formData.append("faculty", data.faculty!)
-          formData.append("year", data.year!.toString())
-          formData.append("phone", data.phone!)
-          formData.append("studentStatus", studentStatus)
-
-          if (selectedFile) {
-            formData.append("transcript", selectedFile)
-          }
-        } else {
-          formData.append("companyName", data.companyName!)
-          formData.append("address", data.address!)
-          formData.append("website", data.website || "")
-          formData.append("description", data.description!)
-          formData.append("phone", data.phone!)
-
-          if (selectedFile) {
-            formData.append("evidence", selectedFile)
-          }
-          // formData.append("year", data.year!.toString())
-        }
-
-
-
-        const response = await fetch("/api/register", {
-          method: "POST",
-          body: formData,
-        })
-
-        const responseText = await response.text()
-
-        let result;
-        try {
-          result = JSON.parse(responseText)
-        } catch (jsonError) {
-          setError(`Server returned invalid response. Status: ${response.status}`)
-          console.log(`Server returned invalid response when registering: ${jsonError}`)
-          return
-        }
-
-        if (!response.ok) {
-          // If server returned Zod issues or structured details, map them to field errors
-          try {
-            if (result && result.details && Array.isArray(result.details)) {
-              // details are Zod issues
-              result.details.forEach((issue: { path: unknown[]; message: string }) => {
-                const path = Array.isArray(issue.path) && issue.path.length ? String(issue.path[0]) : null
-                if (path) {
-                  setFieldError(path as keyof AuthFormData, { type: 'server', message: issue.message })
-                }
-              })
-            }
-          } catch (e) {
-            console.warn('Failed to map server validation details to fields', e)
-          }
-
-          setError(result.error || "Registration failed")
-        } else {
-          // For OAuth users, update session and redirect
-          if (isOAuthCompletion) {
-            console.log("OAuth registration complete, updating session...")
-
-            // Show completion state
-            setIsCompletingRegistration(true)
-            setError("") // Clear any errors
-
-            // Wait for database transaction to commit (reduce to 500ms)
-            await new Promise(resolve => setTimeout(resolve, 500))
-
-            // Update session to fetch fresh user data with role
-            await update()
-
-            // Navigate to dashboard
-            router.push(result.redirectTo)
-          } else {
-            // Auto-login after registration for credentials users
-            const loginResult = await signIn("credentials", {
-              email: data.email,
-              password: data.password,
-              redirect: false,
-            })
-
-            if (loginResult?.error) {
-              setError("Registration successful but login failed. Please try logging in.")
-            } else {
-              router.push(result.redirectTo)
-            }
-          }
-        }
+        await performRegistration(data, selectedFile)
       }
+      
     } catch (error) {
       setError("An unexpected error occurred. Please try again later.")
       console.log("Error during form submission:", error)
@@ -283,14 +307,10 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   const handleSwitchGoogleAccount = useCallback(async () => {
     setIsSwitchingAccount(true)
     try {
-      // Build callback URL
       const callbackUrl = mode === "register"
         ? `/register/complete/${role}`
         : roleConfig.redirectPath
 
-      // Directly trigger Google OAuth flow
-      // The prompt: "select_account" in provider config will force Google to show account picker
-      // No need to sign out - Google will handle account selection
       await signIn("google", {
         callbackUrl,
         redirect: true
@@ -305,7 +325,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   const handleGoogleSignIn = useCallback(async () => {
     setIsLoading(true)
     try {
-      // For registration, pass role to skip role selection page
       const callbackUrl = mode === "register"
         ? `/register/complete/${role}`
         : roleConfig.redirectPath
@@ -326,7 +345,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
     const file = files?.[0]
     if (file && files) {
       setSelectedFile(file)
-      // Register the files with the form for validation
       if (role === "student") {
         setValue("transcript", files)
       } else if (role === "company") {
@@ -384,12 +402,10 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
 
         <form onSubmit={handleSubmit(onSubmit, (errors) => {
           console.log("Form validation errors:", errors)
-          // Filter out password errors for OAuth completion
           const filteredErrors = isOAuthCompletion
             ? Object.entries(errors).filter(([field]) => field !== 'password' && field !== 'confirmPassword')
             : Object.entries(errors);
 
-          // Find the first error and display it
           const firstError = filteredErrors[0]
           if (firstError) {
             const [field, error] = firstError
@@ -486,7 +502,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             <>
               {role === "student" ? (
                 <>
-                  {/* Student Status Selection */}
                   <div className="space-y-3">
                     <Label>I am a</Label>
                     <div className="flex gap-4">
@@ -518,7 +533,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                         <span className="text-sm font-medium">KU Alumni</span>
                       </label>
                     </div>
-                    {/* Show locked message for non-KU OAuth emails */}
                     {isOAuthCompletion && session?.user?.email && !session.user.email.toLowerCase().endsWith("@ku.th") && (
                       <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
                         <p className="text-xs text-amber-900">
@@ -604,14 +618,12 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                       </SelectTrigger>
                       <SelectContent>
                         {studentStatus === "CURRENT" ? (
-                          // Current students: Only show year 1-8
                           [1, 2, 3, 4, 5, 6, 7, 8].map((year) => (
                             <SelectItem key={year} data-testid={`year-${year}`} value={year.toString()}>
                               Year {year}
                             </SelectItem>
                           ))
                         ) : (
-                          // Alumni: Only show "Alumni" option
                           <SelectItem data-testid="year-alumni" value="Alumni">
                             Alumni
                           </SelectItem>
@@ -773,21 +785,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                       Upload documents like business license, registration certificate, or other proof of company legitimacy
                     </p>
                   </div>
-
-                  {/* <div>
-                    <Label htmlFor="year">Founded Year</Label>
-                    <Input
-                      id="year"
-                      type="number"
-                      {...register("year", { valueAsNumber: true })}
-                      className="mt-1 bg-gray-50"
-                      min="1900"
-                      max={new Date().getFullYear()}
-                    />
-                    {errors.year && (
-                      <p className="text-sm text-red-600 mt-1">{errors.year.message}</p>
-                    )}
-                  </div> */}
                 </>
               )}
             </>
@@ -811,8 +808,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                 ? "Sign In"
                 : "Create Account"}
           </Button>
-
-          {/* Only show Google OAuth for non-admin roles and non-OAuth completion */}
           {role !== "admin" && !isOAuthCompletion && (
             <>
               <div className="relative">
@@ -879,6 +874,27 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             </p>
           )}
         </div>
+        <PrivacyModal
+          isOpen={showConsentModal}
+          onClose={() => setShowConsentModal(false)}
+          onAccept={async () => {
+            try {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('pdpaConsent', 'true')
+              }
+            } catch (e) {
+              // ignore
+            }
+            setShowConsentModal(false)
+            if (pendingFormData) {
+              setIsLoading(true)
+              await performRegistration(pendingFormData, pendingFile)
+              setPendingFormData(null)
+              setPendingFile(null)
+              setIsLoading(false)
+            }
+          }}
+        />
       </CardContent>
     </Card>
   )
