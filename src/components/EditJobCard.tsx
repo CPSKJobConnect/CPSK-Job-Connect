@@ -92,7 +92,7 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
 
 
   const onSave = async () => {
-    let result = true;
+    let result;
     try {
       result = handleEdit ? await Promise.resolve(handleEdit()) : true;
     } catch (err) {
