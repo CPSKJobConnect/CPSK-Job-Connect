@@ -124,6 +124,14 @@ export function createPrismaMock() {
       findMany: jest.fn(),
       create: jest.fn(),
     },
+    passwordResetToken: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    $transaction: jest.fn(),
   };
 }
 

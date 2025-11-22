@@ -536,7 +536,8 @@ describe("POST /api/register", () => {
     });
 
     it("hashes passwords before storing", async () => {
-      const formData = createStudentFormData({ password: "PlainTextPassword123!" });
+      const strongPassword = "ValidTr33!Secret";
+      const formData = createStudentFormData({ password: strongPassword });
       const transcriptFile = createMockFile("transcript.pdf");
       formData.append("transcript", transcriptFile);
 
@@ -547,7 +548,7 @@ describe("POST /api/register", () => {
 
       await POST(req as any);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith("PlainTextPassword123!", 12);
+      expect(bcrypt.hash).toHaveBeenCalledWith(strongPassword, 12);
       expect(txAccountCreateMock).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
