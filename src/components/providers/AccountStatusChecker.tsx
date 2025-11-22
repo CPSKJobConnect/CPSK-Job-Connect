@@ -11,6 +11,8 @@ import { toast } from "sonner";
  * - Uses visibility API to pause when tab is hidden
  * - Reduces serverless function calls on Vercel by 90%+
  */
+type LogoutReason = "disabled" | "expired";
+
 export function AccountStatusChecker() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -19,28 +21,36 @@ export function AccountStatusChecker() {
   const lastCheckTime = useRef<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleLogout = useCallback(async () => {
+  const handleLogout = useCallback(
+    async (reason: LogoutReason = "disabled") => {
     if (hasShownToast.current) return;
 
     hasShownToast.current = true;
     console.log("Account disabled, logging out...");
 
-    toast.error("Your account has been disabled. Please contact support.");
+    toast.error(
+      reason === "disabled"
+        ? "Your account has been disabled. Please contact support."
+        : "Your session expired due to inactivity. Please sign in again."
+    );
 
     const role = session?.user?.role?.toLowerCase();
     let callbackUrl = "/";
 
+    const errorParam = reason === "disabled" ? "account_disabled" : "session_expired";
+
     if (role === "student") {
-      callbackUrl = "/login/student?error=account_disabled";
+      callbackUrl = `/login/student?error=${errorParam}`;
     } else if (role === "company") {
-      callbackUrl = "/login/company?error=account_disabled";
+      callbackUrl = `/login/company?error=${errorParam}`;
     } else if (role === "admin") {
-      callbackUrl = "/login/admin?error=account_disabled";
+      callbackUrl = `/login/admin?error=${errorParam}`;
     }
 
-    await signOut({ redirect: false });
-    router.push(callbackUrl);
-  }, [session?.user?.role, router]);
+    await signOut({ redirect: true, callbackUrl });
+  },
+    [session?.user?.role, router]
+  );
 
   const checkAccountStatus = useCallback(async () => {
     // Prevent duplicate checks within 5 seconds
@@ -60,8 +70,13 @@ export function AccountStatusChecker() {
       });
       const data = await response.json();
 
+      if (response.status === 401) {
+        handleLogout("expired");
+        return;
+      }
+
       if (!data.active) {
-        handleLogout();
+        handleLogout("disabled");
       }
     } catch (error) {
       console.error("Error checking account status:", error);

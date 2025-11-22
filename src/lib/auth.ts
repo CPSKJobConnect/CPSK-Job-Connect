@@ -1,8 +1,12 @@
 import { prisma } from "@/lib/db";
+import { rotateGoogleRefreshToken } from "@/lib/oauthRefreshTokenService";
+import { INTERNAL_JWT_AUDIENCE, INTERNAL_JWT_ISSUER, INTERNAL_JWT_TOKEN_TYPE } from "@/lib/securityConstants";
 import bycrypt from "bcryptjs";
 import { NextAuthOptions, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+
+export const MAX_INACTIVITY_MS = 30 * 60 * 1000;
 
 // Rate limiting for login attempts
 interface LoginAttempt {
@@ -76,6 +80,9 @@ export const authOptions: NextAuthOptions = {
     maxAge: 2 * 60 * 60, // 2 hours (7200 seconds)
     updateAge: 15 * 60, // Update session every 15 minutes (900 seconds)
   },
+  jwt: {
+    maxAge: 2 * 60 * 60,
+  },
   pages: {
     signIn: "/", // Redirect to home page on sign-in error
     error: "/", // Redirect OAuth errors to home page
@@ -84,6 +91,7 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      checks: ["pkce", "state"],
       authorization: {
         params: {
           prompt: "select_account",
@@ -134,6 +142,7 @@ export const authOptions: NextAuthOptions = {
             logoUrl: true,
             backgroundUrl: true,
             is_active: true,
+            token_version: true,
             accountRole: {
               select: {
                 name: true
@@ -198,6 +207,7 @@ export const authOptions: NextAuthOptions = {
           logoUrl: user.logoUrl,
           backgroundUrl: user.backgroundUrl,
           isActive: user.is_active,
+          tokenVersion: user.token_version,
           emailVerified: user.student?.email_verified,
           studentStatus: user.student?.student_status,
           verificationStatus: user.student?.verification_status,
@@ -208,6 +218,45 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user, account, trigger, session }) {
+      const tokenMeta = token as Record<string, unknown>;
+      const now = Date.now();
+      const lastActivity =
+        typeof tokenMeta.lastActivity === "number" ? (tokenMeta.lastActivity as number) : now;
+      const isUpdateTrigger = trigger === "update";
+
+      tokenMeta.aud = INTERNAL_JWT_AUDIENCE;
+      tokenMeta.iss = INTERNAL_JWT_ISSUER;
+      tokenMeta.tokenType = INTERNAL_JWT_TOKEN_TYPE;
+
+      if (!user && !account && !isUpdateTrigger) {
+        if (tokenMeta.sessionLocked) {
+          return token;
+        }
+        // Periodically check token version and active status against DB
+        const lastVersionCheck =
+          typeof tokenMeta.lastTokenVersionCheck === "number" ? (tokenMeta.lastTokenVersionCheck as number) : 0;
+        if (token.sub && now - lastVersionCheck > 60000) {
+          const userId = parseInt(token.sub as string, 10);
+          if (!Number.isNaN(userId)) {
+            const versionRecord = await prisma.account.findUnique({
+              where: { id: userId },
+              select: { token_version: true, is_active: true },
+            });
+            tokenMeta.lastTokenVersionCheck = now;
+            const tokenVersion = typeof tokenMeta.tokenVersion === "number" ? (tokenMeta.tokenVersion as number) : 0;
+            if (!versionRecord || !versionRecord.is_active || versionRecord.token_version !== tokenVersion) {
+              tokenMeta.sessionLocked = true;
+              return token;
+            }
+          }
+        }
+        if (now - lastActivity > MAX_INACTIVITY_MS) {
+          tokenMeta.sessionLocked = true;
+          tokenMeta.lastActivity = lastActivity;
+          return token;
+        }
+      }
+
       // Debug logging for OAuth flow
       if (token.email?.includes('@gmail.com') || token.email?.includes('@hotmail.com')) {
         // console.log('🔐 JWT callback - OAuth user:', {
@@ -221,6 +270,7 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (user) {
+        tokenMeta.sessionLocked = false;
         // `authorize` returns `name` (username) and `role` on first sign-in.
         // Map those to token fields so subsequent requests have them available.
         token.role = (user as User & { role?: string }).role;
@@ -232,6 +282,7 @@ export const authOptions: NextAuthOptions = {
         token.studentStatus = user.studentStatus;
         token.verificationStatus = user.verificationStatus;
         token.companyRegistrationStatus = user.companyRegistrationStatus;
+        token.tokenVersion = (user as User & { tokenVersion?: number }).tokenVersion ?? 0;
       }
 
       // Handle session update (when profile image is changed or verification status changes)
@@ -250,6 +301,7 @@ export const authOptions: NextAuthOptions = {
                   logoUrl: true,
                   backgroundUrl: true,
                   is_active: true,
+                  token_version: true,
                   student: {
                     select: {
                       email_verified: true,
@@ -278,6 +330,7 @@ export const authOptions: NextAuthOptions = {
                 token.studentStatus = existing.student?.student_status
                 token.verificationStatus = existing.student?.verification_status
                 token.companyRegistrationStatus = existing.company?.registration_status
+                token.tokenVersion = existing.token_version ?? token.tokenVersion ?? 0
               }
             }
           } catch (err) {
@@ -328,10 +381,16 @@ export const authOptions: NextAuthOptions = {
               select: {
                 registration_status: true
               }
-            }
+            },
+            token_version: true
           }
         })
         if (existingUser) {
+          const oauthRefreshToken = (account as Record<string, unknown>)?.refresh_token;
+          if (typeof oauthRefreshToken === "string") {
+            await rotateGoogleRefreshToken(existingUser.id, oauthRefreshToken);
+          }
+
           // Check if account is disabled
           if (!existingUser.is_active) {
             throw new Error("ACCOUNT_DISABLED:Your account has been disabled. Please contact support for assistance.");
@@ -348,6 +407,7 @@ export const authOptions: NextAuthOptions = {
           token.studentStatus = existingUser.student?.student_status
           token.verificationStatus = existingUser.student?.verification_status
           token.companyRegistrationStatus = existingUser.company?.registration_status
+          token.tokenVersion = existingUser.token_version ?? token.tokenVersion ?? 0
         }
       }
 
@@ -366,6 +426,7 @@ export const authOptions: NextAuthOptions = {
                 logoUrl: true,
                 backgroundUrl: true,
                 is_active: true,
+                token_version: true,
                 student: {
                   select: {
                     email_verified: true,
@@ -402,9 +463,14 @@ export const authOptions: NextAuthOptions = {
           console.log('Error populating token from DB:', err)
         }
       }
+      tokenMeta.lastActivity = now;
       return token;
     },
     async session({ session, token }) {
+      const tokenMeta = token as Record<string, unknown>;
+      if (tokenMeta.sessionLocked) {
+        return null;
+      }
       if (token) {
         session.user.id = token.sub!
         session.user.role = token.role as string
@@ -490,5 +556,19 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     }
-  }
+  },
+  events: {
+    async signOut({ token }) {
+      const userId = token?.sub ? parseInt(token.sub as string, 10) : NaN;
+      if (Number.isNaN(userId)) return;
+      try {
+        await prisma.account.update({
+          where: { id: userId },
+          data: { token_version: { increment: 1 } },
+        });
+      } catch (error) {
+        console.error("Failed to bump token_version on signOut:", error);
+      }
+    },
+  },
 }
