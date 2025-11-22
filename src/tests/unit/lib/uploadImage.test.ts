@@ -19,6 +19,17 @@ jest.mock("@supabase/supabase-js", () => ({
   })),
 }));
 
+jest.mock("@/lib/filePolicy", () => {
+  const actual = jest.requireActual("@/lib/filePolicy");
+  return {
+    ...actual,
+    validateFileAgainstPolicy: jest.fn(async () => ({
+      sanitizedFileName: "avatar.png",
+      extension: "png",
+    })),
+  };
+});
+
 describe("uploadImage", () => {
   const file = {
     name: "avatar.png",
@@ -46,7 +57,8 @@ describe("uploadImage", () => {
     expect(mockStorageFrom).toHaveBeenCalledWith("documents");
     expect(mockUpload).toHaveBeenCalledWith(
       expect.stringMatching(/profile-images\/1\/logo_\d+_avatar\.png/),
-      file
+      file,
+      expect.objectContaining({ upsert: false, contentType: "image/png" })
     );
     expect(mockCreateSignedUrl).toHaveBeenCalledWith(
       "profile-images/1/logo_123_avatar.png",

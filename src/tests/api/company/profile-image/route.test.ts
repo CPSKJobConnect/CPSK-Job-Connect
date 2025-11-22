@@ -2,6 +2,8 @@ import { POST } from "@/app/api/company/profile-image/route";
 import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { NextRequest } from "next/server";
+import { uploadImage } from "@/lib/uploadImage";
+import { FileValidationError } from "@/lib/filePolicy";
 
 jest.mock("next-auth/next", () => ({
   getServerSession: jest.fn(),
@@ -16,20 +18,8 @@ jest.mock("@/lib/db", () => ({
   },
 }));
 
-const removeMock = jest.fn();
-const uploadMock = jest.fn();
-const signedUrlMock = jest.fn();
-
-jest.mock("@supabase/supabase-js", () => ({
-  createClient: jest.fn(() => ({
-    storage: {
-      from: jest.fn(() => ({
-        remove: removeMock,
-        upload: uploadMock,
-        createSignedUrl: signedUrlMock,
-      })),
-    },
-  })),
+jest.mock("@/lib/uploadImage", () => ({
+  uploadImage: jest.fn(),
 }));
 
 describe("POST /api/company/profile-image", () => {
@@ -37,18 +27,9 @@ describe("POST /api/company/profile-image", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.SUPABASE_URL = "https://supabase.example.com";
-    process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role";
     (getServerSession as jest.Mock).mockResolvedValue(session);
     (prisma.account.findUnique as jest.Mock).mockResolvedValue({ id: 10 });
-    uploadMock.mockResolvedValue({
-      data: { path: "profile-images/10/file.png" },
-      error: null,
-    });
-    signedUrlMock.mockResolvedValue({
-      data: { signedUrl: "https://signed-url/image.png" },
-      error: null,
-    });
+    (uploadImage as jest.Mock).mockResolvedValue("https://signed-url/image.png");
   });
 
   function buildRequest(file?: File) {
@@ -92,16 +73,11 @@ describe("POST /api/company/profile-image", () => {
   });
 
   it("uploads new image and updates account", async () => {
-    (prisma.account.findUnique as jest.Mock)
-      .mockResolvedValueOnce({ id: 10 })
-      .mockResolvedValueOnce({ id: 10, logoUrl: "old/path.png" });
-
     const file = new File(["image"], "pic.png", { type: "image/png" });
     const res = await POST(buildRequest(file));
     const data = await res.json();
 
-    expect(removeMock).toHaveBeenCalledWith(["old/path.png"]);
-    expect(uploadMock).toHaveBeenCalled();
+    expect(uploadImage).toHaveBeenCalledWith(file, "10", "logo");
     expect(prisma.account.update).toHaveBeenCalledWith({
       where: { id: 10 },
       data: { logoUrl: "https://signed-url/image.png" },
@@ -113,22 +89,14 @@ describe("POST /api/company/profile-image", () => {
   it("handles upload and signed URL errors", async () => {
     const file = new File(["image"], "pic.png", { type: "image/png" });
 
-    uploadMock.mockResolvedValueOnce({
-      data: null,
-      error: { message: "Upload failed" },
-    });
+    (uploadImage as jest.Mock).mockRejectedValueOnce(new Error("Upload failed"));
     let res = await POST(buildRequest(file));
     expect(res.status).toBe(500);
 
-    uploadMock.mockResolvedValue({
-      data: { path: "profile-images/10/file.png" },
-      error: null,
-    });
-    signedUrlMock.mockResolvedValueOnce({
-      data: null,
-      error: { message: "Sign failed" },
-    });
+    (uploadImage as jest.Mock).mockRejectedValueOnce(
+      new FileValidationError("Invalid content")
+    );
     res = await POST(buildRequest(file));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
   });
 });

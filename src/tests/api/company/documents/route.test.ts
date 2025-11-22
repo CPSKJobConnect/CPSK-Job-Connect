@@ -1,25 +1,8 @@
 import { POST } from "@/app/api/company/documents/route";
 import { prisma } from "@/lib/db";
+import { FileValidationError } from "@/lib/filePolicy";
 import { mockCompanySession } from "@/tests/fixtures/sessions";
 
-// Mock Supabase
-jest.mock("@supabase/supabase-js", () => {
-  const storageFromMock = jest.fn(() => ({
-    upload: jest.fn(() => ({
-      error: null,
-    })),
-  }));
-
-  return {
-    createClient: jest.fn(() => ({
-      storage: {
-        from: storageFromMock,
-      },
-    })),
-  };
-});
-
-// Mock dependencies
 jest.mock("next-auth/next", () => ({
   getServerSession: jest.fn(),
 }));
@@ -33,49 +16,47 @@ jest.mock("@/lib/db", () => ({
     account: {
       findUnique: jest.fn(),
     },
-    document: {
-      create: jest.fn(),
+    documentType: {
+      findUnique: jest.fn(),
     },
   },
 }));
 
+jest.mock("@/lib/uploadDocument", () => ({
+  uploadDocument: jest.fn(),
+}));
+
 const { getServerSession } = require("next-auth/next");
-const { createClient } = require("@supabase/supabase-js");
+const { uploadDocument } = require("@/lib/uploadDocument");
 
 describe("POST /api/company/documents", () => {
   const mockAccount = {
     id: 10,
   };
 
-  const mockDocument = {
+  const mockUploadedDocument = {
     id: 1,
     account_id: 10,
-    doc_type_id: 5,
-    file_path: "company-10/123456-test.pdf",
-    file_name: "test.pdf",
+    doc_type_id: 7,
+    file_path: "10/company_evidence.pdf",
+    file_name: "company_evidence.pdf",
     created_at: new Date("2024-01-01"),
-    documentType: {
-      name: "Business License",
-    },
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    const supabase = createClient();
-    (supabase.storage.from as jest.Mock).mockImplementation(() => ({
-      upload: jest.fn(() => ({
-        error: null,
-      })),
-    }));
+    (prisma.documentType.findUnique as jest.Mock).mockResolvedValue({
+      id: 7,
+      name: "Company Evidence",
+    });
   });
 
-  describe("Authentication", () => {
-    it("should return 401 if not authenticated", async () => {
+  describe("authentication", () => {
+    it("returns 401 when not authenticated", async () => {
       getServerSession.mockResolvedValue(null);
-
       const formData = new FormData();
-      formData.append("file", new File(["content"], "test.pdf", { type: "application/pdf" }));
-      formData.append("docTypeId", "5");
+      formData.append("file", new File(["content"], "evidence.pdf", { type: "application/pdf" }));
+      formData.append("docTypeId", "7");
 
       const request = new Request("http://localhost/api/company/documents", {
         method: "POST",
@@ -88,13 +69,13 @@ describe("POST /api/company/documents", () => {
       expect(data.error).toBe("Unauthorized");
     });
 
-    it("should return 404 if account not found", async () => {
+    it("returns 404 when account is missing", async () => {
       getServerSession.mockResolvedValue(mockCompanySession);
       (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
 
       const formData = new FormData();
-      formData.append("file", new File(["content"], "test.pdf", { type: "application/pdf" }));
-      formData.append("docTypeId", "5");
+      formData.append("file", new File(["content"], "evidence.pdf", { type: "application/pdf" }));
+      formData.append("docTypeId", "7");
 
       const request = new Request("http://localhost/api/company/documents", {
         method: "POST",
@@ -108,15 +89,15 @@ describe("POST /api/company/documents", () => {
     });
   });
 
-  describe("Input Validation", () => {
+  describe("validation", () => {
     beforeEach(() => {
       getServerSession.mockResolvedValue(mockCompanySession);
       (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockAccount);
     });
 
-    it("should return 400 if file is missing", async () => {
+    it("returns 400 if file missing", async () => {
       const formData = new FormData();
-      formData.append("docTypeId", "5");
+      formData.append("docTypeId", "7");
 
       const request = new Request("http://localhost/api/company/documents", {
         method: "POST",
@@ -129,27 +110,9 @@ describe("POST /api/company/documents", () => {
       expect(data.error).toBe("Missing file or document type");
     });
 
-    it("should return 400 if docTypeId is missing", async () => {
+    it("rejects unsupported document types", async () => {
       const formData = new FormData();
-      formData.append("file", new File(["content"], "test.pdf", { type: "application/pdf" }));
-
-      const request = new Request("http://localhost/api/company/documents", {
-        method: "POST",
-        body: formData,
-      });
-      const response = await POST(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(400);
-      expect(data.error).toBe("Missing file or document type");
-    });
-
-    it("should return 400 if file size exceeds 10MB", async () => {
-      const largeContent = new Uint8Array(11 * 1024 * 1024); // 11MB
-      const largeFile = new File([largeContent], "large.pdf", { type: "application/pdf" });
-
-      const formData = new FormData();
-      formData.append("file", largeFile);
+      formData.append("file", new File(["content"], "evidence.pdf", { type: "application/pdf" }));
       formData.append("docTypeId", "5");
 
       const request = new Request("http://localhost/api/company/documents", {
@@ -160,13 +123,17 @@ describe("POST /api/company/documents", () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe("File size must be less than 10MB");
+      expect(data.error).toBe("Unsupported document type");
     });
 
-    it("should return 400 if file is not PDF", async () => {
+    it("maps FileValidationError to 400 response", async () => {
+      (uploadDocument as jest.Mock).mockRejectedValue(
+        new FileValidationError("Invalid document")
+      );
+
       const formData = new FormData();
-      formData.append("file", new File(["content"], "test.txt", { type: "text/plain" }));
-      formData.append("docTypeId", "5");
+      formData.append("file", new File(["content"], "evidence.pdf", { type: "application/pdf" }));
+      formData.append("docTypeId", "7");
 
       const request = new Request("http://localhost/api/company/documents", {
         method: "POST",
@@ -176,22 +143,22 @@ describe("POST /api/company/documents", () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe("Only PDF files are allowed");
+      expect(data.error).toBe("Invalid document");
     });
   });
 
-  describe("Document Upload", () => {
+  describe("success path", () => {
     beforeEach(() => {
       getServerSession.mockResolvedValue(mockCompanySession);
       (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockAccount);
+      (uploadDocument as jest.Mock).mockResolvedValue(mockUploadedDocument);
     });
 
-    it("should upload document successfully", async () => {
-      (prisma.document.create as jest.Mock).mockResolvedValue(mockDocument);
-
+    it("uploads document using shared helper", async () => {
+      const file = new File(["content"], "evidence.pdf", { type: "application/pdf" });
       const formData = new FormData();
-      formData.append("file", new File(["content"], "test.pdf", { type: "application/pdf" }));
-      formData.append("docTypeId", "5");
+      formData.append("file", file);
+      formData.append("docTypeId", "7");
 
       const request = new Request("http://localhost/api/company/documents", {
         method: "POST",
@@ -201,64 +168,39 @@ describe("POST /api/company/documents", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.id).toBe(1);
-      expect(data.name).toBe("test.pdf");
-      expect(data.type).toBe("Business License");
-    });
-
-    it("should call Supabase upload with correct path", async () => {
-      (prisma.document.create as jest.Mock).mockResolvedValue(mockDocument);
-      const mockSupabase = createClient();
-
-      const formData = new FormData();
-      const file = new File(["content"], "test.pdf", { type: "application/pdf" });
-      formData.append("file", file);
-      formData.append("docTypeId", "5");
-
-      const request = new Request("http://localhost/api/company/documents", {
-        method: "POST",
-        body: formData,
-      });
-      await POST(request);
-
-      expect(mockSupabase.storage.from).toHaveBeenCalledWith("documents");
-    });
-
-    it("should save document to database with correct data", async () => {
-      (prisma.document.create as jest.Mock).mockResolvedValue(mockDocument);
-
-      const formData = new FormData();
-      formData.append("file", new File(["content"], "test.pdf", { type: "application/pdf" }));
-      formData.append("docTypeId", "5");
-
-      const request = new Request("http://localhost/api/company/documents", {
-        method: "POST",
-        body: formData,
-      });
-      await POST(request);
-
-      expect(prisma.document.create).toHaveBeenCalledWith(
+      expect(uploadDocument).toHaveBeenCalledWith(file, "10", 7);
+      expect(data).toEqual(
         expect.objectContaining({
-          data: expect.objectContaining({
-            account_id: 10,
-            doc_type_id: 5,
-            file_name: "test.pdf",
-          }),
+          id: mockUploadedDocument.id,
+          name: mockUploadedDocument.file_name,
+          url: mockUploadedDocument.file_path,
+          type: "Company Evidence",
         })
       );
     });
 
-    it("should handle Supabase upload errors", async () => {
-      const mockSupabase = createClient();
-      mockSupabase.storage.from.mockReturnValue({
-        upload: jest.fn(() => ({
-          error: { message: "Upload failed" },
-        })),
+    it("handles unknown document type gracefully", async () => {
+      (prisma.documentType.findUnique as jest.Mock).mockResolvedValue(null);
+      const formData = new FormData();
+      formData.append("file", new File(["content"], "evidence.pdf", { type: "application/pdf" }));
+      formData.append("docTypeId", "7");
+
+      const request = new Request("http://localhost/api/company/documents", {
+        method: "POST",
+        body: formData,
       });
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(data.type).toBe("Document");
+    });
+
+    it("returns 500 for unexpected errors", async () => {
+      (uploadDocument as jest.Mock).mockRejectedValue(new Error("Supabase offline"));
 
       const formData = new FormData();
-      formData.append("file", new File(["content"], "test.pdf", { type: "application/pdf" }));
-      formData.append("docTypeId", "5");
+      formData.append("file", new File(["content"], "evidence.pdf", { type: "application/pdf" }));
+      formData.append("docTypeId", "7");
 
       const request = new Request("http://localhost/api/company/documents", {
         method: "POST",
@@ -269,51 +211,6 @@ describe("POST /api/company/documents", () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe("Failed to upload document");
-    });
-
-    it("should handle database errors", async () => {
-      (prisma.document.create as jest.Mock).mockRejectedValue(new Error("DB error"));
-
-      const formData = new FormData();
-      formData.append("file", new File(["content"], "test.pdf", { type: "application/pdf" }));
-      formData.append("docTypeId", "5");
-
-      const request = new Request("http://localhost/api/company/documents", {
-        method: "POST",
-        body: formData,
-      });
-      const response = await POST(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(500);
-      expect(data.error).toBe("Failed to upload document");
-    });
-  });
-
-  describe("Response Format", () => {
-    beforeEach(() => {
-      getServerSession.mockResolvedValue(mockCompanySession);
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockAccount);
-      (prisma.document.create as jest.Mock).mockResolvedValue(mockDocument);
-    });
-
-    it("should return correctly formatted document", async () => {
-      const formData = new FormData();
-      formData.append("file", new File(["content"], "test.pdf", { type: "application/pdf" }));
-      formData.append("docTypeId", "5");
-
-      const request = new Request("http://localhost/api/company/documents", {
-        method: "POST",
-        body: formData,
-      });
-      const response = await POST(request);
-      const data = await response.json();
-
-      expect(data).toHaveProperty("id");
-      expect(data).toHaveProperty("name");
-      expect(data).toHaveProperty("url");
-      expect(data).toHaveProperty("uploadedAt");
-      expect(data).toHaveProperty("type");
     });
   });
 });
