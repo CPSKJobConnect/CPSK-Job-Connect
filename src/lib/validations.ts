@@ -1,13 +1,23 @@
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/passwordPolicy";
 import { z } from "zod";
 
 export const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(1, "Password is required"),
 });
+
+const strongPasswordSchema = z
+  .string()
+  .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
+  .max(PASSWORD_MAX_LENGTH, `Password must be at most ${PASSWORD_MAX_LENGTH} characters`)
+  .regex(/[A-Z]/, "Password must include at least one uppercase letter")
+  .regex(/[a-z]/, "Password must include at least one lowercase letter")
+  .regex(/\d/, "Password must include at least one number")
+  .regex(/[^A-Za-z0-9]/, "Password must include at least one special character");
 
 export const studentRegisterSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: strongPasswordSchema,
   confirmPassword: z.string(),
   studentId: z.string().trim().length(10, "Student ID must be exactly 10 digits").regex(/^\d{10}$/, "Student ID must be 10 numeric digits"),
   name: z.string().trim().min(3, "Name is required"),
@@ -56,7 +66,7 @@ export const studentRegisterSchema = z.object({
 
 export const companyRegisterSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: strongPasswordSchema,
   confirmPassword: z.string(),
   companyName: z.string().min(3, "Company name is required"),
   address: z.string().min(3, "Address is required"),

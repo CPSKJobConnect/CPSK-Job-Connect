@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { uploadDocument } from "@/lib/uploadDocument";
+import { FileValidationError } from "@/lib/filePolicy";
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,6 +39,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("API error:", error);
+    if (error instanceof FileValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json({ error: "Failed to upload document" }, { status: 500 });
   }
 }

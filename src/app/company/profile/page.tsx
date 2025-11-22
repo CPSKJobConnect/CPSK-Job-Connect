@@ -11,6 +11,7 @@ import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
 import apiFetch from "@/lib/apiClient";
 import { isValidImageUrl } from "@/lib/validateImageUrl";
+import { PasswordChangeCard } from "@/components/security/PasswordChangeCard";
 
 export default function CompanyProfilePage() {
   const [company, setCompany] = useState<Company | null>(null);
@@ -203,9 +204,10 @@ export default function CompanyProfilePage() {
 
       {/* Tabs */}
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
+        <TabsList className="grid w-full grid-cols-3 mb-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -214,6 +216,12 @@ export default function CompanyProfilePage() {
 
         <TabsContent value="documents">
           <DocumentsTab company={company} onUpdate={fetchCompanyProfile} />
+        </TabsContent>
+
+        <TabsContent value="security">
+          <div className="max-w-3xl mx-auto">
+            <PasswordChangeCard />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

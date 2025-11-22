@@ -11,6 +11,7 @@ import { IoCallOutline, IoCameraOutline, IoIdCardOutline, IoMailOutline, IoPerso
 import { toast } from "sonner";
 import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
+import { PasswordChangeCard } from "@/components/security/PasswordChangeCard";
 
 export default function StudentProfilePage() {
   const [student, setStudent] = useState<Student | null>(null);
@@ -225,9 +226,10 @@ export default function StudentProfilePage() {
 
       {/* Tabs */}
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
+        <TabsList className="grid w-full grid-cols-3 mb-8">
           <TabsTrigger value="profile" data-testid="profile-tab">Profile</TabsTrigger>
           <TabsTrigger value="documents" data-testid="document-tab">Documents</TabsTrigger>
+          <TabsTrigger value="security" data-testid="security-tab">Security</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -238,6 +240,11 @@ export default function StudentProfilePage() {
           <DocumentsTab student={student} onUpdate={fetchStudentProfile} />
         </TabsContent>
 
+        <TabsContent value="security">
+          <div className="max-w-3xl mx-auto">
+            <PasswordChangeCard />
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
