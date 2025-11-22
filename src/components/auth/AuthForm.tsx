@@ -219,6 +219,14 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
 
         setError(result.error || "Registration failed")
       } else {
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('pdpaConsent')
+          }
+        } catch (e) {
+          console.warn('Failed to remove pdpaConsent from localStorage', e)
+        }
+
         if (isOAuthCompletion) {
           console.log("OAuth registration complete, updating session...")
 

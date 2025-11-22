@@ -399,10 +399,42 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       message: "Account created successfully",
       redirectTo: `/${role}/dashboard`
-    }, { status: 201 })
+    }, { status: 201 });
+
+    try {
+      if (consentValue === true) {
+        const maxAge = 30 * 24 * 60 * 60; // 30 days
+
+        // Determine if request was over HTTPS. Prefer `x-forwarded-proto`
+        // when the app is behind a proxy/load-balancer; otherwise fall back
+        // to the request URL protocol. Also enable secure in production.
+        const forwardedProto = req.headers.get?.('x-forwarded-proto') || req.headers.get?.('x-forwarded-protocol');
+        const isHttps = forwardedProto
+          ? String(forwardedProto).split(',')[0].trim() === 'https'
+          : (() => {
+              try {
+                return new URL(req.url).protocol === 'https:';
+              } catch (e) {
+                return false;
+              }
+            })();
+
+        res.cookies.set("pdpa_consent", "true", {
+          httpOnly: true,
+          sameSite: "strict",
+          path: "/",
+          maxAge,
+          secure: process.env.NODE_ENV === "production" || isHttps,
+        });
+      }
+    } catch (cookieErr) {
+      console.error("Failed to set pdpa_consent cookie:", cookieErr);
+    }
+
+    return res;
   } catch (error) {
     console.error("Registration error:", error)
     console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace')

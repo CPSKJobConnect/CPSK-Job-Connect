@@ -1,4 +1,5 @@
 "use client"
+
 import React, { useEffect, useRef } from 'react'
 
 type PrivacyModalProps = {
@@ -114,9 +115,12 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose, onAccept }
           <button
             type="button"
             className="w-full sm:w-auto inline-flex justify-center rounded-md bg-[#2BA17C] px-4 py-2 text-sm font-medium text-white hover:bg-[#228969]"
-            onClick={() => {
-              onAccept()
-              onClose()
+            onClick={async () => {
+              try {
+                await onAccept()
+              } catch (e) {
+                // swallow errors; caller may show feedback
+              }
             }}
             aria-label="Accept privacy policy"
           >
