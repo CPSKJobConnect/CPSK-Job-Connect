@@ -8,6 +8,28 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt"
   },
+  // Explicit cookie settings to enforce secure attributes per ASVS
+  cookies: {
+    sessionToken: {
+      name: 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'strict',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      }
+    },
+    // optional: CSRF token cookie settings (NextAuth uses this internally)
+    csrfToken: {
+      name: 'next-auth.csrf-token',
+      options: {
+        httpOnly: false,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      }
+    }
+  },
   pages: {
     signIn: "/", // Redirect to home page on sign-in error
     error: "/", // Redirect OAuth errors to home page
