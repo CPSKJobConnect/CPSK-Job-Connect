@@ -314,15 +314,18 @@ export async function POST(req: NextRequest) {
       // If consent was provided in the registration request, record it atomically
       if (typeof consentValue !== "undefined") {
         try {
-          await tx.accountConsentLog.create({
-            data: {
-              account_id: account.id,
-              consent: consentValue,
-            }
+          const existing = await tx.accountConsentLog.findFirst({
+            where: { account_id: account.id },
+            orderBy: { created_at: 'desc' },
           });
+          if (existing) {
+            await tx.accountConsentLog.update({ where: { id: existing.id }, data: { consent: consentValue } });
+          } else {
+            await tx.accountConsentLog.create({ data: { account_id: account.id, consent: consentValue } });
+          }
         } catch (consentErr) {
           // Log and rethrow so transaction can be rolled back and caller informed
-          console.error("Failed to create AccountConsentLog inside transaction:", consentErr);
+          console.error("Failed to upsert AccountConsentLog inside transaction:", consentErr);
           throw consentErr;
         }
       }
@@ -409,12 +412,12 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       message: "Account created successfully",
-      // After registering, require the user to sign in. Do not auto-login.
-      redirectTo: `/login/${role}`
+      // After registering, direct user to their dashboard
+      redirectTo: role === 'student' ? '/student/dashboard' : '/company/dashboard'
     }, { status: 201 });
 
     try {
-      if (consentValue === true) {
+        if (consentValue === true) {
         const maxAge = 30 * 24 * 60 * 60; // 30 days
 
         // Determine if request was over HTTPS. Prefer `x-forwarded-proto`
@@ -431,12 +434,13 @@ export async function POST(req: NextRequest) {
               }
             })();
 
-        res.cookies.set("pdpa_consent", "true", {
+        // Use __Secure- prefix and follow ASVS requirements: Secure + HttpOnly + SameSite=Strict
+        res.cookies.set("__Secure-pdpa_consent", "true", {
           httpOnly: true,
           sameSite: "strict",
           path: "/",
           maxAge,
-          secure: process.env.NODE_ENV === "production" || isHttps,
+          secure: process.env.NODE_ENV === "production" || process.env.LOCAL_HTTPS === 'true' || isHttps,
         });
       }
     } catch (cookieErr) {

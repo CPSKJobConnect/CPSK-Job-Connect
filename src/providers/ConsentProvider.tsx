@@ -38,20 +38,39 @@ export default function ConsentProvider({ children }: Props) {
   async function acceptConsent() {
     try {
       setChecking(true);
-      const res = await fetch("/api/consent/accept", {
-        method: "POST",
+      const res = await fetch("/api/consent/update-status", {
+        method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consent: true }),
       });
 
       if (!res.ok) {
-        setChecking(false);
+        await checkConsent();
         return;
       }
 
-      // re-check status
       await checkConsent();
     } catch (err) {
+      await checkConsent();
+    }
+  }
+
+  async function declineConsent() {
+    try {
+      setChecking(true);
+      const res = await fetch('/api/consent/update-status', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consent: false }),
+      });
+
+      await checkConsent();
+    } catch (err) {
+      // network error: recheck to ensure UI uses authoritative source when possible
+      try { await checkConsent(); } catch (_) { }
+    } finally {
       setChecking(false);
     }
   }
@@ -68,7 +87,12 @@ export default function ConsentProvider({ children }: Props) {
     return (
       <PrivacyModal
         isOpen={true}
-        onClose={() => {
+        onClose={async () => {
+          try {
+            await declineConsent();
+          } catch (e) {
+            // swallow errors
+          }
           if (typeof window !== "undefined") {
             window.location.href = "/jobs";
           }

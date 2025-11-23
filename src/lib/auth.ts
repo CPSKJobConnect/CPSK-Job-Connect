@@ -79,7 +79,7 @@ export const authOptions: NextAuthOptions = {
   // Explicit cookie settings to enforce secure attributes per ASVS
   cookies: {
     sessionToken: {
-      name: 'next-auth.session-token',
+      name: '__Secure-next-auth.session-token',
       options: {
         httpOnly: true,
         sameSite: 'strict',
@@ -89,12 +89,12 @@ export const authOptions: NextAuthOptions = {
     },
     // optional: CSRF token cookie settings (NextAuth uses this internally)
     csrfToken: {
-      name: 'next-auth.csrf-token',
+      name: '__Secure-next-auth.csrf-token',
       options: {
         httpOnly: false,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production' || process.env.LOCAL_HTTPS === 'true',
       }
     }
   },
@@ -245,13 +245,17 @@ export const authOptions: NextAuthOptions = {
   }
 
   // Step 2: if role missing, fetch DB once
-  if (!token.role && token.sub) {
+  if (!token.role) {
     try {
-      const userId = parseInt(token.sub as string, 10);
-      if (!Number.isNaN(userId)) {
+      // If this JWT call is for a Google/OAuth sign-in and we have an email
+      // on the `user` object or the account indicates Google, prefer a lookup
+      // by email to resolve the account details (tests exercise this path).
+      if ((account && account.provider === 'google') && (user && (user as any).email)) {
+        const email = (user as any).email;
         const existing = await prisma.account.findUnique({
-          where: { id: userId },
+          where: { email },
           select: {
+            id: true,
             accountRole: { select: { name: true } },
             username: true,
             logoUrl: true,
@@ -271,6 +275,34 @@ export const authOptions: NextAuthOptions = {
           token.studentStatus = existing.student?.student_status;
           token.verificationStatus = existing.student?.verification_status;
           token.companyRegistrationStatus = existing.company?.registration_status;
+          token.sub = existing.id.toString();
+        }
+      } else if (token.sub) {
+        const userId = parseInt(token.sub as string, 10);
+        if (!Number.isNaN(userId)) {
+          const existing = await prisma.account.findUnique({
+            where: { id: userId },
+            select: {
+              accountRole: { select: { name: true } },
+              username: true,
+              logoUrl: true,
+              backgroundUrl: true,
+              is_active: true,
+              student: { select: { email_verified: true, student_status: true, verification_status: true } },
+              company: { select: { registration_status: true } },
+            },
+          });
+          if (existing) {
+            token.role = existing.accountRole?.name;
+            token.username = existing.username || token.username;
+            token.logoUrl = existing.logoUrl || token.logoUrl;
+            token.backgroundUrl = existing.backgroundUrl || token.backgroundUrl;
+            token.isActive = existing.is_active;
+            token.emailVerified = Boolean(existing.student?.email_verified);
+            token.studentStatus = existing.student?.student_status;
+            token.verificationStatus = existing.student?.verification_status;
+            token.companyRegistrationStatus = existing.company?.registration_status;
+          }
         }
       }
     } catch (err) {
