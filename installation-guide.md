@@ -72,7 +72,7 @@ mkcert -key-file certificates/localhost-key.pem -cert-file certificates/localhos
 ### 6. Start the Development Server
 
 ```bash
-npm run dev:https
+npm run dev
 ```
 
 The app will be available at: https://localhost:3000
@@ -144,8 +144,7 @@ RESEND_API_KEY=your-resend-api-key
 
 | Script | Description |
 |--------|-------------|
-| `npm run dev:https` | Start development server (HTTPS) - **recommended** |
-| `npm run dev` | Start development server (HTTP) - limited functionality |
+| `npm run dev` | Start development server (HTTPS) |
 | `npm run build` | Build for production |
 | `npm start` | Start production server |
 | `npm run lint` | Run ESLint |
