@@ -18,10 +18,11 @@ export default withAuth(
         });
       }
     } else {
-      // secure cookie heuristic: enable when prod or HTTPS dev
+      // secure cookie heuristic: enable when prod or HTTPS dev (consistent with auth.ts)
       const secureCookie =
         String(process.env.NODE_ENV) === "production" ||
-        ((process.env.NEXTAUTH_URL || "").startsWith("https://localhost"));
+        process.env.LOCAL_HTTPS === "true" ||
+        (process.env.NEXTAUTH_URL || "").startsWith("https://");
 
       try {
         token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie });

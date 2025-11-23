@@ -52,21 +52,30 @@ Optionally, seed the database with sample data:
 npm run db:seed
 ```
 
-### 5. Start the Development Server
+### 5. Set Up HTTPS (Required)
 
-**HTTP (default):**
+This project uses HTTPS by default for secure cookies. Set up local certificates:
+
 ```bash
-npm run dev
+# Install mkcert (one-time)
+# Windows: choco install mkcert (or scoop install mkcert)
+# macOS: brew install mkcert
+# Linux: see https://github.com/FiloSottile/mkcert
+
+# Install local CA (one-time)
+mkcert -install
+
+# Generate certificates
+mkcert -key-file certificates/localhost-key.pem -cert-file certificates/localhost.pem localhost 127.0.0.1 ::1
 ```
 
-**HTTPS (for secure cookie testing):**
+### 6. Start the Development Server
+
 ```bash
 npm run dev:https
 ```
 
-The app will be available at:
-- HTTP: http://localhost:3000
-- HTTPS: https://localhost:3000
+The app will be available at: https://localhost:3000
 
 ---
 
@@ -79,7 +88,8 @@ The app will be available at:
 | `DATABASE_URL` | PostgreSQL connection string (with PgBouncer) | Supabase Dashboard → Settings → Database |
 | `DIRECT_URL` | Direct PostgreSQL connection (for migrations) | Supabase Dashboard → Settings → Database |
 | `NEXTAUTH_SECRET` | Secret for NextAuth.js sessions | Run: `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | Base URL for authentication | `http://localhost:3000` (dev) |
+| `NEXTAUTH_URL` | Base URL for authentication | `https://localhost:3000` |
+| `LOCAL_HTTPS` | Enable secure cookies for local dev | `true` |
 | `JWT_SECRET` | Secret for JWT tokens | Run: `openssl rand -hex 64` |
 | `REFRESH_TOKEN_PEPPER` | Additional secret for refresh tokens | Generate a unique 64-byte value |
 
@@ -130,61 +140,12 @@ RESEND_API_KEY=your-resend-api-key
 
 ---
 
-## HTTPS Development Setup (Optional)
-
-For testing features that require HTTPS (secure cookies, OAuth callbacks), set up local HTTPS:
-
-### 1. Install mkcert
-
-**Windows:**
-```powershell
-# Using Chocolatey
-choco install mkcert
-
-# Or using Scoop
-scoop install mkcert
-```
-
-**macOS:**
-```bash
-brew install mkcert
-```
-
-**Linux:**
-See [mkcert GitHub](https://github.com/FiloSottile/mkcert#installation) for instructions.
-
-### 2. Generate Certificates
-
-```bash
-# Install local CA (one-time)
-mkcert -install
-
-# Generate certificates
-mkcert -key-file certificates/localhost-key.pem -cert-file certificates/localhost.pem localhost 127.0.0.1 ::1
-```
-
-### 3. Update Environment Variables
-
-In your `.env` file:
-```env
-NEXTAUTH_URL=https://localhost:3000
-NEXT_PUBLIC_APP_URL=https://localhost:3000
-```
-
-### 4. Run HTTPS Server
-
-```bash
-npm run dev:https
-```
-
----
-
 ## Available Scripts
 
 | Script | Description |
 |--------|-------------|
-| `npm run dev` | Start development server (HTTP) |
-| `npm run dev:https` | Start development server (HTTPS) |
+| `npm run dev:https` | Start development server (HTTPS) - **recommended** |
+| `npm run dev` | Start development server (HTTP) - limited functionality |
 | `npm run build` | Build for production |
 | `npm start` | Start production server |
 | `npm run lint` | Run ESLint |
