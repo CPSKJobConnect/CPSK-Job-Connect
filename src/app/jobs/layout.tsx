@@ -4,6 +4,7 @@ import { Navbar01NavLink } from "@/components/ui/shadcn-io/navbar-01";
 import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import UniversalNavbar from "@/components/Navbar/UniversalNavbar";
+import ConsentReminderBanner from "@/components/ConsentReminderBanner";
 
 type Props = { children: React.ReactNode };
 
@@ -49,7 +50,10 @@ export default function JobsLayout({ children }: Props) {
           onSignInClick={handleSignIn}
         />
       </div>
-      <main className="flex-1 p-4 mt-16">{children}</main>
+      <div className="mt-16">
+        <ConsentReminderBanner />
+      </div>
+      <main className="flex-1 p-4">{children}</main>
     </div>
   );
 }
