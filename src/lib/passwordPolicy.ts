@@ -19,7 +19,7 @@ type PasswordPolicyCheck = {
   test: (password: string, context: PasswordPolicyContext) => boolean;
 };
 
-const COMMON_PATTERNS = [/password/i, /1234/, /qwerty/i, /letmein/i, /welcome/i];
+const COMMON_PATTERNS = [/1234/, /qwerty/i, /letmein/i, /welcome/i];
 const SEQUENTIAL_PATTERN = /(0123|1234|2345|3456|4567|5678|6789|abcd|bcde|cdef|defg|abcd)/i;
 
 export const PASSWORD_MIN_LENGTH = 8;

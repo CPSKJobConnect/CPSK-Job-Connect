@@ -45,6 +45,21 @@ async function POST_impl(request: NextRequest) {
       return NextResponse.json({ error: "File size must be less than 5MB" }, { status: 400 });
     }
 
+    // Re-fetch account to obtain existing logoUrl so we can remove the old file
+    const currentAccount = await prisma.account.findUnique({
+      where: { id: account.id },
+      select: { logoUrl: true }
+    });
+
+    try {
+      if (currentAccount?.logoUrl) {
+        await supabase.storage.from("documents").remove([currentAccount.logoUrl]);
+      }
+    } catch (removeErr) {
+      // Log and continue; removal failure should not block the upload
+      console.error("Failed to remove old profile image:", removeErr);
+    }
+
     const signedUrl = await uploadImage(file, account.id.toString(), "logo");
 
     await prisma.account.update({

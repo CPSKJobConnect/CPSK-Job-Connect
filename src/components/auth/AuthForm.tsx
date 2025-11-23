@@ -239,17 +239,9 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
 
           router.push(result.redirectTo)
         } else {
-          const loginResult = await signIn("credentials", {
-            email: data.email,
-            password: data.password,
-            redirect: false,
-          })
-
-          if (loginResult?.error) {
-            setError("Registration successful but login failed. Please try logging in.")
-          } else {
-            router.push(result.redirectTo)
-          }
+          // Do not auto-login after registration. Redirect user to login page
+          // so they can explicitly authenticate (register -> login -> dashboard).
+          router.push(result.redirectTo)
         }
       }
     } catch (error) {

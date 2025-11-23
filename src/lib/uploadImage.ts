@@ -28,10 +28,7 @@ export async function uploadImage(
   // Upload to Supabase storage in the "documents" bucket
   const { data, error } = await supabase.storage
     .from("documents")
-    .upload(filePath, file, {
-      upsert: false,
-      contentType: file.type || policy.allowedMimeTypes[0],
-    });
+    .upload(filePath, file);
 
   if (error) {
     console.error("Supabase storage error:", error);

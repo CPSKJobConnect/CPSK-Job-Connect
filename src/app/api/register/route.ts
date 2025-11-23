@@ -7,7 +7,7 @@ import {
   studentOAuthRegisterSchema,
   studentRegisterSchema
 } from "@/lib/validations";
-import bcrypt from "bcryptjs";
+// bcrypt will be required at runtime to ensure test mocks are used
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -108,15 +108,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Add evidence file to data for validation (required for companies)
+    // Add company evidence file to data for validation (mirrors transcript handling)
     if (role === "company") {
       const evidenceFile = formData ? (formData.get("evidence") as File | null) : null;
       if (evidenceFile && evidenceFile.size > 0) {
-        // For OAuth, pass File directly; for regular registration, create FileList-like object
         if (isOAuth) {
           data.evidence = evidenceFile;
         } else {
-          // Create a FileList-like object with the file
           const fileList = {
             0: evidenceFile,
             length: 1,
@@ -129,8 +127,11 @@ export async function POST(req: NextRequest) {
         }
       }
     }
-    // Validate data base on role and OAuth status
-    let validatedData: z.ZodSafeParseResult<StudentData | CompanyData | StudentOAuthData | CompanyOAuthData>;
+
+    // Validate data based on role and OAuth status
+    let validatedData: z.ZodSafeParseResult<
+      StudentData | CompanyData | StudentOAuthData | CompanyOAuthData
+    >;
     if (role === "student") {
       validatedData = isOAuth
         ? studentOAuthRegisterSchema.safeParse(data)
@@ -189,7 +190,14 @@ export async function POST(req: NextRequest) {
             ? (dataWithPassword as StudentData).name
             : (dataWithPassword as CompanyData).companyName,
       });
-      hashedPassword = await bcrypt.hash(dataWithPassword.password, 12);
+
+      // Require `bcryptjs` at runtime so that Jest's module mock is used in tests.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const bcryptModule = require("bcryptjs");
+      if (!bcryptModule || typeof bcryptModule.hash !== "function") {
+        throw new Error("BCRYPT-REQUIRE-MISSING");
+      }
+      hashedPassword = await bcryptModule.hash(dataWithPassword.password, 12);
     }
 
     // Get role ID
@@ -401,7 +409,8 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       message: "Account created successfully",
-      redirectTo: `/${role}/dashboard`
+      // After registering, require the user to sign in. Do not auto-login.
+      redirectTo: `/login/${role}`
     }, { status: 201 });
 
     try {

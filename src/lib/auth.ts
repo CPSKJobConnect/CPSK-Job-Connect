@@ -84,7 +84,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'strict',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production' || process.env.LOCAL_HTTPS === 'true',
       }
     },
     // optional: CSRF token cookie settings (NextAuth uses this internally)
@@ -229,203 +229,57 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account, trigger, session }) {
-      // Debug logging for OAuth flow
-      if (token.email?.includes('@gmail.com') || token.email?.includes('@hotmail.com')) {
-        // console.log('🔐 JWT callback - OAuth user:', {
-        //   email: token.email,
-        //   hasUser: !!user,
-        //   hasAccount: !!account,
-        //   tokenRole: token.role,
-        //   tokenSub: token.sub,
-        //   trigger
-        // });
-      }
+    async jwt({ token, user, account, trigger }) {
+  // Step 1: map fields on first sign-in
+  if (user) {
+    token.sub = user.id;
+    token.role = user.role || undefined;
+    token.username = user.username ?? user.name ?? undefined;
+    token.logoUrl = user.logoUrl;
+    token.backgroundUrl = user.backgroundUrl;
+    token.isActive = user.isActive ?? true;
+    token.emailVerified = Boolean(user.emailVerified);
+    token.studentStatus = user.studentStatus;
+    token.verificationStatus = user.verificationStatus;
+    token.companyRegistrationStatus = user.companyRegistrationStatus;
+  }
 
-      if (user) {
-        // `authorize` returns `name` (username) and `role` on first sign-in.
-        // Map those to token fields so subsequent requests have them available.
-        token.role = (user as User & { role?: string }).role;
-        token.username = (user as User & { name?: string; username?: string }).name || (user as User & { username?: string }).username;
-        token.logoUrl = user.logoUrl;
-        token.backgroundUrl = user.backgroundUrl;
-        token.isActive = typeof user.isActive === 'boolean' ? user.isActive : true;
-        token.emailVerified = typeof user.emailVerified === 'boolean' ? user.emailVerified : undefined;
-        token.studentStatus = user.studentStatus;
-        token.verificationStatus = user.verificationStatus;
-        token.companyRegistrationStatus = user.companyRegistrationStatus;
-      }
-
-      // Handle session update (when profile image is changed or verification status changes)
-      if (trigger === "update") {
-        // If no role yet, fetch from database (e.g., after OAuth registration completion)
-        if (!token.role && token.sub) {
-          console.log('🔄 Update trigger - fetching role from DB for user:', token.sub);
-          try {
-            const userId = parseInt(token.sub as string, 10)
-            if (!Number.isNaN(userId)) {
-              const existing = await prisma.account.findUnique({
-                where: { id: userId },
-                select: {
-                  accountRole: { select: { name: true } },
-                  username: true,
-                  logoUrl: true,
-                  backgroundUrl: true,
-                  is_active: true,
-                  student: {
-                    select: {
-                      email_verified: true,
-                      student_status: true,
-                      verification_status: true
-                    }
-                  },
-                  company: {
-                    select: {
-                      registration_status: true
-                    }
-                  }
-                }
-              })
-              console.log('📊 Update trigger - fetched data:', {
-                found: !!existing,
-                role: existing?.accountRole?.name,
-              });
-              if (existing) {
-                token.role = existing.accountRole?.name || token.role
-                token.username = existing.username || token.username
-                token.logoUrl = existing.logoUrl || token.logoUrl
-                token.backgroundUrl = existing.backgroundUrl || token.backgroundUrl
-                token.isActive = existing.is_active
-                token.emailVerified = existing.student?.email_verified
-                token.studentStatus = existing.student?.student_status
-                token.verificationStatus = existing.student?.verification_status
-                token.companyRegistrationStatus = existing.company?.registration_status
-              }
-            }
-          } catch (err) {
-            console.log('Error fetching role during update:', err)
-          }
-        }
-
-        // Update other session fields
-        if (session?.user?.logoUrl) {
-          token.logoUrl = session.user.logoUrl;
-        }
-        if (session?.user?.emailVerified !== undefined) {
-          token.emailVerified = session.user.emailVerified;
-        }
-        if (session?.user?.verificationStatus) {
-          token.verificationStatus = session.user.verificationStatus;
-        }
-        if (session?.user?.companyRegistrationStatus) {
-          token.companyRegistrationStatus = session.user.companyRegistrationStatus;
-        }
-      }
-
-      // for OAuth users - fetch complete user data including verification status
-      if (account?.provider === "google") {
-        const existingUser = await prisma.account.findUnique({
-          where: {
-            email: user.email!
-          },
+  // Step 2: if role missing, fetch DB once
+  if (!token.role && token.sub) {
+    try {
+      const userId = parseInt(token.sub as string, 10);
+      if (!Number.isNaN(userId)) {
+        const existing = await prisma.account.findUnique({
+          where: { id: userId },
           select: {
-            id: true,
+            accountRole: { select: { name: true } },
             username: true,
             logoUrl: true,
             backgroundUrl: true,
             is_active: true,
-            accountRole: {
-              select: {
-                name: true
-              }
-            },
-            student: {
-              select: {
-                email_verified: true,
-                student_status: true,
-                verification_status: true
-              }
-            },
-            company: {
-              select: {
-                registration_status: true
-              }
-            }
-          }
-        })
-        if (existingUser) {
-          // Check if account is disabled
-          if (!existingUser.is_active) {
-            throw new Error("ACCOUNT_DISABLED:Your account has been disabled. Please contact support for assistance.");
-          }
-
-          // Use database ID instead of provider ID to avoid integer overflow
-          token.sub = existingUser.id.toString()
-          token.role = existingUser.accountRole?.name
-          token.username = existingUser.username || undefined
-          token.logoUrl = existingUser.logoUrl || undefined
-          token.backgroundUrl = existingUser.backgroundUrl || undefined
-          token.isActive = existingUser.is_active
-          token.emailVerified = existingUser.student?.email_verified
-          token.studentStatus = existingUser.student?.student_status
-          token.verificationStatus = existingUser.student?.verification_status
-          token.companyRegistrationStatus = existingUser.company?.registration_status
+            student: { select: { email_verified: true, student_status: true, verification_status: true } },
+            company: { select: { registration_status: true } },
+          },
+        });
+        if (existing) {
+          token.role = existing.accountRole?.name;
+          token.username = existing.username || token.username;
+          token.logoUrl = existing.logoUrl || token.logoUrl;
+          token.backgroundUrl = existing.backgroundUrl || token.backgroundUrl;
+          token.isActive = existing.is_active;
+          token.emailVerified = Boolean(existing.student?.email_verified);
+          token.studentStatus = existing.student?.student_status;
+          token.verificationStatus = existing.student?.verification_status;
+          token.companyRegistrationStatus = existing.company?.registration_status;
         }
       }
+    } catch (err) {
+      console.error("Error populating token from DB:", err);
+    }
+  }
 
-      // If token exists but role wasn't set (e.g. older session or created without role),
-      // try to populate it from the database using the subject (user id).
-      if (!token.role && token.sub) {
-        console.log('🔄 Fetching role from DB for user:', token.sub);
-        try {
-          const userId = parseInt(token.sub as string, 10)
-          if (!Number.isNaN(userId)) {
-            const existing = await prisma.account.findUnique({
-              where: { id: userId },
-              select: {
-                accountRole: { select: { name: true } },
-                username: true,
-                logoUrl: true,
-                backgroundUrl: true,
-                is_active: true,
-                student: {
-                  select: {
-                    email_verified: true,
-                    student_status: true,
-                    verification_status: true
-                  }
-                },
-                company: {
-                  select: {
-                    registration_status: true
-                  }
-                }
-              }
-            })
-            console.log('📊 Fetched user data:', {
-              found: !!existing,
-              role: existing?.accountRole?.name,
-              hasStudent: !!existing?.student,
-              hasCompany: !!existing?.company
-            });
-            if (existing) {
-              token.role = existing.accountRole?.name || token.role
-              token.username = existing.username || token.username
-              token.logoUrl = existing.logoUrl || token.logoUrl
-              token.backgroundUrl = existing.backgroundUrl || token.backgroundUrl
-              token.isActive = existing.is_active
-              token.emailVerified = existing.student?.email_verified
-              token.studentStatus = existing.student?.student_status
-              token.verificationStatus = existing.student?.verification_status
-              token.companyRegistrationStatus = existing.company?.registration_status
-            }
-          }
-        } catch (err) {
-          console.log('Error populating token from DB:', err)
-        }
-      }
-      return token;
-    },
+  return token;
+},
     async session({ session, token }) {
       if (token) {
         session.user.id = token.sub!
@@ -438,6 +292,20 @@ export const authOptions: NextAuthOptions = {
         session.user.studentStatus = token.studentStatus
         session.user.verificationStatus = token.verificationStatus
         session.user.companyRegistrationStatus = token.companyRegistrationStatus
+      }
+      // Debug: print session contents in non-production environments
+      try {
+        if (process.env.NODE_ENV !== 'production') {
+          const safe = {
+            sub: token?.sub,
+            role: token?.role,
+            email: token?.email,
+            username: token?.username,
+          };
+          console.log('AUTH: session callback ->', JSON.stringify(safe));
+        }
+      } catch (e) {
+        // ignore
       }
       return session;
     },
