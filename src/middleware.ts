@@ -165,8 +165,8 @@ export default withAuth(
 
     // Role-based access control and redirects
     if (token) {
-      // Redirect users without role to complete registration
-      if (!role && !pathname.startsWith("/register/complete")) {
+      // Redirect users without role to complete registration (skip for public routes)
+      if (!role && !pathname.startsWith("/register/complete") && !isPublicRoute) {
         const roleMatch = pathname.match(/\/(login|register|student|company)\/(student|company|dashboard)/);
         let roleHint: string | null = null;
         if (roleMatch) {
@@ -213,9 +213,14 @@ export default withAuth(
         return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url));
       }
 
-      // Redirect authenticated users away from auth pages/homepage to their dashboard (except /jobs and /student/verify-email)
+      // Redirect authenticated users away from auth pages/homepage to their dashboard
+      // Exceptions: /jobs, /student/verify-email, /privacy-policy (users need to read policy before accepting consent)
       if (isPublicRoute && role && !pathname.startsWith("/api")) {
-        if (pathname === "/jobs" || pathname === "/student/verify-email") return NextResponse.next();
+        if (pathname === "/jobs" || pathname.startsWith("/jobs/") ||
+            pathname === "/student/verify-email" ||
+            pathname === "/privacy-policy") {
+          return NextResponse.next();
+        }
         return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url));
       }
     }
