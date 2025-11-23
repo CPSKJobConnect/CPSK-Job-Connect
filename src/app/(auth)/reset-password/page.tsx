@@ -26,6 +26,18 @@ export default function ResetPasswordPage() {
     setToken(paramToken);
   }, [searchParams]);
 
+  useEffect(() => {
+    if (redirectCountdown === null) return;
+    if (redirectCountdown === 0) {
+      router.push("/login/student?reset=success");
+      return;
+    }
+    const timer = setTimeout(() => {
+      setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [redirectCountdown, router]);
+
   const tokenMissing = useMemo(() => !token, [token]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -162,14 +174,3 @@ export default function ResetPasswordPage() {
     </div>
   );
 }
-  useEffect(() => {
-    if (redirectCountdown === null) return;
-    if (redirectCountdown === 0) {
-      router.push("/login/student?reset=success");
-      return;
-    }
-    const timer = setTimeout(() => {
-      setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null));
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [redirectCountdown, router]);

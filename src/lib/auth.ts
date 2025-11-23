@@ -491,7 +491,9 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       const tokenMeta = token as Record<string, unknown>;
       if (tokenMeta.sessionLocked) {
-        return null;
+        // Session is locked - mark it as such instead of returning null
+        session.user.sessionLocked = true;
+        return session;
       }
       if (token) {
         session.user.id = token.sub!
