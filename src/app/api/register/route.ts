@@ -192,7 +192,6 @@ export async function POST(req: NextRequest) {
       });
 
       // Require `bcryptjs` at runtime so that Jest's module mock is used in tests.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const bcryptModule = require("bcryptjs");
       if (!bcryptModule || typeof bcryptModule.hash !== "function") {
         throw new Error("BCRYPT-REQUIRE-MISSING");

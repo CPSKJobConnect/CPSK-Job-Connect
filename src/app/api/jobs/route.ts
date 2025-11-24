@@ -7,7 +7,7 @@ export async function GET(req: Request) {
     const userId = searchParams.get("userId");
     const keyword = searchParams.get("keyword") || undefined;
     const jobCategory = searchParams.get("jobCategory") || undefined;
-    const location = searchParams.get("location") || undefined;
+    const jobLocation = searchParams.get("location") || undefined;
     const jobType = searchParams.get("jobType") || undefined;
     const jobArrangement = searchParams.get("jobArrangement") || undefined;
     const minSalaryParam = searchParams.get("minSalary");
@@ -50,8 +50,8 @@ export async function GET(req: Request) {
       whereClause.category = { name: jobCategory };
     }
 
-    if (location) {
-      whereClause.location = { equals: location };
+    if (jobLocation) {
+      whereClause.location = { equals: jobLocation };
     }
 
     if (jobType) {
