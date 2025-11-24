@@ -2,8 +2,17 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import DOMPurify from "isomorphic-dompurify"; // สำหรับ sanitize input หากใช้ query params
+import { Prisma } from "@prisma/client";
 
-export async function GET() {
+// Utility: canonicalize string input safely
+function canonicalize(input: string | null): string | undefined {
+  if (!input) return undefined;
+  const decoded = decodeURIComponent(input); // decode once
+  return DOMPurify.sanitize(decoded); // sanitize to remove any unexpected HTML/JS
+}
+
+export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
@@ -12,13 +21,30 @@ export async function GET() {
 
     // Check if user is admin (using session role)
     const userRole = (session.user as any).role?.toLowerCase();
-    console.log("🔍 User role:", userRole);
-
     if (userRole !== "admin") {
       return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 
-    // Get all reference data in parallel
+    // Optional: handle query params safely
+    const { searchParams } = new URL(request.url);
+    const search = canonicalize(searchParams.get("search"));
+    const status = canonicalize(searchParams.get("status"));
+    const page = Number(canonicalize(searchParams.get("page")) || 1);
+    const limit = Number(canonicalize(searchParams.get("limit")) || 10);
+
+    // Build whereClause safely if search/status is used in future
+    const whereClause: Prisma.CompanyWhereInput = {};
+    if (search) {
+      whereClause.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+      ];
+    }
+    if (status) {
+      // example: filter by registration status
+      whereClause.registration_status = status;
+    }
+
+    // Fetch all reference data in parallel
     const [
       companies,
       jobTypes,
@@ -31,36 +57,14 @@ export async function GET() {
         select: {
           id: true,
           name: true,
-          account: {
-            select: {
-              email: true
-            }
-          }
+          account: { select: { email: true } }
         },
-        orderBy: {
-          name: "asc"
-        }
+        orderBy: { name: "asc" }
       }),
-      prisma.jobType.findMany({
-        orderBy: {
-          name: "asc"
-        }
-      }),
-      prisma.jobArrangement.findMany({
-        orderBy: {
-          name: "asc"
-        }
-      }),
-      prisma.jobCategory.findMany({
-        orderBy: {
-          name: "asc"
-        }
-      }),
-      prisma.jobTag.findMany({
-        orderBy: {
-          name: "asc"
-        }
-      })
+      prisma.jobType.findMany({ orderBy: { name: "asc" } }),
+      prisma.jobArrangement.findMany({ orderBy: { name: "asc" } }),
+      prisma.jobCategory.findMany({ orderBy: { name: "asc" } }),
+      prisma.jobTag.findMany({ orderBy: { name: "asc" } })
     ]);
 
     return NextResponse.json({
@@ -68,7 +72,8 @@ export async function GET() {
       jobTypes,
       jobArrangements,
       categories,
-      tags
+      tags,
+      pagination: { page, limit }
     }, { status: 200 });
 
   } catch (error) {

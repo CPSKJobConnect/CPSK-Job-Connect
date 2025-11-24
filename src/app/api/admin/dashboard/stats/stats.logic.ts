@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import DOMPurify from "isomorphic-dompurify";
 
 export async function getDashboardStats() {
   // --- Basic counts and aggregates ---
@@ -56,7 +57,7 @@ export async function getDashboardStats() {
 
       return {
         id: company?.id ?? 0,
-        name: company?.name ?? "Unknown",
+        name: DOMPurify.sanitize(company?.name || "Unknown"), // sanitize
         jobPostsCount: entry._count.id,
         totalApplications,
       };
@@ -68,11 +69,11 @@ export async function getDashboardStats() {
     ["Software and Knowledge Engineering (SKE)", "Computer Engineering (CPE)"].map(async (faculty) => {
       const totalStudents = await prisma.student.count({ where: { faculty } });
       const acceptedApplications = await prisma.application.count({
-        where: { student: { faculty }, status: 4 }, // 4 = Offered (accepted)
+        where: { student: { faculty }, status: 4 }, // 4 = Offered
       });
 
       return {
-        faculty,
+        faculty: DOMPurify.sanitize(faculty), // sanitize
         totalStudents,
         acceptedApplications,
         successRate:
@@ -88,7 +89,7 @@ export async function getDashboardStats() {
     id: report.id,
     type: report.target_type,
     createdAt: report.created_at,
-    reporterEmail: report.account.email,
+    reporterEmail: DOMPurify.sanitize(report.account.email), // sanitize
   }));
 
   // --- Final Return Object ---
@@ -109,7 +110,7 @@ export async function getDashboardStats() {
     topHiringCompanies,
     successRateByDepartment: departmentSuccessRate,
     topSkills: topSkills.map((skill) => ({
-      name: skill.name,
+      name: DOMPurify.sanitize(skill.name), // sanitize
       count: skill._count?.posts || 0,
     })),
     recentReports: processedRecentReports,

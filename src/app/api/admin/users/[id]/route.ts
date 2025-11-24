@@ -13,15 +13,11 @@ export async function PATCH(
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    // Check if user is admin
+
     const adminAccount = await prisma.account.findUnique({
       where: { email: session.user.email },
       include: { accountRole: true }
     });
-
-    // Check if user is admin (using session role)
-    const userRole = (session.user as any).role?.toLowerCase();
-    console.log("🔍 User role:", userRole);
 
     if (!adminAccount || adminAccount.accountRole?.name?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -29,62 +25,32 @@ export async function PATCH(
 
     const { id } = await params;
     const userId = parseInt(id);
-    const { isActive } = await request.json();
+    if (isNaN(userId)) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+    }
 
-    // Prevent admin from deactivating themselves
-    if (userId === userRole.id) {
+    const data = await request.json();
+    const isActive: boolean = !!data.isActive;
+
+    // Prevent admin from modifying themselves
+    if (userId === adminAccount.id) {
       return NextResponse.json({ error: "Cannot modify your own account" }, { status: 400 });
     }
 
-    // Check if user exists
-    const user = await prisma.account.findUnique({
-      where: { id: userId }
-    });
-
+    const user = await prisma.account.findUnique({ where: { id: userId } });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Update user status
     const updatedUser = await prisma.account.update({
       where: { id: userId },
-      data: {
-        is_active: isActive,
-        // Force session update by changing updated_at timestamp
-        updated_at: new Date()
-      },
+      data: { is_active: isActive, updated_at: new Date() },
       select: {
         id: true,
         email: true,
         username: true,
         is_active: true,
-        accountRole: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        student: {
-          select: {
-            id: true,
-            student_id: true,
-            name: true,
-            faculty: true,
-            year: true,
-            phone: true
-          }
-        },
-        company: {
-          select: {
-            id: true,
-            name: true,
-            address: true,
-            phone: true,
-            description: true,
-            website: true,
-            registration_status: true
-          }
-        }
+        accountRole: { select: { name: true } }
       }
     });
 
@@ -116,46 +82,33 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin (using session role)
-    const userRole = (session.user as any).role?.toLowerCase();
-    // console.log("🔍 User role:", userRole);
+    const adminAccount = await prisma.account.findUnique({
+      where: { email: session.user.email },
+      include: { accountRole: true }
+    });
 
-    // Check if user is admin
-        const adminAccount = await prisma.account.findUnique({
-          where: { email: session.user.email },
-          include: { accountRole: true }
-        });
-    
     if (!adminAccount || adminAccount.accountRole?.name?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { id } = await params;
     const userId = parseInt(id);
+    if (isNaN(userId)) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+    }
 
-    // Prevent admin from deleting themselves
-    if (userId === userRole.id) {
+    if (userId === adminAccount.id) {
       return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
     }
 
-    // Check if user exists
-    const user = await prisma.account.findUnique({
-      where: { id: userId },
-      include: { accountRole: true }
-    });
-
+    const user = await prisma.account.findUnique({ where: { id: userId } });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Delete user account (this will cascade delete related records due to onDelete: Cascade)
-    await prisma.account.delete({
-      where: { id: userId }
-    });
+    await prisma.account.delete({ where: { id: userId } });
 
-    return NextResponse.json({
-      message: "User deleted successfully"
-    }, { status: 200 });
+    return NextResponse.json({ message: "User deleted successfully" }, { status: 200 });
 
   } catch (error) {
     console.error("API error:", error);
