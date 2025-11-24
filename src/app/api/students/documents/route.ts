@@ -48,7 +48,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(document, { status: 201 });
 
   } catch (error) {
-    console.error("API error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("API error:", error);
+    }
     return NextResponse.json({ error: "Failed to upload document" }, { status: 500 });
   }
 }

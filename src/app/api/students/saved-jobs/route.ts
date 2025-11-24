@@ -3,6 +3,12 @@ import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 import sanitizeHtml from "sanitize-html";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getApiSession(request);
@@ -51,7 +57,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error("Error saving job:", error);
+    logDebug("Error saving job:", error);
     return NextResponse.json(
       { error: "Internal Server Error, Failed to save job to bookmark" },
       { status: 500 }
@@ -112,7 +118,7 @@ export async function DELETE(request: NextRequest) {
         { status: 404 }
       );
     }
-    console.error("Error unsaving job:", error);
+    logDebug("Error unsaving job:", error);
     return NextResponse.json(
       { error: "Internal Server Error, Failed to unsave job from bookmark" },
       { status: 500 }
@@ -220,7 +226,7 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error("Error fetching saved jobs:", error);
+    logDebug("Error fetching saved jobs:", error);
     return NextResponse.json(
       { error: "Internal Server Error, Failed to fetch saved jobs" },
       { status: 500 }

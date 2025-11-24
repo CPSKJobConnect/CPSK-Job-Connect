@@ -3,6 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -59,7 +65,7 @@ export async function GET(
       .createSignedUrl(document.file_path, 3600); // 1 hour expiry
 
     if (error || !data) {
-      console.error("Supabase error:", error);
+      logDebug("Supabase error:", error);
       return NextResponse.json({ error: "Failed to generate download URL" }, { status: 500 });
     }
 
@@ -70,7 +76,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to get document" }, { status: 500 });
   }
 }

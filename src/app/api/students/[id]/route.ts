@@ -3,6 +3,12 @@ import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 import DOMPurify from "isomorphic-dompurify";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getApiSession(request);
@@ -64,7 +70,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(responseStudent);
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to fetch student" }, { status: 500 });
   }
 }
@@ -140,7 +146,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(responseStudent);
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to update student profile" }, { status: 500 });
   }
 }

@@ -8,6 +8,12 @@ import {
 import { sendVerificationEmail } from '@/lib/email';
 import sanitizeHtml from 'sanitize-html';
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 // Rate limiting: Track last email sent time per email address
 const rateLimitMap = new Map<string, number>();
 const RATE_LIMIT_MS = 60000; // 1 minute
@@ -76,7 +82,7 @@ export async function POST(req: NextRequest) {
     try {
       await sendVerificationEmail(normalizedEmail, verificationCode, studentName);
     } catch (emailError) {
-      console.error('Failed to send email:', emailError);
+      logDebug('Failed to send email:', emailError);
       await prisma.email_verification_tokens.deleteMany({
         where: { email: normalizedEmail, token: verificationCode },
       });
@@ -96,7 +102,7 @@ export async function POST(req: NextRequest) {
     }, { status: 200 });
 
   } catch (error) {
-    console.error('Error in send-verification:', error);
+    logDebug('Error in send-verification:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

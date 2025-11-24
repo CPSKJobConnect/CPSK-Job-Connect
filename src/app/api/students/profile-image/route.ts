@@ -3,6 +3,12 @@ import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getApiSession(request);
@@ -45,7 +51,7 @@ export async function POST(request: NextRequest) {
       .upload(filePath, file);
 
     if (error) {
-      console.error("Supabase upload error:", error);
+      logDebug("Supabase upload error:", error);
       return NextResponse.json({ error: "Failed to upload image" }, { status: 500 });
     }
 
@@ -55,7 +61,7 @@ export async function POST(request: NextRequest) {
       .createSignedUrl(data.path, 31536000);
 
     if (signedUrlError) {
-      console.error("Supabase signed URL error:", signedUrlError);
+      logDebug("Supabase signed URL error:", signedUrlError);
       return NextResponse.json({ error: "Failed to generate image URL" }, { status: 500 });
     }
 
@@ -73,7 +79,7 @@ export async function POST(request: NextRequest) {
     }, { status: 200 });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to update profile image" }, { status: 500 });
   }
 }

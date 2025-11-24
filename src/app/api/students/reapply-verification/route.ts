@@ -74,7 +74,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: unknown) {
-    console.error("Error in reapply-verification:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error in reapply-verification:", error);
+    }
     return NextResponse.json({ error: "Failed to process re-verification request" }, { status: 500 });
   }
 }
