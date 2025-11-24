@@ -2,6 +2,12 @@ import { prisma } from "@/lib/db";
 import { NextResponse, NextRequest } from "next/server";
 import DOMPurify from "isomorphic-dompurify";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
@@ -61,7 +67,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     };
     return NextResponse.json(mappedJob);
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to fetch job" }, { status: 500 });
   }
 }
@@ -110,7 +116,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Job deleted successfully" }, { status: 200 });
   } catch (error) {
-    console.error("DELETE /api/jobs/[id] error:", error);
+    logDebug("DELETE /api/jobs/[id] error:", error);
     return NextResponse.json({ error: "Failed to delete job" }, { status: 500 });
   }
 }
@@ -228,7 +234,7 @@ export async function PATCH(
       job: updatedJob,
     });
   } catch (error) {
-    console.error("PATCH /api/jobs/[id] error:", error);
+    logDebug("PATCH /api/jobs/[id] error:", error);
     return NextResponse.json({ error: "Failed to update job" }, { status: 500 });
   }
 }

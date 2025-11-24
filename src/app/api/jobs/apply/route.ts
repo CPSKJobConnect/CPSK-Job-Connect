@@ -145,7 +145,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, application }, { status: 200 });
   } catch (error) {
-    console.error("❌ Error applying to job:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("❌ Error applying to job:", error);
+    }
     return NextResponse.json({ error: "Failed to apply to job" }, { status: 500 });
   }
 }

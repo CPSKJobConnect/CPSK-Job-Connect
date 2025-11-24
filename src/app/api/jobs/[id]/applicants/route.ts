@@ -77,7 +77,9 @@ export async function GET(
 
     return NextResponse.json({ job_id: jobId, applicants: mappedApplicants });
   } catch (error) {
-    console.error("API error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("API error:", error);
+    }
     return NextResponse.json(
       { error: "Failed to fetch applicants" },
       { status: 500 }
