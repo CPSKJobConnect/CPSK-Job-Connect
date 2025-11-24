@@ -5,6 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import DOMPurify from "isomorphic-dompurify";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -55,7 +61,7 @@ export async function GET(
       .createSignedUrl(document.file_path, 300); // 5 minutes expiry
 
     if (error || !data) {
-      console.error("Supabase error:", error);
+      logDebug("Supabase error:", error);
       return NextResponse.json({ error: "Failed to generate download URL" }, { status: 500 });
     }
 
@@ -66,7 +72,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to get document" }, { status: 500 });
   }
 }

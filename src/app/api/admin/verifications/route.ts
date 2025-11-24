@@ -70,7 +70,9 @@ export async function GET(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error fetching verifications:', error);
+    if (process.env.NODE_ENV === "development") {
+        console.error('Error fetching verifications:', error);
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
