@@ -5,6 +5,12 @@ import sanitizeHtml from "sanitize-html";
 
 const ALLOWED_TARGET_TYPES = ["JOB", "POST", "GENERAL"] as const;
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getApiSession(req);
@@ -91,7 +97,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(report, { status: 201 });
   } catch (err) {
-    console.error(err);
+    logDebug(err);
     return NextResponse.json({ error: "Failed to create report" }, { status: 500 });
   }
 }
@@ -189,7 +195,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(reports);
   } catch (err) {
-    console.error(err);
+    logDebug(err);
     return NextResponse.json({ error: "Failed to fetch reports" }, { status: 500 });
   }
 }

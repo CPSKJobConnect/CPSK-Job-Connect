@@ -27,7 +27,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(reportTypes);
   } catch (err) {
-    console.error("Error fetching report types:", err);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching report types:", err);
+    }
     return NextResponse.json(
       { error: "Failed to fetch report types" },
       { status: 500 }
