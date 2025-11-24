@@ -291,7 +291,11 @@ export const authOptions: NextAuthOptions = {
 
           return true;
         } catch (error) {
-          console.error("Error in OAuth sign-in:", error);
+          if (process.env.NODE_ENV === "development") {
+            console.error("Error in OAuth sign-in:", error);
+          } else {
+            console.error("Error in OAuth sign-in:");
+          }
           return false;
         }
       }

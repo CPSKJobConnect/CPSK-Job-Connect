@@ -13,33 +13,41 @@ export async function uploadImage(
   accountId: string,
   type: "logo" | "background"
 ): Promise<string> {
+  // Ensure server-side execution
+  if (typeof window !== "undefined") {
+    throw new Error("uploadImage should only be called server-side");
+  }
+
   const supabase = createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // Create a unique file path matching student profile pattern
   const timestamp = Date.now();
   const filePath = `profile-images/${accountId}/${type}_${timestamp}_${file.name}`;
 
-  // Upload to Supabase storage in the "documents" bucket
+  // Upload file
   const { data, error } = await supabase.storage
     .from("documents")
     .upload(filePath, file);
 
   if (error) {
-    console.error("Supabase storage error:", error);
-    throw new Error(`Failed to upload image: ${error.message}`);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Supabase storage error:", error);
+    }
+    throw new Error("Failed to upload image"); // generic error for production
   }
 
-  // Get signed URL (valid for 1 year)
+  // Generate signed URL (1 year)
   const { data: signedUrlData, error: signedUrlError } = await supabase.storage
     .from("documents")
-    .createSignedUrl(data.path, 31536000); // 1 year in seconds
+    .createSignedUrl(data.path, 31536000);
 
   if (signedUrlError) {
-    console.error("Supabase signed URL error:", signedUrlError);
-    throw new Error(`Failed to generate image URL: ${signedUrlError.message}`);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Supabase signed URL error:", signedUrlError);
+    }
+    throw new Error("Failed to generate image URL"); // generic error for production
   }
 
   return signedUrlData.signedUrl;

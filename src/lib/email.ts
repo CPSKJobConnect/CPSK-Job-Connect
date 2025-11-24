@@ -29,30 +29,31 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
   const lastSent = recentEmails.get(emailKey);
 
   if (lastSent && now - lastSent < 10000) {
-    console.warn(`⚠️ Duplicate email prevented: ${options.subject} to ${options.to} (sent ${Math.round((now - lastSent) / 1000)}s ago)`);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`⚠️ Duplicate email prevented: ${options.subject} to ${options.to} (sent ${Math.round((now - lastSent)/1000)}s ago)`);
+    }
     return; // Skip sending duplicate
   }
 
-  // Record this email
   recentEmails.set(emailKey, now);
 
-  // Clean up old entries (older than 30 seconds)
+  // Clean up old entries
   for (const [key, timestamp] of recentEmails.entries()) {
-    if (now - timestamp > 30000) {
-      recentEmails.delete(key);
-    }
+    if (now - timestamp > 30000) recentEmails.delete(key);
   }
-  try {
-    // 1. SMTP (Gmail/Mailtrap) - PRODUCTION
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-      console.log(`📧 Sending email via SMTP to ${options.to}...`);
 
-      // Dynamic import to work around Turbopack module resolution
+  try {
+    // 1. SMTP (Production)
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📧 Sending email via SMTP to ${options.to}...`);
+      }
+
       const nodemailer = await import('nodemailer');
       const transporter = nodemailer.default.createTransport({
         host: process.env.SMTP_HOST,
         port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true', // true for 465, false for 587
+        secure: process.env.SMTP_SECURE === 'true',
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
@@ -67,24 +68,33 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
         text: options.text,
       });
 
-      console.log(`✅ Email sent via SMTP to ${options.to}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ Email sent via SMTP to ${options.to}`);
+      }
       return;
     }
 
     // 2. Console Logging (Development fallback)
-    console.log('\n' + '='.repeat(80));
-    console.log('📧 EMAIL (Development Mode - Not Actually Sent)');
-    console.log('='.repeat(80));
-    console.log(`To: ${options.to}`);
-    console.log(`Subject: ${options.subject}`);
-    console.log('-'.repeat(80));
-    console.log(options.text || 'No text content');
-    console.log('='.repeat(80) + '\n');
-    return;
+    if (process.env.NODE_ENV === 'development') {
+      console.log('\n' + '='.repeat(80));
+      console.log('📧 EMAIL (Development Mode - Not Actually Sent)');
+      console.log('='.repeat(80));
+      console.log(`To: ${options.to}`);
+      console.log(`Subject: ${options.subject}`);
+      console.log('-'.repeat(80));
+      console.log(options.text || 'No text content');
+      console.log('='.repeat(80) + '\n');
+    }
 
   } catch (error) {
-    console.error('❌ Error sending email:', error);
-    throw new Error(`Failed to send email: ${error instanceof Error ? error.message : String(error)}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ Error sending email:', error);
+    }
+    // Generic error in production to prevent info leak
+    if (process.env.NODE_ENV === 'production') {
+      console.error('❌ Error sending email (production)');
+    }
+    throw new Error(`Failed to send email${process.env.NODE_ENV === 'development' && error instanceof Error ? `: ${error.message}` : ''}`);
   }
 }
 

@@ -2,6 +2,11 @@ import { prisma } from "@/lib/db";
 import { createClient } from "@supabase/supabase-js";
 
 export async function uploadDocument(file: File, accountId: string, docTypeId: number) {
+  // Ensure server-side execution
+  if (typeof window !== "undefined") {
+    throw new Error("uploadDocument should only be called server-side");
+  }
+
   const supabase = createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -15,6 +20,7 @@ export async function uploadDocument(file: File, accountId: string, docTypeId: n
   else if (docTypeId === 5) suffix = "company_evidence";
 
   const filePath = `${accountId}/${Date.now()}_${suffix}_${file.name}`;
+
   const { data, error } = await supabase.storage
     .from("documents")
     .upload(filePath, file, {
@@ -23,8 +29,10 @@ export async function uploadDocument(file: File, accountId: string, docTypeId: n
     });
 
   if (error) {
-    console.error("Supabase storage error:", error);
-    throw new Error(`Failed to upload file: ${error.message}`);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Supabase storage error:", error);
+    }
+    throw new Error("Failed to upload file"); // generic error for production
   }
 
   const document = await prisma.document.create({
