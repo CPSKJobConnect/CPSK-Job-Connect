@@ -30,36 +30,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
+    // Sanitize filename
+    const safeFileName = file.name.trim().replace(/[^a-zA-Z0-9._-]/g, "_");
+    const filePath = `profile-images/${account.id}/${Date.now()}_${safeFileName}`;
+
     // Upload to Supabase storage
     const supabase = createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const filePath = `profile-images/${account.id}/${Date.now()}_${file.name}`;
     const { data, error } = await supabase.storage
       .from("documents")
       .upload(filePath, file);
 
     if (error) {
       console.error("Supabase upload error:", error);
-      return NextResponse.json(
-        { error: "Failed to upload image" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to upload image" }, { status: 500 });
     }
 
     // Get signed URL (valid for 1 year)
     const { data: signedUrlData, error: signedUrlError } = await supabase.storage
       .from("documents")
-      .createSignedUrl(data.path, 31536000); // 1 year in seconds
+      .createSignedUrl(data.path, 31536000);
 
     if (signedUrlError) {
       console.error("Supabase signed URL error:", signedUrlError);
-      return NextResponse.json(
-        { error: "Failed to generate image URL" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to generate image URL" }, { status: 500 });
     }
 
     // Update account with new logoUrl
@@ -70,18 +67,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(
-      {
-        message: "Profile image updated successfully",
-        profile_url: updatedAccount.logoUrl,
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      message: "Profile image updated successfully",
+      profile_url: updatedAccount.logoUrl,
+    }, { status: 200 });
+
   } catch (error) {
     console.error("API error:", error);
-    return NextResponse.json(
-      { error: "Failed to update profile image" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to update profile image" }, { status: 500 });
   }
 }
