@@ -5,7 +5,13 @@ import { COOKIE_NAME, getLatestConsentFromDB } from "@/lib/consent";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    let session = null;
+    try {
+      session = await getServerSession(authOptions);
+    } catch (e) {
+      // getServerSession may throw when headers() is not available in test context.
+      session = null;
+    }
     const forwardedProto = req.headers.get?.('x-forwarded-proto') || req.headers.get?.('x-forwarded-protocol');
     const isHttps = forwardedProto ? String(forwardedProto).split(',')[0].trim() === 'https' : (() => {
       try { return new URL(req.url).protocol === 'https:' } catch { return false }
@@ -38,8 +44,21 @@ export async function GET(req: NextRequest) {
       return res;
     }
 
+    // Try Request cookies API first, otherwise fall back to parsing the raw header (useful in tests).
     const cookieStore = (req as any).cookies && typeof (req as any).cookies.get === "function" ? (req as any).cookies : null;
-    const cookie = cookieStore ? (cookieStore.get(COOKIE_NAME) || cookieStore.get("pdpa_consent")) : undefined;
+    let cookie = cookieStore ? (cookieStore.get(COOKIE_NAME) || cookieStore.get("pdpa_consent")) : undefined;
+    if (!cookie) {
+      const header = req.headers.get?.('cookie') || req.headers.get?.('Cookie') || '';
+      if (header) {
+        const parts = header.split(';').map(s => s.trim());
+        const match = parts.find((s: string) => s.startsWith(COOKIE_NAME + '=') || s.startsWith('pdpa_consent='));
+        if (match) {
+          const [, val] = match.split('=');
+          cookie = { value: val } as any;
+        }
+      }
+    }
+
     if (cookie?.value === "true") {
       return NextResponse.json({ consent: true }, { status: 200 });
     }

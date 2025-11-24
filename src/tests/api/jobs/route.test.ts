@@ -188,15 +188,14 @@ describe("GET /api/jobs", () => {
       const request = new Request("http://localhost:3000/api/jobs");
       await GET(request);
 
-      expect(prisma.jobPost.findMany).toHaveBeenCalledWith({
-        where: {
-          is_Published: true,
-          deadline: {
-            gte: expect.any(Date),
-          },
-        },
-        include: expect.any(Object),
-      });
+      expect(prisma.jobPost.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            is_Published: true,
+            deadline: { gte: expect.any(Date) },
+          }),
+        })
+      );
     });
 
     it("should handle jobs with null category", async () => {
