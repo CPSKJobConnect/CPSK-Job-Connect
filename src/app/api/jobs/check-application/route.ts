@@ -10,10 +10,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { jobId } = await request.json();
+    const body = await request.json();
+    const jobIdRaw = body.jobId;
 
-    if (!jobId) {
+    if (!jobIdRaw) {
       return NextResponse.json({ error: "Missing job ID" }, { status: 400 });
+    }
+
+    // Canonicalize jobId
+    const jobId = Number(decodeURIComponent(jobIdRaw.toString()));
+    if (isNaN(jobId) || jobId <= 0) {
+      return NextResponse.json({ error: "Invalid job ID" }, { status: 400 });
     }
 
     const student = await prisma.student.findUnique({
@@ -27,7 +34,7 @@ export async function POST(request: NextRequest) {
     const existingApplication = await prisma.application.findFirst({
       where: {
         student_id: student.id,
-        job_post_id: Number(jobId),
+        job_post_id: jobId,
       },
     });
 

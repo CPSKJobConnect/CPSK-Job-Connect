@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import DOMPurify from "isomorphic-dompurify";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -13,9 +14,9 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    const jobId = Number(id);
+    const jobId = Number(decodeURIComponent(id));
 
-    if (isNaN(jobId)) {
+    if (isNaN(jobId) || jobId <= 0) {
       return NextResponse.json({ error: "Invalid job ID" }, { status: 400 });
     }
 
@@ -47,7 +48,7 @@ export async function GET(
         if (a.resumeDocument?.file_path) {
           const { data } = await supabase.storage
             .from("documents")
-            .createSignedUrl(a.resumeDocument.file_path, 60 * 60 * 24 * 7); // 7 วัน
+            .createSignedUrl(a.resumeDocument.file_path, 60 * 60 * 24 * 7);
           resumeUrl = data?.signedUrl ?? null;
         }
 
@@ -59,9 +60,9 @@ export async function GET(
         }
 
         return {
-          application_id: a.id, // This is the application ID, needed for /api/company/applicants/[id]
-          applicant_id: a.student.id, // This is the actual student/applicant ID
-          name: a.student.name,
+          application_id: a.id,
+          applicant_id: a.student.id,
+          name: DOMPurify.sanitize(a.student.name),
           student_id: a.student.student_id,
           email: a.student.account.email,
           profile_url: a.student.account.logoUrl,

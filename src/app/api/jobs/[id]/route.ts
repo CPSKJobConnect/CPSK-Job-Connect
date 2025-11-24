@@ -1,11 +1,18 @@
 import { prisma } from "@/lib/db";
 import { NextResponse, NextRequest } from "next/server";
+import DOMPurify from "isomorphic-dompurify";
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
+    const jobId = Number(decodeURIComponent(id));
+
+    if (isNaN(jobId) || jobId <= 0) {
+      return NextResponse.json({ error: "Invalid job ID" }, { status: 400 });
+    }
+
     const job = await prisma.jobPost.findFirst({
-      where: { id: Number(id) },
+      where: { id: jobId },
       include: {
         category: true,
         tags: true,
@@ -21,21 +28,17 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    // Derive status from is_Published and deadline
     let status = "active";
-    if (!job.is_Published) {
-      status = "draft";
-    } else if (job.deadline && new Date(job.deadline) < new Date()) {
-      status = "expire";
-    }
+    if (!job.is_Published) status = "draft";
+    else if (job.deadline && new Date(job.deadline) < new Date()) status = "expire";
 
     const mappedJob = {
       id: job.id,
       companyLogo: job.company.account?.logoUrl ?? "",
       companyBg: job.company.account?.backgroundUrl ?? "",
-      title: job.jobName,
-      companyName: job.company.name,
-      category: job.category?.name ?? "",
+      title: DOMPurify.sanitize(job.jobName),
+      companyName: DOMPurify.sanitize(job.company.name),
+      category: DOMPurify.sanitize(job.category?.name ?? ""),
       location: job.location,
       posted: job.created_at.toISOString(),
       applied: job.applications.length,
@@ -43,15 +46,15 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         min: Number(job.min_salary),
         max: Number(job.max_salary),
       },
-      type: job.jobType.name,
+      type: DOMPurify.sanitize(job.jobType.name),
       description: {
-        overview: job.aboutRole ?? "",
-        responsibility: job.responsibilities ?? "-",
-        requirement: job.requirements.join("\n"),
-        qualification: job.qualifications.join("\n"),
+        overview: DOMPurify.sanitize(job.aboutRole ?? ""),
+        responsibility: DOMPurify.sanitize(job.responsibilities ?? "-"),
+        requirement: DOMPurify.sanitize(job.requirements.join("\n")),
+        qualification: DOMPurify.sanitize(job.qualifications.join("\n")),
       },
-      skills: job.tags.map((tag: { name: string }) => tag.name),
-      arrangement: job.jobArrangement.name,
+      skills: job.tags.map((tag: { name: string }) => DOMPurify.sanitize(tag.name)),
+      arrangement: DOMPurify.sanitize(job.jobArrangement.name),
       deadline: job.deadline ? job.deadline.toISOString() : null,
       status,
       documents: job.documents.map((doc: { name: string }) => doc.name.toLowerCase()),

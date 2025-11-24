@@ -2,6 +2,7 @@ import { getApiSession } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { uploadDocument } from "@/lib/uploadDocument";
 import { NextRequest, NextResponse } from "next/server";
+import DOMPurify from "isomorphic-dompurify";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,58 +12,44 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
-    const jobId = Number(formData.get("jobId"));
-    if (!jobId) {
-      return NextResponse.json({ error: "Job ID is required" }, { status: 400 });
+
+    // Canonicalize input
+    const jobIdRaw = formData.get("jobId");
+    const jobId = Number(jobIdRaw ? decodeURIComponent(jobIdRaw.toString()) : NaN);
+    if (isNaN(jobId) || jobId <= 0) {
+      return NextResponse.json({ error: "Invalid job ID" }, { status: 400 });
     }
 
     const resumeFile = formData.get("resume") as File | null;
     const resumeId = formData.get("resumeId") as string | null;
     const portfolioFile = formData.get("portfolio") as File | null;
     const portfolioId = formData.get("portfolioId") as string | null;
-
     const cvFile = formData.get("cv") as File | null;
     const cvId = formData.get("cvId") as string | null;
-
     const transcriptFile = formData.get("transcript") as File | null;
     const transcriptId = formData.get("transcriptId") as string | null;
 
     let resumeDoc, portfolioDoc, cvDoc, transcriptDoc;
 
-    if (resumeFile) {
-      resumeDoc = await uploadDocument(resumeFile, session.user.id, 1);
-    } else if (resumeId) {
-      resumeDoc = { id: Number(resumeId) };
-    }
+    if (resumeFile) resumeDoc = await uploadDocument(resumeFile, session.user.id, 1);
+    else if (resumeId) resumeDoc = { id: Number(resumeId) };
 
-    if (cvFile) {
-      cvDoc = await uploadDocument(cvFile, session.user.id, 2);
-    } else if (cvId) {
-      cvDoc = { id: Number(cvId) };
-    }
+    if (cvFile) cvDoc = await uploadDocument(cvFile, session.user.id, 2);
+    else if (cvId) cvDoc = { id: Number(cvId) };
 
-    if (portfolioFile) {
-      portfolioDoc = await uploadDocument(portfolioFile, session.user.id, 3);
-    } else if (portfolioId) {
-      portfolioDoc = { id: Number(portfolioId) };
-    }
+    if (portfolioFile) portfolioDoc = await uploadDocument(portfolioFile, session.user.id, 3);
+    else if (portfolioId) portfolioDoc = { id: Number(portfolioId) };
 
-    if (transcriptFile) {
-      transcriptDoc = await uploadDocument(transcriptFile, session.user.id, 4);
-    } else if (transcriptId) {
-      transcriptDoc = { id: Number(transcriptId) };
-    }
+    if (transcriptFile) transcriptDoc = await uploadDocument(transcriptFile, session.user.id, 4);
+    else if (transcriptId) transcriptDoc = { id: Number(transcriptId) };
 
     const student = await prisma.student.findUnique({
       where: { account_id: parseInt(session.user.id) },
     });
 
-    if (!student) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
-    }
+    if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
 
     // VERIFICATION CHECKS
-    // Check if current student has verified email
     if (student.student_status === "CURRENT" && !student.email_verified) {
       return NextResponse.json(
         {
@@ -74,14 +61,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if alumni has been approved by admin
     if (student.student_status === "ALUMNI") {
       if (student.verification_status !== "APPROVED") {
         let message = "Your account is pending admin approval";
         if (student.verification_status === "REJECTED") {
           message = "Your alumni verification was rejected. Please contact support.";
         }
-
         return NextResponse.json(
           {
             error: "Verification required",
@@ -91,8 +76,6 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         );
       }
-
-      // Alumni must also verify their email after admin approval
       if (!student.email_verified) {
         return NextResponse.json(
           {
@@ -105,36 +88,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check if the company posting this job is verified
     const jobPost = await prisma.jobPost.findUnique({
       where: { id: jobId },
-      include: {
-        company: {
-          select: { registration_status: true }
-        }
-      }
+      include: { company: { select: { registration_status: true } } },
     });
 
-    if (!jobPost) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
-    }
-
+    if (!jobPost) return NextResponse.json({ error: "Job not found" }, { status: 404 });
     if (jobPost.company.registration_status !== "APPROVED") {
       return NextResponse.json(
         {
           error: "Company not verified",
-          message: "You can only apply to jobs from verified companies"
+          message: "You can only apply to jobs from verified companies",
         },
         { status: 403 }
       );
     }
 
-    // Check if student has already applied to this job
     const existingApplication = await prisma.application.findFirst({
-      where: {
-        student_id: student.id,
-        job_post_id: jobId,
-      },
+      where: { student_id: student.id, job_post_id: jobId },
     });
 
     if (existingApplication) {
@@ -148,7 +119,7 @@ export async function POST(request: NextRequest) {
       data: {
         student_id: student.id,
         job_post_id: jobId,
-        status: 1, // pending หรือ waiting
+        status: 1,
         resume_id: resumeDoc?.id,
         portfolio_id: portfolioDoc?.id,
         cv_id: cvDoc?.id,
@@ -156,18 +127,18 @@ export async function POST(request: NextRequest) {
         updated_at: new Date(),
       },
       include: {
-        jobPost: {
-          include: {
-            company: true,
-          },
-        },
+        jobPost: { include: { company: true } },
       },
     });
+
+    // SANITIZE BEFORE NOTIFICATION
+    const sanitizedStudentName = DOMPurify.sanitize(student.name);
+    const sanitizedJobName = DOMPurify.sanitize(application.jobPost.jobName);
 
     await prisma.notification.create({
       data: {
         account_id: application.jobPost.company.account_id,
-        message: `${student.name} has applied for your job post "${application.jobPost.jobName}".`,
+        message: `${sanitizedStudentName} has applied for your job post "${sanitizedJobName}".`,
         sender_id: Number(session.user.id),
       },
     });
@@ -175,9 +146,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, application }, { status: 200 });
   } catch (error) {
     console.error("❌ Error applying to job:", error);
-    return NextResponse.json(
-      { error: "Failed to apply to job" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to apply to job" }, { status: 500 });
   }
 }
