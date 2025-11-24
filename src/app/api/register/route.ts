@@ -18,6 +18,12 @@ type CompanyData = z.infer<typeof companyRegisterSchema>;
 type StudentOAuthData = z.infer<typeof studentOAuthRegisterSchema>;
 type CompanyOAuthData = z.infer<typeof companyOAuthRegisterSchema>;
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -88,7 +94,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!validatedData.success) {
-      console.error("❌ Validation failed:", validatedData.error.issues);
+      logDebug("❌ Validation failed:", validatedData.error.issues);
       return NextResponse.json({ error: "Invalid data", details: validatedData.error.issues }, { status: 400 });
     }
 
@@ -187,7 +193,7 @@ export async function POST(req: NextRequest) {
         const document = await uploadDocument(transcriptFile, String(account.id), 4);
         await prisma.student.update({ where: { account_id: account.id }, data: { transcript: document.file_path } });
       } catch (error) {
-        console.error("Error uploading transcript file:", error);
+        logDebug("Error uploading transcript file:", error);
       }
     }
 
@@ -196,7 +202,7 @@ export async function POST(req: NextRequest) {
         const { uploadDocument } = await import("@/lib/uploadDocument");
         await uploadDocument(evidenceFile, String(account.id), 7);
       } catch (error) {
-        console.error("Error uploading evidence file:", error);
+        logDebug("Error uploading evidence file:", error);
       }
     }
 
@@ -210,22 +216,22 @@ export async function POST(req: NextRequest) {
           const { sendAlumniRegistrationEmail } = await import("@/lib/email");
           await sendAlumniRegistrationEmail(validatedData.data.email, studentData.name);
         } catch (emailError) {
-          console.error("❌ Failed to send registration email:", emailError);
+          logDebug("❌ Failed to send registration email:", emailError);
         }
         try { await notifyAdminsNewAlumni(studentData.name, studentData.studentId, account.id); }
-        catch (notificationError) { console.error("❌ Failed to notify admins:", notificationError); }
+        catch (notificationError) { logDebug("❌ Failed to notify admins:", notificationError); }
       }
     }
 
     if (role === "company") {
       try { await notifyAdminsNewCompany((validatedData.data as CompanyData).companyName, account.id); }
-      catch (notificationError) { console.error("❌ Failed to notify admins:", notificationError); }
+      catch (notificationError) { logDebug("❌ Failed to notify admins:", notificationError); }
     }
 
     return NextResponse.json({ message: "Account created successfully", redirectTo: `/${role}/dashboard` }, { status: 201 });
 
   } catch (error) {
-    console.error("Registration error:", error, error instanceof Error ? error.stack : '');
+    logDebug("Registration error:", error, error instanceof Error ? error.stack : '');
     if (error instanceof z.ZodError) return NextResponse.json({ error: "Invalid data", details: error.issues }, { status: 400 });
 
     if (error && typeof error === 'object' && 'code' in error) {
