@@ -42,7 +42,9 @@ export async function PATCH(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error marking notification as read:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error marking notification as read:", error);
+    }
     return NextResponse.json(
       { error: "Failed to update notification" },
       { status: 500 }
