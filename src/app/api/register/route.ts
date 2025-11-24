@@ -185,7 +185,7 @@ export async function POST(req: NextRequest) {
       const dataWithPassword = validatedData.data as StudentData | CompanyData;
       assertPasswordMeetsPolicy(dataWithPassword.password, {
         email: dataWithPassword.email,
-        name:
+        fullName:
           role === "student"
             ? (dataWithPassword as StudentData).name
             : (dataWithPassword as CompanyData).companyName,
