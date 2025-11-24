@@ -3,6 +3,12 @@ import { getApiSession } from "@/lib/api-auth";
 import { uploadDocument } from "@/lib/uploadDocument";
 import { NextRequest, NextResponse } from "next/server";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 /**
  * POST /api/company/reapply-verification
  * Allow rejected companies to re-upload evidence and reset status to PENDING
@@ -70,7 +76,7 @@ export async function POST(request: NextRequest) {
       const { notifyAdminsCompanyReapplication } = await import("@/lib/notifyAdmins");
       await notifyAdminsCompanyReapplication(company.name, parseInt(session.user.id));
     } catch (error) {
-      console.error("Failed to notify admins:", error);
+      logDebug("Failed to notify admins:", error);
     }
 
     return NextResponse.json({
@@ -80,7 +86,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Error in company reapply-verification:", error);
+    logDebug("Error in company reapply-verification:", error);
     return NextResponse.json({ error: "Failed to process re-verification request" }, { status: 500 });
   }
 }

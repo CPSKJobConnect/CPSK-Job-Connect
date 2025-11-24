@@ -9,6 +9,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -49,7 +55,7 @@ export async function DELETE(
       .remove([document.file_path]);
 
     if (deleteError) {
-      console.error("Failed to delete file from storage:", deleteError);
+      logDebug("Failed to delete file from storage:", deleteError);
     }
 
     await prisma.document.delete({ where: { id: docId } });
@@ -57,7 +63,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error("Error deleting company document:", error);
+    logDebug("Error deleting company document:", error);
     return NextResponse.json({ error: "Failed to delete document" }, { status: 500 });
   }
 }

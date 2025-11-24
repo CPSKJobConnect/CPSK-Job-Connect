@@ -93,7 +93,9 @@ export async function PATCH(
     });
 
   } catch (error) {
-    console.error("Error updating application status:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error updating application status:", error);
+    }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

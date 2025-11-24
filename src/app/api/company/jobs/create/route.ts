@@ -136,7 +136,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newJob, { status: 201 });
 
   } catch (error) {
-    console.error("Error creating job:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error creating job:", error);
+    }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

@@ -9,6 +9,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -52,7 +58,7 @@ export async function POST(request: NextRequest) {
       try {
         await supabase.storage.from("documents").remove([oldAccount.logoUrl]);
       } catch (error) {
-        console.error("Failed to delete old profile image:", error);
+        logDebug("Failed to delete old profile image:", error);
       }
     }
 
@@ -87,7 +93,7 @@ export async function POST(request: NextRequest) {
       profile_url: signedUrlData.signedUrl
     });
   } catch (error) {
-    console.error("Error uploading profile image:", error);
+    logDebug("Error uploading profile image:", error);
     return NextResponse.json({ error: "Failed to upload profile image" }, { status: 500 });
   }
 }

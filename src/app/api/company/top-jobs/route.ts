@@ -73,7 +73,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: { jobs: topJobs } });
   } catch (error) {
-    console.error("Error fetching top jobs:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching top jobs:", error);
+    }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

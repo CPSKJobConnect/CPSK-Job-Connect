@@ -103,7 +103,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid type parameter" }, { status: 400 });
 
   } catch (error) {
-    console.error("Error fetching company analytics:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching company analytics:", error);
+    }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

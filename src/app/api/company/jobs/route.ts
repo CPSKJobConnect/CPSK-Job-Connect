@@ -68,7 +68,9 @@ export async function GET() {
 
     return NextResponse.json(mappedJobs, { status: 200 });
   } catch (error) {
-    console.error("API error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("API error:", error);
+    }
     return NextResponse.json({ error: "Failed to fetch jobs" }, { status: 500 });
   }
 }

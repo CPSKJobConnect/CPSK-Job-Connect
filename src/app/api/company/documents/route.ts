@@ -89,7 +89,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(document);
   } catch (error) {
-    console.error("Error uploading company document:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error uploading company document:", error);
+    }
     return NextResponse.json({ error: "Failed to upload document" }, { status: 500 });
   }
 }
