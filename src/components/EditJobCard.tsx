@@ -34,6 +34,12 @@ interface CompanyProps {
   bg_profile_url: string;
 }
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export default function EditJobCard({ job,formData, setFormData, handleEdit, 
   categories, jobTypes, arrangements,tags}: EditJobCardProps) {
   const [open, setOpen] = useState(false);
@@ -54,14 +60,14 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
     const fetchCompany = async () => {
       const res = await fetch("/api/auth/session");
       const data = await res.json();
-      console.log("Session data:", data);
+      logDebug("Session data:", data);
       setCompany(data.user || null)
     };
     fetchCompany();
   }, [categories, jobTypes, arrangements]);
 
   useEffect(() => {
-    console.log("edit form data: ", formData);
+    logDebug("edit form data: ", formData);
   }, [formData, setFormData]);
 
   const handleCancel = () => {
@@ -96,7 +102,7 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
     try {
       result = handleEdit ? await Promise.resolve(handleEdit()) : true;
     } catch (err) {
-      console.error("Error in handleEdit:", err);
+      logDebug("Error in handleEdit:", err);
       result = false;
     }
     if (result) {

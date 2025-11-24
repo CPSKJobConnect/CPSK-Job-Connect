@@ -21,6 +21,12 @@ interface AuthFormProps {
   isOAuthCompletion?: boolean
 }
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false)
@@ -165,17 +171,17 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         }
       } else {
         // Registration
-        console.log("Starting registration, isOAuthCompletion:", isOAuthCompletion)
+        logDebug("Starting registration, isOAuthCompletion:", isOAuthCompletion)
         const formData = new FormData()
         formData.append("role", role)
         formData.append("email", data.email)
 
         // For OAuth completion, mark as OAuth and skip password
         if (isOAuthCompletion) {
-          console.log("OAuth registration - skipping password fields")
+          logDebug("OAuth registration - skipping password fields")
           formData.append("isOAuth", "true")
         } else {
-          console.log("Credentials registration - including password fields")
+          logDebug("Credentials registration - including password fields")
           formData.append("password", data.password!)
           formData.append("confirmPassword", data.confirmPassword!)
         }
@@ -218,7 +224,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
           result = JSON.parse(responseText)
         } catch (jsonError) {
           setError(`Server returned invalid response. Status: ${response.status}`)
-          console.log(`Server returned invalid response when registering: ${jsonError}`)
+          logDebug(`Server returned invalid response when registering: ${jsonError}`)
           return
         }
 
@@ -235,14 +241,14 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
               })
             }
           } catch (e) {
-            console.warn('Failed to map server validation details to fields', e)
+            logDebug('Failed to map server validation details to fields', e)
           }
 
           setError(result.error || "Registration failed")
         } else {
           // For OAuth users, update session and redirect
           if (isOAuthCompletion) {
-            console.log("OAuth registration complete, updating session...")
+            logDebug("OAuth registration complete, updating session...")
 
             // Show completion state
             setIsCompletingRegistration(true)
@@ -274,7 +280,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
       }
     } catch (error) {
       setError("An unexpected error occurred. Please try again later.")
-      console.log("Error during form submission:", error)
+      logDebug("Error during form submission:", error)
     } finally {
       setIsLoading(false)
     }
@@ -297,7 +303,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
       })
     } catch (error) {
       setError("Failed to switch account")
-      console.log("Switch account error:", error)
+      logDebug("Switch account error:", error)
       setIsSwitchingAccount(false)
     }
   }, [mode, role, roleConfig.redirectPath])
@@ -316,7 +322,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
       })
     } catch (error) {
       setError("Google sign-in failed")
-      console.log("Google sign-in error:", error)
+      logDebug("Google sign-in error:", error)
       setIsLoading(false)
     }
   }, [mode, role, roleConfig.redirectPath])
@@ -383,7 +389,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         )}
 
         <form onSubmit={handleSubmit(onSubmit, (errors) => {
-          console.log("Form validation errors:", errors)
+          logDebug("Form validation errors:", errors)
           // Filter out password errors for OAuth completion
           const filteredErrors = isOAuthCompletion
             ? Object.entries(errors).filter(([field]) => field !== 'password' && field !== 'confirmPassword')

@@ -20,6 +20,12 @@ type NotificationDetail = {
   created_at: string;
 };
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 // helper functions
 export const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -58,7 +64,7 @@ export default function FloatingNotification() {
           setSummaries(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error("Error fetching notifications:", error);
+        logDebug("Error fetching notifications:", error);
       }
     };
 
@@ -122,7 +128,7 @@ export default function FloatingNotification() {
         );
       }
     } catch (error) {
-      console.error("Error marking notification as read:", error);
+      logDebug("Error marking notification as read:", error);
     }
   };
 

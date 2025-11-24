@@ -11,6 +11,12 @@ import { toast } from "sonner";
  * - Uses visibility API to pause when tab is hidden
  * - Reduces serverless function calls on Vercel by 90%+
  */
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export function AccountStatusChecker() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -23,7 +29,7 @@ export function AccountStatusChecker() {
     if (hasShownToast.current) return;
 
     hasShownToast.current = true;
-    console.log("Account disabled, logging out...");
+    logDebug("Account disabled, logging out...");
 
     toast.error("Your account has been disabled. Please contact support.");
 
@@ -64,7 +70,7 @@ export function AccountStatusChecker() {
         handleLogout();
       }
     } catch (error) {
-      console.error("Error checking account status:", error);
+      logDebug("Error checking account status:", error);
     }
   }, [handleLogout]);
 
