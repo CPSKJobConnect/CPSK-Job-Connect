@@ -14,6 +14,12 @@ import { IoMdSearch } from "react-icons/io";
 import { MdTipsAndUpdates } from "react-icons/md";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export default function Page() {
   const { data: session } = useSession();
   const [jobData, setJobData] = useState<JobInfo[]>([]);
@@ -37,7 +43,7 @@ export default function Page() {
         setRole(data.user?.role || null);
         setIsCompanyView(data.user?.role === 'company');
       } catch (err) {
-        console.error("Error fetching user role:", err);
+        logDebug("Error fetching user role:", err);
       }
     };
     
@@ -68,7 +74,7 @@ export default function Page() {
 
           const resFilters = await fetch("/api/jobs/filter");
           const dataFilters = await resFilters.json();
-          console.log("Fetched filter info:", dataFilters);
+          logDebug("Fetched filter info:", dataFilters);
           setFilterInfo(dataFilters);
         } finally {
           done();
@@ -95,10 +101,10 @@ export default function Page() {
 
           const resFilters = await fetch("/api/jobs/filter");
           const dataFilters = await resFilters.json();
-          console.log("Fetched filter info:", dataFilters);
+          logDebug("Fetched filter info:", dataFilters);
           setFilterInfo(dataFilters);
         } catch (err2) {
-          console.error("Error fetching jobs or filters (fallback):", err2);
+          logDebug("Error fetching jobs or filters (fallback):", err2);
         }
         } finally {
           // mark page-level loaded so we only show "Not Found Jobs" after first fetch
