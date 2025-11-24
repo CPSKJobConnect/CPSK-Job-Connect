@@ -11,6 +11,12 @@ import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
 import { isValidImageUrl } from "@/lib/validateImageUrl";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export default function CompanyProfilePage() {
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,7 +34,7 @@ export default function CompanyProfilePage() {
       const data: Company = await res.json();
       setCompany(data);
     } catch (error) {
-      console.error("Failed to fetch company profile:", error);
+      logDebug("Failed to fetch company profile:", error);
       toast.error("Error loading profile");
     } finally {
       setLoading(false);
@@ -84,7 +90,7 @@ export default function CompanyProfilePage() {
 
       await fetchCompanyProfile();
     } catch (error) {
-      console.error("Error uploading profile image:", error);
+      logDebug("Error uploading profile image:", error);
       toast.error("Error uploading profile image");
     } finally {
       setUploadingImage(false);

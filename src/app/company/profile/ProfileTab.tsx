@@ -157,7 +157,9 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
         toast.error(error.error || "Failed to update profile");
       }
     } catch (error) {
-      console.error("Error updating profile:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error updating profile:", error);
+      }
       toast.error("An error occurred while updating profile");
     } finally {
       setIsSaving(false);
