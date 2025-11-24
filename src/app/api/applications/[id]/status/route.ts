@@ -63,7 +63,9 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 
     return NextResponse.json({ application: updated });
   } catch (error) {
-    console.error("Error updating application status:", error);
+    if (process.env.NODE_ENV === "development") {
+        console.error("Error updating application status:", error);
+    }
     return NextResponse.json({ error: "Failed to update status" }, { status: 500 });
   }
 }
