@@ -1,13 +1,24 @@
 import type { NextConfig } from "next";
 
+const isProd = process.env.NODE_ENV === "production";
+
 const nextConfig: NextConfig = {
   // Allow build to proceed despite ESLint warnings/errors
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
-  // Turbopack config only for development (used with next dev --turbopack)
+
+  // Prevent exposing source maps in production
+  productionBrowserSourceMaps: false,
+
+  // React strict mode is safe
+  reactStrictMode: true,
+
+  // Hide dev indicators in production
+  devIndicators: {
+    buildActivity: !isProd, // only show in dev
+  },
+
   turbopack: {
     rules: {
       '*.svg': {
@@ -16,6 +27,7 @@ const nextConfig: NextConfig = {
       },
     },
   },
+
   images: {
     domains: ['randomuser.me', 'lh3.googleusercontent.com'],
     remotePatterns: [
@@ -33,20 +45,28 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
   webpack: (config, { dev, isServer }) => {
-    // SVG handling for production builds
+    // SVG handling for all builds
     config.module.rules.push({
       test: /\.svg$/,
       use: ['@svgr/webpack'],
     });
 
-    if (dev && !isServer) {
+    // Only dev-specific options
+    if (!isProd && !isServer) {
       config.watchOptions = {
-        poll: false, // Disable polling for better performance
+        poll: false,
         aggregateTimeout: 1000,
-      }
+      };
     }
-    return config
+
+    // Ensure no devtool in production
+    if (isProd) {
+      config.devtool = false;
+    }
+
+    return config;
   },
 };
 
