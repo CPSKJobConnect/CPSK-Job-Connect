@@ -10,6 +10,12 @@ import { useState, useEffect } from "react";
 import { Mail, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export default function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -69,7 +75,7 @@ export default function VerifyEmailPage() {
       }
     } catch (err) {
       setError("Failed to send verification code. Please try again.");
-      console.error("Error sending verification code:", err);
+      logDebug("Error sending verification code:", err);
     } finally {
       setIsSendingCode(false);
     }
@@ -117,7 +123,7 @@ export default function VerifyEmailPage() {
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
-      console.error("Error verifying email:", err);
+      logDebug("Error verifying email:", err);
     } finally {
       setIsLoading(false);
     }

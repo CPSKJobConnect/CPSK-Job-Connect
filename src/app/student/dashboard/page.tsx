@@ -21,6 +21,12 @@ const statIconMap: Record<string, { icon: IconType; iconBg: string; iconColor: s
   "Saved Jobs": { icon: RiSaveLine, iconBg: "#F0D9FF", iconColor: "#A855F7", key: "savedJobs" },
 };
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 const StudentDashboardPage = () => {
   const { data: session, status, update } = useSession()
   const [studentStat, setStudentStat] = useState<{ title: string; value: number; icon: IconType; iconBg: string; iconColor: string }[]>([]);
@@ -44,7 +50,7 @@ const StudentDashboardPage = () => {
 
         setStudentStat(stats);
       } catch (err) {
-        console.error("Error fetching student summary:", err);
+        logDebug("Error fetching student summary:", err);
       }
     };
 
@@ -81,7 +87,7 @@ const StudentDashboardPage = () => {
           }
         }
       } catch (error) {
-        console.error('Error checking verification status:', error);
+        logDebug('Error checking verification status:', error);
       }
     };
 

@@ -54,6 +54,12 @@ interface Application {
   };
 }
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 const statusColors: Record<string, string> = {
   Pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
   Reviewed: "bg-blue-100 text-blue-800 border-blue-200",
@@ -80,10 +86,10 @@ export default function ApplicationsTab() {
           return;
         }
         const data = await res.json();
-        console.log("app", data);
+        logDebug("app", data);
         setApplications(data);
       } catch (error) {
-        console.error("Failed to fetch applications:", error);
+        logDebug("Failed to fetch applications:", error);
         toast.error("Error loading applications");
       } finally {
         done();
@@ -120,7 +126,7 @@ export default function ApplicationsTab() {
         setRecentApplied(null);
       }, ONE_HOUR - age);
     } catch (err) {
-      console.warn("Failed to read recentlyApplied marker", err);
+      logDebug("Failed to read recentlyApplied marker", err);
     }
 
     return () => {

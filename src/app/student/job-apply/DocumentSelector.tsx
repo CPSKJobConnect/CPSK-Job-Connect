@@ -29,7 +29,9 @@ const DocumentSelector = (props: DocumentSelectorProps) => {
     const [selectedDocName, setSelectedDocName] = useState("");
 
     useEffect(() => {
-        console.log(props.selectedFile)
+        if (process.env.NODE_ENV === "development") {
+            console.log(props.selectedFile)
+        }
       }, [props.selectedFile]);
 
 

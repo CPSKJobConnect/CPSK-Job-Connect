@@ -15,6 +15,12 @@ interface DocumentsTabProps {
   onUpdate: () => void;
 }
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 interface DocumentSectionProps {
   title: string;
   documents: FileMeta[];
@@ -151,7 +157,7 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
         onUpdate();
       }
     } catch (error) {
-      console.error("Error uploading document:", error);
+      logDebug("Error uploading document:", error);
       toast.error("Error uploading document");
     } finally {
       setUploading(false);
@@ -176,7 +182,7 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
       toast.success("Document deleted successfully");
       onUpdate();
     } catch (error) {
-      console.error("Error deleting document:", error);
+      logDebug("Error deleting document:", error);
       toast.error("Error deleting document");
     }
   };

@@ -49,7 +49,9 @@ export default function ApplicantLineChart() {
 
         setData(aggregated);
       } catch (err) {
-        console.error("Error fetching applicant data:", err);
+        if (process.env.NODE_ENV === "development") {
+            console.error("Error fetching applicant data:", err);
+        }
       } finally {
         setLoading(false);
       }

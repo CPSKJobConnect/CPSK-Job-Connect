@@ -30,7 +30,9 @@ export default function StatusPieChart() {
         const json: StatusPieProps[] = await res.json();
         setData(json);
       } catch (error) {
-        console.error("Error fetching status data:", error);
+          if (process.env.NODE_ENV === "development") {
+            console.error("Error fetching status data:", error);
+          }
       }
     };
 

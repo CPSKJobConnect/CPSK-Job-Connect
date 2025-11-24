@@ -29,7 +29,9 @@ export default function InterviewConversionCard() {
           setSelectedCategory(json[0].category);
         }
       } catch (err) {
-        console.error("Error fetching interview conversion data:", err);
+        if (process.env.NODE_ENV === "development") {
+            console.error("Error fetching interview conversion data:", err);
+        }
       }
     };
 
