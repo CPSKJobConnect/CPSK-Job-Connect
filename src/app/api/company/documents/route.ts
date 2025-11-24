@@ -63,10 +63,16 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const docTypeId = formData.get("docTypeId");
+    const docTypeIdRaw = formData.get("docTypeId");
 
-    if (!file || !docTypeId) {
+    if (!file || !docTypeIdRaw) {
       return NextResponse.json({ error: "Missing file or document type" }, { status: 400 });
+    }
+
+    // Canonicalize / decode input (OWASP ASVS 1.1.1)
+    const docTypeId = parseInt(decodeURIComponent(docTypeIdRaw as string));
+    if (isNaN(docTypeId)) {
+      return NextResponse.json({ error: "Invalid document type" }, { status: 400 });
     }
 
     // Validate file size (max 10MB)
@@ -74,12 +80,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File size must be less than 10MB" }, { status: 400 });
     }
 
-    // Validate file type (PDF only for company documents)
+    // Validate file type (PDF only)
     if (!file.type.includes("pdf")) {
       return NextResponse.json({ error: "Only PDF files are allowed" }, { status: 400 });
     }
 
-    const document = await uploadDocument(file, account.id.toString(), parseInt(docTypeId as string));
+    const document = await uploadDocument(file, account.id.toString(), docTypeId);
 
     return NextResponse.json(document);
   } catch (error) {

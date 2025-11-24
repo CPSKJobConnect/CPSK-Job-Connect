@@ -53,13 +53,13 @@ export async function POST(request: NextRequest) {
         await supabase.storage.from("documents").remove([oldAccount.logoUrl]);
       } catch (error) {
         console.error("Failed to delete old profile image:", error);
-        // Continue even if deletion fails
       }
     }
 
-    // Upload new profile image
+    // --- ปรับชื่อไฟล์ให้ปลอดภัย (1.1.1) ---
+    const safeFileName = encodeURIComponent(file.name.replace(/[\s\\/]+/g, "_"));
     const timestamp = Date.now();
-    const filePath = `profile-images/${account.id}/${timestamp}_${file.name}`;
+    const filePath = `profile-images/${account.id}/${timestamp}_${safeFileName}`;
 
     const { data, error: uploadError } = await supabase.storage
       .from("documents")
@@ -69,16 +69,14 @@ export async function POST(request: NextRequest) {
       throw new Error(`Failed to upload file: ${uploadError.message}`);
     }
 
-    // Get signed URL (valid for 1 year)
     const { data: signedUrlData, error: signedUrlError } = await supabase.storage
       .from("documents")
-      .createSignedUrl(data.path, 31536000); // 1 year in seconds
+      .createSignedUrl(data.path, 31536000);
 
     if (signedUrlError) {
       throw new Error(`Failed to generate signed URL: ${signedUrlError.message}`);
     }
 
-    // Update account with new profile image URL
     await prisma.account.update({
       where: { id: account.id },
       data: { logoUrl: signedUrlData.signedUrl }
