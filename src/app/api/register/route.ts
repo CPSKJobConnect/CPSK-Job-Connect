@@ -11,6 +11,7 @@ import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import sanitizeHtml from "sanitize-html";
 
 type StudentData = z.infer<typeof studentRegisterSchema>;
 type CompanyData = z.infer<typeof companyRegisterSchema>;
@@ -20,91 +21,61 @@ type CompanyOAuthData = z.infer<typeof companyOAuthRegisterSchema>;
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const role = formData.get("role") as string;
+
+    // Canonicalize role
+    const role = String(formData.get("role") ?? "").trim();
     const isOAuth = formData.get("isOAuth") === "true";
 
     if (!["student", "company"].includes(role)) {
-      return NextResponse.json(
-        { error: "Invalid role" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
-    // For OAuth registration, validate session exists
+    // OAuth session check
     if (isOAuth) {
       const session = await getServerSession(authOptions);
       if (!session?.user?.email) {
-        return NextResponse.json(
-          { error: "Unauthorized - OAuth session required" },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: "Unauthorized - OAuth session required" }, { status: 401 });
       }
     }
 
-    // Convert FormData to object
-    const data: Record<string, unknown> = {}
+    // Convert FormData to object with canonicalization + sanitization
+    const data: Record<string, unknown> = {};
     for (const [key, value] of formData.entries()) {
       if (key !== "transcript" && key !== "evidence" && key !== "role") {
+        let val = typeof value === "string" ? value.trim() : value;
+
+        // Sanitize free-text inputs
+        if (["name", "companyName", "description", "username"].includes(key) && typeof val === "string") {
+          val = sanitizeHtml(val, { allowedTags: [], allowedAttributes: {} });
+        }
+
         if (key === "year") {
-          // Handle both numeric years and "Alumni"
-          const yearValue = value as string;
-          data[key] = yearValue === "Alumni" ? "Alumni" : parseInt(yearValue);
+          data[key] = val === "Alumni" ? "Alumni" : parseInt(val as string);
         } else {
-          data[key] = value
+          data[key] = val;
         }
       }
     }
 
-    // Handle studentStatus from form
-    const studentStatus = formData.get("studentStatus") as string | null;
+    // Canonicalize studentStatus
+    const studentStatus = formData.get("studentStatus");
     if (studentStatus) {
-      data.studentStatus = studentStatus;
+      data.studentStatus = String(studentStatus).trim();
     }
 
-    // Add transcript file to data for validation
-    if (role === "student") {
-      const transcriptFile = formData.get("transcript") as File | null;
-      if (transcriptFile && transcriptFile.size > 0) {
-        // For OAuth, pass File directly; for regular registration, create FileList-like object
-        if (isOAuth) {
-          data.transcript = transcriptFile;
-        } else {
-          // Create a FileList-like object with the file
-          const fileList = {
-            0: transcriptFile,
-            length: 1,
-            item: (index: number) => index === 0 ? transcriptFile : null,
-            [Symbol.iterator]: function* () {
-              yield transcriptFile;
-            }
-          } as unknown as FileList;
-          data.transcript = fileList;
-        }
-      }
+    // Add transcript/evidence files
+    const transcriptFile = formData.get("transcript") as File | null;
+    const evidenceFile = formData.get("evidence") as File | null;
+
+    if (role === "student" && transcriptFile && transcriptFile.size > 0) {
+      data.transcript = transcriptFile;
     }
 
-    // Add evidence file to data for validation (required for companies)
-    if (role === "company") {
-      const evidenceFile = formData.get("evidence") as File | null;
-      if (evidenceFile && evidenceFile.size > 0) {
-        // For OAuth, pass File directly; for regular registration, create FileList-like object
-        if (isOAuth) {
-          data.evidence = evidenceFile;
-        } else {
-          // Create a FileList-like object with the file
-          const fileList = {
-            0: evidenceFile,
-            length: 1,
-            item: (index: number) => index === 0 ? evidenceFile : null,
-            [Symbol.iterator]: function* () {
-              yield evidenceFile;
-            }
-          } as unknown as FileList;
-          data.evidence = fileList;
-        }
-      }
+    if (role === "company" && evidenceFile && evidenceFile.size > 0) {
+      data.evidence = evidenceFile;
     }
-    // Validate data base on role and OAuth status
+
+    // Validate data
     let validatedData: z.ZodSafeParseResult<StudentData | CompanyData | StudentOAuthData | CompanyOAuthData>;
     if (role === "student") {
       validatedData = isOAuth
@@ -118,78 +89,39 @@ export async function POST(req: NextRequest) {
 
     if (!validatedData.success) {
       console.error("❌ Validation failed:", validatedData.error.issues);
-      return NextResponse.json(
-        { error: "Invalid data", details: validatedData.error.issues },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid data", details: validatedData.error.issues }, { status: 400 });
     }
 
-    // Check if user already exists
+    // Check existing account
     const existingUser = await prisma.account.findUnique({
-      where: {
-        email: validatedData.data.email,
-      },
-      include: {
-        student: true,
-        company: true,
-      }
-    })
+      where: { email: validatedData.data.email },
+      include: { student: true, company: true }
+    });
 
-    // If account exists and has complete registration
     if (existingUser && (existingUser.student || existingUser.company)) {
-      return NextResponse.json(
-        { error: "User already exists" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "User already exists" }, { status: 400 });
     }
 
-    // If account exists but is orphaned (no student/company record), use it for OAuth
-    if (existingUser && isOAuth) {
-      // For OAuth, we'll update this account with role and create student/company record
-    } else if (existingUser) {
-      // Regular registration - clean up orphaned account
-      await prisma.account.delete({
-        where: { id: existingUser.id }
-      });
+    if (existingUser && !isOAuth) {
+      await prisma.account.delete({ where: { id: existingUser.id } });
     }
 
-    // Hash password (not needed for OAuth)
+    // Hash password for non-OAuth
     let hashedPassword: string | null = null;
     if (!isOAuth) {
       const dataWithPassword = validatedData.data as StudentData | CompanyData;
       hashedPassword = await bcrypt.hash(dataWithPassword.password, 12);
     }
 
-    // Get role ID
-    const roleRecord = await prisma.accountRole.findFirst({
-      where: {
-        name: role
-      }
-    })
-    let roleId: number;
-    if (!roleRecord) {
-      // Create role if it doesn't exist
-      const newRole = await prisma.accountRole.create({
-        data: {
-          name: role
-        }
-      })
-      roleId = newRole.id;
-    } else {
-      roleId = roleRecord.id;
-    }
+    // Get or create role ID
+    const roleRecord = await prisma.accountRole.findFirst({ where: { name: role } });
+    const roleId = roleRecord ? roleRecord.id : (await prisma.accountRole.create({ data: { name: role } })).id;
 
-    // Handle file upload for transcript and evidence
-    let transcriptPath: string | null = null
-    const transcriptFile = role === "student" ? formData.get("transcript") as File : null;
-    const evidenceFile = role === "company" ? formData.get("evidence") as File : null;
-
-    // Use transaction to ensure atomic account + role-specific record creation
+    // Transaction: create/update account + role-specific record
     const account = await prisma.$transaction(async (tx) => {
       let account;
 
       if (isOAuth && existingUser) {
-        // Update existing OAuth account with role
         account = await tx.account.update({
           where: { id: existingUser.id },
           data: {
@@ -198,7 +130,6 @@ export async function POST(req: NextRequest) {
           }
         });
       } else {
-        // Create new account
         account = await tx.account.create({
           data: {
             email: validatedData.data.email,
@@ -209,7 +140,6 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Create role-specific record (without file paths initially)
       if (role === "student") {
         const studentData = validatedData.data as StudentData | StudentOAuthData;
         const isAlumni = studentData.studentStatus === "ALUMNI";
@@ -222,56 +152,55 @@ export async function POST(req: NextRequest) {
             faculty: studentData.faculty,
             year: studentData.year.toString(),
             phone: studentData.phone,
-            transcript: null, // Will be updated after file upload
+            transcript: null,
             student_status: isAlumni ? "ALUMNI" : "CURRENT",
-            // Alumni need admin approval, current students just need email verification
             verification_status: isAlumni ? "PENDING" : "APPROVED",
-            // For OAuth current students, trust Google email verification
             email_verified: isOAuth && !isAlumni ? true : false,
             updated_at: new Date(),
           }
-        })
+        });
       } else {
         const companyData = validatedData.data as CompanyData | CompanyOAuthData;
+        const sanitizedDescription = sanitizeHtml(companyData.description ?? "", { allowedTags: [], allowedAttributes: {} });
+
         await tx.company.create({
           data: {
             account_id: account.id,
             name: companyData.companyName,
             address: companyData.address,
             phone: companyData.phone,
-            description: companyData.description,
+            description: sanitizedDescription,
             website: companyData.website || null,
             register_day: new Date(),
             registration_status: "PENDING",
           }
-        })
+        });
       }
 
       return account;
-    }, {
-      maxWait: 5000, // Maximum time to wait for a transaction slot (ms)
-      timeout: 10000, // Maximum time the transaction can run (ms)
-    })
+    }, { maxWait: 5000, timeout: 10000 });
 
-    // Handle file uploads AFTER transaction completes
+    // Handle file uploads
     if (transcriptFile && transcriptFile.size > 0) {
       try {
         const { uploadDocument } = await import("@/lib/uploadDocument");
-        const document = await uploadDocument(transcriptFile, String(account.id), 4); // 4 = Transcript
-        transcriptPath = document.file_path;
-
-        // Update student record with transcript path
-        await prisma.student.update({
-          where: { account_id: account.id },
-          data: { transcript: transcriptPath }
-        });
+        const document = await uploadDocument(transcriptFile, String(account.id), 4);
+        await prisma.student.update({ where: { account_id: account.id }, data: { transcript: document.file_path } });
       } catch (error) {
         console.error("Error uploading transcript file:", error);
-        // Continue with registration even if file upload fails
       }
     }
 
-    // Send registration confirmation email to alumni and notify admins
+    if (evidenceFile && evidenceFile.size > 0) {
+      try {
+        const { uploadDocument } = await import("@/lib/uploadDocument");
+        await uploadDocument(evidenceFile, String(account.id), 7);
+      } catch (error) {
+        console.error("Error uploading evidence file:", error);
+      }
+    }
+
+    // Notify admins / send emails
     if (role === "student") {
       const studentData = validatedData.data as StudentData;
       const isAlumni = studentData.studentStatus === "ALUMNI";
@@ -279,97 +208,32 @@ export async function POST(req: NextRequest) {
       if (isAlumni) {
         try {
           const { sendAlumniRegistrationEmail } = await import("@/lib/email");
-          await sendAlumniRegistrationEmail(
-            validatedData.data.email,
-            studentData.name
-          );
+          await sendAlumniRegistrationEmail(validatedData.data.email, studentData.name);
         } catch (emailError) {
           console.error("❌ Failed to send registration email:", emailError);
-          // Continue with registration even if email fails
         }
-
-        // Notify all admins about new alumni registration
-        try {
-          await notifyAdminsNewAlumni(
-            studentData.name,
-            studentData.studentId,
-            account.id
-          );
-        } catch (notificationError) {
-          console.error("❌ Failed to notify admins about new alumni:", notificationError);
-          // Continue with registration even if notification fails
-        }
+        try { await notifyAdminsNewAlumni(studentData.name, studentData.studentId, account.id); }
+        catch (notificationError) { console.error("❌ Failed to notify admins:", notificationError); }
       }
     }
 
-    if (evidenceFile && evidenceFile.size > 0) {
-      try {
-        const { uploadDocument } = await import("@/lib/uploadDocument");
-        await uploadDocument(evidenceFile, String(account.id), 7); // 7 = Company Evidence
-        // Evidence is stored in Document table, no need to update Company record
-      } catch (error) {
-        console.error("Error uploading evidence file:", error);
-        // Continue with registration even if file upload fails
-      }
-    }
-
-    // Notify admins about new company registration
     if (role === "company") {
-      try {
-        const companyData = validatedData.data as CompanyData;
-        await notifyAdminsNewCompany(
-          companyData.companyName,
-          account.id
-        );
-      } catch (notificationError) {
-        console.error("❌ Failed to notify admins about new company:", notificationError);
-        // Continue with registration even if notification fails
-      }
+      try { await notifyAdminsNewCompany((validatedData.data as CompanyData).companyName, account.id); }
+      catch (notificationError) { console.error("❌ Failed to notify admins:", notificationError); }
     }
 
-    return NextResponse.json({
-      message: "Account created successfully",
-      redirectTo: `/${role}/dashboard`
-    }, { status: 201 })
+    return NextResponse.json({ message: "Account created successfully", redirectTo: `/${role}/dashboard` }, { status: 201 });
+
   } catch (error) {
-    console.error("Registration error:", error)
-    console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace')
+    console.error("Registration error:", error, error instanceof Error ? error.stack : '');
+    if (error instanceof z.ZodError) return NextResponse.json({ error: "Invalid data", details: error.issues }, { status: 400 });
 
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid data", details: error.issues },
-        { status: 400 }
-      );
-    }
-
-    // Handle Prisma unique constraint errors
     if (error && typeof error === 'object' && 'code' in error) {
       const prismaError = error as { code: string; meta?: { target?: string[] } };
-
-      if (prismaError.code === 'P2002') {
-        const target = prismaError.meta?.target;
-        console.error("Unique constraint violation on:", target);
-
-        return NextResponse.json(
-          {
-            error: "Registration failed due to duplicate data",
-            details: `A record with this ${target?.join(', ') || 'data'} already exists`
-          },
-          { status: 409 }
-        );
-      }
-
-      if (prismaError.code === 'P2003') {
-        return NextResponse.json(
-          { error: "Registration failed", details: "Invalid reference data" },
-          { status: 400 }
-        );
-      }
+      if (prismaError.code === 'P2002') return NextResponse.json({ error: "Registration failed due to duplicate data", details: `A record with this ${prismaError.meta?.target?.join(', ') || 'data'} already exists` }, { status: 409 });
+      if (prismaError.code === 'P2003') return NextResponse.json({ error: "Registration failed", details: "Invalid reference data" }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: "Internal server error", details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error", details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
