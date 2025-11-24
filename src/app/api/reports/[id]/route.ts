@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 import { prisma } from "@/lib/db";
 
 export async function PATCH(
@@ -7,6 +6,11 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+
+  const reportId = Number(id);
+  if (!Number.isInteger(reportId) || reportId <= 0) {
+    return NextResponse.json({ error: "Invalid report id" }, { status: 400 });
+  }
 
   try {
     const body = await req.json();
@@ -20,7 +24,7 @@ export async function PATCH(
     }
 
     const updatedReport = await prisma.report.update({
-      where: { id: Number(id) },
+      where: { id: reportId },
       data: { is_resolved },
     });
 
