@@ -5,9 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { LuPhone } from "react-icons/lu";
-import { MdOutlineMailOutline, MdOutlinePersonOutline } from "react-icons/md";
-import { IoEyeOutline } from "react-icons/io5";
+import { Phone, Mail, User, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { DocumentViewerModal } from "@/components/DocumentViewerModal";
 
@@ -111,8 +109,8 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button data-testid={`view-applicant-${applicant_id}`} className={`${baseStyle} ${sizeStyle}`}>
-          <MdOutlinePersonOutline size={20} />
+          <Button data-testid={`view-applicant-${applicant_id}`} className={`${baseStyle} ${sizeStyle}`}>
+          <User className="w-4 h-4 text-white" />
           <p>Profile</p>
         </Button>
       </DialogTrigger>
@@ -161,11 +159,11 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
 
                 <div className="flex flex-row gap-6 text-gray-600">
                   <div className="flex flex-row items-center gap-2">
-                    <MdOutlineMailOutline />
+                    <Mail className="w-4 h-4 text-gray-500" />
                     <p className="text-sm">{applicantInfo.email}</p>
                   </div>
                   <div className="flex flex-row items-center gap-2">
-                    <LuPhone />
+                    <Phone className="w-4 h-4 text-gray-500" />
                     <p className="text-sm">{applicantInfo.phone_number}</p>
                   </div>
                 </div>
@@ -230,49 +228,49 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
             <div className="flex flex-col gap-2">
               <p className="text-md font-bold text-gray-800">Documents</p>
               <div className="flex flex-wrap gap-2">
-                {applicantInfo.documents.resume_url ? (
-                  <button
-                    onClick={() => applicantInfo.documents.resume_id && handleViewDocument(applicantInfo.documents.resume_id, applicantInfo.documents.resume_name || "Resume")}
-                    disabled={!applicantInfo.documents.resume_id}
-                    className="flex flex-row items-center gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <IoEyeOutline className="w-5 h-5"/>
-                    <p>View Resume</p>
-                  </button>
-                ) : null}
-
-                {applicantInfo.documents.cv_url ? (
-                  <button
-                    onClick={() => applicantInfo.documents.cv_id && handleViewDocument(applicantInfo.documents.cv_id, applicantInfo.documents.cv_name || "CV")}
-                    disabled={!applicantInfo.documents.cv_id}
-                    className="flex flex-row items-center gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <IoEyeOutline className="w-5 h-5"/>
-                    <p>View CV</p>
-                  </button>
-                ) : null}
-
-                {applicantInfo.documents.portfolio_url ? (
-                  <button
-                    onClick={() => applicantInfo.documents.portfolio_id && handleViewDocument(applicantInfo.documents.portfolio_id, applicantInfo.documents.portfolio_name || "Portfolio")}
-                    disabled={!applicantInfo.documents.portfolio_id}
-                    className="flex flex-row items-center gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <IoEyeOutline className="w-5 h-5"/>
-                    <p>View Portfolio</p>
-                  </button>
-                ) : null}
-
-                {applicantInfo.documents.transcript_url ? (
-                  <button
-                    onClick={() => applicantInfo.documents.transcript_id && handleViewDocument(applicantInfo.documents.transcript_id, applicantInfo.documents.transcript_name || "Transcript")}
-                    disabled={!applicantInfo.documents.transcript_id}
-                    className="flex flex-row items-center gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <IoEyeOutline className="w-5 h-5"/>
-                    <p>View Transcript</p>
-                  </button>
-                ) : null}
+                  {applicantInfo.documents.resume_url ? (
+                    <button
+                      onClick={() => applicantInfo.documents.resume_id && handleViewDocument(applicantInfo.documents.resume_id, applicantInfo.documents.resume_name || "Resume")}
+                      disabled={!applicantInfo.documents.resume_id}
+                      className="flex flex-row items-center gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Eye className="w-4 h-4"/>
+                      <p>View Resume</p>
+                    </button>
+                  ) : null}
+  
+                  {applicantInfo.documents.cv_url ? (
+                    <button
+                      onClick={() => applicantInfo.documents.cv_id && handleViewDocument(applicantInfo.documents.cv_id, applicantInfo.documents.cv_name || "CV")}
+                      disabled={!applicantInfo.documents.cv_id}
+                      className="flex flex-row items-center gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Eye className="w-4 h-4"/>
+                      <p>View CV</p>
+                    </button>
+                  ) : null}
+  
+                  {applicantInfo.documents.portfolio_url ? (
+                    <button
+                      onClick={() => applicantInfo.documents.portfolio_id && handleViewDocument(applicantInfo.documents.portfolio_id, applicantInfo.documents.portfolio_name || "Portfolio")}
+                      disabled={!applicantInfo.documents.portfolio_id}
+                      className="flex flex-row items-center gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Eye className="w-4 h-4"/>
+                      <p>View Portfolio</p>
+                    </button>
+                  ) : null}
+  
+                  {applicantInfo.documents.transcript_url ? (
+                    <button
+                      onClick={() => applicantInfo.documents.transcript_id && handleViewDocument(applicantInfo.documents.transcript_id, applicantInfo.documents.transcript_name || "Transcript")}
+                      disabled={!applicantInfo.documents.transcript_id}
+                      className="flex flex-row items-center gap-1 bg-[#2BA17C] text-white rounded-md shadow-md p-2 text-sm hover:bg-[#27946F] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Eye className="w-4 h-4"/>
+                      <p>View Transcript</p>
+                    </button>
+                  ) : null}
 
                 {!applicantInfo.documents.resume_url &&
                  !applicantInfo.documents.cv_url &&
@@ -286,7 +284,7 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
         ) : (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <MdOutlinePersonOutline className="w-8 h-8 text-gray-400" />
+              <User className="w-6 h-6 text-gray-400" />
             </div>
             <p className="text-gray-700 font-medium">No applicant information available</p>
             <p className="text-gray-500 text-sm mt-1">This application may have been deleted or is no longer accessible</p>

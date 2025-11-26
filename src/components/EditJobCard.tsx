@@ -1,6 +1,6 @@
 "use client";
 
-import { FiEdit } from "react-icons/fi";
+import { Edit } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { JobPostFormData, JobInfo } from "@/types/job";
@@ -172,9 +172,9 @@ export default function EditJobCard({ job,formData, setFormData, handleEdit,
             onClick={() => setOpen(true)}
             data-testid="edit-job-button">
                 <div className="flex gap-2 items-center">
-                    <FiEdit />
-                    <p>Edit</p>
-                </div>
+                <Edit />
+                <p>Edit</p>
+              </div>
             </Button>
       </DialogTrigger>
       {open && (

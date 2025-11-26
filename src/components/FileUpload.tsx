@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { PiUploadSimpleBold } from "react-icons/pi";
-import { IoDocumentTextOutline } from "react-icons/io5";
+import { Upload, FileText } from "lucide-react";
 
 interface FileUploadProps {
   title: string;
@@ -67,14 +66,14 @@ const FileUpload = (props: FileUploadProps) => {
           : "border-gray-300 hover:bg-gray-50"
       }`}
     >
-      <PiUploadSimpleBold className="w-7 h-7 text-[#1FD29A]" />
+      <Upload className="w-7 h-7 text-[#1FD29A]" />
       <p className="font-semibold text-sm">{props.title}</p>
       <p className="text-sm text-gray-600">
         {props.acceptedTypes.map((type) => type.toUpperCase()).join(", ")} files
       </p>
 
       <div className="flex flex-row gap-1 bg-[#10B981] rounded-md shadow-sm px-3 py-1 mt-2 text-white hover:bg-[#059669] transition">
-        <IoDocumentTextOutline className="w-4 h-4" />
+        <FileText className="w-4 h-4" />
         <p className="text-sm">Choose file</p>
       </div>
 

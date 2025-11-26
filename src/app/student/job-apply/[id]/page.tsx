@@ -4,9 +4,7 @@ import { useState, useEffect } from "react";
 import { begin, done } from "@/lib/loaderSignal";
 import { useParams, useRouter } from "next/navigation"
 import { JobInfo } from "@/types/job";
-import { IoLocationOutline } from "react-icons/io5";
-import { MdOutlineTimer, MdOutlinePeopleAlt } from "react-icons/md";
-import { IoDocumentTextOutline } from "react-icons/io5";
+import { MapPin, Clock, Users, FileText } from "lucide-react";
 import { FileMeta } from "@/types/file";
 import DocumentUploadSection from "../DocumentUploadSection";
 import StudentInfoCard from "../StudentInfoCard";
@@ -246,15 +244,15 @@ export default function Page() {
 
             <div className="flex gap-4 px-4 py-2 text-sm text-gray-600">
               <div className="flex gap-1 items-center">
-                <IoLocationOutline />
+                <MapPin className="w-4 h-4 text-gray-500" />
                 <span>{job.location}</span>
               </div>
               <div className="flex gap-1 items-center">
-                <MdOutlineTimer />
+                <Clock className="w-4 h-4 text-gray-500" />
                 <span>{job.posted}</span>
               </div>
               <div className="flex gap-1 items-center">
-                <MdOutlinePeopleAlt />
+                <Users className="w-4 h-4 text-gray-500" />
                 <span>{job.applied} applied</span>
               </div>
             </div>
@@ -290,7 +288,7 @@ export default function Page() {
           </div>
           <div className="w-full md:basis-3/4 flex flex-col gap-5 p-3 rounded-md shadow-md border border-gray-100">
             <div className="flex flex-row gap-2">
-                <IoDocumentTextOutline  className="w-7 h-7" />
+                <FileText  className="w-5 h-5 mt-1" />
                 <p className="text-lg font-semibold text-gray-800">Documents</p>
             </div>
             {/* Required Documents Notice */}

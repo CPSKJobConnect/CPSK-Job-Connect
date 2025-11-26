@@ -1,18 +1,13 @@
 "use client";
 import JobFilterBar from "@/app/jobs/JobFilterBar";
 import { JobFilters as FilterFormData } from "@/app/jobs/JobFilterBar";
-import { JobFilters } from "@/lib/jobFilter";
 import JobCard from "@/components/JobCard";
 import JobDescriptionCard from "@/components/JobDescriptionCard";
-import { filterJobs } from "@/lib/jobFilter";
 import { JobFilterInfo } from "@/types/filter";
 import { JobInfo } from "@/types/job";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { FaRegFileAlt } from "react-icons/fa";
-import { IoMdSearch } from "react-icons/io";
-import { MdTipsAndUpdates } from "react-icons/md";
+import { ChevronLeft, ChevronRight, FileText, Search, Lightbulb } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Page() {
@@ -184,7 +179,7 @@ export default function Page() {
                       disabled={currentPage === 0 || loadingPage}
                       aria-label="Previous page"
                     >
-                      <FaChevronLeft />
+                      <ChevronLeft />
                     </button>
 
                     <button
@@ -193,7 +188,7 @@ export default function Page() {
                       disabled={!hasMore || loadingPage}
                       aria-label="Next page"
                     >
-                      <FaChevronRight />
+                      <ChevronRight />
                     </button>
                   </div>
 
@@ -223,14 +218,14 @@ export default function Page() {
               )
             ) : (
               <div className="flex flex-col items-center gap-4 py-44">
-                <div className="bg-[#ABE9D6] rounded-full w-[60px] h-[60px] flex items-center justify-center">
-                  <FaRegFileAlt className="text-xl text-[#2BA17C]" />
+                  <div className="bg-[#ABE9D6] rounded-full w-[60px] h-[60px] flex items-center justify-center">
+                  <FileText className="text-xl text-[#2BA17C]" />
                 </div>
                 <p className="font-bold">
                   Details of the job post will be shown here
                 </p>
                 <div className="bg-[#F3FEFA] flex flex-row gap-2 rounded-xl p-3">
-                  <MdTipsAndUpdates className="text-[#2BA17C]" />
+                  <Lightbulb className="text-[#2BA17C]" />
                   <p className="text-sm">
                     Tip: You quickly apply for the job here!
                   </p>
@@ -272,8 +267,8 @@ export default function Page() {
       ) : (
         isLoaded ? (
           <div className="flex flex-col items-center gap-4 py-44">
-            <div className="bg-[#ABE9D6] rounded-full w-[60px] h-[60px] flex items-center justify-center">
-              <IoMdSearch className="text-xl text-[#2BA17C]" />
+              <div className="bg-[#ABE9D6] rounded-full w-[60px] h-[60px] flex items-center justify-center">
+              <Search className="text-xl text-[#2BA17C]" />
             </div>
             <p className="font-bold">
               Not Found Jobs

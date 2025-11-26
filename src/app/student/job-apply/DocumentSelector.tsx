@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FileMeta } from "@/types/file";
-import { IoEyeOutline } from "react-icons/io5";
+import { Eye } from "lucide-react";
 import { DocumentViewerModal } from "@/components/DocumentViewerModal";
 
 
@@ -76,7 +76,7 @@ const DocumentSelector = (props: DocumentSelectorProps) => {
               className="p-1 hover:bg-blue-100 rounded-md text-blue-600 transition-colors"
               title="Preview document"
             >
-              <IoEyeOutline className="w-5 h-5" />
+              <Eye className="w-5 h-5" />
             </button>
           </div>
 
