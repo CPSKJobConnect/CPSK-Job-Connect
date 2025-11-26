@@ -18,8 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { IoIosAdd } from "react-icons/io";
-import { IoIosClose } from "react-icons/io";
+import { Plus, X } from "lucide-react";
 
 
 interface SkillComboboxProps {
@@ -74,7 +73,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
                 className="flex items-center gap-1 rounded-full bg-gray-200 text-gray-700 text-xs py-1 px-3"
                 >
                 <p>{skill}</p>
-                <IoIosClose
+                <X
                     className="w-4 h-4 cursor-pointer hover:text-red-500"
                     onClick={() =>
                       setSelectedSkill(selectedSkill.filter((s) => s !== skill))
@@ -129,7 +128,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
                             onClick={handleSkillAdded}
                             className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-auto max-h-[30px] max-w-[200px]"
                           >
-                            <IoIosAdd className="w-5 h-5 flex-shrink-0" />
+                            <Plus className="w-5 h-5 flex-shrink-0" />
                             <span className="truncate max-w-[150px]">
                               Add new skill: {searchTerm}
                             </span>
@@ -168,7 +167,7 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
                         onClick={handleSkillAdded}
                         className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-full"
                       >
-                        <IoIosAdd className="w-5 h-5 flex-shrink-0" />
+                        <Plus className="w-5 h-5 flex-shrink-0" />
                         <span className="truncate">Add new skill: {searchTerm.trim()}</span>
                       </Button>
                     </div>

@@ -1,11 +1,9 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { begin, done } from "@/lib/loaderSignal";
-import { IoBriefcaseOutline, IoLocationOutline } from "react-icons/io5";
-import { MdOutlineTimer } from "react-icons/md";
+import { Briefcase, MapPin, Clock } from "lucide-react";
 import { toast } from "sonner";
 import ApplicationSearchBar from "./ApplicationSearchBar";
 import { DocumentViewerModal } from "@/components/DocumentViewerModal";
@@ -147,7 +145,7 @@ export default function ApplicationsTab() {
       </div>
       {applications.length === 0 ? (
         <div className="text-center py-12">
-          <IoBriefcaseOutline className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 text-lg">No applications yet</p>
           <p className="text-gray-400 text-sm mt-2">Start applying to jobs to see them here</p>
         </div>
@@ -179,7 +177,7 @@ export default function ApplicationsTab() {
                       />
                     ) : (
                       <div className="w-[60px] h-[60px] bg-gray-200 rounded-lg flex items-center justify-center">
-                        <IoBriefcaseOutline className="w-8 h-8 text-gray-400" />
+                        <Briefcase className="w-8 h-8 text-gray-400" />
                       </div>
                     )}
                   </div>
@@ -208,15 +206,15 @@ export default function ApplicationsTab() {
 
                     <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
-                        <IoLocationOutline className="w-4 h-4" />
+                        <MapPin className="w-4 h-4" />
                         <span>{application.job.location}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <IoBriefcaseOutline className="w-4 h-4" />
+                        <Briefcase className="w-4 h-4" />
                         <span>{application.job.jobType}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <MdOutlineTimer className="w-4 h-4" />
+                        <Clock className="w-4 h-4" />
                         <span>Applied {new Date(application.applied_at).toLocaleDateString()}</span>
                       </div>
                     </div>

@@ -7,11 +7,7 @@ import { JobInfo, JobPostFormData } from "@/types/job";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { HiOutlineOfficeBuilding } from "react-icons/hi";
-import { IoLocationOutline } from "react-icons/io5";
-import { LiaMoneyCheckAltSolid } from "react-icons/lia";
-import { MdOutlinePeopleAlt } from "react-icons/md";
-import { RiDeleteBinFill } from "react-icons/ri";
+import { Building, MapPin, CreditCard, Users, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import EditJobCard from "./EditJobCard";
 import apiFetch from '@/lib/apiClient';
@@ -280,13 +276,13 @@ const JobDescriptionCard = ({
               />
             </div>
 
-            <Button
+              <Button
               data-testid="delete-job-button"
               onClick={handleDelete}
               className="absolute flex right-4 top-2 w-10 h-8 bg-gradient-to-b from-[#FF755D] to-[#F3573C]
               shadow-lg hover:bg-[#F9664C] transition"
             >
-              <RiDeleteBinFill />
+              <Trash2 className="w-4 h-4" />
             </Button>
           </>
         )}
@@ -314,22 +310,22 @@ const JobDescriptionCard = ({
       </div>
 
       <div className="flex gap-4 px-4 py-2 text-sm text-gray-600">
-        <div className="flex gap-1 items-center">
-          <IoLocationOutline />
+          <div className="flex gap-1 items-center">
+          <MapPin className="w-4 h-4 text-gray-500" />
           <span>{job.location}</span>
         </div>
         <div className="flex gap-1 items-center">
-          <HiOutlineOfficeBuilding />
+          <Building className="w-4 h-4 text-gray-500" />
           <span>{job.arrangement}</span>
         </div>
         <div className="flex gap-1 items-center">
-          <LiaMoneyCheckAltSolid />
+          <CreditCard className="w-4 h-4 text-gray-500" />
           <span>฿{job.salary.min.toLocaleString()}</span>
           <span> - </span>
           <span>฿{job.salary.max.toLocaleString()} THB</span>
         </div>
         <div className="flex gap-1 items-center">
-          <MdOutlinePeopleAlt />
+          <Users className="w-4 h-4 text-gray-500" />
           <span>{job.applied} applied</span>
         </div>
       </div>

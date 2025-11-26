@@ -1,12 +1,7 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { MdWorkOutline, MdOutlineArchive } from "react-icons/md";
-import { AiOutlineSchedule, AiOutlineClockCircle } from "react-icons/ai";
-import { BsClipboardCheck, BsClipboardData } from "react-icons/bs";
-import { RiDraftLine, RiUserSharedLine, RiUserHeartLine } from "react-icons/ri";
-import { PiHandshakeLight } from "react-icons/pi";
-import { HiOutlineUserGroup } from "react-icons/hi2";
+import { Briefcase, Archive, Calendar, Clock, ClipboardCheck, Clipboard, FileText, Users, Heart, Handshake } from "lucide-react";
 import StatCard from "@/components/StatCard";
 import { StatusBreakdownChartProps, TopJobsCardProps, RecentApplicationsTableProps } from "@/types/companyStat";
 import ApplicationTrendChart from "./ApplicationTrendChart";
@@ -15,74 +10,75 @@ import RecentApplicationsTable from "./RecentApplicationsTable";
 import TopJobCard from "./TopJobsCard";
 import { useEffect, useState } from "react";
 import { begin, done } from "@/lib/loaderSignal";
-import { IconType } from "react-icons/lib";
+import type { ComponentType, SVGProps } from "react";
+type IconType = ComponentType<SVGProps<SVGSVGElement>>;
 import { CompanyVerificationBanner } from "@/components/CompanyVerificationBanner";
 import { Company } from "@/types/user";
 
 
 const companyStatsConfig: Record<string, { icon: IconType; iconBg: string; iconColor: string; key: string }> = {
   "Total Jobs": {
-    icon: MdWorkOutline,
+    icon: Briefcase,
     iconBg: "#FFEFEA",
     iconColor: "#FD8A5E",
     key: "totalJobs",
   },
   "Active Jobs": {
-    icon: AiOutlineSchedule,
+    icon: Calendar,
     iconBg: "#E6F6FF",
     iconColor: "#2E93FF",
     key: "activeJobs",
   },
   "Draft Jobs": {
-    icon: RiDraftLine,
+    icon: FileText,
     iconBg: "#E9F8F0",
     iconColor: "#34C38F",
     key: "draftJobs",
   },
   "Closed Jobs": {
-    icon: MdOutlineArchive,
+    icon: Archive,
     iconBg: "#F4E9FF",
     iconColor: "#A855F7",
     key: "closedJobs",
   },
   "Total Applications": {
-    icon: HiOutlineUserGroup,
+    icon: Users,
     iconBg: "#FFF3E6",
     iconColor: "#F59E0B",
     key: "totalApplications",
   },
   "New Applications": {
-    icon: BsClipboardData,
+    icon: Clipboard,
     iconBg: "#E8F5FF",
     iconColor: "#3B82F6",
     key: "newApplications",
   },
   "Pending Applications": {
-    icon: AiOutlineClockCircle,
+    icon: Clock,
     iconBg: "#FFF7E6",
     iconColor: "#FBBF24",
     key: "pendingApplications",
   },
   "Reviewed Applications": {
-    icon: BsClipboardCheck,
+    icon: ClipboardCheck,
     iconBg: "#E7F9EE",
     iconColor: "#10B981",
     key: "reviewedApplications",
   },
   "Interviews Scheduled": {
-    icon: PiHandshakeLight,
+    icon: Handshake,
     iconBg: "#E8E8FF",
     iconColor: "#6366F1",
     key: "interviewsScheduled",
   },
   "Offers Rejected": {
-    icon: RiUserSharedLine,
+    icon: Users,
     iconBg: "#FFF0F4",
     iconColor: "#EC4899",
     key: "offersRejected",
   },
   "Offers Accepted": {
-    icon: RiUserHeartLine,
+    icon: Heart,
     iconBg: "#E7FAF5",
     iconColor: "#14B8A6",
     key: "offersAccepted",

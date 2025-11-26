@@ -5,9 +5,7 @@ import { begin, done } from "@/lib/loaderSignal";
 import { JobInfo } from "@/types/job";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaRegFileAlt } from "react-icons/fa";
-import { IoMdAdd } from "react-icons/io";
-import { MdTipsAndUpdates } from "react-icons/md";
+import { FileText, Plus, Lightbulb } from "lucide-react";
 import AllJobPost from "./AllJobPost";
 import ApplicationList from "./ApplicationList";
 
@@ -155,7 +153,7 @@ export default function Page() {
               onClick={handlePostJob}
               className="flex flex-row bg-[#FD873E] rounded-md shadow-md gap-1 p-2 hover:bg-[#e46d25] transition"
             >
-              <IoMdAdd className="text-white w-5 h-5 mt-1" />
+                    <Plus className="text-white w-5 h-5 mt-1" />
               <p className="text-white font-semibold text-md">Post New Job</p>
             </button>
           </div>
@@ -186,14 +184,14 @@ export default function Page() {
                 </>
               ) : (
                 <div className="flex flex-col items-center gap-4 py-44">
-                  <div className="bg-[#ABE9D6] rounded-full w-[60px] h-[60px] flex items-center justify-center">
-                    <FaRegFileAlt className="text-xl text-[#2BA17C]" />
+                    <div className="bg-[#ABE9D6] rounded-full w-[60px] h-[60px] flex items-center justify-center">
+                    <FileText className="text-xl text-[#2BA17C]" />
                   </div>
                   <p className="font-bold">
                     Details of the job post will be shown here
                   </p>
                   <div className="bg-[#F3FEFA] flex flex-row gap-2 rounded-xl p-3">
-                    <MdTipsAndUpdates className="text-[#2BA17C]" />
+                    <Lightbulb className="text-[#2BA17C]" />
                     <p className="text-sm">
                       Tip: You can quickly manage your job post here!
                     </p>

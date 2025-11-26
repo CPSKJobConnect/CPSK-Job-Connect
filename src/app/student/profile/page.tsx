@@ -7,7 +7,15 @@ import { Student } from "@/types/user";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { IoCallOutline, IoCameraOutline, IoIdCardOutline, IoMailOutline, IoPersonCircleOutline, IoSchoolOutline } from "react-icons/io5";
+import { Phone, Camera, Mail, User, GraduationCap } from "lucide-react";
+
+const IdIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <rect x="2" y="3" width="20" height="18" rx="2" />
+    <circle cx="9" cy="9" r="2" />
+    <path d="M15 8h.01M13 16h-6v-1a2 2 0 0 1 2-2h2" />
+  </svg>
+);
 import { toast } from "sonner";
 import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
@@ -150,7 +158,7 @@ export default function StudentProfilePage() {
               </div>
             ) : (
               <div className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-lg bg-white/20 flex items-center justify-center">
-                <IoPersonCircleOutline className="w-20 h-20 text-white" />
+                <User className="w-20 h-20 text-white" />
               </div>
             )}
 
@@ -164,7 +172,7 @@ export default function StudentProfilePage() {
               {uploadingImage ? (
                 <div className="text-white text-sm">Uploading...</div>
               ) : (
-                <IoCameraOutline className="w-10 h-10 text-white" />
+                <Camera className="w-10 h-10 text-white" />
               )}
             </button>
 
@@ -185,19 +193,19 @@ export default function StudentProfilePage() {
             </h1>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
               <div className="flex items-center gap-2">
-                <IoIdCardOutline className="w-5 h-5" />
+                <IdIcon className="w-5 h-5" />
                 <span className="text-sm">Student ID: {student.student_id}</span>
               </div>
               <div className="flex items-center gap-2">
-                <IoMailOutline className="w-5 h-5" />
+                <Mail className="w-5 h-5" />
                 <span className="text-sm">{student.email}</span>
               </div>
               <div className="flex items-center gap-2">
-                <IoSchoolOutline className="w-5 h-5" />
+                <GraduationCap className="w-5 h-5" />
                 <span className="text-sm">{student.faculty}</span>
               </div>
               <div className="flex items-center gap-2">
-                <IoCallOutline className="w-5 h-5" />
+                <Phone className="w-5 h-5" />
                 <span className="text-sm">{student.phone}</span>
               </div>
             </div>

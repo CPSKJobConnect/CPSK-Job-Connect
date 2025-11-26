@@ -40,8 +40,8 @@ export default function ResetPasswordPage() {
 
   const tokenMissing = useMemo(() => !token, [token]);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setStatusMessage("");
     setErrorMessage("");
 
@@ -134,7 +134,7 @@ export default function ResetPasswordPage() {
                   type="password"
                   autoComplete="new-password"
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter a strong password"
                   className="bg-white"
                 />
@@ -147,7 +147,7 @@ export default function ResetPasswordPage() {
                   type="password"
                   autoComplete="new-password"
                   value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter your new password"
                   className="bg-white"
                 />

@@ -2,7 +2,7 @@ import { isPasswordInDenylist } from "@/lib/passwordDenylist";
 
 export interface PasswordPolicyContext {
   email?: string;
-  name?: string;
+  fullName?: string;
   username?: string;
 }
 
@@ -70,12 +70,12 @@ export const PASSWORD_POLICY_CHECKS: PasswordPolicyCheck[] = [
     test: (password, context) => {
       const emailLocal = context.email?.split("@")[0]?.toLowerCase() ?? "";
       const username = context.username?.toLowerCase() ?? "";
-      const name = context.name?.toLowerCase() ?? "";
+      const fullName = context.fullName?.toLowerCase() ?? "";
       const lowerPassword = password.toLowerCase();
 
       const containsEmail = emailLocal.length >= 4 && lowerPassword.includes(emailLocal);
       const containsUsername = username.length >= 4 && lowerPassword.includes(username);
-      const containsName = name.length >= 3 && lowerPassword.includes(name.replace(/\s+/g, ""));
+      const containsName = fullName.length >= 3 && lowerPassword.includes(fullName.replace(/\s+/g, ""));
 
       return !(containsEmail || containsUsername || containsName);
     },

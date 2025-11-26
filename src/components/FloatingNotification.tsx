@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import apiFetch from "@/lib/apiClient";
 import { useSession } from "next-auth/react";
-import { FaBell, FaArrowLeft } from "react-icons/fa";
-import { IoMdClose } from "react-icons/io";
+import { Bell, ArrowLeft, X } from "lucide-react";
 
 type NotificationSummary = {
   senderId: number | null;
@@ -150,7 +149,7 @@ export default function FloatingNotification() {
         }}
         className="relative bg-white rounded-full shadow-lg p-3 hover:bg-gray-100 transition cursor-pointer"
       >
-        <FaBell size={24} color="#006C67" />
+        <Bell size={24} color="#006C67" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-semibold rounded-full px-1.5 py-0.5">
             {unreadCount}
@@ -165,7 +164,7 @@ export default function FloatingNotification() {
           <div className="flex justify-between items-center bg-[#006C67] text-white px-4 py-2 cursor-pointer">
             <span className="font-semibold">Notifications</span>
             <button onClick={() => setIsOpen(false)} className={"cursor-pointer"}>
-              <IoMdClose size={20} />
+              <X size={20} />
             </button>
           </div>
 
@@ -223,14 +222,14 @@ export default function FloatingNotification() {
           <div className="flex justify-between items-center bg-[#006C67] text-white px-4 py-2">
             <div className="flex items-center gap-2">
               <button onClick={backToSummary} className="p-0 cursor-pointer">
-                <FaArrowLeft size={20} color="white" />
+                <ArrowLeft size={20} color="white" />
               </button>
               <span className="font-semibold">
                 {summaries.find((s) => s.senderId === selectedSender)?.senderName || "Messages"}
               </span>
             </div>
             <button onClick={() => setIsOpen(false)} className={"cursor-pointer"}>
-              <IoMdClose size={20} />
+              <X size={20} />
             </button>
           </div>
 

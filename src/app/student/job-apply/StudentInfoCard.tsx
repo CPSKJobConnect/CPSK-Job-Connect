@@ -1,9 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { MdOutlinePerson } from "react-icons/md";
-import { MdOutlineMail } from "react-icons/md";
-import { FiPhone } from "react-icons/fi";
+import { User, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 
@@ -47,7 +45,7 @@ const StudentInfoCard = (props: StudentInfoProps) => {
     <div className="flex flex-col rounded-md shadow-md border border-gray-100 w-full h-full">
         <div className="flex flex-row justify-between items-center p-3">
             <div className="flex flex-row gap-2">
-                <MdOutlinePerson className="w-7 h-7" />
+                <User className="w-5 h-5 mt-1" />
                 <p className="text-lg font-semibold text-gray-800">Personal Information</p>
             </div>
             <div className="flex justify-end">
@@ -83,7 +81,7 @@ const StudentInfoCard = (props: StudentInfoProps) => {
             <div className="flex flex-col gap-1 w-full">
                 <p className="text-sm font-semibold text-gray-800">Email Address</p>
                 <div className="relative flex-[2]">
-                    <MdOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                     <Input
                       type="text"
                       value={formData.email}
@@ -96,7 +94,7 @@ const StudentInfoCard = (props: StudentInfoProps) => {
             <div className="flex flex-col gap-1 w-full">
                 <p className="text-sm font-semibold text-gray-800">Phone Number</p>
                 <div className="relative flex-[2]">
-                    <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                     <Input
                       type="text"
                       value={formData.phone}
@@ -109,7 +107,7 @@ const StudentInfoCard = (props: StudentInfoProps) => {
             <div className="flex flex-col gap-1 w-full">
                 <p className="text-sm font-semibold text-gray-800">Faculty</p>
                 <div className="relative flex-[2]">
-                    <MdOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                     <Input
                         type="text"
                         placeholder={props.faculty}

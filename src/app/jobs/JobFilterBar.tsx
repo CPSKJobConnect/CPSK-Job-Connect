@@ -12,12 +12,31 @@ import {
 import LocationCombobox from "@/components/LocationCombobox";
 import { JobFilterInfo } from "@/types/filter";
 import { useState } from "react";
-import { BiCategory } from "react-icons/bi";
-import { IoLocationOutline } from "react-icons/io5";
-import { IoIosArrowDown, IoMdSearch } from "react-icons/io";
-import { LuFilter, LuTags } from "react-icons/lu";
-import { MdOutlineDateRange } from "react-icons/md";
-import { TbCurrencyBaht } from "react-icons/tb";
+import { Tag, MapPin, ChevronDown, Search, Filter, Tags, Calendar } from "lucide-react";
+
+const BahtIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        width={16}
+        height={16}
+        role="img"
+        aria-label="baht"
+        {...props}
+    >
+        <text
+            x="50%"
+            y="50%"
+            dominantBaseline="middle"
+            textAnchor="middle"
+            fontSize="12"
+            fill="currentColor"
+            style={{ lineHeight: 1 }}
+        >
+            ฿
+        </text>
+    </svg>
+);
 import {
   Sheet,
   SheetClose,
@@ -92,7 +111,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
         </div>
         <div className="flex items-center bg-white rounded-full px-4 py-3 shadow-md border border-gray-100">
             <div className="relative flex-1 pr-4">
-                <IoMdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                     type="text"
                     placeholder="Job title or keyword"
@@ -105,7 +124,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
             </div>
 
             <div className="hidden sm:flex items-center h-10 border-l border-gray-200 pl-4 mr-4 min-w-[220px]">
-                <IoLocationOutline className="text-gray-400 mr-3" />
+                <MapPin className="text-gray-400 mr-3 w-4 h-4" />
                     <LocationCombobox
                         dataTestId="location-combobox"
                         value={filters.location}
@@ -128,9 +147,9 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                         onClick={() => setIsOpen((prev) => !prev)}
                         className="p-2 rounded-xl flex items-center justify-center gap-1 cursor-pointer"
                         >
-                        <LuFilter className="w-4 h-4 text-[#006C67]" />
+                        <Filter className="w-4 h-4 text-[#006C67]" />
                         <p className="text-[#006C67] text-sm font-bold">Filters</p>
-                        <IoIosArrowDown className="w-4 h-4 text-[#006C67]" />
+                        <ChevronDown className="w-4 h-4 text-[#006C67]" />
                     </button>
                 </SheetTrigger>
                 <SheetContent className="overflow-y-auto p-6">
@@ -142,7 +161,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                     </SheetHeader>
                     <div className="mx-auto grid grid-cols-1 gap-10 items-start w-full">
                         <div className="relative w-full p-1">
-                            <BiCategory className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"/>
+                            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"/>
                             <Select value={filters.jobCategory} 
                             onValueChange={(val) => updateFilter("jobCategory", val)}>
                                 <SelectTrigger data-testid="select-job-category" className="pl-10 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full cursor-pointer">
@@ -160,7 +179,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                         </div>
 
                         <div className="relative w-full p-1">
-                            <TbCurrencyBaht className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                            <BahtIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                             <Select value={filters.minSalary} 
                             onValueChange={(val) => updateFilter("minSalary", val)}>
                                 <SelectTrigger data-testid="select-min-salary" className="pl-8 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
@@ -178,7 +197,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                         </div>
                         
                         <div className="relative w-full p-1">
-                            <TbCurrencyBaht className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                            <BahtIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                             <Select value={filters.maxSalary} 
                             onValueChange={(val) => updateFilter("maxSalary", val)}>
                                 <SelectTrigger data-testid="select-max-salary" className="pl-8 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
@@ -196,7 +215,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                         </div>
 
                         <div className="relative w-full p-1">
-                            <LuTags className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                            <Tags className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                             <Select value={filters.jobType} 
                             onValueChange={(val) => updateFilter("jobType", val)}>
                                 <SelectTrigger data-testid="select-job-type" className="pl-9 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
@@ -214,7 +233,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                         </div>
 
                         <div className="relative w-full p-1">
-                            <LuTags className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                            <Tags className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                             <Select value={filters.jobArrangement} 
                             onValueChange={(val) => updateFilter("jobArrangement", val)}>
                                 <SelectTrigger data-testid="select-job-arrangement" className="pl-9 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">
@@ -232,7 +251,7 @@ const JobFilterBar = ({ filter, onSearch }: JobFilterBarProps) => {
                         </div>
 
                         <div className="relative w-full p-1">
-                            <MdOutlineDateRange className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                             <Select value={filters.datePost} 
                             onValueChange={(val) => updateFilter("datePost", val)}>
                                 <SelectTrigger data-testid="select-date-post" className="pl-9 pr-3 py-2 bg-white rounded-md border-gray-100 shadow-sm w-full">

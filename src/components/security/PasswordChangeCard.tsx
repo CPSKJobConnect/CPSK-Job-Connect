@@ -21,13 +21,13 @@ export function PasswordChangeCard() {
       evaluatePasswordPolicy(newPassword, {
         email: session?.user?.email ?? undefined,
         username: session?.user?.username ?? undefined,
-        name: session?.user?.name ?? undefined,
+        fullName: session?.user?.name ?? undefined,
       }),
     [newPassword, session?.user?.email, session?.user?.name, session?.user?.username]
   );
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!newPassword || newPassword !== confirmPassword) {
       toast.error("New passwords do not match");
       return;
@@ -83,7 +83,7 @@ export function PasswordChangeCard() {
               type="password"
               autoComplete="current-password"
               value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)}
+              onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Enter your current password"
             />
           </div>
@@ -95,7 +95,7 @@ export function PasswordChangeCard() {
               type="password"
               autoComplete="new-password"
               value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
+              onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Use a strong, unique password"
             />
           </div>
@@ -107,7 +107,7 @@ export function PasswordChangeCard() {
               type="password"
               autoComplete="new-password"
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Re-enter your new password"
             />
           </div>

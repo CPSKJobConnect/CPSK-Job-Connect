@@ -8,9 +8,7 @@ import {
   DropdownMenuRadioGroup,
 } from "@/components/ui/dropdown-menu"
 import { useEffect, useState } from "react";
-import { IoMdSearch } from "react-icons/io";
-import { FiChevronDown } from "react-icons/fi";
-import { IoMdCheckmark } from "react-icons/io";
+import { Search, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 
@@ -56,7 +54,7 @@ const ApplicationSearchBar = ({ applications, setFilteredApplications }: Applica
           <div className="pl-4 w-full">
             <div className="flex items-center gap-4 w-full">
               <div className="relative flex-1">
-                <IoMdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -73,7 +71,7 @@ const ApplicationSearchBar = ({ applications, setFilteredApplications }: Applica
                             <span className="flex items-center gap-2">
                               <span className="hidden sm:inline">{selectedStatus === 'all' ? 'All Statuses' : selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)}</span>
                             </span>
-                            <FiChevronDown className="w-4 h-4 text-gray-600 group-hover:text-white" />
+                            <ChevronDown className="w-4 h-4 text-gray-600 group-hover:text-white" />
                         </Button>
                         </DropdownMenuTrigger>
 
@@ -89,7 +87,7 @@ const ApplicationSearchBar = ({ applications, setFilteredApplications }: Applica
                               }`}
                             >
                               <span className="capitalize">{s === 'all' ? 'All' : s}</span>
-                              {selectedStatus === s && <IoMdCheckmark className="w-4 h-4 text-green-600" />}
+                              {selectedStatus === s && <Check className="w-4 h-4 text-green-600" />}
                             </DropdownMenuRadioItem>
                           ))}
                         </DropdownMenuRadioGroup>
