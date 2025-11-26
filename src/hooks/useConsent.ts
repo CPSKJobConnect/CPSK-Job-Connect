@@ -101,7 +101,22 @@ export function useConsent(required = true): UseConsentResult {
     }
   }
 
-  return { loading, consent, showPrompt, setConsent, setShowPrompt, recheck } as UseConsentResult & {
+  async function setConsentValue(v: boolean) {
+    try {
+      // send update and then re-fetch authoritative status
+      await fetch('/api/consent/update-status', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consent: v }),
+      });
+    } catch (err) {
+      // ignore network error; recheck will attempt to reconcile
+    }
+    await recheck();
+  }
+
+  return { loading, consent, showPrompt, setConsent: setConsentValue, setShowPrompt, recheck } as UseConsentResult & {
     showPrompt: boolean;
     setConsent: (v: boolean) => void;
     setShowPrompt: (v: boolean) => void;

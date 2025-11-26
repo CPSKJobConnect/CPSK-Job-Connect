@@ -86,22 +86,22 @@ export const authOptions: NextAuthOptions = {
   // Explicit cookie settings to enforce secure attributes per ASVS
   cookies: {
     sessionToken: {
-      name: 'next-auth.session-token',
+      name: '__Secure-next-auth.session-token',
       options: {
         httpOnly: true,
         sameSite: 'strict',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production' || process.env.LOCAL_HTTPS === 'true',
       }
     },
     // optional: CSRF token cookie settings (NextAuth uses this internally)
     csrfToken: {
-      name: 'next-auth.csrf-token',
+      name: '__Secure-next-auth.csrf-token',
       options: {
         httpOnly: false,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production' || process.env.LOCAL_HTTPS === 'true',
       }
     }
   },
@@ -479,6 +479,7 @@ export const authOptions: NextAuthOptions = {
               token.studentStatus = existing.student?.student_status
               token.verificationStatus = existing.student?.verification_status
               token.companyRegistrationStatus = existing.company?.registration_status
+              token.tokenVersion = existing.token_version ?? token.tokenVersion ?? 0
             }
           }
         } catch (err) {
@@ -506,6 +507,20 @@ export const authOptions: NextAuthOptions = {
         session.user.studentStatus = token.studentStatus
         session.user.verificationStatus = token.verificationStatus
         session.user.companyRegistrationStatus = token.companyRegistrationStatus
+      }
+      // Debug: print session contents in non-production environments
+      try {
+        if (process.env.NODE_ENV !== 'production') {
+          const safe = {
+            sub: token?.sub,
+            role: token?.role,
+            email: token?.email,
+            username: token?.username,
+          };
+          console.log('AUTH: session callback ->', JSON.stringify(safe));
+        }
+      } catch {
+        // ignore
       }
       return session;
     },

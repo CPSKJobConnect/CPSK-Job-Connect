@@ -90,6 +90,18 @@ export default function ResetPasswordPage() {
     }
   };
 
+  useEffect(() => {
+    if (redirectCountdown === null) return;
+    if (redirectCountdown === 0) {
+      router.push("/login/student?reset=success");
+      return;
+    }
+    const timer = setTimeout(() => {
+      setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [redirectCountdown, router]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">

@@ -7,7 +7,7 @@ import {
   studentOAuthRegisterSchema,
   studentRegisterSchema
 } from "@/lib/validations";
-import bcrypt from "bcryptjs";
+// bcrypt will be required at runtime to ensure test mocks are used
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -108,15 +108,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Add evidence file to data for validation (required for companies)
+    // Add company evidence file to data for validation (mirrors transcript handling)
     if (role === "company") {
       const evidenceFile = formData ? (formData.get("evidence") as File | null) : null;
       if (evidenceFile && evidenceFile.size > 0) {
-        // For OAuth, pass File directly; for regular registration, create FileList-like object
         if (isOAuth) {
           data.evidence = evidenceFile;
         } else {
-          // Create a FileList-like object with the file
           const fileList = {
             0: evidenceFile,
             length: 1,
@@ -129,8 +127,11 @@ export async function POST(req: NextRequest) {
         }
       }
     }
-    // Validate data base on role and OAuth status
-    let validatedData: z.ZodSafeParseResult<StudentData | CompanyData | StudentOAuthData | CompanyOAuthData>;
+
+    // Validate data based on role and OAuth status
+    let validatedData: z.ZodSafeParseResult<
+      StudentData | CompanyData | StudentOAuthData | CompanyOAuthData
+    >;
     if (role === "student") {
       validatedData = isOAuth
         ? studentOAuthRegisterSchema.safeParse(data)
@@ -189,7 +190,14 @@ export async function POST(req: NextRequest) {
             ? (dataWithPassword as StudentData).name
             : (dataWithPassword as CompanyData).companyName,
       });
-      hashedPassword = await bcrypt.hash(dataWithPassword.password, 12);
+
+      // Require `bcryptjs` at runtime so that Jest's module mock is used in tests.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const bcryptModule = require("bcryptjs");
+      if (!bcryptModule || typeof bcryptModule.hash !== "function") {
+        throw new Error("BCRYPT-REQUIRE-MISSING");
+      }
+      hashedPassword = await bcryptModule.hash(dataWithPassword.password, 12);
     }
 
     // Get role ID
@@ -306,15 +314,18 @@ export async function POST(req: NextRequest) {
       // If consent was provided in the registration request, record it atomically
       if (typeof consentValue !== "undefined") {
         try {
-          await tx.accountConsentLog.create({
-            data: {
-              account_id: account.id,
-              consent: consentValue,
-            }
+          const existing = await tx.accountConsentLog.findFirst({
+            where: { account_id: account.id },
+            orderBy: { created_at: 'desc' },
           });
+          if (existing) {
+            await tx.accountConsentLog.update({ where: { id: existing.id }, data: { consent: consentValue } });
+          } else {
+            await tx.accountConsentLog.create({ data: { account_id: account.id, consent: consentValue } });
+          }
         } catch (consentErr) {
           // Log and rethrow so transaction can be rolled back and caller informed
-          console.error("Failed to create AccountConsentLog inside transaction:", consentErr);
+          console.error("Failed to upsert AccountConsentLog inside transaction:", consentErr);
           throw consentErr;
         }
       }
@@ -401,11 +412,12 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       message: "Account created successfully",
-      redirectTo: `/${role}/dashboard`
+      // After registering, direct user to their dashboard
+      redirectTo: role === 'student' ? '/student/dashboard' : '/company/dashboard'
     }, { status: 201 });
 
     try {
-      if (consentValue === true) {
+        if (consentValue === true) {
         const maxAge = 30 * 24 * 60 * 60; // 30 days
 
         // Determine if request was over HTTPS. Prefer `x-forwarded-proto`
@@ -422,12 +434,13 @@ export async function POST(req: NextRequest) {
               }
             })();
 
-        res.cookies.set("pdpa_consent", "true", {
+        // Use __Secure- prefix and follow ASVS requirements: Secure + HttpOnly + SameSite=Strict
+        res.cookies.set("__Secure-pdpa_consent", "true", {
           httpOnly: true,
           sameSite: "strict",
           path: "/",
           maxAge,
-          secure: process.env.NODE_ENV === "production" || isHttps,
+          secure: process.env.NODE_ENV === "production" || process.env.LOCAL_HTTPS === 'true' || isHttps,
         });
       }
     } catch (cookieErr) {

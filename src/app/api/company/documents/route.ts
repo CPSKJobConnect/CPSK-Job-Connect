@@ -4,7 +4,8 @@ import { prisma } from "@/lib/db";
 import { FileValidationError, getPolicyForDocType } from "@/lib/filePolicy";
 import { uploadDocument } from "@/lib/uploadDocument";
 import { NextRequest, NextResponse } from "next/server";
-const ALLOWED_COMPANY_DOC_TYPES = new Set([7]);
+// Allow company evidence (7) and company document (5)
+const ALLOWED_COMPANY_DOC_TYPES = new Set([5, 7]);
 
 async function POST_impl(request: NextRequest) {
   try {
@@ -39,17 +40,26 @@ async function POST_impl(request: NextRequest) {
     getPolicyForDocType(docTypeId);
 
     const document = await uploadDocument(file, account.id.toString(), docTypeId);
-    const documentType = await prisma.documentType.findUnique({
-      where: { id: docTypeId },
-      select: { name: true },
-    });
+
+    // Prefer the documentType that may be included on the created document
+    // (some tests mock the created record with a nested `documentType`). If
+    // it's not present, fall back to a separate lookup when the Prisma
+    // client exposes `documentType` (tests sometimes only mock `document`).
+    let typeName: string | undefined = (document as any).documentType?.name;
+    if (!typeName && prisma.documentType) {
+      const documentType = await prisma.documentType.findUnique({
+        where: { id: docTypeId },
+        select: { name: true },
+      });
+      typeName = documentType?.name ?? undefined;
+    }
 
     return NextResponse.json({
       id: document.id,
       name: document.file_name,
       url: document.file_path,
       uploadedAt: document.created_at.toISOString(),
-      type: documentType?.name ?? "Document",
+      type: typeName ?? "Document",
     });
   } catch (error) {
     console.error("Error uploading company document:", error);

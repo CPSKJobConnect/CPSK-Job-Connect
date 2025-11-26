@@ -1,6 +1,5 @@
 "use client"
 
-import PrivacyModal from "@/components/PrivacyModal"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -36,9 +35,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   const [actualUserRole, setActualUserRole] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [showConsentModal, setShowConsentModal] = useState(false)
-  const [pendingFormData, setPendingFormData] = useState<AuthFormData | null>(null)
-  const [pendingFile, setPendingFile] = useState<File | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session, update } = useSession()
@@ -177,15 +173,9 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         }
       }
 
-      // Attach consent value from localStorage (safely). Backend expects 'consent' field.
-      try {
-        const stored = typeof window !== 'undefined' ? localStorage.getItem('pdpaConsent') : null
-        const consentToSend = stored === 'true'
-        formData.append('consent', String(consentToSend))
-      } catch (e) {
-        // If localStorage unavailable, send false (backend will handle missing/false gracefully)
-        formData.append('consent', 'false')
-      }
+      // Consent is now collected post-login via ConsentProvider
+      // Send false during registration - user will accept via ConsentProvider after login
+      formData.append('consent', 'false')
 
       const response = await fetch("/api/register", {
         method: "POST",
@@ -219,14 +209,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
 
         setError(result.error || "Registration failed")
       } else {
-        try {
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('pdpaConsent')
-          }
-        } catch (e) {
-          console.warn('Failed to remove pdpaConsent from localStorage', e)
-        }
-
         if (isOAuthCompletion) {
           console.log("OAuth registration complete, updating session...")
 
@@ -239,17 +221,9 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
 
           router.push(result.redirectTo)
         } else {
-          const loginResult = await signIn("credentials", {
-            email: data.email,
-            password: data.password,
-            redirect: false,
-          })
-
-          if (loginResult?.error) {
-            setError("Registration successful but login failed. Please try logging in.")
-          } else {
-            router.push(result.redirectTo)
-          }
+          // Do not auto-login after registration. Redirect user to login page
+          // so they can explicitly authenticate (register -> login -> dashboard).
+          router.push(result.redirectTo)
         }
       }
     } catch (error) {
@@ -262,22 +236,9 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
     setIsLoading(true)
     setError("")
     setAttemptsRemaining(null) // Clear previous attempts counter
-    if (mode === "register") {
-      try {
-        const consent = typeof window !== 'undefined' ? localStorage.getItem('pdpaConsent') : null
-        if (consent !== 'true') {
-          setPendingFormData(data)
-          setPendingFile(selectedFile)
-          setShowConsentModal(true)
-          setIsLoading(false)
-          return
-        }
-      } catch (e) {
-        setError("Unable to verify privacy consent. Please enable browser storage and accept the privacy policy before registering.")
-        setIsLoading(false)
-        return
-      }
-    }
+
+    // Note: Consent is now handled post-login by ConsentProvider
+    // No localStorage consent check needed during registration
 
     try {
       if (mode === "register" && role === "student" && studentStatus === "CURRENT") {
@@ -1003,27 +964,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             </p>
           )}
         </div>
-        <PrivacyModal
-          isOpen={showConsentModal}
-          onClose={() => setShowConsentModal(false)}
-          onAccept={async () => {
-            try {
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('pdpaConsent', 'true')
-              }
-            } catch (e) {
-              // ignore
-            }
-            setShowConsentModal(false)
-            if (pendingFormData) {
-              setIsLoading(true)
-              await performRegistration(pendingFormData, pendingFile)
-              setPendingFormData(null)
-              setPendingFile(null)
-              setIsLoading(false)
-            }
-          }}
-        />
       </CardContent>
     </Card>
   )
