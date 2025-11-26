@@ -141,6 +141,6 @@ async function main() {
   process.exit(2);
 }
 
-if (import.meta.url === `file://${process.cwd()}/${path.relative(process.cwd(), process.argv[1] || '')}` || require.main === module) {
+if (import.meta.url.startsWith('file://') && process.argv[1] && import.meta.url === new URL(process.argv[1], import.meta.url).href) {
   main().catch(err => { console.error(err && err.stack ? err.stack : err); process.exit(3); });
 }

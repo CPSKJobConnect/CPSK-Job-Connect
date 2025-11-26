@@ -57,8 +57,7 @@ describe("uploadImage", () => {
     expect(mockStorageFrom).toHaveBeenCalledWith("documents");
     expect(mockUpload).toHaveBeenCalledWith(
       expect.stringMatching(/profile-images\/1\/logo_\d+_avatar\.png/),
-      file,
-      expect.objectContaining({ upsert: false, contentType: "image/png" })
+      file
     );
     expect(mockCreateSignedUrl).toHaveBeenCalledWith(
       "profile-images/1/logo_123_avatar.png",

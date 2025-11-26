@@ -113,7 +113,7 @@ describe("POST /api/company/documents", () => {
     it("rejects unsupported document types", async () => {
       const formData = new FormData();
       formData.append("file", new File(["content"], "evidence.pdf", { type: "application/pdf" }));
-      formData.append("docTypeId", "5");
+      formData.append("docTypeId", "999"); // Use invalid doc type ID
 
       const request = new Request("http://localhost/api/company/documents", {
         method: "POST",
