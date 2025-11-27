@@ -8,19 +8,15 @@ context('Company - Application Management', () => {
     // Allow extra time for auth/session cookie propagation
     cy.wait(20000);
 
-    // Increase window retrieval timeout so fetch has longer to resolve in slow environments
-    return (cy.window({ timeout: 30000 }) as any)
-      .then((win: any) => win.fetch('/api/company/jobs'))
-      .then((res: Response | null) => {
-        if (!res) return null
-        if ((res as Response).status === 401) {
-          cy.log('Not authenticated when fetching company jobs (401). Skipping tests.');
-          ctx.skip();
-          return null;
-        }
-        return (res as Response).json();
-      })
-      .then((jobsBody: any) => {
+    // Use cy.request (node-side) to reliably fetch company jobs and avoid unresolved window.fetch promises
+    return cy.request({ method: 'GET', url: '/api/company/jobs', failOnStatusCode: false }).then((res) => {
+      if (!res) return null;
+      if (res.status === 401) {
+        cy.log('Not authenticated when fetching company jobs (401). Skipping tests.');
+        ctx.skip();
+        return null;
+      }
+      const jobsBody: any = res.body;
         if (!Array.isArray(jobsBody) || jobsBody.length === 0) {
           cy.log('No company jobs available, skipping tests');
           ctx.skip();
@@ -34,30 +30,23 @@ context('Company - Application Management', () => {
           if (!taskRes || taskRes.error) {
             cy.log('Failed to create application via task', taskRes?.error);
           }
-
-          return (cy.window() as any).then((win: any) =>
-            win
-              .fetch('/api/company/recent-applications?limit=50')
-              .then((res2: Response | null) => {
-                if (!res2) return null
-                if ((res2 as Response).status === 401) {
-                  cy.log('Not authenticated when fetching recent applications (401). Skipping tests.');
-                  ctx.skip();
-                  return null;
-                }
-                return (res2 as Response).json();
-              })
-              .then((body: any) => {
-                if (!body) return;
-                const apps = body?.data?.applications || [];
-                if (!apps || apps.length === 0) {
-                  cy.log('No recent applications available, skipping tests');
-                  ctx.skip();
-                  return;
-                }
-                cy.wrap(apps[0]).as('selectedApp');
-              })
-          );
+          return cy.request({ method: 'GET', url: '/api/company/recent-applications?limit=50', failOnStatusCode: false }).then((res2) => {
+            if (!res2) return null;
+            if (res2.status === 401) {
+              cy.log('Not authenticated when fetching recent applications (401). Skipping tests.');
+              ctx.skip();
+              return null;
+            }
+            const body: any = res2.body;
+            if (!body) return;
+            const apps = body?.data?.applications || [];
+            if (!apps || apps.length === 0) {
+              cy.log('No recent applications available, skipping tests');
+              ctx.skip();
+              return;
+            }
+            cy.wrap(apps[0]).as('selectedApp');
+          });
         });
       });
   });
@@ -77,17 +66,15 @@ context('Company - Application Management', () => {
       cy.intercept({ method: 'PATCH', url: '**/api/**' }).as('anyPatch');
       cy.intercept({ method: 'PATCH', url: '**/api/**applications/**' }).as('patchStatus');
 
-      cy.window()
-        .then((win) => win.fetch('/api/company/recent-applications?limit=50'))
-        .then((res) => res.json())
-        .then((body) => {
-          const apps = body?.data?.applications || [];
-          const found = apps.find((a: any) => String(a.id) === String(applicationId));
-          const current = (found?.status || '').toLowerCase();
-          let targetStatus = newStatus;
-          if (current === newStatus) targetStatus = 'reviewed';
-          return targetStatus;
-        })
+      cy.request({ method: 'GET', url: '/api/company/recent-applications?limit=50', failOnStatusCode: false }).then((res) => {
+        const body = res?.body;
+        const apps = body?.data?.applications || [];
+        const found = apps.find((a: any) => String(a.id) === String(applicationId));
+        const current = (found?.status || '').toLowerCase();
+        let targetStatus = newStatus;
+        if (current === newStatus) targetStatus = 'reviewed';
+        return targetStatus;
+      })
         .then((targetStatus) => {
           cy.get(`[data-testid="application-status-trigger-${applicationId}"]`, { timeout: 15000 })
             .should('exist')
