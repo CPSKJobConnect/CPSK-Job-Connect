@@ -33,12 +33,23 @@ describe('Student Bookmark Job', () => {
         }
         const id = String(candidate.id)
 
-        // Ensure the specific job card is present in the DOM
-        cy.get(`[data-testid="job-card-${id}"]`, { timeout: 30000 }).should('be.visible').as('firstJobCard')
+        // Ensure the specific job card is present in the DOM and bring it into view
+        cy.get(`[data-testid="job-card-${id}"]`, { timeout: 30000 }).scrollIntoView().should('be.visible').as('firstJobCard')
 
-        // Open actions and click bookmark
-        cy.get(`button[data-testid="job-actions-trigger-${id}"]`).click()
-        cy.get(`[data-testid="bookmark-job-${id}"]`, { timeout: 5000 }).should('be.visible').click()
+        // Open actions and click bookmark. Break the chain to avoid re-render races.
+        cy.get(`button[data-testid="job-actions-trigger-${id}"]`, { timeout: 5000 })
+          .should('be.visible')
+          .then(($trigger) => {
+            cy.wrap($trigger).click();
+          });
+        // Wait briefly for the dropdown/menu to stabilize, then click the bookmark item
+        cy.get(`[data-testid="bookmark-job-${id}"]`, { timeout: 7000 })
+          .should('be.visible')
+          .then(($item) => {
+            // small pause helps when the UI animates the menu
+            cy.wait(200);
+            cy.wrap($item).click();
+          });
 
         // Verify via API the job is saved
         cy.wait(1000)
@@ -78,6 +89,7 @@ describe('Student Bookmark Job', () => {
       .should('have.length.at.least', 1)
       .first()
       .as('bookmarkedJobCard')
+      .scrollIntoView()
       .should('be.visible');
     cy.get('@bookmarkedJobCard').then(($card) => {
       const dt = $card.attr('data-testid') || ''
@@ -122,14 +134,22 @@ describe('Student Bookmark Job', () => {
       .should('have.length.at.least', 1)
       .first()
       .as('bookmarkedJobCard')
+      .scrollIntoView()
       .should('be.visible');
 
     cy.get('@bookmarkedJobCard').then(($card) => {
       const dt = $card.attr('data-testid') || ''
       const id = dt.replace('job-card-', '')
-      // open actions and toggle (unsave)
-      cy.get(`button[data-testid="job-actions-trigger-${id}"]`).click()
-      cy.get(`[data-testid="bookmark-job-${id}"]`, { timeout: 5000 }).should('be.visible').click()
+      // open actions and toggle (unsave) — click robustly to avoid re-render races
+      cy.get(`button[data-testid="job-actions-trigger-${id}"]`, { timeout: 5000 })
+        .should('be.visible')
+        .then(($trigger) => cy.wrap($trigger).click());
+      cy.get(`[data-testid="bookmark-job-${id}"]`, { timeout: 7000 })
+        .should('be.visible')
+        .then(($item) => {
+          cy.wait(200);
+          cy.wrap($item).click();
+        });
       // Verify via API the job is no longer in saved jobs
       cy.wait(1000)
       cy.request('GET', '/api/students/saved-jobs').then((resp) => {
