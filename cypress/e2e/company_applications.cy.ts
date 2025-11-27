@@ -21,14 +21,13 @@ context('Company - Application Management', () => {
         return (res as Response).json();
       })
       .then((jobsBody: any) => {
-        if (!jobsBody) return;
-        const jobs = jobsBody || [];
-        if (!jobs || jobs.length === 0) {
+        if (!Array.isArray(jobsBody) || jobsBody.length === 0) {
           cy.log('No company jobs available, skipping tests');
           ctx.skip();
           return;
         }
 
+        const jobs = jobsBody;
         const jobId = jobs[0].id;
 
         return cy.createApplicationViaAPI(jobId).then((taskRes: any) => {

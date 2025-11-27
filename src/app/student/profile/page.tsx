@@ -131,7 +131,7 @@ export default function StudentProfilePage() {
   }, []);
 
   // Rely on global loader for initial load; render nothing locally while fetching
-  if (!student) return null;
+  if (loading) return null;
 
   if (!student) {
     return (
