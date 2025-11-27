@@ -29,7 +29,7 @@ export async function GET(request?: Request) {
     // Optional: handle query params safely
     const { searchParams } = new URL(req.url);
     const search = canonicalize(searchParams.get("search"));
-    const status = canonicalize(searchParams.get("status"));
+    const statusParam = canonicalize(searchParams.get("status"));
     const page = Number(canonicalize(searchParams.get("page")) || 1);
     const limit = Number(canonicalize(searchParams.get("limit")) || 10);
 
@@ -40,9 +40,9 @@ export async function GET(request?: Request) {
         { name: { contains: search, mode: "insensitive" } },
       ];
     }
-    if (status) {
+    if (statusParam) {
       // example: filter by registration status
-      whereClause.registration_status = status;
+      whereClause.registration_status = statusParam;
     }
 
     // Fetch all reference data in parallel

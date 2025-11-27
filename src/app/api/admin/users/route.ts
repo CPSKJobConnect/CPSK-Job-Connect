@@ -30,8 +30,8 @@ export async function GET(request: Request) {
     // Canonicalize and sanitize inputs
     const search = DOMPurify.sanitize(rawSearch.trim());
     const role = DOMPurify.sanitize(rawRole.trim());
-    const status = DOMPurify.sanitize(rawStatus.trim());
-    const statusParam = status;
+    const statusValue = DOMPurify.sanitize(rawStatus.trim());
+    const statusParam = statusValue;
 
     const skip = (page - 1) * limit;
 

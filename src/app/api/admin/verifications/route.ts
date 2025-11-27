@@ -27,15 +27,15 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const rawStatus = searchParams.get('status') || 'PENDING';
-    const status = rawStatus.trim().toUpperCase();
+    const statusValue = rawStatus.trim().toUpperCase();
 
     const whereClause: {
       student_status: StudentStatus;
       verification_status?: VerificationStatus;
     } = { student_status: StudentStatus.ALUMNI };
 
-    if (['PENDING', 'APPROVED', 'REJECTED'].includes(status)) {
-      whereClause.verification_status = status as VerificationStatus;
+    if (['PENDING', 'APPROVED', 'REJECTED'].includes(statusValue)) {
+      whereClause.verification_status = statusValue as VerificationStatus;
     }
 
     const students = await prisma.student.findMany({

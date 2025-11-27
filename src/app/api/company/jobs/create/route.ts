@@ -23,7 +23,7 @@ async function POST_impl(request: NextRequest) {
 
     // Sanitize string inputs from WYSIWYG or text fields (1.3.1)
     const title = DOMPurify.sanitize(body.title || "");
-    const location = DOMPurify.sanitize(body.location || "");
+    const jobLocation = DOMPurify.sanitize(body.location || "");
     const descriptionOverview = DOMPurify.sanitize(body.description?.overview || "");
     const descriptionResponsibility = DOMPurify.sanitize(body.description?.responsibility || "-");
     const descriptionRequirement = DOMPurify.sanitize(body.description?.requirement || "");
@@ -110,7 +110,7 @@ async function POST_impl(request: NextRequest) {
       data: {
         company_id: account.company.id,
         jobName: title,
-        location,
+        location: jobLocation,
         aboutRole: descriptionOverview,
         responsibilities: descriptionResponsibility,
         requirements: descriptionRequirement

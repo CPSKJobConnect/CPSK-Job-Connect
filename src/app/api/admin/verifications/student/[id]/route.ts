@@ -48,10 +48,10 @@ export async function PATCH(
     const rawStatus = body.status;
     const rawNotes = body.notes || '';
 
-    const status = rawStatus?.toString().trim().toUpperCase();
+    const statusValue = rawStatus?.toString().trim().toUpperCase();
     const notes = DOMPurify.sanitize(rawNotes.trim());
 
-    if (!status || !['APPROVED', 'REJECTED'].includes(status)) {
+    if (!statusValue || !['APPROVED', 'REJECTED'].includes(statusValue)) {
       return NextResponse.json({ error: 'Invalid status. Must be APPROVED or REJECTED' }, { status: 400 });
     }
 
@@ -71,7 +71,7 @@ export async function PATCH(
     const updatedStudent = await prisma.student.update({
       where: { id: studentId },
       data: {
-        verification_status: status as VerificationStatus,
+        verification_status: statusValue as VerificationStatus,
         verified_by: adminAccount.id,
         verified_at: new Date(),
         verification_notes: notes || null,
@@ -80,9 +80,9 @@ export async function PATCH(
     });
 
     try {
-      await sendAlumniStatusEmail(student.account.email, DOMPurify.sanitize(student.name), status === 'APPROVED', notes);
+      await sendAlumniStatusEmail(student.account.email, DOMPurify.sanitize(student.name), statusValue === 'APPROVED', notes);
 
-      if (status === 'APPROVED') {
+      if (statusValue === 'APPROVED') {
         const verificationCode = generateVerificationCode();
         await prisma.email_verification_tokens.create({
           data: {

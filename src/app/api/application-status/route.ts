@@ -7,9 +7,9 @@ export async function GET() {
     const statuses = await prisma.applicationStatus.findMany();
 
     // Sanitize all status names to prevent XSS from DB input
-    const sanitizedStatuses = statuses.map((status) => ({
-      ...status,
-      name: DOMPurify.sanitize(status.name),
+    const sanitizedStatuses = statuses.map((statusRecord) => ({
+      ...statusRecord,
+      name: DOMPurify.sanitize(statusRecord.name),
     }));
 
     return NextResponse.json({ statuses: sanitizedStatuses });

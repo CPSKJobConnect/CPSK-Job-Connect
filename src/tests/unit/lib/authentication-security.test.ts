@@ -54,8 +54,8 @@ describe("Authentication Security Tests (OWASP ASVS V6)", () => {
       // Query for default account names
       const accounts = await prisma.account.findMany({
         where: {
-          OR: defaultAccountNames.map((name) => ({
-            username: { equals: name, mode: "insensitive" },
+          OR: defaultAccountNames.map((acctName) => ({
+            username: { equals: acctName, mode: "insensitive" },
           })),
         },
         select: {
