@@ -43,7 +43,9 @@ export async function GET(
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error fetching status data:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching status data:", error);
+    }
     return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 });
   }
 }

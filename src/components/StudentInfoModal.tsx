@@ -44,6 +44,12 @@ interface ApplicantInfo {
   certification: string[];
 }
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?: string }) => {
   const [applicantInfo, setApplicantInfo] = useState<ApplicantInfo | null>(null);
   const [loading, setLoading] = useState(false);
@@ -61,7 +67,7 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
 
         if (!response.ok) {
           const error = await response.json();
-          console.error("Failed to fetch applicant info:", error);
+          logDebug("Failed to fetch applicant info:", error);
 
           // Don't show toast for 404 errors (application might have been deleted)
           if (response.status !== 404) {
@@ -73,7 +79,7 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
         }
 
         const result = await response.json();
-        console.log("Fetched applicant info:", result);
+        logDebug("Fetched applicant info:", result);
         if (result.success) {
           const data = result.data;
           if (data && (data.profile_url === "" || data.profile_url === "/default-avatar.png" || data.profile_url === "null")) {
@@ -82,7 +88,7 @@ const StudentInfoModal = ({ applicant_id, size }: { applicant_id: string; size?:
           setApplicantInfo(data);
         }
       } catch (error) {
-        console.error("Error fetching applicant info:", error);
+        logDebug("Error fetching applicant info:", error);
         toast.error("Error loading profile", {
           description: "An unexpected error occurred"
         });

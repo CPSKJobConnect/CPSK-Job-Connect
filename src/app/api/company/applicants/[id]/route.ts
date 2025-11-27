@@ -104,7 +104,9 @@ export async function GET(
     return NextResponse.json({ success: true, data: applicantInfo });
 
   } catch (error) {
-    console.error("Error fetching applicant info:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching applicant info:", error);
+    }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

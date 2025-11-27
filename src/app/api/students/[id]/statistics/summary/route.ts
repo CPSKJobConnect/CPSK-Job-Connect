@@ -45,7 +45,9 @@ export async function GET(
       savedJobs,
     });
   } catch (error) {
-    console.error("Error fetching student summary:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching student summary:", error);
+    }
     return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 });
   }
 }

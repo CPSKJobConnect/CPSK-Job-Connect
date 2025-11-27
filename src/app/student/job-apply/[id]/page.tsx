@@ -33,6 +33,12 @@ const typeColors: Record<string, string> = {
   freelance: "bg-yellow-200 text-gray-800",
 };
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export default function Page() {
     const params = useParams();
     const router = useRouter();
@@ -67,7 +73,7 @@ export default function Page() {
         const data: JobInfo = await res.json();
         setJob(data);
       }   catch (error) {
-        console.error("Failed to fetch job:", error);
+        logDebug("Failed to fetch job:", error);
         router.push("/jobs");
       } finally {
         done();
@@ -79,7 +85,7 @@ export default function Page() {
         begin();
         const res = await fetch(`/api/students/profile`);
         if (!res.ok) {
-          console.error("Failed to fetch student");
+          logDebug("Failed to fetch student");
           return;
         }
         const data: Student = await res.json();
@@ -91,7 +97,7 @@ export default function Page() {
         setTranscriptExisting(data.documents?.transcript || []);
 
       } catch (error) {
-        console.error("Failed to fetch student:", error);
+        logDebug("Failed to fetch student:", error);
       } finally {
         done();
       }
@@ -114,7 +120,7 @@ export default function Page() {
         const data = await res.json();
         setAlreadyApplied(data.applied);
       } catch (err) {
-        console.error("Failed to check application:", err);
+        logDebug("Failed to check application:", err);
       }
     };
 
@@ -188,10 +194,10 @@ export default function Page() {
       const res = await apiFetch("/api/jobs/apply", { method: "POST", body: formData });
 
       const data = await res.json();
-      console.log("form: ", data);
+      logDebug("form: ", data);
 
       if (!res.ok) {
-        console.error(data);
+        logDebug(data);
         toast.error("Failed to submit application.", "Please try again later.");
         return;
       }
@@ -204,7 +210,7 @@ export default function Page() {
         };
         localStorage.setItem("recentlyApplied", JSON.stringify(marker));
       } catch (err) {
-        console.warn("Could not write recentlyApplied marker", err);
+        logDebug("Could not write recentlyApplied marker", err);
       }
 
       router.push("/student/my-application");

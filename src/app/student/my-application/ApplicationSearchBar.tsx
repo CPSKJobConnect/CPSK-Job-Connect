@@ -42,7 +42,9 @@ const ApplicationSearchBar = ({ applications, setFilteredApplications }: Applica
 
       setFilteredApplications(filtered);
     } catch (err) {
-      console.error("Error filtering applications:", err);
+        if (process.env.NODE_ENV === "development") {
+            console.error("Error filtering applications:", err);
+        }
     }
   }, [applications, query, selectedStatus, setFilteredApplications]);
   

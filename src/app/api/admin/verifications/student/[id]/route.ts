@@ -6,6 +6,12 @@ import { generateVerificationCode, getVerificationExpiry } from '@/lib/email-val
 import { StudentStatus, VerificationStatus } from '@prisma/client';
 import DOMPurify from 'isomorphic-dompurify';
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 /**
  * PATCH /api/admin/verifications/student/[id]
  * Approve or reject an alumni verification
@@ -89,7 +95,7 @@ export async function PATCH(
         await sendVerificationEmail(student.account.email, verificationCode, DOMPurify.sanitize(student.name));
       }
     } catch (emailError) {
-      console.error('Failed to send status email:', emailError);
+      logDebug('Failed to send status email:', emailError);
     }
 
     await prisma.notification.create({
@@ -117,7 +123,7 @@ export async function PATCH(
     }, { status: 200 });
 
   } catch (error) {
-    console.error('Error in admin verification:', error);
+    logDebug('Error in admin verification:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -183,7 +189,7 @@ export async function GET(
     }, { status: 200 });
 
   } catch (error) {
-    console.error('Error fetching student details:', error);
+    logDebug('Error fetching student details:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

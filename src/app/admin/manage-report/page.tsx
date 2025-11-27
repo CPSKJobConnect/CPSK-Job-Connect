@@ -176,7 +176,9 @@ export default function ManageReportsPage() {
       setAllReports(prev => prev.map(r => r.id === reportId ? { ...r, is_resolved: true } : r));
       toast.success("Report marked as resolved!");
     } catch (error) {
-      console.error(error);
+      if (process.env.NODE_ENV === "development") {
+        console.error(error);
+      }
       toast.error("Failed to resolve report.");
     }
   };

@@ -4,6 +4,12 @@ import { isVerificationExpired } from '@/lib/email-validation';
 import { getApiSession } from '@/lib/api-auth';
 import sanitizeHtml from 'sanitize-html';
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 /**
  * POST /api/students/verify-email
  * Verify a student's email using the verification code
@@ -102,7 +108,7 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error in verify-email:', error);
+    logDebug('Error in verify-email:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -136,7 +142,7 @@ export async function GET(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error checking verification status:', error);
+    logDebug('Error checking verification status:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -9,6 +9,12 @@ import { FileText, Plus, Lightbulb } from "lucide-react";
 import AllJobPost from "./AllJobPost";
 import ApplicationList from "./ApplicationList";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export default function Page() {
   const router = useRouter();
   const [jobPost, setJobPost] = useState<JobInfo[]>([]);
@@ -33,7 +39,7 @@ export default function Page() {
       const data: JobInfo[] = await res.json();
       setJobPost(data);
     } catch (error) {
-      console.error("Error fetching jobs:", error);
+      logDebug("Error fetching jobs:", error);
     } finally {
       done();
     }
@@ -50,7 +56,7 @@ export default function Page() {
             setArrangementList(data.arrangements || []);
             setAllTags(data.tags || []);
         } catch (error) {
-            console.error("Error fetching job filters:", error);
+            logDebug("Error fetching job filters:", error);
         }
     };
 
@@ -69,7 +75,7 @@ export default function Page() {
           setIsCompanyVerified(data.registration_status === "APPROVED");
         }
       } catch (error) {
-        console.error("Error fetching company status:", error);
+        logDebug("Error fetching company status:", error);
       }
     };
     fetchCompanyStatus();
@@ -108,7 +114,7 @@ export default function Page() {
         const data = await res.json();
         setApplicants(data.applicants || []);
       } catch (error) {
-        console.error("Error fetching applicants:", error);
+        logDebug("Error fetching applicants:", error);
       } finally {
         setApplicantsLoading(false);
       }

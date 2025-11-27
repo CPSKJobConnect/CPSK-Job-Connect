@@ -36,7 +36,9 @@ export default function Page() {
         setBookmarkedJobs(data.savedJobs || []);
         setSortedBookmarkedJobs(data.savedJobs || []);
       } catch (err) {
-        console.error("Error fetching bookmarked jobs:", err);
+        if (process.env.NODE_ENV === "development") {
+            console.error("Error fetching bookmarked jobs:", err);
+        }
         setError(err instanceof Error ? err.message : "Failed to load bookmarks");
       } finally {
         done();

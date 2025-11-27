@@ -3,6 +3,12 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 // GET - Fetch all job posts with pagination and filtering
 export async function GET(request: Request) {
   try {
@@ -13,7 +19,7 @@ export async function GET(request: Request) {
 
     // Check if user is admin (using session role)
     const userRole = (session.user as any).role?.toLowerCase();
-    console.log("🔍 User role:", userRole);
+    logDebug("🔍 User role:", userRole);
 
     if (userRole !== "admin") {
       return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
@@ -118,7 +124,7 @@ if (reported === "true") {
     }, { status: 200 });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to fetch job posts" }, { status: 500 });
   }
 }
@@ -187,7 +193,7 @@ export async function POST(request: Request) {
     return NextResponse.json(jobPost, { status: 201 });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to create job post" }, { status: 500 });
   }
 }

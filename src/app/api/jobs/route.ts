@@ -195,7 +195,9 @@ export async function GET(req: Request) {
     // console.log("Mapped jobs to JSON:", mappedData);
     return NextResponse.json(mappedData);
   } catch (error) {
-    console.error("API error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("API error:", error);
+    }
     return NextResponse.json({ error: "Failed to fetch jobs" }, { status: 500 });
   }
 }

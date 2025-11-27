@@ -14,7 +14,9 @@ export async function GET() {
 
     return NextResponse.json({ statuses: sanitizedStatuses });
   } catch (error) {
-    console.error("Failed to fetch statuses:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Failed to fetch statuses:", error);
+    }
     return NextResponse.json({ error: "Failed to fetch statuses" }, { status: 500 });
   }
 }

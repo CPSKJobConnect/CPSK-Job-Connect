@@ -9,6 +9,12 @@ interface TrendDataPoint {
   applications: number;
 }
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export default function ApplicantTrendChart() {
   const [data, setData] = useState<TrendDataPoint[]>([]);
   const [loading, setLoading] = useState(false);
@@ -18,7 +24,7 @@ export default function ApplicantTrendChart() {
     const contentType = response.headers.get("content-type") || "";
     if (!response.ok) {
       const text = await response.text().catch(() => null);
-      console.error(`Fetch failed (${response.status}):`, text);
+      logDebug(`Fetch failed (${response.status}):`, text);
       return null;
     }
     if (contentType.includes("application/json")) {
@@ -26,12 +32,12 @@ export default function ApplicantTrendChart() {
         return await response.json();
       } catch (err) {
         const text = await response.text().catch(() => null);
-        console.error("Failed to parse JSON response:", err, text);
+        logDebug("Failed to parse JSON response:", err, text);
         return null;
       }
     }
     const text = await response.text().catch(() => null);
-    console.warn("Expected JSON but got different content-type:", contentType, text);
+    logDebug("Expected JSON but got different content-type:", contentType, text);
     return null;
   }
 
@@ -44,11 +50,11 @@ export default function ApplicantTrendChart() {
         if (result?.success) {
           setData(result.data?.trend ?? []);
         } else {
-          console.error("Failed to fetch application trend data:", result?.error);
+          logDebug("Failed to fetch application trend data:", result?.error);
           setData([]);
         }
       } catch (err) {
-        console.error("Error fetching trend data:", err);
+        logDebug("Error fetching trend data:", err);
         setData([]);
       } finally {
         setLoading(false);

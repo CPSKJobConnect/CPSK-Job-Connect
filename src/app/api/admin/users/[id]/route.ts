@@ -3,6 +3,12 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 // PATCH - Toggle user active/inactive status
 export async function PATCH(
   request: Request,
@@ -66,7 +72,7 @@ export async function PATCH(
     }, { status: 200 });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to update user status" }, { status: 500 });
   }
 }
@@ -111,7 +117,7 @@ export async function DELETE(
     return NextResponse.json({ message: "User deleted successfully" }, { status: 200 });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
   }
 }

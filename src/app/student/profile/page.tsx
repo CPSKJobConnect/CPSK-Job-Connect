@@ -21,6 +21,12 @@ import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
 import { PasswordChangeCard } from "@/components/security/PasswordChangeCard";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export default function StudentProfilePage() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,7 +46,7 @@ export default function StudentProfilePage() {
       const data: Student = await res.json();
       setStudent(data);
     } catch (error) {
-      console.error("Failed to fetch student profile:", error);
+      logDebug("Failed to fetch student profile:", error);
       toast.error("Error loading profile");
     } finally {
       done();
@@ -97,7 +103,7 @@ export default function StudentProfilePage() {
 
       await fetchStudentProfile();
     } catch (error) {
-      console.error("Error uploading profile image:", error);
+      logDebug("Error uploading profile image:", error);
       toast.error("Error uploading profile image");
     } finally {
       setUploadingImage(false);

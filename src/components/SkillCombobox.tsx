@@ -35,7 +35,9 @@ const SkillCombobox = ({ selectedSkill, setSelectedSkill, existingSkills = [] }:
   const [skillList, setSkillList] = useState<string[]>(existingSkills);
 
   useEffect(() => {
-    console.log("selected skill: ", selectedSkill)
+    if (process.env.NODE_ENV !== "production") {
+        console.log("selected skill: ", selectedSkill)
+    }
   }, [selectedSkill])
 
   const handleSkillAdded = () => {

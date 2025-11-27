@@ -31,7 +31,9 @@ async function PATCH_impl(
 
     return NextResponse.json(updatedReport, { status: 200 });
   } catch (error) {
-    console.error(error);
+    if (process.env.NODE_ENV === "development") {
+      console.error(error);
+    }
     return NextResponse.json(
       { error: "Failed to update report" },
       { status: 500 }

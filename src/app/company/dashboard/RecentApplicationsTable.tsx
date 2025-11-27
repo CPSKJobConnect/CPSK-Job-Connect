@@ -17,6 +17,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 import apiFetch from "@/lib/apiClient";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
 
 type StatusType = "pending" | "reviewed" | "interview" | "offered" | "rejected";
 
@@ -57,7 +62,7 @@ export default function RecentApplicationsTable({ applications, loading, isCompa
 
       if (!response.ok) {
         const error = await response.json();
-        console.error("Failed to update application status:", error);
+        logDebug("Failed to update application status:", error);
         // Revert to previous status on error
         setStatusMap((prev) => ({ ...prev, [application_id]: previousStatus }));
         toast.error("Failed to update status", {
@@ -65,13 +70,13 @@ export default function RecentApplicationsTable({ applications, loading, isCompa
         });
       } else {
         const result = await response.json();
-        console.log("Application status updated successfully:", result);
+        logDebug("Application status updated successfully:", result);
         toast.success("Status updated", {
           description: `Application status changed to ${newStatus}`
         });
       }
     } catch (error) {
-      console.error("Error updating application status:", error);
+      logDebug("Error updating application status:", error);
       // Revert to previous status on error
       setStatusMap((prev) => ({ ...prev, [application_id]: previousStatus }));
       toast.error("Error updating status", {

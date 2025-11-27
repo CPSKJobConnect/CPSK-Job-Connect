@@ -11,6 +11,12 @@ interface SessionUser {
   role?: string;
 }
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 // ฟังก์ชันตรวจสอบ Admin
 function isAdmin(user: SessionUser | undefined) {
   return user?.role?.toLowerCase() === "admin";
@@ -53,7 +59,7 @@ export async function GET(
     return NextResponse.json(jobPost, { status: 200 });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to fetch job post" }, { status: 500 });
   }
 }
@@ -94,7 +100,7 @@ export async function PUT(
     return NextResponse.json(jobPost, { status: 200 });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to update job post" }, { status: 500 });
   }
 }
@@ -125,7 +131,7 @@ export async function DELETE(
     return NextResponse.json({ message: "Successfully deleted", deleted }, { status: 200 });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to delete job post" }, { status: 500 });
   }
 }

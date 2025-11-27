@@ -66,7 +66,12 @@ export async function getApiSession(request?: NextRequest) {
           expires: "",
         };
       } catch (error) {
-        console.error("Invalid token:", error);
+        // OWASP ASVS 13.4.2: log detailed error only in development
+        if (process.env.NODE_ENV === "development") {
+          console.error("Invalid token:", error);
+        } else {
+          console.error("Invalid token.");
+        }
         return null;
       }
     }

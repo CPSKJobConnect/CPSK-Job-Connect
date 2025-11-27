@@ -3,6 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -51,7 +57,7 @@ export async function DELETE(
       .remove([document.file_path]);
 
     if (storageError) {
-      console.error("Supabase delete error:", storageError);
+      logDebug("Supabase delete error:", storageError);
       // Continue to delete from DB anyway
     }
 
@@ -61,7 +67,7 @@ export async function DELETE(
     return NextResponse.json({ message: "Document deleted successfully" });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to delete document" }, { status: 500 });
   }
 }

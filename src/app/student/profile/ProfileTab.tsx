@@ -27,6 +27,12 @@ interface ProfileTabProps {
   onUpdate: () => void;
 }
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -170,7 +176,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
 
       if (!res.ok) {
         const errorData = await res.json();
-        console.error("❌ Update failed:", errorData);
+        logDebug("❌ Update failed:", errorData);
         toast.error(errorData.error || "Failed to update profile");
         return;
       }
@@ -181,7 +187,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
       setLogoFile(null);
       onUpdate();
     } catch (error) {
-      console.error("Error updating profile:", error);
+      logDebug("Error updating profile:", error);
       toast.error("Error updating profile");
     } finally {
       setIsSaving(false);

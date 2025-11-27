@@ -6,6 +6,12 @@ import { sendAlumniStatusEmail, sendCompanyStatusEmail } from "@/lib/email";
 import DOMPurify from "isomorphic-dompurify";
 import { z } from "zod";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 // ✅ Zod Input Validation (ASVS 1.1.1)
 const ApproveSchema = z.object({
   accountId: z.number(),
@@ -91,7 +97,7 @@ export async function POST(request: Request) {
           reason || undefined
         );
       } catch (emailError) {
-        console.error(`❌ Failed to send email to ${student.account.email}:`, emailError);
+        logDebug(`❌ Failed to send email to ${student.account.email}:`, emailError);
       }
 
       message = `Student ${action === "approve" ? "approved" : "rejected"} successfully`;
@@ -140,7 +146,7 @@ export async function POST(request: Request) {
           reason || undefined
         );
       } catch (emailError) {
-        console.error(`❌ Failed to send email to ${company.account.email}:`, emailError);
+        logDebug(`❌ Failed to send email to ${company.account.email}:`, emailError);
       }
 
       message = `Company ${action === "approve" ? "approved" : "rejected"} successfully`;
@@ -149,7 +155,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message, success: true }, { status: 200 });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to update account status" }, { status: 500 });
   }
 }

@@ -178,7 +178,9 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Login error:", error);
+    if (process.env.NODE_ENV === "development") {
+        console.error("Login error:", error);
+    }
     return NextResponse.json({ error: "An error occurred during login" }, { status: 500 });
   }
 }

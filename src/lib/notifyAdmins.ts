@@ -17,7 +17,9 @@ export async function notifyAdmins(
     });
 
     if (!adminRole) {
-      console.error("❌ Admin role not found in database");
+      if (process.env.NODE_ENV === "development") {
+        console.error("❌ Admin role not found in database");
+      }
       return 0;
     }
 
@@ -28,7 +30,9 @@ export async function notifyAdmins(
     });
 
     if (admins.length === 0) {
-      console.warn("⚠️ No admin accounts found");
+      if (process.env.NODE_ENV === "development") {
+        console.warn("⚠️ No admin accounts found");
+      }
       return 0;
     }
 
@@ -42,12 +46,17 @@ export async function notifyAdmins(
       }))
     });
 
-    console.log(`✅ Notified ${admins.length} admin(s): "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`);
+    if (process.env.NODE_ENV === "development") {
+      console.log(`✅ Notified ${admins.length} admin(s): "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`);
+    }
+
     return admins.length;
 
   } catch (error) {
-    console.error("❌ Error notifying admins:", error);
-    return 0;
+    if (process.env.NODE_ENV === "development") {
+      console.error("❌ Error notifying admins:", error);
+    }
+    return 0; // generic failure in production
   }
 }
 

@@ -31,6 +31,12 @@ const typeColors: Record<string, string> = {
   freelance: "bg-yellow-200 text-gray-800",
 };
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 const JobCard = (job: JobCardProps) => {
   const { data: session } = useSession();
   const [isSaved, setIsSaved] = useState(job.info.isSaved || false);
@@ -62,7 +68,7 @@ const JobCard = (job: JobCardProps) => {
           setIsSaved(data.isSaved);
         }
       } catch (error) {
-        console.error("Error checking saved status:", error);
+        logDebug("Error checking saved status:", error);
         setIsSaved(false);
       } finally {
         setIsCheckingStatus(false);
@@ -109,11 +115,11 @@ const JobCard = (job: JobCardProps) => {
         }
       } else {
         const error = await response.json();
-        console.error("Failed to toggle save:", error);
+        logDebug("Failed to toggle save:", error);
         toast.error("Failed to save job. Please try again.");
       }
     } catch (error) {
-      console.error("Error toggling save:", error);
+      logDebug("Error toggling save:", error);
       toast.error("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);

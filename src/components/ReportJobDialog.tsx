@@ -21,6 +21,12 @@ interface ReportType {
   target: string;
 }
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export const ReportJobDialog = ({
   targetId,
   targetType,
@@ -42,7 +48,7 @@ export const ReportJobDialog = ({
         const data = await res.json();
         setReportTypes(data);
       } catch (err) {
-        console.error(err);
+        logDebug(err);
         toast.error("Failed to load report reasons");
       }
     };
@@ -77,7 +83,7 @@ export const ReportJobDialog = ({
         toast.error(error.message || "Failed to submit report");
       }
     } catch (err) {
-      console.error(err);
+      logDebug(err);
       toast.error("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
