@@ -10,8 +10,15 @@ describe('Student Login E2E', () => {
   cy.get('#email').click();
   cy.get('#email').type('student_test@ku.th');
   cy.get('#password').click();
-  cy.get('#password').type('test1234{enter}');
-  cy.get('[data-testid="auth-submit"]').as('submit').should('be.visible').click();
+  // Type the password without pressing Enter to avoid racing navigation
+  cy.get('#password').type('test1234');
+  // Break the chain and fetch the button, then click it to avoid re-render races
+  cy.get('[data-testid="auth-submit"]', { timeout: 15000 })
+    .should('be.visible')
+    .and('not.be.disabled')
+    .then(($btn) => {
+      cy.wrap($btn).click();
+    });
   cy.location('pathname', { timeout: 10000 }).should('include', '/student/dashboard');
     });
 
@@ -19,8 +26,11 @@ describe('Student Login E2E', () => {
     cy.get('#email').click();
     cy.get('#email').type('student_wrong@ku.th');
     cy.get('#password').click();
-    cy.get('#password').type('test1234{enter}');
-    cy.get('[data-testid="auth-submit"]').as('submit').should('be.visible').click();
+    cy.get('#password').type('test1234');
+    cy.get('[data-testid="auth-submit"]', { timeout: 15000 })
+      .should('be.visible')
+      .and('not.be.disabled')
+      .then(($btn) => cy.wrap($btn).click());
     cy.get('[data-testid="auth-form-error-card"]', { timeout: 15000 }).should('be.visible').within(() => {
       cy.contains('Invalid email or password', { timeout: 10000 }).should('be.visible')
     });
@@ -30,7 +40,7 @@ describe('Student Login E2E', () => {
     cy.get('#email').click();
     cy.get('#email').type('student_test@ku.th');
     cy.get('#password').click();
-    cy.get('#password').type('wrong1234{enter}');
+    cy.get('#password').type('wrong1234');
     cy.get('button.text-primary-foreground').click();
     // allow extra time for server validation and error UI animation
     cy.get('[data-testid="auth-form-error-card"]', { timeout: 15000 }).should('be.visible');
