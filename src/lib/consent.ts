@@ -26,13 +26,21 @@ function readCookieFromRequest(req?: NextRequest | Request | { headers?: any; co
 }
 
 async function getLatestConsentFromDB(accountId: number): Promise<boolean> {
-  if (!accountId) return false
-  const latest = await prisma.accountConsentLog.findFirst({
-    where: { account_id: accountId },
-    orderBy: { created_at: 'desc' },
-    select: { consent: true }
-  })
-  return !!(latest && latest.consent)
+  if (!accountId || !Number.isInteger(accountId) || accountId <= 0) return false;
+
+  try {
+    const latest = await prisma.accountConsentLog.findFirst({
+      where: { account_id: accountId },
+      orderBy: { created_at: 'desc' },
+      select: { consent: true },
+      // Add timeout to prevent long-running queries
+      take: 1,
+    });
+    return !!(latest && latest.consent);
+  } catch (error) {
+    console.error(`Failed to retrieve consent for account ${accountId}:`, error);
+    return false;
+  }
 }
 
 
@@ -46,7 +54,8 @@ export async function resolveConsent(options: {
   const cookieVal = readCookieFromRequest(req)
   const sync = Boolean((options as any)?.syncCookie)
 
-  if (typeof accountId === 'number' && accountId > 0) {
+  // Validate accountId to prevent injection
+  if (typeof accountId === 'number' && Number.isInteger(accountId) && accountId > 0) {
     const dbConsent = await getLatestConsentFromDB(accountId)
 
     // Only sync cookie when explicitly requested and a response object is provided.

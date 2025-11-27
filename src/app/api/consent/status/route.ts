@@ -3,8 +3,45 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { COOKIE_NAME, getLatestConsentFromDB } from "@/lib/consent";
 
+// Rate limiting for status checks
+const statusAttempts = new Map<string, { count: number; firstAttempt: number }>();
+const MAX_STATUS_ATTEMPTS = 30;
+const STATUS_WINDOW_MS = 60 * 1000; // 1 minute
+
+function checkStatusRateLimit(identifier: string): boolean {
+  const now = Date.now();
+  const record = statusAttempts.get(identifier);
+
+  if (record) {
+    if (now - record.firstAttempt > STATUS_WINDOW_MS) {
+      statusAttempts.delete(identifier);
+      return true;
+    }
+    if (record.count >= MAX_STATUS_ATTEMPTS) {
+      return false;
+    }
+    record.count++;
+  } else {
+    statusAttempts.set(identifier, { count: 1, firstAttempt: now });
+  }
+  return true;
+}
+
 export async function GET(req: NextRequest) {
   try {
+    // Get client IP for rate limiting
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+                     req.headers.get('x-real-ip') ||
+                     'unknown';
+
+    // Rate limiting check
+    if (!checkStatusRateLimit(clientIp)) {
+      return NextResponse.json(
+        { error: 'Too many status check attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     let session = null;
     try {
       session = await getServerSession(authOptions);

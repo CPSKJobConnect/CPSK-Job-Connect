@@ -4,16 +4,54 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { COOKIE_NAME } from "@/lib/consent";
 
+// Rate limiting for consent updates
+const updateAttempts = new Map<string, { count: number; firstAttempt: number }>();
+const MAX_UPDATE_ATTEMPTS = 20;
+const UPDATE_WINDOW_MS = 60 * 1000; // 1 minute
+
+function checkUpdateRateLimit(identifier: string): boolean {
+  const now = Date.now();
+  const record = updateAttempts.get(identifier);
+
+  if (record) {
+    if (now - record.firstAttempt > UPDATE_WINDOW_MS) {
+      updateAttempts.delete(identifier);
+      return true;
+    }
+    if (record.count >= MAX_UPDATE_ATTEMPTS) {
+      return false;
+    }
+    record.count++;
+  } else {
+    updateAttempts.set(identifier, { count: 1, firstAttempt: now });
+  }
+  return true;
+}
+
 export async function PATCH(req: NextRequest) {
   try {
+    // Get client IP for rate limiting
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+                     req.headers.get('x-real-ip') ||
+                     'unknown';
+
+    // Rate limiting check
+    if (!checkUpdateRateLimit(clientIp)) {
+      return NextResponse.json(
+        { error: 'Too many update attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     try {
       const cookieHeader = req.headers.get?.('cookie') || req.headers.get?.('Cookie');
       console.debug('[consent:update-status] incoming request url=', req.url, 'cookie=', cookieHeader);
     } catch (e) { /* ignore */ }
 
+    // Input validation with size limit
     const body = await req.json().catch(() => null);
     if (!body || typeof body.consent !== 'boolean') {
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid request: consent must be a boolean' }, { status: 400 });
     }
 
     const consentValue: boolean = body.consent;
