@@ -55,13 +55,19 @@ const httpsOptions = {
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
+const sanitizeForLog = (value) => {
+  if (typeof value !== 'string') return '[non-string]';
+  return value.replace(/[\r\n\t]/g, ' ');
+};
+
 app.prepare().then(() => {
   createServer(httpsOptions, async (req, res) => {
     try {
       const parsedUrl = parse(req.url, true);
       await handle(req, res, parsedUrl);
     } catch (err) {
-      console.error('Error occurred handling', req.url, err);
+      const safeUrl = sanitizeForLog(req.url || '');
+      console.error('Error occurred handling', safeUrl, err);
       res.statusCode = 500;
       res.end('Internal server error');
     }

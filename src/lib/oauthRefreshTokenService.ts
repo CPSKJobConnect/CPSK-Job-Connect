@@ -5,7 +5,8 @@ import { GOOGLE_OAUTH_PROVIDER, getRefreshTokenPepper } from "@/lib/securityCons
 
 function createRefreshTokenHash(refreshToken: string) {
   const pepper = getRefreshTokenPepper();
-  return crypto.createHash("sha256").update(`${refreshToken}:${pepper}`).digest("hex");
+  // Use an intentionally expensive derivation to slow down brute-force attempts
+  return crypto.pbkdf2Sync(refreshToken, pepper, 120_000, 64, "sha512").toString("hex");
 }
 
 export async function rotateGoogleRefreshToken(accountId: number, refreshToken: string) {
