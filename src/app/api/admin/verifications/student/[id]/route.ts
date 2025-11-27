@@ -103,7 +103,7 @@ export async function PATCH(
         account_id: student.account_id,
         sender_id: adminAccount.id,
         message:
-          status === 'APPROVED'
+          statusValue === 'APPROVED'
             ? 'Your alumni verification has been approved! You can now apply for jobs.'
             : 'Your alumni verification has been rejected. Please contact support for more information.',
       },
@@ -111,7 +111,7 @@ export async function PATCH(
 
     return NextResponse.json({
       success: true,
-      message: `Student ${status === 'APPROVED' ? 'approved' : 'rejected'} successfully`,
+      message: `Student ${statusValue === 'APPROVED' ? 'approved' : 'rejected'} successfully`,
       student: {
         id: updatedStudent.id,
         name: DOMPurify.sanitize(updatedStudent.name),
