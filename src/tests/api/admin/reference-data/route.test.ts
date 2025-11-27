@@ -42,7 +42,8 @@ describe("GET /api/admin/reference-data", () => {
     it("should return 401 if not authenticated", async () => {
       getServerSession.mockResolvedValue(null);
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(401);
@@ -54,7 +55,8 @@ describe("GET /api/admin/reference-data", () => {
         user: {},
       });
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(401);
@@ -64,7 +66,8 @@ describe("GET /api/admin/reference-data", () => {
     it("should return 403 if user is not admin", async () => {
       getServerSession.mockResolvedValue(mockStudentSession);
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(403);
@@ -117,7 +120,8 @@ describe("GET /api/admin/reference-data", () => {
       (prisma.jobCategory.findMany as jest.Mock).mockResolvedValue(mockCategories);
       (prisma.jobTag.findMany as jest.Mock).mockResolvedValue(mockTags);
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -135,7 +139,8 @@ describe("GET /api/admin/reference-data", () => {
       (prisma.jobCategory.findMany as jest.Mock).mockResolvedValue(mockCategories);
       (prisma.jobTag.findMany as jest.Mock).mockResolvedValue(mockTags);
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -166,7 +171,8 @@ describe("GET /api/admin/reference-data", () => {
       (prisma.jobCategory.findMany as jest.Mock).mockResolvedValue(mockCategories);
       (prisma.jobTag.findMany as jest.Mock).mockResolvedValue(mockTags);
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -186,7 +192,8 @@ describe("GET /api/admin/reference-data", () => {
       (prisma.jobCategory.findMany as jest.Mock).mockResolvedValue(mockCategories);
       (prisma.jobTag.findMany as jest.Mock).mockResolvedValue(mockTags);
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -206,7 +213,8 @@ describe("GET /api/admin/reference-data", () => {
       (prisma.jobCategory.findMany as jest.Mock).mockResolvedValue(mockCategories);
       (prisma.jobTag.findMany as jest.Mock).mockResolvedValue(mockTags);
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -226,7 +234,8 @@ describe("GET /api/admin/reference-data", () => {
       (prisma.jobCategory.findMany as jest.Mock).mockResolvedValue(mockCategories);
       (prisma.jobTag.findMany as jest.Mock).mockResolvedValue(mockTags);
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -246,7 +255,8 @@ describe("GET /api/admin/reference-data", () => {
       (prisma.jobCategory.findMany as jest.Mock).mockResolvedValue(mockCategories);
       (prisma.jobTag.findMany as jest.Mock).mockResolvedValue(mockTags);
 
-      await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      await GET(request);
 
       // All queries should be called
       expect(prisma.company.findMany).toHaveBeenCalled();
@@ -263,7 +273,8 @@ describe("GET /api/admin/reference-data", () => {
       (prisma.jobCategory.findMany as jest.Mock).mockResolvedValue([]);
       (prisma.jobTag.findMany as jest.Mock).mockResolvedValue([]);
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -285,7 +296,8 @@ describe("GET /api/admin/reference-data", () => {
         new Error("Database connection error")
       );
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -297,7 +309,8 @@ describe("GET /api/admin/reference-data", () => {
         new Error("Company query failed")
       );
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -310,7 +323,8 @@ describe("GET /api/admin/reference-data", () => {
         new Error("JobType query failed")
       );
 
-      const response = await GET();
+      const request = new Request("http://localhost:3000/api/admin/reference-data");
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(500);
