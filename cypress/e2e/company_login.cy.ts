@@ -1,6 +1,6 @@
 describe('Company Login E2E', () => {
   beforeEach(() => {
-    cy.visit('http://localhost:3000')
+    cy.visit('https://localhost:3000')
     cy.get('[data-testid="company-card"]').click()
   })
 
@@ -8,9 +8,10 @@ describe('Company Login E2E', () => {
     cy.get('[name="email"]').click();
     cy.get('[name="email"]').type('company_test@gmail.com');
     cy.get('[name="password"]').click();
-    cy.get('[name="password"]').type('test1234{enter}');
-    // wait until the submit button is enabled before clicking to avoid 'disabled' failures
-    cy.get('[data-testid="auth-submit"]', { timeout: 10000 }).should('not.be.disabled').click();
+    // Type the password without pressing Enter to avoid racing a navigation
+    cy.get('[name="password"]').type('test1234');
+    // wait until the submit button is present and enabled before clicking to avoid flakiness
+    cy.get('[data-testid="auth-submit"]', { timeout: 15000 }).should('be.visible').and('not.be.disabled').click();
     cy.location('pathname', { timeout: 20000 }).should('include', '/company/dashboard');
   });
 

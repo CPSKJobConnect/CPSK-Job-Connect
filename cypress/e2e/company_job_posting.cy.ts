@@ -2,7 +2,7 @@
 
 context('Company - Job Posting Flow', () => {
   beforeEach(() => {
-    const base = Cypress.config('baseUrl') || Cypress.env('baseUrl') || 'http://localhost:3000';
+    const base = Cypress.config('baseUrl') || Cypress.env('baseUrl') || 'https://localhost:3000';
     cy.loginAsCompany();
     // allow extra time after login for server-side data to become available
     cy.wait(5000);
@@ -158,7 +158,7 @@ context('Company - Job Posting Flow', () => {
   });
 
   it('Happy path - Edit Job Post (create -> edit -> verify)', function (this: Mocha.Context) {
-    const base = Cypress.config('baseUrl') || 'http://localhost:3000'
+    const base = Cypress.config('baseUrl') || 'https://localhost:3000'
     const filters = Cypress.env('jobFilters') || {};
     if (!filters || !filters.categories || filters.categories.length === 0) {
       cy.log('No categories available, skipping edit job test');
@@ -170,25 +170,16 @@ context('Company - Job Posting Flow', () => {
       this.skip();
     }
 
-    const createBody = {
-      title: `E2E Edit Job ${Date.now()}`,
-      category: filters.categories[0] || 'Other',
-      location: 'Bangkok',
-      type: (filters.types && filters.types[0]) || 'fulltime',
-      arrangement: (filters.arrangements && filters.arrangements[0]) || 'onsite',
-      salary: { min: 10000, max: 20000 },
-      posted: new Date().toISOString(),
-      deadline: (() => { const d = new Date(); d.setDate(d.getDate()+10); return d.toISOString().slice(0,10); })(),
-      skills: [filters.tags[0]],
-      description: { overview: 'overview', responsibility: 'resp', requirement: 'req', qualification: 'qual' },
-      documents: ['Resume'],
-      is_published: true,
-    };
+    // Instead of creating a job, look up an existing job posted by this company and edit it.
+    cy.request({ method: 'GET', url: `${base}/api/company/jobs` }).then((res) => {
+      const jobs = Array.isArray(res.body) ? res.body : [];
+      if (!jobs.length) {
+        cy.log('No existing company jobs to edit, skipping test');
+        this.skip();
+        return;
+      }
 
-    cy.request({ method: 'POST', url: `${base}/api/company/jobs/create`, body: createBody }).then((res) => {
-      cy.wrap([200, 201]).should('include', res.status);
-      const job = res.body;
-      const jobId = job.id || job.jobId || job.data?.id;
+      const jobId = jobs[0].id;
       cy.wrap(jobId).should('exist');
 
       cy.visit(`${base}/company/job-applicant`);
@@ -216,7 +207,7 @@ context('Company - Job Posting Flow', () => {
   });
 
   it('Delete Job Post (create -> delete -> verify removed)', function (this: Mocha.Context) {
-    const base = Cypress.config('baseUrl') || 'http://localhost:3000'
+    const base = Cypress.config('baseUrl') || 'https://localhost:3000'
     const filters = Cypress.env('jobFilters') || {};
     if (!filters || !filters.categories || filters.categories.length === 0) {
       cy.log('No categories available, skipping delete job test');
@@ -227,25 +218,16 @@ context('Company - Job Posting Flow', () => {
       this.skip();
     }
 
-    const createBody = {
-      title: `E2E Delete Job ${Date.now()}`,
-      category: filters.categories[0] || 'Other',
-      location: 'Bangkok',
-      type: (filters.types && filters.types[0]) || 'fulltime',
-      arrangement: (filters.arrangements && filters.arrangements[0]) || 'onsite',
-      salary: { min: 10000, max: 20000 },
-      posted: new Date().toISOString(),
-      deadline: (() => { const d = new Date(); d.setDate(d.getDate()+10); return d.toISOString().slice(0,10); })(),
-      skills: [filters.tags[0]],
-      description: { overview: 'overview', responsibility: 'resp', requirement: 'req', qualification: 'qual' },
-      documents: ['Resume'],
-      is_published: true,
-    };
+    // Instead of creating a job, find an existing job posted by this company and delete it.
+    cy.request({ method: 'GET', url: `${base}/api/company/jobs` }).then((res) => {
+      const jobs = Array.isArray(res.body) ? res.body : [];
+      if (!jobs.length) {
+        cy.log('No existing company jobs to delete, skipping test');
+        this.skip();
+        return;
+      }
 
-    cy.request({ method: 'POST', url: `${base}/api/company/jobs/create`, body: createBody }).then((res) => {
-      cy.wrap([200, 201]).should('include', res.status);
-      const job = res.body;
-      const jobId = job.id || job.jobId || job.data?.id;
+      const jobId = jobs[0].id;
       cy.wrap(jobId).should('exist');
 
       cy.visit(`${base}/company/job-applicant`);

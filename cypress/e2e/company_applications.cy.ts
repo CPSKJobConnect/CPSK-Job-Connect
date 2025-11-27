@@ -63,7 +63,7 @@ context('Company - Application Management', () => {
   });
 
   it('Change Application Status (Pending -> Interview) and persist', function () {
-    const base = Cypress.config('baseUrl') || 'http://localhost:3000';
+    const base = Cypress.config('baseUrl') || 'https://localhost:3000';
     const newStatus = 'interview';
 
     cy.get('@selectedApp').then((app: any) => {
@@ -150,7 +150,7 @@ context('Company - Application Management', () => {
   });
 
   it('View Applicant Profile (opens modal and shows correct info)', function () {
-    const base = Cypress.config('baseUrl') || 'http://localhost:3000';
+    const base = Cypress.config('baseUrl') || 'https://localhost:3000';
 
     cy.get('@selectedApp').then((app: any) => {
       const applicationId = String(app.id);

@@ -25,7 +25,7 @@ describe('Browse jobs - dynamic filter tests', () => {
     cy.wait(10000);
     cy.get('[data-testid^="job-card-"]', { timeout: 15000 }).should('have.length.at.least', 1);
 
-    const base = Cypress.env('baseUrl') || Cypress.config('baseUrl') || 'http://localhost:3000';
+    const base = Cypress.env('baseUrl') || Cypress.config('baseUrl') || 'https://localhost:3000';
     cy.request({ method: 'GET', url: `${base}/api/jobs` }).then((resp) => {
       const jobs = resp.body?.data || resp.body || [];
       if (!jobs || jobs.length === 0) {

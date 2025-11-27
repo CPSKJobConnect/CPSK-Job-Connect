@@ -4,7 +4,7 @@ describe('Student Documents Upload', () => {
     cy.loginAsStudent();
     // Allow extra time for session and header/menu to render
     cy.wait(8000);
-    const base = Cypress.config('baseUrl') || 'http://localhost:3000';
+    const base = Cypress.config('baseUrl') || 'https://localhost:3000';
     // Navigate directly to profile to avoid flaky popover/menu
     cy.visit(`${base}/student/profile`);
     cy.get('[data-testid="document-tab"]', { timeout: 15000 }).should('be.visible').click();
