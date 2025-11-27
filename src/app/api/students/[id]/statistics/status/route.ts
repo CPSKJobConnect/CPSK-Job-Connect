@@ -23,23 +23,26 @@ export async function GET(
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    const statusData = await prisma.application.groupBy({
-      by: ["status"],
-      where: { student_id: student.id },
-      _count: { id: true },
-    });
+    // Fetch all status names in a single query to avoid N+1 problem
+    const [statusData, allStatuses] = await Promise.all([
+      prisma.application.groupBy({
+        by: ["status"],
+        where: { student_id: student.id },
+        _count: { id: true },
+      }),
+      prisma.applicationStatus.findMany({
+        select: { id: true, name: true },
+      }),
+    ]);
 
-    const result = await Promise.all(
-      statusData.map(async (item) => {
-        const statusRecord = await prisma.applicationStatus.findUnique({
-            where: { id: item.status },
-          });
-          return {
-            name: statusRecord?.name || "Unknown",
-            value: item._count.id,
-          };
-      })
-    );
+    // Create a map for O(1) status name lookup
+    const statusMap = new Map(allStatuses.map(s => [s.id, s.name]));
+
+    // Map results without additional database queries
+    const result = statusData.map((item) => ({
+      name: statusMap.get(item.status) || "Unknown",
+      value: item._count.id,
+    }));
 
     return NextResponse.json(result);
   } catch (error) {

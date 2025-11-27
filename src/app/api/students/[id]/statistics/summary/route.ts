@@ -22,21 +22,21 @@ export async function GET(
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    const applicationsSent = await prisma.application.count({
-      where: { student_id: student.id },
-    });
-
-    const interviewsScheduled = await prisma.application.count({
-      where: { student_id: student.id, status: 3 },
-    });
-
-    const offersReceived = await prisma.application.count({
-      where: { student_id: student.id, status: 4 },
-    });
-
-    const savedJobs = await prisma.savedJob.count({
-      where: { student_id: student.id },
-    });
+    // Execute all count queries in parallel for better performance
+    const [applicationsSent, interviewsScheduled, offersReceived, savedJobs] = await Promise.all([
+      prisma.application.count({
+        where: { student_id: student.id },
+      }),
+      prisma.application.count({
+        where: { student_id: student.id, status: 3 },
+      }),
+      prisma.application.count({
+        where: { student_id: student.id, status: 4 },
+      }),
+      prisma.savedJob.count({
+        where: { student_id: student.id },
+      }),
+    ]);
 
     return NextResponse.json({
       applicationsSent,

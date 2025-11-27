@@ -42,46 +42,48 @@ export async function GET(request: NextRequest) {
     const limit = limitParam ? parseInt(limitParam) : 5;
     const offset = offsetParam ? parseInt(offsetParam) : 0;
 
-    const totalApplications = await prisma.application.count({
-      where: {
-        jobPost: { company_id: companyId }
-      }
-    });
-
-    const applications = await prisma.application.findMany({
-      where: {
-        jobPost: { company_id: companyId }
-      },
-      include: {
-        student: {
-          include: {
-            account: {
-              select: {
-                id: true,
-                email: true,
-                logoUrl: true // This is the profile picture
+    // Parallelize count and findMany queries for better performance
+    const [totalApplications, applications] = await Promise.all([
+      prisma.application.count({
+        where: {
+          jobPost: { company_id: companyId }
+        }
+      }),
+      prisma.application.findMany({
+        where: {
+          jobPost: { company_id: companyId }
+        },
+        include: {
+          student: {
+            include: {
+              account: {
+                select: {
+                  id: true,
+                  email: true,
+                  logoUrl: true // This is the profile picture
+                }
               }
+            }
+          },
+          jobPost: {
+            select: {
+              id: true,
+              jobName: true
+            }
+          },
+          applicationStatus: {
+            select: {
+              name: true
             }
           }
         },
-        jobPost: {
-          select: {
-            id: true,
-            jobName: true
-          }
+        orderBy: {
+          applied_at: "desc"
         },
-        applicationStatus: {
-          select: {
-            name: true
-          }
-        }
-      },
-      orderBy: {
-        applied_at: "desc"
-      },
-      take: limit,
-      skip: offset
-    });
+        take: limit,
+        skip: offset
+      })
+    ]);
 
      
     const formattedApplications = applications.map((app: any) => ({

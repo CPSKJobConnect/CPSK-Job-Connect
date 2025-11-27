@@ -92,8 +92,9 @@ const StudentDashboardPage = () => {
     // Check on mount
     checkVerificationStatus();
 
-    // Check every 30 seconds
-    const interval = setInterval(checkVerificationStatus, 30000);
+    // Check every 5 minutes (reduced from 30 seconds for better performance)
+    // Verification status doesn't change frequently enough to warrant 30s polling
+    const interval = setInterval(checkVerificationStatus, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [session, update]);

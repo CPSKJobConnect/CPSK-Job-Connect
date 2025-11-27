@@ -45,6 +45,7 @@ jest.mock("@/lib/db", () => ({
     },
     applicationStatus: {
       findUnique: jest.fn(),
+      findMany: jest.fn(),
     },
     jobPost: {
       findUnique: jest.fn(),
@@ -284,9 +285,10 @@ describe("GET /api/students/[id]/statistics/status", () => {
         { status: 1, _count: { id: 10 } },
         { status: 2, _count: { id: 5 } },
       ]);
-      (prisma.applicationStatus.findUnique as jest.Mock)
-        .mockResolvedValueOnce({ id: 1, name: "Pending" })
-        .mockResolvedValueOnce({ id: 2, name: "Reviewed" });
+      (prisma.applicationStatus.findMany as jest.Mock).mockResolvedValue([
+        { id: 1, name: "Pending" },
+        { id: 2, name: "Reviewed" },
+      ]);
 
       const req = new Request("http://localhost/api/students/1/statistics/status");
       const res = await getStatus(req, { params: Promise.resolve({ id: "1" }) });
@@ -303,7 +305,7 @@ describe("GET /api/students/[id]/statistics/status", () => {
       (prisma.application.groupBy as jest.Mock).mockResolvedValue([
         { status: 999, _count: { id: 3 } },
       ]);
-      (prisma.applicationStatus.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.applicationStatus.findMany as jest.Mock).mockResolvedValue([]);
 
       const req = new Request("http://localhost/api/students/1/statistics/status");
       const res = await getStatus(req, { params: Promise.resolve({ id: "1" }) });

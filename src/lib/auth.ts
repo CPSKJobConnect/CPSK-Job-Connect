@@ -508,9 +508,10 @@ export const authOptions: NextAuthOptions = {
         session.user.verificationStatus = token.verificationStatus
         session.user.companyRegistrationStatus = token.companyRegistrationStatus
       }
-      // Debug: print session contents in non-production environments
+      // Debug: print session contents in non-production environments (throttled)
+      // Only log once per minute per user to reduce noise
       try {
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== 'production' && process.env.DEBUG_AUTH === 'true') {
           const safe = {
             sub: token?.sub,
             role: token?.role,

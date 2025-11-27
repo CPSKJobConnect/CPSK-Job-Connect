@@ -359,30 +359,33 @@ export async function POST(req: NextRequest) {
       const isAlumni = studentData.studentStatus === "ALUMNI";
 
       if (isAlumni) {
+        // Send alumni registration email in background (non-blocking)
         if (process.env.NODE_ENV !== "test") {
-          try {
-            const { sendAlumniRegistrationEmail } = await import("@/lib/email");
-            await sendAlumniRegistrationEmail(
-              validatedData.data.email,
-              studentData.name
-            );
-          } catch (emailError) {
-            console.error("Failed to send registration email:", emailError);
-            // Continue with registration even if email fails
-          }
+          (async () => {
+            try {
+              const { sendAlumniRegistrationEmail } = await import("@/lib/email");
+              await sendAlumniRegistrationEmail(
+                validatedData.data.email,
+                studentData.name
+              );
+            } catch (emailError) {
+              console.error("Failed to send registration email:", emailError);
+            }
+          })();
         }
 
-        // Notify all admins about new alumni registration
-        try {
-          await notifyAdminsNewAlumni(
-            studentData.name,
-            studentData.studentId,
-            account.id
-          );
-        } catch (notificationError) {
-          console.error("Failed to notify admins about new alumni:", notificationError);
-          // Continue with registration even if notification fails
-        }
+        // Notify all admins about new alumni registration in background (non-blocking)
+        (async () => {
+          try {
+            await notifyAdminsNewAlumni(
+              studentData.name,
+              studentData.studentId,
+              account.id
+            );
+          } catch (notificationError) {
+            console.error("Failed to notify admins about new alumni:", notificationError);
+          }
+        })();
       }
     }
 
@@ -397,25 +400,26 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Notify admins about new company registration
-    if (role === "company") {
-      try {
-        const companyData = validatedData.data as CompanyData;
-        await notifyAdminsNewCompany(
-          companyData.companyName,
-          account.id
-        );
-      } catch (notificationError) {
-        console.error("G�� Failed to notify admins about new company:", notificationError);
-        // Continue with registration even if notification fails
-      }
-    }
-
-    const res = NextResponse.json({
-      message: "Account created successfully",
-      // After registering, direct user to their dashboard
-      redirectTo: role === 'student' ? '/student/dashboard' : '/company/dashboard'
-    }, { status: 201 });
+    // Notify admins about new company registration in background (non-blocking)
+    if (role === "company") {
+      (async () => {
+        try {
+          const companyData = validatedData.data as CompanyData;
+          await notifyAdminsNewCompany(
+            companyData.companyName,
+            account.id
+          );
+        } catch (notificationError) {
+          console.error("Failed to notify admins about new company:", notificationError);
+        }
+      })();
+    }
+
+    const res = NextResponse.json({
+      message: "Account created successfully",
+      // After registering, direct user to their dashboard
+      redirectTo: role === 'student' ? '/student/dashboard' : '/company/dashboard'
+    }, { status: 201 });
 
     try {
         if (consentValue === true) {
@@ -498,3 +502,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

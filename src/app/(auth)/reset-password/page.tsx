@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, CheckCircle2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { PASSWORD_REQUIREMENTS, evaluatePasswordPolicy } from "@/lib/passwordPolicy";
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
@@ -26,6 +27,14 @@ export default function ResetPasswordPage() {
     setToken(paramToken);
   }, [searchParams]);
 
+  const tokenMissing = useMemo(() => !token, [token]);
+
+  const passwordPolicyResults = useMemo(
+    () => evaluatePasswordPolicy(password, { email: "" }),
+    [password]
+  );
+
+  // Handle redirect countdown
   useEffect(() => {
     if (redirectCountdown === null) return;
     if (redirectCountdown === 0) {
@@ -37,8 +46,6 @@ export default function ResetPasswordPage() {
     }, 1000);
     return () => clearTimeout(timer);
   }, [redirectCountdown, router]);
-
-  const tokenMissing = useMemo(() => !token, [token]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -90,18 +97,6 @@ export default function ResetPasswordPage() {
     }
   };
 
-  useEffect(() => {
-    if (redirectCountdown === null) return;
-    if (redirectCountdown === 0) {
-      router.push("/login/student?reset=success");
-      return;
-    }
-    const timer = setTimeout(() => {
-      setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null));
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [redirectCountdown, router]);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
@@ -151,6 +146,27 @@ export default function ResetPasswordPage() {
                   placeholder="Re-enter your new password"
                   className="bg-white"
                 />
+              </div>
+
+              <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <p className="text-sm font-semibold mb-2">Password requirements</p>
+                <ul className="space-y-1 text-sm">
+                  {PASSWORD_REQUIREMENTS.map((label) => {
+                    const result = passwordPolicyResults.find((item) => item.label === label)
+                    const hasInput = password.length > 0
+                    const passed = hasInput && (result?.passed ?? false)
+                    return (
+                      <li key={label} className="flex items-center gap-2">
+                        {passed ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-gray-400" />
+                        )}
+                        <span className={passed ? "text-emerald-700" : "text-gray-700"}>{label}</span>
+                      </li>
+                    )
+                  })}
+                </ul>
               </div>
 
               {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
