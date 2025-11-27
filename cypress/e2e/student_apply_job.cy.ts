@@ -12,7 +12,7 @@ describe("Student Apply Job", () => {
   beforeEach(function (this: Mocha.Context) {
     cy.intercept('POST', '/api/students/documents').as('uploadDoc');
     cy.loginAsStudent();
-    const base = Cypress.config('baseUrl') || 'http://localhost:3000';
+    const base = Cypress.config('baseUrl') || 'https://localhost:3000';
     const pollSession = (attempts = 0): Cypress.Chainable<any> => {
       const maxAttempts = 30;
       return cy.request({ method: 'GET', url: `${base}/api/auth/session`, failOnStatusCode: false }).then((resp) => {
@@ -57,7 +57,7 @@ describe("Student Apply Job", () => {
   it('Happy path - select existing documents and apply', function (this: Mocha.Context) {
     cy.intercept('POST', '/api/jobs/apply').as('applyRequest');
 
-    const base = Cypress.config('baseUrl') || 'http://localhost:3000';
+    const base = Cypress.config('baseUrl') || 'https://localhost:3000';
     cy.createJobViaAPI({ title: `E2E Job ${Date.now()}`, requiredDocuments: ['Resume', 'CV', 'Portfolio', 'Transcript'] })
       .then((res: any) => {
         if (res && (res.jobId || res.job?.id || res.id)) {
@@ -96,7 +96,7 @@ describe("Student Apply Job", () => {
   it('Failure path - missing required documents shows error and does not call apply API', function (this: Mocha.Context) {
     cy.intercept('POST', '/api/jobs/apply').as('applyRequest');
 
-    const base = Cypress.config('baseUrl') || 'http://localhost:3000';
+    const base = Cypress.config('baseUrl') || 'https://localhost:3000';
     cy.createJobViaAPI({ title: `E2E Job ${Date.now()}`, requiredDocuments: ['Resume', 'CV', 'Portfolio', 'Transcript'] })
       .then((res: any) => {
         if (res && (res.jobId || res.job?.id || res.id)) {

@@ -1,6 +1,6 @@
 describe('CSRF Guard (Cypress)', () => {
   // Use configured baseUrl when available, otherwise default to localhost:3000
-  const base = Cypress.config('baseUrl') || 'http://localhost:3000';
+  const base = Cypress.config('baseUrl') || 'https://localhost:3000';
   const endpoint = `${base}/api/test/csrf`;
 
   it('rejects browser-style form POST without custom header', () => {

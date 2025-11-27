@@ -603,6 +603,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                         <input
                           type="radio"
                           name="studentStatus"
+                          data-testid="studentStatus-current"
                           value="CURRENT"
                           checked={studentStatus === "CURRENT"}
                           onChange={(e) => setStudentStatus(e.target.value as "CURRENT" | "ALUMNI")}
@@ -615,6 +616,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                         <input
                           type="radio"
                           name="studentStatus"
+                          data-testid="studentStatus-alumni"
                           value="ALUMNI"
                           checked={studentStatus === "ALUMNI"}
                           onChange={(e) => setStudentStatus(e.target.value as "CURRENT" | "ALUMNI")}
@@ -650,12 +652,13 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                     <Label htmlFor="studentId">Student ID</Label>
                     <Input
                       id="studentId"
+                      data-testid="studentId"
                       {...register("studentId")}
                       className="mt-1 bg-gray-50"
                       placeholder="e.g., 6610545XXX"
                     />
                     {errors.studentId && (
-                      <p className="text-sm text-red-600 mt-1">{errors.studentId.message}</p>
+                      <p data-testid="error-studentId" className="text-sm text-red-600 mt-1">{errors.studentId.message}</p>
                     )}
                   </div>
 
@@ -663,12 +666,13 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                     <Label htmlFor="name">Full Name</Label>
                     <Input
                       id="name"
+                      data-testid="name"
                       {...register("name")}
                       className="mt-1 bg-gray-50"
                       placeholder="Enter your full name"
                     />
                     {errors.name && (
-                      <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
+                      <p data-testid="error-name" className="text-sm text-red-600 mt-1">{errors.name.message}</p>
                     )}
                   </div>
 
@@ -729,12 +733,13 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                     <Label htmlFor="phone">Phone Number</Label>
                     <Input
                       id="phone"
+                      data-testid="phone"
                       {...register("phone")}
                       className="mt-1 bg-gray-50"
                       placeholder="e.g., 0812345XXX"
                     />
                     {errors.phone && (
-                      <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
+                      <p data-testid="error-phone" className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
                     )}
                   </div>
 
@@ -745,6 +750,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                     <div className="mt-1 flex items-center space-x-2 bg-gray-50">
                       <Input
                         id="transcript"
+                        data-testid="transcript"
                         type="file"
                         accept=".pdf,.doc,.docx"
                         onChange={handleFileChange}
@@ -763,7 +769,7 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                       </Label>
                     </div>
                     {studentStatus === "ALUMNI" && !selectedFile && (
-                      <p className="text-sm text-red-600 mt-1">Alumni must upload a transcript</p>
+                      <p data-testid="error-transcript-required" className="text-sm text-red-600 mt-1">Alumni must upload a transcript</p>
                     )}
                   </div>
                 </>

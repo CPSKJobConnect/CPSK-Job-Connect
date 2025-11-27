@@ -164,6 +164,29 @@ export default defineConfig({
             return { error: String(error) };
           }
         },
+        async "db:approveCompany"(opts: { email: string }) {
+          try {
+            const { prisma } = await import("./src/lib/db");
+            const email = opts?.email;
+            if (!email) return { error: "email is required" };
+
+            const account = await prisma.account.findUnique({ where: { email } });
+            if (!account) return { error: `Account not found for ${email}` };
+
+            const company = await prisma.company.findUnique({ where: { account_id: account.id } });
+            if (!company) return { error: `Company not found for account ${account.id}` };
+
+            await prisma.company.update({
+              where: { id: company.id },
+              data: { registration_status: 'APPROVED', verified_at: new Date() },
+            });
+
+            return { success: true, companyId: company.id };
+          } catch (error) {
+            console.error("db:approveCompany task error:", error);
+            return { error: String(error) };
+          }
+        },
       });
 
       return config;

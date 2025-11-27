@@ -26,7 +26,7 @@ Cypress.Commands.add('loginAsStudent', (email: string = 'DEFAULT', password: str
   const em = email === 'DEFAULT' ? (getCred('TEST_STUDENT_EMAIL') || DEFAULTS.student.email) : email
   const pw = password === 'DEFAULT' ? (getCred('TEST_STUDENT_PASSWORD') || DEFAULTS.student.password) : password
 
-  const base = Cypress.config('baseUrl') || 'http://localhost:3000'
+  const base = Cypress.config('baseUrl') || 'https://localhost:3000'
   cy.visit(`${base}/login/student`)
   cy.get('#email', { timeout: 15000 }).should('be.visible').clear().type(em)
   cy.get('#password', { timeout: 15000 }).should('be.visible').clear().type(pw)
@@ -45,7 +45,19 @@ Cypress.Commands.add('loginAsCompany', (email: string = 'DEFAULT', password: str
   const em = email === 'DEFAULT' ? (getCred('TEST_COMPANY_EMAIL') || DEFAULTS.company.email) : email
   const pw = password === 'DEFAULT' ? (getCred('TEST_COMPANY_PASSWORD') || DEFAULTS.company.password) : password
 
-  const base = Cypress.config('baseUrl') || 'http://localhost:3000'
+  const base = Cypress.config('baseUrl') || 'https://localhost:3000'
+  // Ensure the company account is approved in the database for posting actions
+  // (this is safe for test environments only)
+  // Use a Cypress task (node-side) which imports the app's Prisma client.
+  cy.task('db:approveCompany', { email: em }).then((res) => {
+    if (res && typeof res === 'object' && (res as any).error) {
+      // eslint-disable-next-line no-console
+      console.error('db:approveCompany error:', (res as any).error)
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('db:approveCompany result:', res)
+    }
+  })
   cy.visit(`${base}/login/company`)
   cy.get('#email', { timeout: 15000 }).should('be.visible').clear().type(em)
   cy.get('#password', { timeout: 15000 }).should('be.visible').clear().type(pw)
