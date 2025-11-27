@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { PASSWORD_REQUIREMENTS, evaluatePasswordPolicy } from "@/lib/passwordPolicy"
 import { ROLE_CONFIGS } from "@/lib/role-config"
 import { AuthFormData, Role } from "@/types/auth"
-import { Upload } from "lucide-react"
-import { signIn, useSession } from "next-auth/react"
+import { CheckCircle2, Eye, EyeOff, Upload, XCircle } from "lucide-react"
+import { signIn, signOut, useSession } from "next-auth/react"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
@@ -26,10 +28,13 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false)
   const [isCompletingRegistration, setIsCompletingRegistration] = useState(false)
   const [error, setError] = useState("")
+  const [attemptsRemaining, setAttemptsRemaining] = useState<number | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [awaitingSession, setAwaitingSession] = useState(false)
   const [studentStatus, setStudentStatus] = useState<"CURRENT" | "ALUMNI">("CURRENT")
   const [actualUserRole, setActualUserRole] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session, update } = useSession()
@@ -49,42 +54,36 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   })
 
   const emailValue = watch("email")
+  const passwordValue = watch("password") || ""
   const yearValue = watch("year")
 
-  // Auto-select "Alumni" year when student status is ALUMNI
   useEffect(() => {
     if (mode === "register" && role === "student" && studentStatus === "ALUMNI") {
       setValue("year", "Alumni")
     }
   }, [studentStatus, mode, role, setValue])
 
-  // Pre-fill email for OAuth completion
   useEffect(() => {
     if (isOAuthCompletion && session?.user?.email) {
       setValue("email", session.user.email)
     }
   }, [isOAuthCompletion, session, setValue])
 
-  // Auto-lock student status based on OAuth email domain
   useEffect(() => {
     if (isOAuthCompletion && session?.user?.email && role === "student") {
       const email = session.user.email.toLowerCase()
-      // If OAuth email is not @ku.th, force ALUMNI status
       if (!email.endsWith("@ku.th")) {
         setStudentStatus("ALUMNI")
-        // Also set year to "Alumni" immediately
         setValue("year", "Alumni", { shouldValidate: true })
       }
     }
   }, [isOAuthCompletion, session, role, setValue])
 
-  // Handle session-based redirection after login
   useEffect(() => {
     if (awaitingSession && session?.user?.role) {
       setAwaitingSession(false)
       setIsLoading(false)
 
-      // Redirect to callbackUrl if provided, otherwise to dashboard
       if (callbackUrl) {
         router.push(callbackUrl)
       } else {
@@ -95,16 +94,153 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
     }
   }, [session, awaitingSession, router, callbackUrl])
 
+  // Clear stale session cookie after auto-logout redirects
+  useEffect(() => {
+    const errorParam = searchParams.get("error")
+    if (mode === "login" && errorParam === "session_expired") {
+      signOut({ redirect: false })
+    }
+  }, [mode, searchParams, signOut])
+
+  const passwordPolicyResults = useMemo(
+    () =>
+      mode === "register" && !isOAuthCompletion
+        ? evaluatePasswordPolicy(passwordValue, { email: emailValue })
+        : [],
+    [emailValue, mode, passwordValue, isOAuthCompletion]
+  )
+
   const roleConfig = useMemo(() => ROLE_CONFIGS[role], [role])
   const Icon = roleConfig.icon
 
+  const performRegistration = async (data: AuthFormData, file?: File | null) => {
+    try {
+      if (mode === "register" && role === "student" && studentStatus === "CURRENT") {
+        if (!data.email.toLowerCase().endsWith("@ku.th")) {
+          setError("Current students must use a KU email address (@ku.th). If you don't have access to your KU email, please register as Alumni instead and provide your transcript for verification.")
+          return
+        }
+      }
+
+      if (mode === "register" && role === "student" && studentStatus === "ALUMNI") {
+        if (!file) {
+          setError("Alumni must upload a transcript")
+          return
+        }
+      }
+
+      if (mode === "register" && role === "company") {
+        if (!file) {
+          setError("Company evidence document is required")
+          return
+        }
+      }
+      
+      console.log("Starting registration, isOAuthCompletion:", isOAuthCompletion)
+      const formData = new FormData()
+      formData.append("role", role)
+      formData.append("email", data.email)
+
+      if (isOAuthCompletion) {
+        console.log("OAuth registration - skipping password fields")
+        formData.append("isOAuth", "true")
+      } else {
+        console.log("Credentials registration - including password fields")
+        formData.append("password", data.password!)
+        formData.append("confirmPassword", data.confirmPassword!)
+      }
+
+      if (role === "student") {
+        formData.append("studentId", data.studentId!)
+        formData.append("name", data.name!)
+        formData.append("faculty", data.faculty!)
+        formData.append("year", data.year!.toString())
+        formData.append("phone", data.phone!)
+        formData.append("studentStatus", studentStatus)
+
+        if (file) {
+          formData.append("transcript", file)
+        }
+      } else {
+        formData.append("companyName", data.companyName!)
+        formData.append("address", data.address!)
+        formData.append("website", data.website || "")
+        formData.append("description", data.description!)
+        formData.append("phone", data.phone!)
+
+        if (file) {
+          formData.append("evidence", file)
+        }
+      }
+
+      // Consent is now collected post-login via ConsentProvider
+      // Send false during registration - user will accept via ConsentProvider after login
+      formData.append('consent', 'false')
+
+      const response = await fetch("/api/register", {
+        method: "POST",
+        body: formData,
+      })
+
+      const responseText = await response.text()
+
+      let result
+      try {
+        result = JSON.parse(responseText)
+      } catch (jsonError) {
+        setError(`Server returned invalid response. Status: ${response.status}`)
+        console.log(`Server returned invalid response when registering: ${jsonError}`)
+        return
+      }
+
+      if (!response.ok) {
+        try {
+          if (result && result.details && Array.isArray(result.details)) {
+            result.details.forEach((issue: { path: unknown[]; message: string }) => {
+              const path = Array.isArray(issue.path) && issue.path.length ? String(issue.path[0]) : null
+              if (path) {
+                setFieldError(path as keyof AuthFormData, { type: 'server', message: issue.message })
+              }
+            })
+          }
+        } catch (e) {
+          console.warn('Failed to map server validation details to fields', e)
+        }
+
+        setError(result.error || "Registration failed")
+      } else {
+        if (isOAuthCompletion) {
+          console.log("OAuth registration complete, updating session...")
+
+          setIsCompletingRegistration(true)
+          setError("")
+
+          await new Promise(resolve => setTimeout(resolve, 500))
+
+          await update()
+
+          router.push(result.redirectTo)
+        } else {
+          // Do not auto-login after registration. Redirect user to login page
+          // so they can explicitly authenticate (register -> login -> dashboard).
+          router.push(result.redirectTo)
+        }
+      }
+    } catch (error) {
+      setError("An unexpected error occurred. Please try again later.")
+      console.log("Error during registration submission:", error)
+    }
+  }
+
   const onSubmit = async (data: AuthFormData) => {
-    // console.log("Form submitted with data:", data)
     setIsLoading(true)
     setError("")
+    setAttemptsRemaining(null) // Clear previous attempts counter
+
+    // Note: Consent is now handled post-login by ConsentProvider
+    // No localStorage consent check needed during registration
 
     try {
-      // Validate KU email for current students
       if (mode === "register" && role === "student" && studentStatus === "CURRENT") {
         if (!data.email.toLowerCase().endsWith("@ku.th")) {
           setError("Current students must use a KU email address (@ku.th). If you don't have access to your KU email, please register as Alumni instead and provide your transcript for verification.")
@@ -113,7 +249,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         }
       }
 
-      // Validate transcript for alumni
       if (mode === "register" && role === "student" && studentStatus === "ALUMNI") {
         if (!selectedFile) {
           setError("Alumni must upload a transcript")
@@ -122,7 +257,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         }
       }
 
-      // Validate evidence for company
       if (mode === "register" && role === "company") {
         if (!selectedFile) {
           setError("Company evidence document is required")
@@ -135,143 +269,60 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
         const result = await signIn("credentials", {
           email: data.email,
           password: data.password,
-          role: role, // Pass the role from URL
+          role: role,
           redirect: false,
         })
 
         if (result?.error) {
+          // Check if it's a rate limit error
+          if (result.error.startsWith("RATE_LIMIT:")) {
+            const message = result.error.split(":")[1];
+            setActualUserRole(null)
+            setError(message)
+            setAttemptsRemaining(0) // Locked out
+            setIsLoading(false)
+          }
           // Check if it's a role mismatch error
-          if (result.error.startsWith("ROLE_MISMATCH:")) {
+          else if (result.error.startsWith("ROLE_MISMATCH:")) {
             const parts = result.error.split(":");
-            const actualRole = parts[1]; // student or company
-            const message = parts[2]; // The error message
+            const actualRole = parts[1];
+            const message = parts[2];
             setActualUserRole(actualRole)
             setError(message)
             setIsLoading(false)
           } else if (result.error.startsWith("OAUTH_ACCOUNT:")) {
-            // OAuth account trying to login with credentials
             const message = result.error.split(":")[1];
             setActualUserRole(null)
             setError(message)
             setIsLoading(false)
-          } else {
+          } else if (result.error.toLowerCase().includes("tokenexpired")) {
+            await signOut({ redirect: false })
+            setActualUserRole(null)
+            setError("Your previous session expired. Please sign in again.")
+            setAttemptsRemaining(null)
+            setIsLoading(false)
+          } else if (result.error.startsWith("INVALID_CREDENTIALS:")) {
+            // Invalid credentials with attempt counter from backend
+            const [, attemptsStr] = result.error.split(":")
+            const parsedAttempts = Number(attemptsStr)
             setActualUserRole(null)
             setError("Invalid email or password")
+            setAttemptsRemaining(Number.isFinite(parsedAttempts) ? Math.max(0, parsedAttempts) : null)
+            setIsLoading(false)
+          } else {
+            // Generic error fallback
+            setActualUserRole(null)
+            setError(result.error === "Invalid credentials" ? "Invalid email or password" : result.error)
+            setAttemptsRemaining(null)
             setIsLoading(false)
           }
         } else {
-          // Wait for session to be established before redirecting
           setAwaitingSession(true)
         }
       } else {
-        // Registration
-        console.log("Starting registration, isOAuthCompletion:", isOAuthCompletion)
-        const formData = new FormData()
-        formData.append("role", role)
-        formData.append("email", data.email)
-
-        // For OAuth completion, mark as OAuth and skip password
-        if (isOAuthCompletion) {
-          console.log("OAuth registration - skipping password fields")
-          formData.append("isOAuth", "true")
-        } else {
-          console.log("Credentials registration - including password fields")
-          formData.append("password", data.password!)
-          formData.append("confirmPassword", data.confirmPassword!)
-        }
-
-        if (role === "student") {
-          formData.append("studentId", data.studentId!)
-          formData.append("name", data.name!)
-          formData.append("faculty", data.faculty!)
-          formData.append("year", data.year!.toString())
-          formData.append("phone", data.phone!)
-          formData.append("studentStatus", studentStatus)
-
-          if (selectedFile) {
-            formData.append("transcript", selectedFile)
-          }
-        } else {
-          formData.append("companyName", data.companyName!)
-          formData.append("address", data.address!)
-          formData.append("website", data.website || "")
-          formData.append("description", data.description!)
-          formData.append("phone", data.phone!)
-
-          if (selectedFile) {
-            formData.append("evidence", selectedFile)
-          }
-          // formData.append("year", data.year!.toString())
-        }
-
-
-
-        const response = await fetch("/api/register", {
-          method: "POST",
-          body: formData,
-        })
-
-        const responseText = await response.text()
-
-        let result;
-        try {
-          result = JSON.parse(responseText)
-        } catch (jsonError) {
-          setError(`Server returned invalid response. Status: ${response.status}`)
-          console.log(`Server returned invalid response when registering: ${jsonError}`)
-          return
-        }
-
-        if (!response.ok) {
-          // If server returned Zod issues or structured details, map them to field errors
-          try {
-            if (result && result.details && Array.isArray(result.details)) {
-              // details are Zod issues
-              result.details.forEach((issue: { path: unknown[]; message: string }) => {
-                const path = Array.isArray(issue.path) && issue.path.length ? String(issue.path[0]) : null
-                if (path) {
-                  setFieldError(path as keyof AuthFormData, { type: 'server', message: issue.message })
-                }
-              })
-            }
-          } catch (e) {
-            console.warn('Failed to map server validation details to fields', e)
-          }
-
-          setError(result.error || "Registration failed")
-        } else {
-          // For OAuth users, update session and redirect
-          if (isOAuthCompletion) {
-            console.log("OAuth registration complete, updating session...")
-
-            // Show completion state
-            setIsCompletingRegistration(true)
-            setError("") // Clear any errors
-
-            // Wait for database transaction to commit (reduce to 500ms)
-            await new Promise(resolve => setTimeout(resolve, 500))
-
-            // Update session to fetch fresh user data with role
-            await update()
-
-            // Navigate to dashboard
-            router.push(result.redirectTo)
-          } else {
-            // Auto-login after registration for credentials users
-            const loginResult = await signIn("credentials", {
-              email: data.email,
-              password: data.password,
-              redirect: false,
-            })
-
-            if (loginResult?.error) {
-              setError("Registration successful but login failed. Please try logging in.")
-            } else {
-              router.push(result.redirectTo)
-            }
-          }
-        }
+        await performRegistration(data, selectedFile)
       }
+      
     } catch (error) {
       setError("An unexpected error occurred. Please try again later.")
       console.log("Error during form submission:", error)
@@ -283,14 +334,10 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   const handleSwitchGoogleAccount = useCallback(async () => {
     setIsSwitchingAccount(true)
     try {
-      // Build callback URL
       const callbackUrl = mode === "register"
         ? `/register/complete/${role}`
         : roleConfig.redirectPath
 
-      // Directly trigger Google OAuth flow
-      // The prompt: "select_account" in provider config will force Google to show account picker
-      // No need to sign out - Google will handle account selection
       await signIn("google", {
         callbackUrl,
         redirect: true
@@ -305,7 +352,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
   const handleGoogleSignIn = useCallback(async () => {
     setIsLoading(true)
     try {
-      // For registration, pass role to skip role selection page
       const callbackUrl = mode === "register"
         ? `/register/complete/${role}`
         : roleConfig.redirectPath
@@ -326,7 +372,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
     const file = files?.[0]
     if (file && files) {
       setSelectedFile(file)
-      // Register the files with the form for validation
       if (role === "student") {
         setValue("transcript", files)
       } else if (role === "company") {
@@ -366,6 +411,16 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             <AlertDescription>
               <div className="flex flex-col gap-2">
                 <p>{error}</p>
+                {mode === "login" && attemptsRemaining !== null && attemptsRemaining > 0 && (
+                  <p className="text-sm text-red-800 mt-1">
+                    ⚠️ <strong>{attemptsRemaining}</strong> {attemptsRemaining === 1 ? 'attempt' : 'attempts'} remaining before account lockout
+                  </p>
+                )}
+                {mode === "login" && attemptsRemaining === 0 && (
+                  <p className="text-sm text-red-900 font-semibold mt-1">
+                    🔒 Account locked. Please wait before trying again.
+                  </p>
+                )}
                 {actualUserRole && mode === "login" && (
                   <Button
                     type="button"
@@ -384,12 +439,10 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
 
         <form onSubmit={handleSubmit(onSubmit, (errors) => {
           console.log("Form validation errors:", errors)
-          // Filter out password errors for OAuth completion
           const filteredErrors = isOAuthCompletion
             ? Object.entries(errors).filter(([field]) => field !== 'password' && field !== 'confirmPassword')
             : Object.entries(errors);
 
-          // Find the first error and display it
           const firstError = filteredErrors[0]
           if (firstError) {
             const [field, error] = firstError
@@ -450,33 +503,86 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             <>
               <div>
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  data-testid="password"
-                  type="password"
-                  {...register("password")}
-                  className="mt-1 bg-gray-50"
-                  placeholder="Enter your password"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    data-testid="password"
+                    type={showPassword ? "text" : "password"}
+                    {...register("password")}
+                    className="mt-1 bg-gray-50 pr-10"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.password && (
                   <p data-testid="error-password" className="text-sm text-red-600 mt-1">{errors.password.message}</p>
+                )}
+                {mode === "login" && (
+                  <div className="mt-2 text-right">
+                    <Link
+                      href="/forgot-password"
+                      className="text-sm text-primary hover:underline focus-visible:underline"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
                 )}
               </div>
 
               {mode === "register" && (
                 <div>
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    data-testid="confirmPassword"
-                    type="password"
-                    {...register("confirmPassword")}
-                    className="mt-1 bg-gray-50"
-                    placeholder="Confirm your password"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      data-testid="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      {...register("confirmPassword")}
+                      className="mt-1 bg-gray-50 pr-10"
+                      placeholder="Confirm your password"
+                    />
+                    <button
+                      type="button"
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                   {errors.confirmPassword && (
                     <p data-testid="error-confirmPassword" className="text-sm text-red-600 mt-1">{errors.confirmPassword.message}</p>
                   )}
+                </div>
+              )}
+
+              {mode === "register" && !isOAuthCompletion && (
+                <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <p className="text-sm font-semibold mb-2">Password requirements</p>
+                  <ul className="space-y-1 text-sm">
+                    {PASSWORD_REQUIREMENTS.map((label) => {
+                      const result = passwordPolicyResults.find((item) => item.label === label)
+                      const hasInput = passwordValue.length > 0
+                      const passed = hasInput && (result?.passed ?? false)
+                      return (
+                        <li key={label} className="flex items-center gap-2">
+                          {passed ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-gray-400" />
+                          )}
+                          <span className={passed ? "text-emerald-700" : "text-gray-700"}>{label}</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
                 </div>
               )}
             </>
@@ -486,7 +592,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
             <>
               {role === "student" ? (
                 <>
-                  {/* Student Status Selection */}
                   <div className="space-y-3">
                     <Label>I am a</Label>
                     <div className="flex gap-4">
@@ -518,7 +623,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                         <span className="text-sm font-medium">KU Alumni</span>
                       </label>
                     </div>
-                    {/* Show locked message for non-KU OAuth emails */}
                     {isOAuthCompletion && session?.user?.email && !session.user.email.toLowerCase().endsWith("@ku.th") && (
                       <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
                         <p className="text-xs text-amber-900">
@@ -604,14 +708,12 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                       </SelectTrigger>
                       <SelectContent>
                         {studentStatus === "CURRENT" ? (
-                          // Current students: Only show year 1-8
                           [1, 2, 3, 4, 5, 6, 7, 8].map((year) => (
                             <SelectItem key={year} data-testid={`year-${year}`} value={year.toString()}>
                               Year {year}
                             </SelectItem>
                           ))
                         ) : (
-                          // Alumni: Only show "Alumni" option
                           <SelectItem data-testid="year-alumni" value="Alumni">
                             Alumni
                           </SelectItem>
@@ -773,21 +875,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                       Upload documents like business license, registration certificate, or other proof of company legitimacy
                     </p>
                   </div>
-
-                  {/* <div>
-                    <Label htmlFor="year">Founded Year</Label>
-                    <Input
-                      id="year"
-                      type="number"
-                      {...register("year", { valueAsNumber: true })}
-                      className="mt-1 bg-gray-50"
-                      min="1900"
-                      max={new Date().getFullYear()}
-                    />
-                    {errors.year && (
-                      <p className="text-sm text-red-600 mt-1">{errors.year.message}</p>
-                    )}
-                  </div> */}
                 </>
               )}
             </>
@@ -811,8 +898,6 @@ export function AuthForm({ role, mode, isOAuthCompletion = false }: AuthFormProp
                 ? "Sign In"
                 : "Create Account"}
           </Button>
-
-          {/* Only show Google OAuth for non-admin roles and non-OAuth completion */}
           {role !== "admin" && !isOAuthCompletion && (
             <>
               <div className="relative">

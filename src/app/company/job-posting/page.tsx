@@ -7,11 +7,18 @@ import JobDescriptionCard from "@/components/JobDescriptionCard";
 import { JobInfo, JobPostFormData } from "@/types/job";
 import { defaultJobPostForm } from "@/types/job";
 import { toast } from "@/lib/toastTemplate";
+import apiFetch from '@/lib/apiClient';
 import { validateForm, validateDetail, validateDescription } from "@/lib/validateJobForm";
 import { useRouter } from "next/navigation";
 import { CompanyVerificationBanner } from "@/components/CompanyVerificationBanner";
 import { Company } from "@/types/user";
 import { useSession } from "next-auth/react";
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
 
 export default function Page() {
   const [formData, setFormData] = useState<JobPostFormData>(defaultJobPostForm);
@@ -45,14 +52,14 @@ export default function Page() {
           setCompanyProfile(data);
         }
       } catch (error) {
-        console.error("Error fetching company profile:", error);
+        logDebug("Error fetching company profile:", error);
       }
     };
     fetchCompanyProfile();
   }, []);
 
   const previewJob = useMemo<JobInfo>(() => {
-    console.log("Preview Job Data:", {
+    logDebug("Preview Job Data:", {
       sessionStatus: status,
       username: session?.user?.username,
       logoUrl: session?.user?.logoUrl,
@@ -93,9 +100,8 @@ export default function Page() {
   
   const handlePost = async () => {
     try {
-      const res = await fetch("/api/company/jobs/create", {
+      const res = await apiFetch("/api/company/jobs/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           requiredDocuments: formData.documents,
@@ -105,7 +111,7 @@ export default function Page() {
 
       if (res.ok) {
         const data = await res.json();
-        console.log("data", data)
+        logDebug("data", data)
         toast.success("Job posted successfully!", "Your job has been published.");
         router.push("/company/job-applicant");
       } else {
@@ -113,16 +119,15 @@ export default function Page() {
         toast.error("Failed to post job", err.error || "Unknown error");
       }
     } catch (error) {
-      console.error("Error posting job:", error);
+      logDebug("Error posting job:", error);
       toast.error("Something went wrong while posting the job.", "Please try again later.");
     }
   };
 
   const handleDraft = async () => {
     try {
-      const res = await fetch("/api/company/jobs/create", {
+      const res = await apiFetch("/api/company/jobs/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           // ensure required documents are passed to API
@@ -140,7 +145,7 @@ export default function Page() {
         toast.error("Failed to draft job", err.error || "Unknown error");
       }
     } catch (error) {
-      console.error("Error posting job:", error);
+      logDebug("Error posting job:", error);
       toast.error("Something went wrong while drafting the job.", "Please try again later.");
     }
   };

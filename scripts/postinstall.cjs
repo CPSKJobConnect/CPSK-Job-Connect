@@ -25,12 +25,7 @@ if (isCi || isProduction) {
 
 try {
   console.log("Installing Cypress binary for local development...");
-  run("npx cypress install", {
-    env: {
-      ...process.env,
-      CYPRESS_INSTALL_BINARY: "1",
-    },
-  });
+  run("npx cypress install");
 } catch (error) {
   console.warn("Unable to install Cypress binary automatically.");
   console.warn("Run `npx cypress install` manually if you need it locally.");

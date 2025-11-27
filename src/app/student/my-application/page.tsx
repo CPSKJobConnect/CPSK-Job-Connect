@@ -1,11 +1,9 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { begin, done } from "@/lib/loaderSignal";
-import { IoBriefcaseOutline, IoLocationOutline } from "react-icons/io5";
-import { MdOutlineTimer } from "react-icons/md";
+import { Briefcase, MapPin, Clock } from "lucide-react";
 import { toast } from "sonner";
 import ApplicationSearchBar from "./ApplicationSearchBar";
 import { DocumentViewerModal } from "@/components/DocumentViewerModal";
@@ -54,6 +52,12 @@ interface Application {
   };
 }
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 const statusColors: Record<string, string> = {
   Pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
   Reviewed: "bg-blue-100 text-blue-800 border-blue-200",
@@ -80,10 +84,10 @@ export default function ApplicationsTab() {
           return;
         }
         const data = await res.json();
-        console.log("app", data);
+        logDebug("app", data);
         setApplications(data);
       } catch (error) {
-        console.error("Failed to fetch applications:", error);
+        logDebug("Failed to fetch applications:", error);
         toast.error("Error loading applications");
       } finally {
         done();
@@ -120,7 +124,7 @@ export default function ApplicationsTab() {
         setRecentApplied(null);
       }, ONE_HOUR - age);
     } catch (err) {
-      console.warn("Failed to read recentlyApplied marker", err);
+      logDebug("Failed to read recentlyApplied marker", err);
     }
 
     return () => {
@@ -147,7 +151,7 @@ export default function ApplicationsTab() {
       </div>
       {applications.length === 0 ? (
         <div className="text-center py-12">
-          <IoBriefcaseOutline className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 text-lg">No applications yet</p>
           <p className="text-gray-400 text-sm mt-2">Start applying to jobs to see them here</p>
         </div>
@@ -179,7 +183,7 @@ export default function ApplicationsTab() {
                       />
                     ) : (
                       <div className="w-[60px] h-[60px] bg-gray-200 rounded-lg flex items-center justify-center">
-                        <IoBriefcaseOutline className="w-8 h-8 text-gray-400" />
+                        <Briefcase className="w-8 h-8 text-gray-400" />
                       </div>
                     )}
                   </div>
@@ -208,15 +212,15 @@ export default function ApplicationsTab() {
 
                     <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
-                        <IoLocationOutline className="w-4 h-4" />
+                        <MapPin className="w-4 h-4" />
                         <span>{application.job.location}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <IoBriefcaseOutline className="w-4 h-4" />
+                        <Briefcase className="w-4 h-4" />
                         <span>{application.job.jobType}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <MdOutlineTimer className="w-4 h-4" />
+                        <Clock className="w-4 h-4" />
                         <span>Applied {new Date(application.applied_at).toLocaleDateString()}</span>
                       </div>
                     </div>

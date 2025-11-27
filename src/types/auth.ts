@@ -16,6 +16,7 @@ declare module "next-auth" {
       studentStatus?: StudentStatus;
       verificationStatus?: VerificationStatus;
       companyRegistrationStatus?: string;
+      sessionLocked?: boolean;
     } & DefaultSession["user"];
   }
 
@@ -43,6 +44,8 @@ declare module "next-auth/jwt" {
     studentStatus?: StudentStatus;
     verificationStatus?: VerificationStatus;
     companyRegistrationStatus?: string;
+    sessionLocked?: boolean;
+    lastActivity?: number;
   }
 }
 

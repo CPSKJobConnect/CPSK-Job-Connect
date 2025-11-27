@@ -17,7 +17,6 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    domains: ['randomuser.me', 'lh3.googleusercontent.com'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -28,6 +27,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'randomuser.me',
         port: '',
         pathname: '/**',
       },
@@ -46,6 +51,12 @@ const nextConfig: NextConfig = {
         aggregateTimeout: 1000,
       }
     }
+
+    // Suppress webpack cache serialization warnings
+    config.infrastructureLogging = {
+      level: 'error',
+    };
+
     return config
   },
 };

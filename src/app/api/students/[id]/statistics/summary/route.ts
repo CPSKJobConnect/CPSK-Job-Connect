@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    const accountId = Number(id);
+    const accountId = parseInt(id, 10); // ใช้ parseInt กับ radix
 
     if (isNaN(accountId)) {
       return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });
@@ -45,7 +45,9 @@ export async function GET(
       savedJobs,
     });
   } catch (error) {
-    console.error("Error fetching student summary:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching student summary:", error);
+    }
     return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 });
   }
 }

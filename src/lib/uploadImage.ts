@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { prisma } from "@/lib/db";
+import { getImageUploadPolicy, validateFileAgainstPolicy } from "@/lib/filePolicy";
 
 /**
  * Upload an image file to Supabase storage and return a signed URL
@@ -13,6 +13,9 @@ export async function uploadImage(
   accountId: string,
   type: "logo" | "background"
 ): Promise<string> {
+  const policy = getImageUploadPolicy();
+  const { sanitizedFileName } = await validateFileAgainstPolicy(file, policy);
+
   const supabase = createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -20,7 +23,7 @@ export async function uploadImage(
 
   // Create a unique file path matching student profile pattern
   const timestamp = Date.now();
-  const filePath = `profile-images/${accountId}/${type}_${timestamp}_${file.name}`;
+  const filePath = `profile-images/${accountId}/${type}_${timestamp}_${sanitizedFileName}`;
 
   // Upload to Supabase storage in the "documents" bucket
   const { data, error } = await supabase.storage

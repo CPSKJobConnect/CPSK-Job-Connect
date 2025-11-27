@@ -12,15 +12,7 @@ import { JobInfo } from "@/types/job";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { FaRegStar, FaStar } from "react-icons/fa";
-import { IoLocationOutline } from "react-icons/io5";
-import {
-  MdOutlineLink,
-  MdOutlinePeopleAlt,
-  MdOutlineReportProblem,
-  MdOutlineTimer,
-  MdMoreVert,
-} from "react-icons/md";
+import { Star, MapPin, Link as LinkIcon, Users, AlertTriangle, Clock, MoreVertical } from "lucide-react";
 import { Button } from "./ui/button";
 import { ReportJobDialog } from "./ReportJobDialog";
 import { toast } from "sonner";
@@ -38,6 +30,12 @@ const typeColors: Record<string, string> = {
   internship: "bg-orange-100 text-gray-800",
   freelance: "bg-yellow-200 text-gray-800",
 };
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
 
 const JobCard = (job: JobCardProps) => {
   const { data: session } = useSession();
@@ -70,7 +68,7 @@ const JobCard = (job: JobCardProps) => {
           setIsSaved(data.isSaved);
         }
       } catch (error) {
-        console.error("Error checking saved status:", error);
+        logDebug("Error checking saved status:", error);
         setIsSaved(false);
       } finally {
         setIsCheckingStatus(false);
@@ -117,11 +115,11 @@ const JobCard = (job: JobCardProps) => {
         }
       } else {
         const error = await response.json();
-        console.error("Failed to toggle save:", error);
+        logDebug("Failed to toggle save:", error);
         toast.error("Failed to save job. Please try again.");
       }
     } catch (error) {
-      console.error("Error toggling save:", error);
+      logDebug("Error toggling save:", error);
       toast.error("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -163,13 +161,13 @@ const JobCard = (job: JobCardProps) => {
             <div className="p-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button
+                    <button
                     onClick={(e) => e.stopPropagation()}
                     aria-label="More options"
                     type="button"
                     className="hover:bg-gray-100 rounded-full p-1 transition"
                   >
-                    <MdMoreVert className="w-5 h-5" />
+                    <MoreVertical className="w-4 h-4" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
@@ -178,11 +176,11 @@ const JobCard = (job: JobCardProps) => {
                     disabled={isLoading || isCheckingStatus}
                   >
                     {isCheckingStatus ? (
-                      <FaRegStar className="mr-2 h-4 w-4 text-gray-400 animate-pulse" />
+                      <Star className="mr-2 h-4 w-4 text-gray-400 animate-pulse" />
                     ) : isSaved ? (
-                      <FaStar className="mr-2 h-4 w-4 text-yellow-500" />
+                      <Star className="mr-2 h-4 w-4 text-yellow-500" />
                     ) : (
-                      <FaRegStar className="mr-2 h-4 w-4" />
+                      <Star className="mr-2 h-4 w-4" />
                     )}
                     <span>{isSaved ? "Unsave Job" : "Save Job"}</span>
                   </DropdownMenuItem>
@@ -190,7 +188,7 @@ const JobCard = (job: JobCardProps) => {
                   <DropdownMenuItem
                     onClick={(e) => { e.stopPropagation(); handleCopyLink(); }}
                   >
-                    <MdOutlineLink className="mr-2 h-4 w-4" />
+                    <LinkIcon className="mr-2 h-4 w-4" />
                     <span>Copy Link</span>
                   </DropdownMenuItem>
 
@@ -200,7 +198,7 @@ const JobCard = (job: JobCardProps) => {
                     onClick={(e) => { e.stopPropagation(); setReportOpen(true); }}
                     className="text-red-600 focus:text-red-600"
                   >
-                    <MdOutlineReportProblem className="mr-2 h-4 w-4" />
+                    <AlertTriangle className="mr-2 h-4 w-4" />
                     <span>Report Post</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -212,15 +210,15 @@ const JobCard = (job: JobCardProps) => {
         {/* Info section */}
         <div className="flex gap-4 py-2">
           <div className="flex gap-1 min-w-0 items-center">
-            <div className="py-1"><IoLocationOutline /></div>
+            <div className="py-1"><MapPin className="w-4 h-4 text-gray-500" /></div>
             <span className="truncate text-sm text-gray-700 max-w-[120px]" title={job.info.location}>{job.info.location}</span>
           </div>
           <div className="flex gap-1 min-w-0 items-center">
-            <div className="py-1"><MdOutlineTimer /></div>
+            <div className="py-1"><Clock className="w-4 h-4 text-gray-500" /></div>
             <span className="text-sm text-gray-700">{formatPostedDate(job.info.posted)}</span>
           </div>
           <div className="flex gap-1 min-w-0 items-center">
-            <div className="py-1"><MdOutlinePeopleAlt /></div>
+            <div className="py-1"><Users className="w-4 h-4 text-gray-500" /></div>
             <span className="text-sm text-gray-700">{job.info.applied} applied</span>
           </div>
         </div>

@@ -20,7 +20,7 @@ Cypress.Commands.add('createJobViaAPI', (opts: any = {}) => {
   } catch (err) {
     const base = Cypress.config('baseUrl') || 'http://localhost:3000'
     const body = Object.assign({ title: `E2E Job ${Date.now()}` }, opts)
-    return cy.request({ method: 'POST', url: `${base}/api/company/jobs/create`, body }).then((r) => r.body)
+    return cy.request({ method: 'POST', url: `${base}/api/company/jobs/create`, body, headers: { 'x-app-request': '1', 'content-type': 'application/json' } }).then((r) => r.body)
   }
 })
 

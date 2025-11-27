@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 
-export async function POST(request: NextRequest) {
+async function POST_impl(request: NextRequest) {
   try {
     const session = await getApiSession(request);
 
@@ -33,10 +34,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ applied: !!existingApplication }, { status: 200 });
   } catch (error) {
-    console.error("Error checking application:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error checking application:", error);
+    }
     return NextResponse.json(
       { error: "Failed to check application" },
       { status: 500 }
     );
   }
 }
+
+export const POST = withResponseCsrfGuard(POST_impl as any);

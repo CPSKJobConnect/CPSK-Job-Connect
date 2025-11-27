@@ -9,10 +9,8 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuRadioGroup,
 } from "@/components/ui/dropdown-menu"
-import { BiSortAlt2 } from "react-icons/bi";
+import { SortAsc, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FiChevronDown } from "react-icons/fi";
-import { IoMdCheckmark } from "react-icons/io";
 
 
 interface JobSortDropdownProps {
@@ -41,10 +39,10 @@ const JobSortDropdown = ({job, setSortedBookmarkedJobs}: JobSortDropdownProps) =
             <DropdownMenuTrigger asChild>
               <Button className="group bg-white border border-gray-200 md:w-[150px] text-gray-800 font-semibold rounded-full px-4 flex items-center justify-between gap-2 transition-colors hover:bg-[#34BFA3] hover:text-white focus:outline-none focus:ring-0">
                 <span className="flex items-center gap-2">
-                  <BiSortAlt2 size={18} className="text-gray-600 group-hover:text-white" />
+                  <SortAsc size={18} className="text-gray-600 group-hover:text-white" />
                   <span className="hidden sm:inline">Sort</span>
                 </span>
-                <FiChevronDown className="w-4 h-4 text-gray-600 group-hover:text-white" />
+                <ChevronDown className="w-4 h-4 text-gray-600 group-hover:text-white" />
               </Button>
             </DropdownMenuTrigger>
 
@@ -58,7 +56,7 @@ const JobSortDropdown = ({job, setSortedBookmarkedJobs}: JobSortDropdownProps) =
                   }`}
                 >
                   <span>Recently added</span>
-                  {sortOption === "recent" && <IoMdCheckmark className="w-4 h-4 text-green-600" />}
+                  {sortOption === "recent" && <Check className="w-4 h-4 text-green-600" />}
                 </DropdownMenuRadioItem>
 
                 <DropdownMenuRadioItem
@@ -68,7 +66,7 @@ const JobSortDropdown = ({job, setSortedBookmarkedJobs}: JobSortDropdownProps) =
                   }`}
                 >
                   <span>Earliest added</span>
-                  {sortOption === "earliest" && <IoMdCheckmark className="w-4 h-4 text-green-600" />}
+                  {sortOption === "earliest" && <Check className="w-4 h-4 text-green-600" />}
                 </DropdownMenuRadioItem>
 
                 <DropdownMenuRadioItem
@@ -78,7 +76,7 @@ const JobSortDropdown = ({job, setSortedBookmarkedJobs}: JobSortDropdownProps) =
                   }`}
                 >
                   <span>Not applied yet</span>
-                  {sortOption === "notApplied" && <IoMdCheckmark className="w-4 h-4 text-green-600" />}
+                  {sortOption === "notApplied" && <Check className="w-4 h-4 text-green-600" />}
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>

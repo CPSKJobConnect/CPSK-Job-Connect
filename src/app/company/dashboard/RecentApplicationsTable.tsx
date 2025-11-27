@@ -15,7 +15,13 @@ import { RecentApplicationsTableProps } from "@/types/companyStat";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
+import apiFetch from "@/lib/apiClient";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
 
 type StatusType = "pending" | "reviewed" | "interview" | "offered" | "rejected";
 
@@ -44,7 +50,7 @@ export default function RecentApplicationsTable({ applications, loading, isCompa
     setStatusMap((prev) => ({ ...prev, [application_id]: newStatus }));
 
     try {
-      const response = await fetch(`/api/company/applications/${application_id}`, {
+      const response = await apiFetch(`/api/company/applications/${application_id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -56,7 +62,7 @@ export default function RecentApplicationsTable({ applications, loading, isCompa
 
       if (!response.ok) {
         const error = await response.json();
-        console.error("Failed to update application status:", error);
+        logDebug("Failed to update application status:", error);
         // Revert to previous status on error
         setStatusMap((prev) => ({ ...prev, [application_id]: previousStatus }));
         toast.error("Failed to update status", {
@@ -64,13 +70,13 @@ export default function RecentApplicationsTable({ applications, loading, isCompa
         });
       } else {
         const result = await response.json();
-        console.log("Application status updated successfully:", result);
+        logDebug("Application status updated successfully:", result);
         toast.success("Status updated", {
           description: `Application status changed to ${newStatus}`
         });
       }
     } catch (error) {
-      console.error("Error updating application status:", error);
+      logDebug("Error updating application status:", error);
       // Revert to previous status on error
       setStatusMap((prev) => ({ ...prev, [application_id]: previousStatus }));
       toast.error("Error updating status", {
@@ -145,9 +151,9 @@ export default function RecentApplicationsTable({ applications, loading, isCompa
                     <SelectContent>
                       <SelectGroup>
                         <SelectLabel>Status</SelectLabel>
-                        {statusTypes.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status}
+                        {statusTypes.map((statusOption) => (
+                          <SelectItem key={statusOption} value={statusOption}>
+                            {statusOption}
                           </SelectItem>
                         ))}
                       </SelectGroup>

@@ -31,7 +31,9 @@ export async function GET() {
 
     return NextResponse.json({ active: account.is_active }, { status: 200 });
   } catch (error) {
-    console.error("Error checking account status:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error checking account status:", error);
+    }
     return NextResponse.json({ active: false, error: "Server error" }, { status: 500 });
   }
 }

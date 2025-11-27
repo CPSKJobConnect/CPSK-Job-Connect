@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookmarkJobInfo } from "@/types/job";
 import { useEffect, useState } from "react";
 import { begin, done } from "@/lib/loaderSignal";
-import { IoMdSearch } from "react-icons/io";
+import { Search } from "lucide-react";
 import JobSortDropdown from "./JobSortDropdown";
 
 export default function Page() {
@@ -36,7 +36,9 @@ export default function Page() {
         setBookmarkedJobs(data.savedJobs || []);
         setSortedBookmarkedJobs(data.savedJobs || []);
       } catch (err) {
-        console.error("Error fetching bookmarked jobs:", err);
+        if (process.env.NODE_ENV === "development") {
+            console.error("Error fetching bookmarked jobs:", err);
+        }
         setError(err instanceof Error ? err.message : "Failed to load bookmarks");
       } finally {
         done();
@@ -98,7 +100,7 @@ export default function Page() {
           <div className="pl-4 w-full">
             <div className="flex items-center gap-4 w-full">
               <div className="relative flex-1">
-                <IoMdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}

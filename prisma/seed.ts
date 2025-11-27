@@ -231,49 +231,54 @@ async function main() {
     'Engineering',
   ];
 
-  for (let i = 0; i < categories.length; i++) {
+  for (const category of categories) {
     await prisma.jobCategory.upsert({
-      where: { id: i + 1 },
+      where: { name: category },
       update: {},
       create: {
-        id: i + 1,
-        name: categories[i],
+        name: category,
       },
     });
   }
 
   console.log('✅ Job categories seeded');
 
-  // Seed Default Admin Account
-  const adminEmail = 'admin@cpsk.edu';
-  const adminPassword = 'admin123'; // Change this in production!
+  // Seed Default Admin Account (opt-in for development environments)
+  const adminEmail = process.env.SEED_ADMIN_EMAIL;
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
 
-  const existingAdmin = await prisma.account.findUnique({
-    where: { email: adminEmail },
-  });
-
-  if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
-
-    await prisma.account.create({
-      data: {
-        email: adminEmail,
-        password: hashedPassword,
-        username: 'Admin',
-        role: 3, // Admin role ID
-        emailVerified: new Date(),
-      },
+  if (!adminEmail || !adminPassword) {
+    console.log('?,1?,?  Skipping default admin creation (set SEED_ADMIN_EMAIL & SEED_ADMIN_PASSWORD to seed one).');
+  } else if (adminPassword.length < 12) {
+    throw new Error('SEED_ADMIN_PASSWORD must be at least 12 characters to avoid weak default credentials.');
+  } else {
+    const existingAdmin = await prisma.account.findUnique({
+      where: { email: adminEmail },
     });
 
-    console.log('✅ Admin account created');
-    console.log(`   Email: ${adminEmail}`);
-    console.log(`   Password: ${adminPassword}`);
-    console.log('   ⚠️  IMPORTANT: Change the admin password after first login!');
-  } else {
-    console.log('ℹ️  Admin account already exists, skipping creation');
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 12);
+
+      await prisma.account.create({
+        data: {
+          email: adminEmail,
+          password: hashedPassword,
+          username: 'Admin',
+          role: 3, // Admin role ID
+          emailVerified: new Date(),
+        },
+      });
+
+      console.log('?o. Admin account created for development use');
+      console.log(`   Email: ${adminEmail}`);
+      console.log('   Password: [hidden - provided via SEED_ADMIN_PASSWORD]');
+      console.log('   ?s??,?  IMPORTANT: Rotate SEED_ADMIN_PASSWORD after each use.');
+    } else {
+      console.log('?,1?,?  Admin account already exists, skipping creation');
+    }
   }
 
-  console.log('Seeding finished successfully! 🎉');
+  console.log('Seeding finished successfully! dYZ%');
 }
 
 main()
@@ -284,3 +289,8 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+
+
+
+

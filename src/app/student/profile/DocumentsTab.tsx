@@ -6,13 +6,19 @@ import { FileMeta } from "@/types/file";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { IoDocumentTextOutline, IoTrashOutline, IoEyeOutline } from "react-icons/io5";
+import { FileText, Trash2, Eye } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
 import { DocumentViewerModal } from "@/components/DocumentViewerModal";
 
 interface DocumentsTabProps {
   student: Student;
   onUpdate: () => void;
+}
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
 }
 
 interface DocumentSectionProps {
@@ -66,7 +72,7 @@ function DocumentSection({ title, documents, docTypeId, onUpload, onDelete, uplo
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
             >
               <div className="flex items-center gap-3">
-                <IoDocumentTextOutline className="w-5 h-5 text-gray-600" />
+                <FileText className="w-5 h-5 text-gray-600" />
                 <div>
                   <p className="text-sm font-medium text-gray-900" data-testid={`document-name-${docTypeId}-${doc.id}`}>{doc.name}</p>
                   <p className="text-xs text-gray-500">
@@ -81,7 +87,7 @@ function DocumentSection({ title, documents, docTypeId, onUpload, onDelete, uplo
                   onClick={() => onViewDocument(doc.id, doc.name)}
                   className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                 >
-                  <IoEyeOutline className="w-5 h-5" />
+                  <Eye className="w-5 h-5" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -89,7 +95,7 @@ function DocumentSection({ title, documents, docTypeId, onUpload, onDelete, uplo
                   onClick={() => onDelete(doc.id)}
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
-                  <IoTrashOutline className="w-5 h-5" />
+                  <Trash2 className="w-5 h-5" />
                 </Button>
               </div>
             </div>
@@ -151,7 +157,7 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
         onUpdate();
       }
     } catch (error) {
-      console.error("Error uploading document:", error);
+      logDebug("Error uploading document:", error);
       toast.error("Error uploading document");
     } finally {
       setUploading(false);
@@ -176,7 +182,7 @@ export default function DocumentsTab({ student, onUpdate }: DocumentsTabProps) {
       toast.success("Document deleted successfully");
       onUpdate();
     } catch (error) {
-      console.error("Error deleting document:", error);
+      logDebug("Error deleting document:", error);
       toast.error("Error deleting document");
     }
   };

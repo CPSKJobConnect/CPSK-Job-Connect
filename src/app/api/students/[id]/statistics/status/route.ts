@@ -7,8 +7,9 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    const accountId = Number(id);
 
+    // Canonicalize input
+    const accountId = parseInt(id?.trim() ?? "", 10);
     if (isNaN(accountId)) {
       return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });
     }
@@ -30,19 +31,21 @@ export async function GET(
 
     const result = await Promise.all(
       statusData.map(async (item) => {
-        const status = await prisma.applicationStatus.findUnique({
-          where: { id: item.status },
-        });
-        return {
-          name: status?.name || "Unknown",
-          value: item._count.id,
-        };
+        const statusRecord = await prisma.applicationStatus.findUnique({
+            where: { id: item.status },
+          });
+          return {
+            name: statusRecord?.name || "Unknown",
+            value: item._count.id,
+          };
       })
     );
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error fetching status data:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching status data:", error);
+    }
     return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 });
   }
 }

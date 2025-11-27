@@ -2,33 +2,37 @@ import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
 import { uploadDocument } from "@/lib/uploadDocument";
 import { NextRequest, NextResponse } from "next/server";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
 
 /**
  * POST /api/company/reapply-verification
  * Allow rejected companies to re-upload evidence and reset status to PENDING
  */
-export async function POST(request: NextRequest) {
+async function POST_impl(request: NextRequest) {
   try {
     const session = await getApiSession(request);
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const formData = await request.formData();
     const evidenceFile = formData.get("evidence") as File | null;
 
     if (!evidenceFile) {
-      return NextResponse.json(
-        { error: "Evidence file is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Evidence file is required" }, { status: 400 });
     }
 
-    // Get company record with name for notification
+    // --- sanitize file name (1.1.1) ---
+    const safeFileName = encodeURIComponent(evidenceFile.name.replace(/[\s\\/]+/g, "_"));
+    const safeEvidenceFile = new File([evidenceFile], safeFileName, { type: evidenceFile.type });
+
     const company = await prisma.company.findUnique({
       where: { account_id: parseInt(session.user.id) },
       select: {
@@ -39,28 +43,17 @@ export async function POST(request: NextRequest) {
     });
 
     if (!company) {
-      return NextResponse.json(
-        { error: "Company not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Company not found" }, { status: 404 });
     }
 
-    // Only allow re-application if currently REJECTED
     if (company.registration_status !== "REJECTED") {
-      return NextResponse.json(
-        { error: "Only rejected companies can re-apply for verification" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Only rejected companies can re-apply for verification" }, { status: 403 });
     }
 
-    // Upload the new evidence (docTypeId: 7 for company evidence)
-    const evidenceDoc = await uploadDocument(
-      evidenceFile,
-      session.user.id,
-      7
-    );
+    // Upload the new evidence
+    const evidenceDoc = await uploadDocument(safeEvidenceFile, session.user.id, 7);
 
-    // Reset registration status to PENDING
+    // Reset registration status
     await prisma.company.update({
       where: { id: company.id },
       data: {
@@ -71,7 +64,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Create notification for the company
+    // Create notification
     await prisma.notification.create({
       data: {
         account_id: parseInt(session.user.id),
@@ -79,16 +72,12 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Notify all admins about the re-application
+    // Notify admins
     try {
       const { notifyAdminsCompanyReapplication } = await import("@/lib/notifyAdmins");
-      await notifyAdminsCompanyReapplication(
-        company.name,
-        parseInt(session.user.id)
-      );
+      await notifyAdminsCompanyReapplication(company.name, parseInt(session.user.id));
     } catch (error) {
-      console.error("Failed to notify admins:", error);
-      // Continue even if notification fails
+      logDebug("Failed to notify admins:", error);
     }
 
     return NextResponse.json({
@@ -98,10 +87,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Error in company reapply-verification:", error);
-    return NextResponse.json(
-      { error: "Failed to process re-verification request" },
-      { status: 500 }
-    );
+    logDebug("Error in company reapply-verification:", error);
+    return NextResponse.json({ error: "Failed to process re-verification request" }, { status: 500 });
   }
 }
+
+export const POST = withResponseCsrfGuard(POST_impl as any);

@@ -3,6 +3,13 @@ import { createClient } from "@supabase/supabase-js";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import DOMPurify from "isomorphic-dompurify";
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
 
 export async function GET(
   request: Request,
@@ -25,7 +32,7 @@ export async function GET(
     }
 
     const { id } = await params;
-    const documentId = parseInt(id);
+    const documentId = parseInt(id.trim()); // trim input for canonicalization
 
     if (!documentId || isNaN(documentId)) {
       return NextResponse.json({ error: "Invalid document ID" }, { status: 400 });
@@ -54,18 +61,18 @@ export async function GET(
       .createSignedUrl(document.file_path, 300); // 5 minutes expiry
 
     if (error || !data) {
-      console.error("Supabase error:", error);
+      logDebug("Supabase error:", error);
       return NextResponse.json({ error: "Failed to generate download URL" }, { status: 500 });
     }
 
     return NextResponse.json({
       url: data.signedUrl,
-      fileName: document.file_name,
-      fileType: document.documentType.name
+      fileName: DOMPurify.sanitize(document.file_name), // sanitize output
+      fileType: DOMPurify.sanitize(document.documentType.name) // sanitize output
     });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to get document" }, { status: 500 });
   }
 }

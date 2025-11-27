@@ -19,6 +19,17 @@ jest.mock("@supabase/supabase-js", () => ({
   })),
 }));
 
+jest.mock("@/lib/filePolicy", () => {
+  const actual = jest.requireActual("@/lib/filePolicy");
+  return {
+    ...actual,
+    validateFileAgainstPolicy: jest.fn(async () => ({
+      sanitizedFileName: "avatar.png",
+      extension: "png",
+    })),
+  };
+});
+
 describe("uploadImage", () => {
   const file = {
     name: "avatar.png",

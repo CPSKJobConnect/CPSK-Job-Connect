@@ -30,7 +30,9 @@ export async function GET(req: Request) {
       tags: tags.map((t: { name: string }) => t.name),
     });
   } catch (error) {
-    console.error("Error fetching job filters:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching job filters:", error);
+    }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

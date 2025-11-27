@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { isVerificationExpired } from '@/lib/email-validation';
 import { getApiSession } from '@/lib/api-auth';
+import sanitizeHtml from 'sanitize-html';
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
 
 /**
  * POST /api/students/verify-email
@@ -14,32 +21,28 @@ export async function POST(req: NextRequest) {
 
     // Validate input
     if (!email || typeof email !== 'string') {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
-
     if (!token || typeof token !== 'string') {
-      return NextResponse.json(
-        { error: 'Verification code is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Verification code is required' }, { status: 400 });
     }
 
-    // Normalize email
+    // Canonicalization
     const normalizedEmail = email.toLowerCase().trim();
     const normalizedToken = token.trim();
+
+    // Sanitize input to prevent injection/XSS
+    const safeEmail = sanitizeHtml(normalizedEmail, { allowedTags: [], allowedAttributes: {} });
+    const safeToken = sanitizeHtml(normalizedToken, { allowedTags: [], allowedAttributes: {} });
 
     // Find verification token in database
     const verificationToken = await prisma.email_verification_tokens.findFirst({
       where: {
-        email: normalizedEmail,
-        token: normalizedToken,
+        email: safeEmail,
+        token: safeToken,
       },
     });
 
-    // Check if token exists
     if (!verificationToken) {
       return NextResponse.json(
         {
@@ -50,13 +53,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if token has expired
     if (isVerificationExpired(verificationToken.expires)) {
       // Delete expired token
-      await prisma.email_verification_tokens.delete({
-        where: { id: verificationToken.id },
-      });
-
+      await prisma.email_verification_tokens.delete({ where: { id: verificationToken.id } });
       return NextResponse.json(
         {
           error: 'Verification code expired',
@@ -68,16 +67,13 @@ export async function POST(req: NextRequest) {
 
     // Find the student account
     const account = await prisma.account.findUnique({
-      where: { email: normalizedEmail },
+      where: { email: safeEmail },
       include: { student: true },
     });
 
     if (!account || !account.student) {
-      // Delete the token
-      await prisma.email_verification_tokens.delete({
-        where: { id: verificationToken.id },
-      });
-
+      // Delete token if account not found
+      await prisma.email_verification_tokens.delete({ where: { id: verificationToken.id } });
       return NextResponse.json(
         {
           error: 'Student account not found',
@@ -92,15 +88,15 @@ export async function POST(req: NextRequest) {
       where: { id: account.student.id },
       data: {
         email_verified: true,
-        // Auto-approve current students upon email verification
-        verification_status: account.student.student_status === 'CURRENT' ? 'APPROVED' : account.student.verification_status,
+        verification_status:
+          account.student.student_status === 'CURRENT'
+            ? 'APPROVED'
+            : account.student.verification_status,
       },
     });
 
     // Delete the used verification token
-    await prisma.email_verification_tokens.delete({
-      where: { id: verificationToken.id },
-    });
+    await prisma.email_verification_tokens.delete({ where: { id: verificationToken.id } });
 
     return NextResponse.json(
       {
@@ -112,11 +108,8 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error in verify-email:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    logDebug('Error in verify-email:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -127,12 +120,8 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const session = await getApiSession(req);
-
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const account = await prisma.account.findUnique({
@@ -141,10 +130,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (!account || !account.student) {
-      return NextResponse.json(
-        { error: 'Student not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Student not found' }, { status: 404 });
     }
 
     return NextResponse.json(
@@ -156,10 +142,7 @@ export async function GET(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error checking verification status:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    logDebug('Error checking verification status:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -78,7 +78,7 @@ describe("authOptions.credentials.authorize", () => {
 
     await expect(
       authorize({ email: "student@ku.th", password: "secret" })
-    ).rejects.toThrow("Invalid credentials");
+    ).rejects.toThrow(/INVALID_CREDENTIALS/);
   });
 
   it("throws when account is disabled", async () => {
@@ -109,7 +109,7 @@ describe("authOptions.credentials.authorize", () => {
 
     await expect(
       authorize({ email: "student@ku.th", password: "wrong" })
-    ).rejects.toThrow("Invalid credentials");
+    ).rejects.toThrow(/INVALID_CREDENTIALS/);
   });
 
   it("throws when role does not match", async () => {

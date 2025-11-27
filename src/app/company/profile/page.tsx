@@ -4,12 +4,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Company } from "@/types/user";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { IoBusinessOutline, IoCallOutline, IoCameraOutline, IoLocationOutline, IoMailOutline } from "react-icons/io5";
+import { Briefcase, Phone, Camera, MapPin, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import DocumentsTab from "./DocumentsTab";
 import ProfileTab from "./ProfileTab";
+import apiFetch from "@/lib/apiClient";
 import { isValidImageUrl } from "@/lib/validateImageUrl";
+import { PasswordChangeCard } from "@/components/security/PasswordChangeCard";
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
 
 export default function CompanyProfilePage() {
   const [company, setCompany] = useState<Company | null>(null);
@@ -28,7 +36,7 @@ export default function CompanyProfilePage() {
       const data: Company = await res.json();
       setCompany(data);
     } catch (error) {
-      console.error("Failed to fetch company profile:", error);
+      logDebug("Failed to fetch company profile:", error);
       toast.error("Error loading profile");
     } finally {
       setLoading(false);
@@ -57,7 +65,7 @@ export default function CompanyProfilePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("/api/company/profile-image", {
+      const res = await apiFetch("/api/company/profile-image", {
         method: "POST",
         body: formData,
       });
@@ -84,7 +92,7 @@ export default function CompanyProfilePage() {
 
       await fetchCompanyProfile();
     } catch (error) {
-      console.error("Error uploading profile image:", error);
+      logDebug("Error uploading profile image:", error);
       toast.error("Error uploading profile image");
     } finally {
       setUploadingImage(false);
@@ -113,7 +121,7 @@ export default function CompanyProfilePage() {
       </div>
     );
   }
-
+              
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Profile Header */}
@@ -136,7 +144,7 @@ export default function CompanyProfilePage() {
               </div>
             ) : (
               <div className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-lg bg-white/20 flex items-center justify-center">
-                <IoBusinessOutline className="w-20 h-20 text-white" />
+                <Briefcase className="w-20 h-20 text-white" />
               </div>
             )}
 
@@ -150,7 +158,7 @@ export default function CompanyProfilePage() {
               {uploadingImage ? (
                 <div className="text-white text-sm">Uploading...</div>
               ) : (
-                <IoCameraOutline className="w-10 h-10 text-white" />
+                <Camera className="w-10 h-10 text-white" />
               )}
             </button>
 
@@ -169,15 +177,15 @@ export default function CompanyProfilePage() {
             <h1 className="text-3xl font-bold mb-2">{company.name}</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
               <div className="flex items-center gap-2">
-                <IoMailOutline className="w-5 h-5" />
+                <Mail className="w-5 h-5" />
                 <span className="text-sm">{company.email}</span>
               </div>
               <div className="flex items-center gap-2">
-                <IoCallOutline className="w-5 h-5" />
+                <Phone className="w-5 h-5" />
                 <span className="text-sm">{company.phone}</span>
               </div>
               <div className="flex items-center gap-2">
-                <IoLocationOutline className="w-5 h-5" />
+                <MapPin className="w-5 h-5" />
                 <span className="text-sm">{company.address.join(", ")}</span>
               </div>
             </div>
@@ -202,9 +210,10 @@ export default function CompanyProfilePage() {
 
       {/* Tabs */}
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
+        <TabsList className="grid w-full grid-cols-3 mb-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -213,6 +222,12 @@ export default function CompanyProfilePage() {
 
         <TabsContent value="documents">
           <DocumentsTab company={company} onUpdate={fetchCompanyProfile} />
+        </TabsContent>
+
+        <TabsContent value="security">
+          <div className="max-w-3xl mx-auto">
+            <PasswordChangeCard />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

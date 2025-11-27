@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { IoBusinessOutline, IoCallOutline, IoGlobeOutline, IoLocationOutline, IoMailOutline, IoShieldCheckmarkOutline, IoCamera, IoSave, IoClose } from "react-icons/io5";
+import { Briefcase, Phone, Globe, MapPin, Mail, ShieldCheck, Camera, Save, X } from "lucide-react";
 import { useState, useRef } from "react";
+import apiFetch from '@/lib/apiClient';
 import { toast } from "sonner";
 import Image from "next/image";
 import { isValidImageUrl } from "@/lib/validateImageUrl";
@@ -40,8 +41,8 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusColor = (statusKey: string) => {
+    switch (statusKey) {
       case "APPROVED":
         return "bg-green-100 text-green-800 border-green-300";
       case "PENDING":
@@ -53,8 +54,8 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
+  const getStatusText = (statusKey: string) => {
+    switch (statusKey) {
       case "APPROVED":
         return "Verified";
       case "PENDING":
@@ -62,7 +63,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
       case "REJECTED":
         return "Verification Rejected";
       default:
-        return status;
+        return statusKey;
     }
   };
 
@@ -126,7 +127,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
         form.append("background", backgroundFile);
       }
 
-      const response = await fetch("/api/company/profile", {
+      const response = await apiFetch("/api/company/profile", {
         method: "PATCH",
         body: form,
       });
@@ -157,7 +158,9 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
         toast.error(error.error || "Failed to update profile");
       }
     } catch (error) {
-      console.error("Error updating profile:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error updating profile:", error);
+      }
       toast.error("An error occurred while updating profile");
     } finally {
       setIsSaving(false);
@@ -197,11 +200,11 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
             ) : (
               <>
                 <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
-                  <IoClose className="w-4 h-4 mr-2" />
+                  <X className="w-4 h-4 mr-2" />
                   Cancel
                 </Button>
                 <Button onClick={handleSave} disabled={isSaving}>
-                  <IoSave className="w-4 h-4 mr-2" />
+                  <Save className="w-4 h-4 mr-2" />
                   {isSaving ? "Saving..." : "Save Changes"}
                 </Button>
               </>
@@ -232,7 +235,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <IoBusinessOutline className="w-12 h-12 text-gray-400" />
+                      <Briefcase className="w-12 h-12 text-gray-400" />
                     </div>
                   )}
                 </div>
@@ -250,7 +253,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
                     size="sm"
                     onClick={() => logoInputRef.current?.click()}
                   >
-                    <IoCamera className="w-4 h-4 mr-2" />
+                    <Camera className="w-4 h-4 mr-2" />
                     Change Logo
                   </Button>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -277,7 +280,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <IoCamera className="w-8 h-8 text-gray-400" />
+                      <Camera className="w-8 h-8 text-gray-400" />
                     </div>
                   )}
                 </div>
@@ -295,7 +298,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
                     size="sm"
                     onClick={() => backgroundInputRef.current?.click()}
                   >
-                    <IoCamera className="w-4 h-4 mr-2" />
+                    <Camera className="w-4 h-4 mr-2" />
                     Change Background
                   </Button>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -309,7 +312,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
 
         {/* Verification Status */}
         <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <IoShieldCheckmarkOutline className="w-6 h-6 text-gray-600" />
+                  <ShieldCheck className="w-6 h-6 text-gray-600" />
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-700">Verification Status</p>
             <span className={`inline-block mt-1 px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(company.registration_status)}`}>
@@ -322,8 +325,8 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Company Name */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <IoBusinessOutline className="w-4 h-4" />
+              <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <Briefcase className="w-4 h-4" />
               <span>Company Name</span>
             </Label>
             {isEditing ? (
@@ -340,8 +343,8 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
 
           {/* Email (Read-only) */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <IoMailOutline className="w-4 h-4" />
+              <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <Mail className="w-4 h-4" />
               <span>Email</span>
             </Label>
             <p className="text-base text-gray-900 pl-6">{company.email}</p>
@@ -349,8 +352,8 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
 
           {/* Phone */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <IoCallOutline className="w-4 h-4" />
+              <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <Phone className="w-4 h-4" />
               <span>Phone</span>
             </Label>
             {isEditing ? (
@@ -367,8 +370,8 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
 
           {/* Address */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <IoLocationOutline className="w-4 h-4" />
+              <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <MapPin className="w-4 h-4" />
               <span>Address</span>
             </Label>
             {isEditing ? (
@@ -385,8 +388,8 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
 
           {/* Website */}
           <div className="space-y-2 md:col-span-2">
-            <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <IoGlobeOutline className="w-4 h-4" />
+              <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <Globe className="w-4 h-4" />
               <span>Website (Optional)</span>
             </Label>
             {isEditing ? (
@@ -407,7 +410,7 @@ export default function ProfileTab({ company, onProfileUpdate }: ProfileTabProps
         {/* Description */}
         <div className="space-y-2 pt-4 border-t">
           <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-            <IoGlobeOutline className="w-4 h-4" />
+            <Globe className="w-4 h-4" />
             <span>Company Description</span>
           </Label>
           {isEditing ? (

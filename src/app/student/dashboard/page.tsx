@@ -1,13 +1,11 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { MdFilePresent } from "react-icons/md";
-import { AiOutlineSchedule } from "react-icons/ai";
-import { LiaFontAwesomeFlag } from "react-icons/lia";
-import { RiSaveLine } from "react-icons/ri";
+import { FileText, Calendar, Flag, Save } from "lucide-react";
 import StatCard from "@/components/StatCard";
 import { useEffect, useState } from "react";
-import { IconType } from "react-icons/lib";
+import type { ComponentType, SVGProps } from "react";
+type IconType = ComponentType<SVGProps<SVGSVGElement>>;
 import ApplicantBarChart from "./ApplicantLineChart";
 import StatusPieChart from "./StatusPieChart";
 import CategoryBarChart from "./CategoryBarChart";
@@ -15,11 +13,17 @@ import InterviewConversionCard from "./InterviewConversionCard";
 import { VerificationBanner } from "@/components/VerificationBanner";
 
 const statIconMap: Record<string, { icon: IconType; iconBg: string; iconColor: string; key: string }> = {
-  "Applications Sent": { icon: MdFilePresent, iconBg: "#FFE0CD", iconColor: "#FD873E", key: "applicationsSent" },
-  "Interviews Scheduled": { icon: AiOutlineSchedule, iconBg: "#D0F4FF", iconColor: "#1E90FF", key: "interviewsScheduled" },
-  "Offers Received": { icon: LiaFontAwesomeFlag, iconBg: "#D9F0E8", iconColor: "#10B981", key: "offersReceived" },
-  "Saved Jobs": { icon: RiSaveLine, iconBg: "#F0D9FF", iconColor: "#A855F7", key: "savedJobs" },
+  "Applications Sent": { icon: FileText, iconBg: "#FFE0CD", iconColor: "#FD873E", key: "applicationsSent" },
+  "Interviews Scheduled": { icon: Calendar, iconBg: "#D0F4FF", iconColor: "#1E90FF", key: "interviewsScheduled" },
+  "Offers Received": { icon: Flag, iconBg: "#D9F0E8", iconColor: "#10B981", key: "offersReceived" },
+  "Saved Jobs": { icon: Save, iconBg: "#F0D9FF", iconColor: "#A855F7", key: "savedJobs" },
 };
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
 
 const StudentDashboardPage = () => {
   const { data: session, status, update } = useSession()
@@ -44,7 +48,7 @@ const StudentDashboardPage = () => {
 
         setStudentStat(stats);
       } catch (err) {
-        console.error("Error fetching student summary:", err);
+        logDebug("Error fetching student summary:", err);
       }
     };
 
@@ -81,7 +85,7 @@ const StudentDashboardPage = () => {
           }
         }
       } catch (error) {
-        console.error('Error checking verification status:', error);
+        logDebug('Error checking verification status:', error);
       }
     };
 

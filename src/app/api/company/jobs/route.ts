@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import DOMPurify from "isomorphic-dompurify";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -20,9 +21,9 @@ export async function GET() {
 
     const companyId = company.id;
 
-  const jobs = await prisma.jobPost.findMany({
-    where: { company_id: companyId },
-    include: {
+    const jobs = await prisma.jobPost.findMany({
+      where: { company_id: companyId },
+      include: {
         category: { select: { name: true } },
         tags: true,
         documents: true,
@@ -30,44 +31,46 @@ export async function GET() {
         company: { include: { account: true } },
         jobType: true,
         jobArrangement: true,
-    },
-    orderBy: { created_at: "desc" },
-  });
+      },
+      orderBy: { created_at: "desc" },
+    });
 
     const mappedJobs = jobs.map((job) => {
-      let status = "active";
-      if (!job.is_Published) status = "draft";
-      else if (job.deadline && new Date(job.deadline) < new Date()) status = "expire";
+      let jobStatus = "active";
+      if (!job.is_Published) jobStatus = "draft";
+      else if (job.deadline && new Date(job.deadline) < new Date()) jobStatus = "expire";
 
       return {
         id: job.id,
-        title: job.jobName,
-        companyName: job.company.name,
+        title: DOMPurify.sanitize(job.jobName),
+        companyName: DOMPurify.sanitize(job.company.name),
         companyLogo: job.company.account?.logoUrl || "/default-logo.png",
         companyBg: job.company.account?.backgroundUrl || "/default-bg.png",
-        location: job.location,
+        location: DOMPurify.sanitize(job.location),
         posted: job.created_at.toISOString(),
         applied: job.applications.length,
         salary: { min: job.min_salary, max: job.max_salary },
-        type: job.jobType.name,
-        arrangement: job.jobArrangement.name,
-        category: job.category?.name ?? "",
-        skills: job.tags.map((t) => t.name),
-        documents: Array.isArray(job.documents) ? job.documents.map((d: any) => d.name) : [],
+        type: DOMPurify.sanitize(job.jobType.name),
+        arrangement: DOMPurify.sanitize(job.jobArrangement.name),
+        category: DOMPurify.sanitize(job.category?.name ?? ""),
+        skills: job.tags.map((t) => DOMPurify.sanitize(t.name)),
+        documents: Array.isArray(job.documents) ? job.documents.map((d: any) => DOMPurify.sanitize(d.name)) : [],
         deadline: job.deadline.toISOString(),
-        status,
+        status: jobStatus,
         description: {
-            overview: job.aboutRole ?? "",
-            responsibility: job.responsibilities ?? "-",
-            requirement: job.requirements.join("\n"),
-            qualification: job.qualifications.join("\n"),
+          overview: DOMPurify.sanitize(job.aboutRole ?? ""),
+          responsibility: DOMPurify.sanitize(job.responsibilities ?? "-"),
+          requirement: DOMPurify.sanitize(job.requirements.join("\n")),
+          qualification: DOMPurify.sanitize(job.qualifications.join("\n")),
         },
       };
     });
 
     return NextResponse.json(mappedJobs, { status: 200 });
   } catch (error) {
-    console.error("API error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("API error:", error);
+    }
     return NextResponse.json({ error: "Failed to fetch jobs" }, { status: 500 });
   }
 }

@@ -29,6 +29,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 interface DashboardStats {
   pendingCompanies: number;
   totalJobPosts: number;
@@ -84,10 +90,10 @@ export default function AdminDashboard() {
         const data = await response.json();
         setStats(data);
       } else {
-        console.error("Failed to fetch dashboard stats");
+        logDebug("Failed to fetch dashboard stats");
       }
     } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
+      logDebug("Error fetching dashboard stats:", error);
     } finally {
       setLoading(false);
     }

@@ -20,10 +20,7 @@ export async function GET(request: NextRequest) {
     const session = await getApiSession(request);
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized. Please login." },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized. Please login." }, { status: 401 });
     }
 
     const company = await prisma.company.findUnique({
@@ -32,21 +29,17 @@ export async function GET(request: NextRequest) {
     });
 
     if (!company) {
-      return NextResponse.json(
-        { error: "No company found for this account." },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "No company found for this account." }, { status: 403 });
     }
 
     const companyId = company.id;
-    const type = request.nextUrl.searchParams.get("type");
-    const period = request.nextUrl.searchParams.get("period") || "month";
+
+    // Canonicalize query params (1.1.1)
+    const type = (request.nextUrl.searchParams.get("type") || "").trim().toLowerCase();
+    const period = (request.nextUrl.searchParams.get("period") || "month").trim().toLowerCase();
 
     if (type !== "trend" && type !== "status") {
-      return NextResponse.json(
-        { error: "Invalid type parameter. Must be 'trend' or 'status'." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid type parameter. Must be 'trend' or 'status'." }, { status: 400 });
     }
 
     if (type === "trend") {
@@ -59,46 +52,34 @@ export async function GET(request: NextRequest) {
         startDate.setMonth(startDate.getMonth() - 1);
       } else if (period === "year") {
         startDate.setFullYear(startDate.getFullYear() - 1);
+      } else {
+        return NextResponse.json({ error: "Invalid period parameter." }, { status: 400 });
       }
 
       const applications = await prisma.application.findMany({
         where: {
           jobPost: { company_id: companyId },
-          applied_at: {
-            gte: startDate,
-            lte: endDate
-          }
+          applied_at: { gte: startDate, lte: endDate }
         },
-        select: {
-          applied_at: true
-        },
-        orderBy: {
-          applied_at: "asc"
-        }
+        select: { applied_at: true },
+        orderBy: { applied_at: "asc" }
       });
 
       const trendMap = new Map<string, number>();
-
-      applications.forEach((app: { applied_at: Date }) => {
-        const dateKey = app.applied_at.toISOString().split('T')[0];
+      applications.forEach(app => {
+        const dateKey = app.applied_at.toISOString().split("T")[0];
         trendMap.set(dateKey, (trendMap.get(dateKey) || 0) + 1);
       });
 
-      const trend = Array.from(trendMap, ([date, applications]) => ({
-        date,
-        applications
-      }));
+      const trend = Array.from(trendMap, ([date, applications]) => ({ date, applications }));
 
       return NextResponse.json({
         success: true,
-        data: {
-          trend,
-          period,
-          total: applications.length
-        }
+        data: { trend, period, total: applications.length }
       });
+    }
 
-    } else if (type === "status") {
+    if (type === "status") {
       const [
         pendingCount,
         reviewedCount,
@@ -106,61 +87,25 @@ export async function GET(request: NextRequest) {
         offeredCount,
         rejectedCount
       ] = await Promise.all([
-        prisma.application.count({
-          where: {
-            jobPost: { company_id: companyId },
-            status: 1
-          }
-        }),
-        prisma.application.count({
-          where: {
-            jobPost: { company_id: companyId },
-            status: 2
-          }
-        }),
-        prisma.application.count({
-          where: {
-            jobPost: { company_id: companyId },
-            status: 3
-          }
-        }),
-        prisma.application.count({
-          where: {
-            jobPost: { company_id: companyId },
-            status: 4
-          }
-        }),
-        prisma.application.count({
-          where: {
-            jobPost: { company_id: companyId },
-            status: 5
-          }
-        }),
+        prisma.application.count({ where: { jobPost: { company_id: companyId }, status: 1 } }),
+        prisma.application.count({ where: { jobPost: { company_id: companyId }, status: 2 } }),
+        prisma.application.count({ where: { jobPost: { company_id: companyId }, status: 3 } }),
+        prisma.application.count({ where: { jobPost: { company_id: companyId }, status: 4 } }),
+        prisma.application.count({ where: { jobPost: { company_id: companyId }, status: 5 } }),
       ]);
 
       return NextResponse.json({
         success: true,
-        data: {
-          pending: pendingCount,
-          reviewed: reviewedCount,
-          interviewed: interviewedCount,
-          offered: offeredCount,
-          rejected: rejectedCount
-        }
+        data: { pending: pendingCount, reviewed: reviewedCount, interviewed: interviewedCount, offered: offeredCount, rejected: rejectedCount }
       });
     }
 
-    // This should never be reached due to validation above, but TypeScript needs it
-    return NextResponse.json(
-      { error: "Invalid type parameter" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid type parameter" }, { status: 400 });
 
   } catch (error) {
-    console.error("Error fetching company analytics:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching company analytics:", error);
+    }
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

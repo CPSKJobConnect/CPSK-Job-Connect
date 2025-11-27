@@ -35,7 +35,9 @@ export default function CategoryBarChart() {
         const json: CategoryBarProps[] = await res.json();
         setData(json);
       } catch (err) {
-        console.error("Error fetching category data:", err);
+        if (process.env.NODE_ENV === "development") {
+            console.error("Error fetching category data:", err);
+        }
       }
     };
 

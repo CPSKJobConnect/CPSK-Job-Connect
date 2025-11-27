@@ -22,37 +22,31 @@ const recentEmails = new Map<string, number>();
  * @param options - Email options (to, subject, html, text)
  * @returns Promise that resolves when email is sent
  */
+import { escapeHtml } from './htmlEscape';
+
 export async function sendEmail(options: EmailOptions): Promise<void> {
-  // Prevent duplicate emails within 10 seconds
   const emailKey = `${options.to}:${options.subject}`;
   const now = Date.now();
   const lastSent = recentEmails.get(emailKey);
 
   if (lastSent && now - lastSent < 10000) {
-    console.warn(`⚠️ Duplicate email prevented: ${options.subject} to ${options.to} (sent ${Math.round((now - lastSent) / 1000)}s ago)`);
-    return; // Skip sending duplicate
+    console.warn(`Duplicate email prevented: ${options.subject} to ${options.to} (sent ${Math.round((now - lastSent) / 1000)}s ago)`);
+    return;
   }
 
-  // Record this email
   recentEmails.set(emailKey, now);
 
-  // Clean up old entries (older than 30 seconds)
   for (const [key, timestamp] of recentEmails.entries()) {
-    if (now - timestamp > 30000) {
-      recentEmails.delete(key);
-    }
+    if (now - timestamp > 30000) recentEmails.delete(key);
   }
-  try {
-    // 1. SMTP (Gmail/Mailtrap) - PRODUCTION
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-      console.log(`📧 Sending email via SMTP to ${options.to}...`);
 
-      // Dynamic import to work around Turbopack module resolution
+  try {
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
       const nodemailer = await import('nodemailer');
       const transporter = nodemailer.default.createTransport({
         host: process.env.SMTP_HOST,
         port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true', // true for 465, false for 587
+        secure: process.env.SMTP_SECURE === 'true',
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
@@ -67,24 +61,26 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
         text: options.text,
       });
 
-      console.log(`✅ Email sent via SMTP to ${options.to}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Email sent via SMTP to ${options.to}`);
+      }
       return;
     }
 
-    // 2. Console Logging (Development fallback)
-    console.log('\n' + '='.repeat(80));
-    console.log('📧 EMAIL (Development Mode - Not Actually Sent)');
-    console.log('='.repeat(80));
-    console.log(`To: ${options.to}`);
-    console.log(`Subject: ${options.subject}`);
-    console.log('-'.repeat(80));
-    console.log(options.text || 'No text content');
-    console.log('='.repeat(80) + '\n');
-    return;
-
+    if (process.env.NODE_ENV === 'development') {
+      console.log('\n' + '='.repeat(80));
+      console.log('EMAIL (Development Mode - Not Actually Sent)');
+      console.log('='.repeat(80));
+      console.log(`To: ${options.to}`);
+      console.log(`Subject: ${options.subject}`);
+      console.log('-'.repeat(80));
+      console.log(options.text || 'No text content');
+      console.log('='.repeat(80) + '\n');
+    }
   } catch (error) {
-    console.error('❌ Error sending email:', error);
-    throw new Error(`Failed to send email: ${error instanceof Error ? error.message : String(error)}`);
+    console.error('Error sending email:', error);
+    const detail = error instanceof Error ? `: ${error.message}` : '';
+    throw new Error(`Failed to send email${detail}`);
   }
 }
 
@@ -95,6 +91,8 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
  * @returns HTML string
  */
 export function generateVerificationEmailHTML(code: string, recipientName?: string): string {
+  const safeRecipient = escapeHtml(recipientName);
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -158,7 +156,7 @@ export function generateVerificationEmailHTML(code: string, recipientName?: stri
   <div class="container">
     <h1 class="header">🎓 CPSK Job Connect</h1>
 
-    ${recipientName ? `<p>Hello ${recipientName},</p>` : '<p>Hello,</p>'}
+    ${recipientName ? `<p>Hello ${safeRecipient},</p>` : '<p>Hello,</p>'}
 
     <p>Thank you for registering with CPSK Job Connect. To complete your registration and verify your KU email address, please use the verification code below:</p>
 
@@ -189,10 +187,12 @@ export function generateVerificationEmailHTML(code: string, recipientName?: stri
  * @returns Plain text string
  */
 export function generateVerificationEmailText(code: string, recipientName?: string): string {
+  const safeRecipientText = escapeHtml(recipientName);
+
   return `
 CPSK Job Connect - Email Verification
 
-${recipientName ? `Hello ${recipientName},` : 'Hello,'}
+${recipientName ? `Hello ${safeRecipientText},` : 'Hello,'}
 
 Thank you for registering with CPSK Job Connect. To complete your registration and verify your KU email address, please use the verification code below:
 
@@ -231,19 +231,20 @@ export async function sendVerificationEmail(
  * Generate HTML template for alumni approval notification
  */
 export function generateAlumniApprovalEmailHTML(studentName: string, approved: boolean): string {
-  const status = approved ? 'Approved' : 'Rejected';
+  const approvalStatus = approved ? 'Approved' : 'Rejected';
   const emoji = approved ? '✅' : '❌';
   const message = approved
     ? 'Your alumni verification has been approved! Please log in to your dashboard and click on the "Account Pending Admin Approval" badge to verify your KU email address. You can browse jobs now, but you\'ll need to complete email verification before applying.'
     : 'Unfortunately, your alumni verification has been rejected. Please contact support if you believe this is an error.';
 
+  const safeStudent = escapeHtml(studentName);
   return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alumni Verification ${status}</title>
+  <title>Alumni Verification ${approvalStatus}</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -298,10 +299,10 @@ export function generateAlumniApprovalEmailHTML(studentName: string, approved: b
   <div class="container">
     <h1 class="header">🎓 CPSK Job Connect</h1>
 
-    <p>Hello ${studentName},</p>
+    <p>Hello ${safeStudent},</p>
 
     <div class="status">
-      <div class="status-text">${emoji} Verification ${status}</div>
+      <div class="status-text">${emoji} Verification ${approvalStatus}</div>
     </div>
 
     <p>${message}</p>
@@ -327,18 +328,21 @@ export async function sendAlumniStatusEmail(
   approved: boolean,
   notes?: string
 ): Promise<void> {
-  const status = approved ? 'Approved' : 'Rejected';
+  const approvalStatus = approved ? 'Approved' : 'Rejected';
+
+  const safeStudent = escapeHtml(studentName);
+  const safeNotes = notes ? escapeHtml(notes) : undefined;
 
   let textContent = `
-CPSK Job Connect - Alumni Verification ${status}
+CPSK Job Connect - Alumni Verification ${approvalStatus}
 
-Hello ${studentName},
+Hello ${safeStudent},
 
 Your alumni verification has been ${approved ? 'approved' : 'rejected'}.
 `;
 
-  if (notes) {
-    textContent += `\n\nAdmin notes: ${notes}`;
+  if (safeNotes) {
+    textContent += `\n\nAdmin notes: ${safeNotes}`;
   }
 
   if (approved) {
@@ -347,7 +351,7 @@ Your alumni verification has been ${approved ? 'approved' : 'rejected'}.
 
   await sendEmail({
     to: email,
-    subject: `Alumni Verification ${status} - CPSK Job Connect`,
+    subject: `Alumni Verification ${approvalStatus} - CPSK Job Connect`,
     html: generateAlumniApprovalEmailHTML(studentName, approved),
     text: textContent.trim(),
   });
@@ -357,11 +361,21 @@ Your alumni verification has been ${approved ? 'approved' : 'rejected'}.
  * Generate HTML template for company approval notification
  */
 export function generateCompanyApprovalEmailHTML(companyName: string, approved: boolean, notes?: string): string {
-  const status = approved ? 'Approved' : 'Rejected';
+  const approvalStatus = approved ? 'Approved' : 'Rejected';
   const emoji = approved ? '✅' : '❌';
+  const safeCompany = escapeHtml(companyName);
+  const safeNotes = notes ? escapeHtml(notes) : undefined;
   const message = approved
     ? 'Your company registration has been approved! You can now post job openings and manage applications.'
-    : `Unfortunately, your company registration has been rejected.${notes ? ` Reason: ${notes}` : ' Please contact support if you believe this is an error.'}`;
+    : `Unfortunately, your company registration has been rejected.${safeNotes ? ` Reason: ${safeNotes}` : ' Please contact support if you believe this is an error.'}`;
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  let dashboardHref = '';
+  try {
+    dashboardHref = new URL('/company/dashboard', baseUrl).toString();
+  } catch (e) {
+    dashboardHref = baseUrl + '/company/dashboard';
+  }
 
   return `
 <!DOCTYPE html>
@@ -369,7 +383,7 @@ export function generateCompanyApprovalEmailHTML(companyName: string, approved: 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Company Registration ${status}</title>
+  <title>Company Registration ${approvalStatus}</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -427,15 +441,15 @@ export function generateCompanyApprovalEmailHTML(companyName: string, approved: 
   <div class="container">
     <h1 class="header">🏢 CPSK Job Connect</h1>
 
-    <p>Hello ${companyName},</p>
+    <p>Hello ${safeCompany},</p>
 
     <div class="status">
-      <div class="status-text">${emoji} Registration ${status}</div>
+      <div class="status-text">${emoji} Registration ${approvalStatus}</div>
     </div>
 
     <p>${message}</p>
 
-    ${approved ? '<a href="' + (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/company/dashboard" class="button">Go to Dashboard</a>' : ''}
+    ${approved ? '<a href="' + dashboardHref + '" class="button">Go to Dashboard</a>' : ''}
 
     <div class="footer">
       <p>CPSK Job Connect - Kasetsart University</p>
@@ -456,18 +470,21 @@ export async function sendCompanyStatusEmail(
   approved: boolean,
   notes?: string
 ): Promise<void> {
-  const status = approved ? 'Approved' : 'Rejected';
+  const approvalStatus = approved ? 'Approved' : 'Rejected';
+
+const safeCompany = escapeHtml(companyName);
+  const safeNotes = notes ? escapeHtml(notes) : undefined;
 
   let textContent = `
-CPSK Job Connect - Company Registration ${status}
+CPSK Job Connect - Company Registration ${approvalStatus}
 
-Hello ${companyName},
+Hello ${safeCompany},
 
 Your company registration has been ${approved ? 'approved' : 'rejected'}.
 `;
 
-  if (notes) {
-    textContent += `\n\nAdmin notes: ${notes}`;
+  if (safeNotes) {
+    textContent += `\n\nAdmin notes: ${safeNotes}`;
   }
 
   if (approved) {
@@ -476,7 +493,7 @@ Your company registration has been ${approved ? 'approved' : 'rejected'}.
 
   await sendEmail({
     to: email,
-    subject: `Company Registration ${status} - CPSK Job Connect`,
+    subject: `Company Registration ${approvalStatus} - CPSK Job Connect`,
     html: generateCompanyApprovalEmailHTML(companyName, approved, notes),
     text: textContent.trim(),
   });
@@ -489,6 +506,7 @@ export async function sendAlumniRegistrationEmail(
   email: string,
   studentName: string
 ): Promise<void> {
+  const safeStudent = escapeHtml(studentName);
   const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -550,7 +568,7 @@ export async function sendAlumniRegistrationEmail(
   <div class="container">
     <h1 class="header">🎓 CPSK Job Connect</h1>
 
-    <p>Hello ${studentName},</p>
+    <p>Hello ${safeStudent},</p>
 
     <div class="status">
       <div class="status-text">📝 Registration Received</div>
@@ -586,7 +604,7 @@ export async function sendAlumniRegistrationEmail(
   const textContent = `
 CPSK Job Connect - Alumni Registration Received
 
-Hello ${studentName},
+Hello ${safeStudent},
 
 Thank you for registering with CPSK Job Connect as an alumni!
 
@@ -614,3 +632,146 @@ Connecting KU students with career opportunities
     text: textContent,
   });
 }
+
+type PasswordResetEmailOptions = {
+  email: string;
+  name?: string;
+  resetLink: string;
+  expiresMinutes?: number;
+};
+
+export async function sendPasswordResetEmail({
+  email,
+  name,
+  resetLink,
+  expiresMinutes = 15,
+}: PasswordResetEmailOptions) {
+  const safeName = name || "there";
+  const primary = "#1C4E80";
+  const accent = "#0F9D58";
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Password Reset Requested</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #f5f7fb;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #1f2937;
+    }
+    .email-wrapper {
+      max-width: 640px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 18px;
+      border: 1px solid #e4e8f5;
+      box-shadow: 0 15px 30px rgba(28, 78, 128, 0.08);
+      overflow: hidden;
+    }
+    .banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 28px 32px;
+      background: #f2f6ff;
+      border-bottom: 1px solid #d9e4ff;
+    }
+    .banner-icon {
+      font-size: 32px;
+    }
+    .banner h1 {
+      font-size: 22px;
+      margin: 0;
+      color: ${primary};
+    }
+    .content {
+      padding: 32px;
+      line-height: 1.6;
+    }
+    .cta {
+      display: inline-block;
+      padding: 12px 28px;
+      margin: 24px 0;
+      border-radius: 50px;
+      background: ${primary};
+      color: white !important;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .cta:hover {
+      background: #163a60;
+    }
+    .info-box {
+      margin-top: 24px;
+      padding: 16px;
+      border-radius: 12px;
+      background: #fdf7e7;
+      border: 1px solid #f4d38c;
+      font-size: 14px;
+      color: #775520;
+    }
+    .footer {
+      border-top: 1px solid #e5e7eb;
+      padding: 20px 32px;
+      text-align: center;
+      font-size: 13px;
+      color: #6b7280;
+      background: #fafbfd;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="banner">
+      <span class="banner-icon">🔐</span>
+      <div>
+        <h1>Password Reset Requested</h1>
+        <p style="margin: 2px 0 0; color: #4b5563;">CPSK Job Connect</p>
+      </div>
+    </div>
+    <div class="content">
+      <p>Hello ${safeName},</p>
+      <p>We received a request to reset the password for your CPSK Job Connect account. Click the button below to create a new password.</p>
+      <p><strong>Security notice:</strong> this link expires in ${expiresMinutes} minutes.</p>
+      <p style="text-align:center;">
+        <a href="${resetLink}" class="cta">Reset Password</a>
+      </p>
+      <div class="info-box">
+        If you didn&apos;t request this change, you can safely ignore this email. Your current password will remain active unless you follow the link above.
+      </div>
+    </div>
+    <div class="footer">
+      CPSK Job Connect · Kasetsart University<br />
+      Connecting KU talents with career opportunities
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+Password Reset Requested
+
+Hello ${safeName},
+
+We received a request to reset your CPSK Job Connect password.
+Use the link below to create a new password. This link expires in ${expiresMinutes} minutes.
+
+${resetLink}
+
+If you didn't request this, you can safely ignore this email.
+  `.trim();
+
+  await sendEmail({
+    to: email,
+    subject: "Reset your CPSK Job Connect password",
+    html,
+    text,
+  });
+}
+

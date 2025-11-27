@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Format the response
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const formattedApplications = applications.map((app: any) => ({
       id: app.id,
       status: app.applicationStatus.name,
@@ -98,7 +98,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(formattedApplications);
 
   } catch (error) {
-    console.error("API error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("API error:", error);
+    }
     return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { uploadDocument } from "@/lib/uploadDocument";
+import { FileValidationError } from "@/lib/filePolicy";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,8 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    const docTypeId = parseInt(formData.get("docTypeId") as string);
+    const docTypeIdRaw = formData.get("docTypeId") as string;
+    const docTypeId = parseInt(docTypeIdRaw?.trim() ?? "", 10); // canonicalize input
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     const account = await prisma.account.findUnique({
-      where: { id: parseInt(session.user.id) }
+      where: { id: parseInt(session.user.id, 10) }
     });
 
     if (!account) {
@@ -38,6 +40,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("API error:", error);
+    if (error instanceof FileValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json({ error: "Failed to upload document" }, { status: 500 });
   }
 }

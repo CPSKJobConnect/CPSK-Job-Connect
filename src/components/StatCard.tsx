@@ -1,11 +1,13 @@
-import { IconType } from "react-icons/lib";
+import type { ComponentType, SVGProps } from "react";
+
+type IconType = ComponentType<SVGProps<SVGSVGElement> & { size?: number }>;
 
 interface StatCardProps {
-    title: string;
-    value: string;
-    icon: IconType;
-    iconBg: string;
-    iconColor: string;
+  title: string;
+  value: string;
+  icon: IconType;
+  iconBg: string;
+  iconColor: string;
 }
 
 const StatCard = ({ title, value, icon: Icon, iconBg, iconColor}: StatCardProps) => {

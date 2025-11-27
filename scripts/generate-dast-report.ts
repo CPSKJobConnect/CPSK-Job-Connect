@@ -80,26 +80,26 @@ function calculateSecurityScore(alerts: ZAPAlert[]): number {
 }
 
 // Get status based on alerts
-function getSecurityStatus(alerts: ZAPAlert[]): { emoji: string; status: string; message: string } {
+function getSecurityStatus(alerts: ZAPAlert[]): { emoji: string; label: string; message: string } {
   const highCount = alerts.filter(a => a.riskcode === '3').length;
   const mediumCount = alerts.filter(a => a.riskcode === '2').length;
 
   if (highCount > 0) {
     return {
       emoji: '🔴',
-      status: 'CRITICAL',
+      label: 'CRITICAL',
       message: 'High severity vulnerabilities detected - immediate action required!'
     };
   } else if (mediumCount > 0) {
     return {
       emoji: '🟡',
-      status: 'WARNING',
+      label: 'WARNING',
       message: 'Medium severity issues found - should be addressed soon'
     };
   } else {
     return {
       emoji: '🟢',
-      status: 'PASS',
+      label: 'PASS',
       message: 'No critical or medium severity issues detected'
     };
   }
@@ -135,7 +135,7 @@ function generateMarkdownReport(zapReport: ZAPReport): string {
 
   const totalIssues = alerts.length;
   const score = calculateSecurityScore(alerts);
-  const status = getSecurityStatus(alerts);
+  const securityStatus = getSecurityStatus(alerts);
 
   const now = new Date();
   const formattedDate = now.toLocaleDateString('en-GB', {
@@ -169,7 +169,7 @@ function generateMarkdownReport(zapReport: ZAPReport): string {
 
 ## Security Status
 
-${status.emoji} **${status.status}** - ${status.message}
+${securityStatus.emoji} **${securityStatus.label}** - ${securityStatus.message}
 
 ---
 

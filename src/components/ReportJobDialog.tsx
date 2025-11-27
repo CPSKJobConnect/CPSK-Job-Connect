@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
+import apiFetch from "@/lib/apiClient";
 
 interface ReportJobDialogProps {
   targetId: string | number;
@@ -18,6 +19,12 @@ interface ReportType {
   id: number;
   name: string;
   target: string;
+}
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
 }
 
 export const ReportJobDialog = ({
@@ -41,7 +48,7 @@ export const ReportJobDialog = ({
         const data = await res.json();
         setReportTypes(data);
       } catch (err) {
-        console.error(err);
+        logDebug(err);
         toast.error("Failed to load report reasons");
       }
     };
@@ -55,7 +62,7 @@ export const ReportJobDialog = ({
 
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/reports", {
+      const res = await apiFetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -76,7 +83,7 @@ export const ReportJobDialog = ({
         toast.error(error.message || "Failed to submit report");
       }
     } catch (err) {
-      console.error(err);
+      logDebug(err);
       toast.error("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);

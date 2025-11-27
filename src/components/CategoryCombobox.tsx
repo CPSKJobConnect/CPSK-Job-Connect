@@ -18,7 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { IoIosAdd } from "react-icons/io"
+import { Plus } from "lucide-react"
 
 interface CategoryComboboxProps {
   selectedCategory: string;
@@ -103,7 +103,7 @@ const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder, 
                               onClick={handleAddCategory}
                               className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-auto max-h-[30px] max-w-[400px]"
                             >
-                              <IoIosAdd className="w-5 h-5 flex-shrink-0" />
+                              <Plus className="w-5 h-5 flex-shrink-0" />
                               <span className="truncate max-w-[200px]">
                                 Add new category: {searchTerm}
                               </span>
@@ -144,7 +144,7 @@ const CategoryCombobox = ({ selectedCategory, setSelectedCategory, placeholder, 
                           onClick={handleAddCategory}
                           className="flex items-center justify-center gap-2 bg-[#C5F4E5] text-[#2BA17C] text-sm w-full"
                         >
-                          <IoIosAdd className="w-5 h-5 flex-shrink-0" />
+                          <Plus className="w-5 h-5 flex-shrink-0" />
                           <span className="truncate">Add new category: {searchTerm.trim()}</span>
                         </Button>
                       </div>

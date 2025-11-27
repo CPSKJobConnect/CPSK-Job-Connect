@@ -198,7 +198,7 @@ async function restoreDatabase() {
       console.log(`Restoring ${data.jobPosts.length} job posts...`);
       for (const jobPost of data.jobPosts) {
         // Remove relation fields for initial creation
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         const { JobCategory, JobTag, Application, SavedJob, Company, JobArrangement, JobType, ...postData } = jobPost;
 
         await prisma.jobPost.upsert({
@@ -217,11 +217,11 @@ async function restoreDatabase() {
     // 12. Application Statuses
     if (data.applicationStatuses && data.applicationStatuses.length > 0) {
       console.log(`Restoring ${data.applicationStatuses.length} application statuses...`);
-      for (const status of data.applicationStatuses) {
+      for (const appStatus of data.applicationStatuses) {
         await prisma.applicationStatus.upsert({
-          where: { id: status.id },
-          update: status,
-          create: status,
+          where: { id: appStatus.id },
+          update: appStatus,
+          create: appStatus,
         });
       }
     }

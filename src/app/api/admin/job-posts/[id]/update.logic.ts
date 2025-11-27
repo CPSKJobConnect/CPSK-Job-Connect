@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/db";
+import DOMPurify from "isomorphic-dompurify";
 
 export async function updateJobPost(params: { id: string }, data: any) {
+  const jobPostId = Number(params.id);
+  if (isNaN(jobPostId)) throw new Error("Invalid job post ID");
+
   const {
     jobName,
     location,
@@ -17,34 +21,43 @@ export async function updateJobPost(params: { id: string }, data: any) {
     tagIds
   } = data;
 
-  // First, disconnect existing tags
-  await prisma.jobPost.update({
-    where: { id: parseInt(params.id) },
-    data: {
-      tags: {
-        set: []
-      }
-    }
-  });
+  // --- Sanitize HTML input ---
+  const safeAboutRole = aboutRole ? DOMPurify.sanitize(aboutRole) : undefined;
 
+  // --- Convert requirements and qualifications to string[] and sanitize each ---
+  const safeRequirements: string[] | undefined = requirements
+    ? requirements.split(/\r?\n/).map((line: string) => DOMPurify.sanitize(line)).filter(Boolean)
+    : undefined;
+
+  const safeQualifications: string[] | undefined = qualifications
+    ? qualifications.split(/\r?\n/).map((line: string) => DOMPurify.sanitize(line)).filter(Boolean)
+    : undefined;
+
+  // --- Disconnect existing tags first ---
+  if (tagIds && tagIds.length > 0) {
+    await prisma.jobPost.update({
+      where: { id: jobPostId },
+      data: { tags: { set: [] } }
+    });
+  }
+
+  // --- Update job post ---
   const jobPost = await prisma.jobPost.update({
-    where: { id: parseInt(params.id) },
+    where: { id: jobPostId },
     data: {
       jobName,
       location,
-      aboutRole,
-      requirements,
-      qualifications,
+      aboutRole: safeAboutRole,
+      requirements: safeRequirements,
+      qualifications: safeQualifications,
       min_salary: minSalary,
       max_salary: maxSalary,
-      deadline: new Date(deadline),
+      deadline: deadline ? new Date(deadline) : undefined,
       is_Published: isPublished,
       job_arrangement_id: jobArrangementId,
       job_type_id: jobTypeId,
-      job_category_id: categoryIds ? categoryIds[0] : null,
-      tags: {
-        connect: tagIds.map((id: number) => ({ id }))
-      }
+      job_category_id: categoryIds && categoryIds.length > 0 ? categoryIds[0] : undefined,
+      tags: tagIds && tagIds.length > 0 ? { connect: tagIds.map((id: number) => ({ id })) } : undefined
     },
     include: {
       company: true,
@@ -54,5 +67,6 @@ export async function updateJobPost(params: { id: string }, data: any) {
       tags: true
     }
   });
+
   return jobPost;
 }

@@ -6,7 +6,9 @@ export async function GET(req: NextRequest) {
     const types = await prisma.reportType.findMany();
     return NextResponse.json(types);
   } catch (err) {
-    console.error(err);
+    if (process.env.NODE_ENV === "development") {
+      console.error(err);
+    }
     return NextResponse.json({ error: "Failed to fetch report types" }, { status: 500 });
   }
 }

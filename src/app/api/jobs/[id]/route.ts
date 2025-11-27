@@ -1,5 +1,12 @@
 import { prisma } from "@/lib/db";
 import { NextResponse, NextRequest } from "next/server";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -22,11 +29,11 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     }
 
     // Derive status from is_Published and deadline
-    let status = "active";
+    let jobStatus = "active";
     if (!job.is_Published) {
-      status = "draft";
+      jobStatus = "draft";
     } else if (job.deadline && new Date(job.deadline) < new Date()) {
-      status = "expire";
+      jobStatus = "expire";
     }
 
     const mappedJob = {
@@ -53,18 +60,18 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       skills: job.tags.map((tag: { name: string }) => tag.name),
       arrangement: job.jobArrangement.name,
       deadline: job.deadline ? job.deadline.toISOString() : null,
-      status,
+      status: jobStatus,
       documents: job.documents.map((doc: { name: string }) => doc.name.toLowerCase()),
     };
     return NextResponse.json(mappedJob);
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to fetch job" }, { status: 500 });
   }
 }
 
 
-export async function DELETE(
+async function DELETE_impl(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -107,13 +114,15 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Job deleted successfully" }, { status: 200 });
   } catch (error) {
-    console.error("DELETE /api/jobs/[id] error:", error);
+    logDebug("DELETE /api/jobs/[id] error:", error);
     return NextResponse.json({ error: "Failed to delete job" }, { status: 500 });
   }
 }
 
+export const DELETE = withResponseCsrfGuard(DELETE_impl as any);
 
-export async function PATCH(
+
+async function PATCH_impl(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -225,7 +234,9 @@ export async function PATCH(
       job: updatedJob,
     });
   } catch (error) {
-    console.error("PATCH /api/jobs/[id] error:", error);
+    logDebug("PATCH /api/jobs/[id] error:", error);
     return NextResponse.json({ error: "Failed to update job" }, { status: 500 });
   }
 }
+
+export const PATCH = withResponseCsrfGuard(PATCH_impl as any);

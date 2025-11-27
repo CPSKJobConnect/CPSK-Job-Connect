@@ -2,7 +2,7 @@
 import DocumentSelector from "@/app/student/job-apply/DocumentSelector";
 import FileUpload from "@/components/FileUpload";
 import { FileMeta } from "@/types/file";
-import { IoMdClose } from "react-icons/io";
+import { X } from "lucide-react";
 
 interface DocumentUploadSectionProps {
     title: string;
@@ -55,7 +55,7 @@ const DocumentUploadSection = ({
             <p className="text-sm text-gray-700 max-w-[80%] truncate">
               Selected: <span className="font-medium">{selectedFile ? selectedFile.name : uploadedFile?.name}</span>
             </p>
-            <IoMdClose
+            <X
               className="w-5 h-5 text-gray-500 cursor-pointer hover:text-red-500"
               onClick={handleRemove}
             />

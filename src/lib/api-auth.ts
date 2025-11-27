@@ -1,31 +1,29 @@
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { INTERNAL_JWT_AUDIENCE, INTERNAL_JWT_ISSUER, INTERNAL_JWT_TOKEN_TYPE } from "@/lib/securityConstants";
 import { verify } from "jsonwebtoken";
 import { getServerSession } from "next-auth/next";
 import { NextRequest } from "next/server";
 
-/**
- * Get session from either NextAuth cookies or Authorization header (for API testing)
- * This allows both browser-based authentication and Postman/API testing
- */
 export async function getApiSession(request?: NextRequest) {
-  // First, try to get session from NextAuth (normal browser flow)
+  // Browser-based session
   const session = await getServerSession(authOptions);
-  if (session) {
-    return session;
-  }
+  if (session) return session;
 
-  // If no session, try to get token from Authorization header (API testing)
+  // API testing via Authorization header
   if (request) {
     const authHeader = request.headers.get("authorization");
     if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.substring(7);
+      // Canonicalize: trim whitespace
+      const token = authHeader.substring(7).trim();
       try {
         const secret = process.env.NEXTAUTH_SECRET;
-        if (!secret) {
-          throw new Error("NEXTAUTH_SECRET not configured");
-        }
+        if (!secret) throw new Error("NEXTAUTH_SECRET not configured");
 
-        const decoded = verify(token, secret) as {
+        const decoded = verify(token, secret, {
+          audience: INTERNAL_JWT_AUDIENCE,
+          issuer: INTERNAL_JWT_ISSUER,
+        }) as {
           sub: string;
           email: string;
           name: string;
@@ -33,7 +31,26 @@ export async function getApiSession(request?: NextRequest) {
           username: string;
           logoUrl?: string;
           backgroundUrl?: string;
+          tokenVersion?: number;
+          tokenType?: string;
         };
+
+        if (decoded.tokenType !== INTERNAL_JWT_TOKEN_TYPE) {
+          throw new Error("UNEXPECTED_TOKEN_TYPE");
+        }
+
+        // Validate token version against database to ensure revoked/terminated sessions are unusable
+        const userId = parseInt(decoded.sub, 10);
+        if (!Number.isNaN(userId)) {
+          const account = await prisma.account.findUnique({
+            where: { id: userId },
+            select: { token_version: true, is_active: true },
+          });
+          const tokenVersion = decoded.tokenVersion ?? 0;
+          if (!account || !account.is_active || account.token_version !== tokenVersion) {
+            throw new Error("TOKEN_VERSION_MISMATCH");
+          }
+        }
 
         // Return session in the same format as NextAuth
         return {
@@ -46,10 +63,15 @@ export async function getApiSession(request?: NextRequest) {
             logoUrl: decoded.logoUrl,
             backgroundUrl: decoded.backgroundUrl,
           },
-          expires: "", // Not used for JWT-based sessions
+          expires: "",
         };
       } catch (error) {
-        console.error("Invalid token:", error);
+        // OWASP ASVS 13.4.2: log detailed error only in development
+        if (process.env.NODE_ENV === "development") {
+          console.error("Invalid token:", error);
+        } else {
+          console.error("Invalid token.");
+        }
         return null;
       }
     }

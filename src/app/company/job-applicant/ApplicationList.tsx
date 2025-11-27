@@ -12,6 +12,13 @@ import {
 } from "@/components/ui/select";
 import StudentInfoModal from "@/components/StudentInfoModal";
 import { toast } from "sonner";
+import apiFetch from "@/lib/apiClient";
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
 
 interface Applicant {
   application_id: number;
@@ -65,11 +72,11 @@ const ApplicationList = ({ applicants, isCompanyVerified = true, loading = false
         });
         setStatusMap(initialMap);
       })
-      .catch(console.error);
+      .catch(logDebug);
   }, [applicants]);
 
   const handleStatusChange = async (application_id: number, newStatusId: number) => {
-    console.log("handleStatusChange called", { application_id, newStatusId });
+    logDebug("handleStatusChange called", { application_id, newStatusId });
     const s = statusList.find((st) => st.id === newStatusId);
     if (!s) return;
     const previous = statusMap[application_id];
@@ -80,7 +87,7 @@ const ApplicationList = ({ applicants, isCompanyVerified = true, loading = false
     }));
 
     try {
-      const response = await fetch(`/api/applications/${application_id}/status`, {
+      const response = await apiFetch(`/api/applications/${application_id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status_id: newStatusId }),
@@ -94,7 +101,7 @@ const ApplicationList = ({ applicants, isCompanyVerified = true, loading = false
       }
 
       if (!response.ok) {
-        console.error("Failed to update status:", result || response.statusText);
+        logDebug("Failed to update status:", result || response.statusText);
         toast.error("Failed to update status", {
           description: result?.error || "Please try again.",
         });
@@ -103,12 +110,12 @@ const ApplicationList = ({ applicants, isCompanyVerified = true, loading = false
         return;
       }
 
-      console.log("Application status updated successfully:", result);
+      logDebug("Application status updated successfully:", result);
       toast.success("Status updated", {
         description: `Application status changed to ${s.name}`,
       });
     } catch (error) {
-      console.error("Failed to update status:", error);
+      logDebug("Failed to update status:", error);
       toast.error("Failed to update application status");
       setStatusMap((prev) => ({ ...prev, [application_id]: previous }));
     }
@@ -203,13 +210,13 @@ const ApplicationList = ({ applicants, isCompanyVerified = true, loading = false
                         <SelectContent>
                           <SelectGroup>
                             <SelectLabel>Status</SelectLabel>
-                            {statusList.map((status) => (
+                            {statusList.map((statusItem) => (
                               <SelectItem
-                                  key={status.id}
-                                  value={status.id.toString()}
+                                  key={statusItem.id}
+                                  value={statusItem.id.toString()}
                                 >
-                                  {status.name.charAt(0).toUpperCase() + status.name.slice(1)}
-                                </SelectItem>
+                                  {statusItem.name.charAt(0).toUpperCase() + statusItem.name.slice(1)}
+                            </SelectItem>
                             ))}
                           </SelectGroup>
                         </SelectContent>

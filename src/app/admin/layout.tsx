@@ -1,7 +1,7 @@
-"use client";''
+"use client";
 
-import AdminNavbar from "@/components/Navbar/AdminNavbar";
 import FloatingNotification from "@/components/FloatingNotification";
+import AdminNavbar from "@/components/Navbar/AdminNavbar";
 
 type Props = {
   children: React.ReactNode;

@@ -3,6 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -14,26 +20,26 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const documentId = parseInt((await params).id);
+    // Canonicalize & validate document ID
+    const documentIdRaw = (await params).id;
+    const documentId = parseInt(documentIdRaw, 10);
 
     if (!documentId || isNaN(documentId)) {
       return NextResponse.json({ error: "Invalid document ID" }, { status: 400 });
     }
 
+    // Fetch account
     const account = await prisma.account.findUnique({
-      where: { id: parseInt(session.user.id) }
+      where: { id: parseInt(session.user.id, 10) }
     });
 
     if (!account) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
-    // Find the document and verify ownership
+    // Verify document ownership
     const document = await prisma.document.findFirst({
-      where: {
-        id: documentId,
-        account_id: account.id
-      }
+      where: { id: documentId, account_id: account.id }
     });
 
     if (!document) {
@@ -51,19 +57,17 @@ export async function DELETE(
       .remove([document.file_path]);
 
     if (storageError) {
-      console.error("Supabase delete error:", storageError);
-      // Continue with database deletion even if storage delete fails
+      logDebug("Supabase delete error:", storageError);
+      // Continue to delete from DB anyway
     }
 
     // Delete from database
-    await prisma.document.delete({
-      where: { id: documentId }
-    });
+    await prisma.document.delete({ where: { id: documentId } });
 
     return NextResponse.json({ message: "Document deleted successfully" });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to delete document" }, { status: 500 });
   }
 }

@@ -1,17 +1,20 @@
+import { getApiSession } from "@/lib/api-auth";
+import { withResponseCsrfGuard } from '@/lib/csrfGuard';
 import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import { NextRequest, NextResponse } from "next/server";
+import { FileValidationError } from "@/lib/filePolicy";
+import { uploadImage } from "@/lib/uploadImage";
 import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
+
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(request: NextRequest) {
+async function POST_impl(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getApiSession(request);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -42,54 +45,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File size must be less than 5MB" }, { status: 400 });
     }
 
-    // Delete old profile image if it exists
-    const oldAccount = await prisma.account.findUnique({
+    // Re-fetch account to obtain existing logoUrl so we can remove the old file
+    const currentAccount = await prisma.account.findUnique({
       where: { id: account.id },
       select: { logoUrl: true }
     });
 
-    if (oldAccount?.logoUrl) {
-      try {
-        await supabase.storage.from("documents").remove([oldAccount.logoUrl]);
-      } catch (error) {
-        console.error("Failed to delete old profile image:", error);
-        // Continue even if deletion fails
+    try {
+      if (currentAccount?.logoUrl) {
+        await supabase.storage.from("documents").remove([currentAccount.logoUrl]);
       }
+    } catch (removeErr) {
+      // Log and continue; removal failure should not block the upload
+      console.error("Failed to remove old profile image:", removeErr);
     }
 
-    // Upload new profile image
-    const timestamp = Date.now();
-    const filePath = `profile-images/${account.id}/${timestamp}_${file.name}`;
+    const signedUrl = await uploadImage(file, account.id.toString(), "logo");
 
-    const { data, error: uploadError } = await supabase.storage
-      .from("documents")
-      .upload(filePath, file);
-
-    if (uploadError) {
-      throw new Error(`Failed to upload file: ${uploadError.message}`);
-    }
-
-    // Get signed URL (valid for 1 year)
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-      .from("documents")
-      .createSignedUrl(data.path, 31536000); // 1 year in seconds
-
-    if (signedUrlError) {
-      throw new Error(`Failed to generate signed URL: ${signedUrlError.message}`);
-    }
-
-    // Update account with new profile image URL
     await prisma.account.update({
       where: { id: account.id },
-      data: { logoUrl: signedUrlData.signedUrl }
+      data: { logoUrl: signedUrl }
     });
 
     return NextResponse.json({
       success: true,
-      profile_url: signedUrlData.signedUrl
+      profile_url: signedUrl
     });
   } catch (error) {
     console.error("Error uploading profile image:", error);
+    if (error instanceof FileValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json({ error: "Failed to upload profile image" }, { status: 500 });
   }
 }
+
+export const POST = withResponseCsrfGuard(POST_impl as any);

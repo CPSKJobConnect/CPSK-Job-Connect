@@ -3,6 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -18,9 +24,7 @@ export async function GET(
       where: { email: session.user.email },
       include: {
         accountRole: true,
-        student: {
-          select: { id: true }
-        }
+        student: { select: { id: true } }
       }
     });
 
@@ -28,8 +32,9 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Canonicalize document ID
     const { id } = await params;
-    const documentId = parseInt(id);
+    const documentId = parseInt(id.trim(), 10);
 
     if (!documentId || isNaN(documentId)) {
       return NextResponse.json({ error: "Invalid document ID" }, { status: 400 });
@@ -38,21 +43,18 @@ export async function GET(
     // Find the document and verify ownership
     const document = await prisma.document.findUnique({
       where: { id: documentId },
-      include: {
-        documentType: true
-      }
+      include: { documentType: true }
     });
 
     if (!document) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 });
     }
 
-    // Verify the document belongs to this student
     if (document.account_id !== account.id) {
       return NextResponse.json({ error: "Forbidden - Not your document" }, { status: 403 });
     }
 
-    // Get file from Supabase
+    // Get signed URL from Supabase
     const supabase = createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -63,7 +65,7 @@ export async function GET(
       .createSignedUrl(document.file_path, 3600); // 1 hour expiry
 
     if (error || !data) {
-      console.error("Supabase error:", error);
+      logDebug("Supabase error:", error);
       return NextResponse.json({ error: "Failed to generate download URL" }, { status: 500 });
     }
 
@@ -74,7 +76,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error("API error:", error);
+    logDebug("API error:", error);
     return NextResponse.json({ error: "Failed to get document" }, { status: 500 });
   }
 }

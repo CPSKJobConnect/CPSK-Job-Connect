@@ -4,19 +4,28 @@
 
 import { uploadDocument } from "@/lib/uploadDocument";
 import { prisma } from "@/lib/db";
+import { validateFileAgainstPolicy } from "@/lib/filePolicy";
 
-const mockUpload = jest.fn();
-const mockStorageFrom = jest.fn(() => ({
-  upload: mockUpload,
-}));
+jest.mock("@supabase/supabase-js", () => {
+  const uploadMock = jest.fn();
+  const fromMock = jest.fn(() => ({
+    upload: uploadMock,
+  }));
+  return {
+    __esModule: true,
+    createClient: jest.fn(() => ({
+      storage: {
+        from: fromMock,
+      },
+    })),
+    _uploadMock: uploadMock,
+    _fromMock: fromMock,
+  };
+});
 
-jest.mock("@supabase/supabase-js", () => ({
-  createClient: jest.fn(() => ({
-    storage: {
-      from: mockStorageFrom,
-    },
-  })),
-}));
+const { _uploadMock, _fromMock } = require("@supabase/supabase-js");
+const mockUpload = _uploadMock as jest.Mock;
+const mockStorageFrom = _fromMock as jest.Mock;
 
 jest.mock("@/lib/db", () => ({
   prisma: {
@@ -25,6 +34,17 @@ jest.mock("@/lib/db", () => ({
     },
   },
 }));
+
+jest.mock("@/lib/filePolicy", () => {
+  const actual = jest.requireActual("@/lib/filePolicy");
+  return {
+    ...actual,
+    validateFileAgainstPolicy: jest.fn(async () => ({
+      sanitizedFileName: "resume.pdf",
+      extension: "pdf",
+    })),
+  };
+});
 
 describe("uploadDocument", () => {
   const file = {
@@ -36,6 +56,11 @@ describe("uploadDocument", () => {
     jest.clearAllMocks();
     process.env.SUPABASE_URL = "https://supabase.example.com";
     process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-key";
+    mockUpload.mockReset();
+    mockStorageFrom.mockReset();
+    mockStorageFrom.mockReturnValue({
+      upload: mockUpload,
+    });
   });
 
   it("uploads the file and stores metadata", async () => {
@@ -65,6 +90,7 @@ describe("uploadDocument", () => {
       },
     });
     expect(result).toEqual({ id: 1, account_id: 123 });
+    expect(validateFileAgainstPolicy).toHaveBeenCalled();
   });
 
   it("throws when Supabase upload fails", async () => {

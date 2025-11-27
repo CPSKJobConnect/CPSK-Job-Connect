@@ -6,6 +6,13 @@ import {
   getVerificationExpiry,
 } from '@/lib/email-validation';
 import { sendVerificationEmail } from '@/lib/email';
+import sanitizeHtml from 'sanitize-html';
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
 
 // Rate limiting: Track last email sent time per email address
 const rateLimitMap = new Map<string, number>();
@@ -18,105 +25,83 @@ const RATE_LIMIT_MS = 60000; // 1 minute
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, studentName } = body;
+    const payload = body && typeof body === 'object' ? body : {};
+    const { email, studentName } = payload as { email?: unknown; studentName?: unknown };
 
     // Validate email
     if (!email || typeof email !== 'string') {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // Check if the student is an alumni
+    // Canonicalize email
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Sanitize studentName to prevent injection/XSS
+    const sanitizedStudentName =
+      typeof studentName === 'string'
+        ? sanitizeHtml(studentName, { allowedTags: [], allowedAttributes: {} }).trim() || undefined
+        : undefined;
+
+    // Check if the student is a current student
     const student = await prisma.student.findFirst({
-      where: {
-        account: {
-          email: email
-        }
-      },
-      select: {
-        student_status: true
-      }
+      where: { account: { email: normalizedEmail } },
+      select: { student_status: true },
     });
 
-    // Only require KU email for current students, alumni can use any email
-    if (student?.student_status === 'CURRENT' && !isValidKUEmail(email)) {
-      return NextResponse.json(
-        { error: 'Current students must use a valid KU email address (@ku.th)' },
-        { status: 400 }
-      );
+    if (student?.student_status === 'CURRENT' && !isValidKUEmail(normalizedEmail)) {
+      return NextResponse.json({
+        error: 'Current students must use a valid KU email address (@ku.th)',
+      }, { status: 400 });
     }
 
     // Rate limiting check
-    const normalizedEmail = email.toLowerCase().trim();
-    const lastSentTime = rateLimitMap.get(normalizedEmail);
     const now = Date.now();
-
+    const lastSentTime = rateLimitMap.get(normalizedEmail);
     if (lastSentTime && now - lastSentTime < RATE_LIMIT_MS) {
       const remainingSeconds = Math.ceil((RATE_LIMIT_MS - (now - lastSentTime)) / 1000);
-      return NextResponse.json(
-        {
-          error: 'Too many requests',
-          message: `Please wait ${remainingSeconds} seconds before requesting another code`,
-        },
-        { status: 429 }
-      );
+      return NextResponse.json({
+        error: 'Too many requests',
+        message: `Please wait ${remainingSeconds} seconds before requesting another code`,
+      }, { status: 429 });
     }
 
-    // Generate 6-digit verification code
+    // Generate verification code
     const verificationCode = generateVerificationCode();
     const expiryDate = getVerificationExpiry();
 
-    // Delete any existing verification tokens for this email
-    await prisma.email_verification_tokens.deleteMany({
-      where: { email: normalizedEmail },
-    });
+    // Delete existing tokens
+    await prisma.email_verification_tokens.deleteMany({ where: { email: normalizedEmail } });
 
-    // Save token to database
+    // Save token
     await prisma.email_verification_tokens.create({
-      data: {
-        email: normalizedEmail,
-        token: verificationCode,
-        expires: expiryDate,
-      },
+      data: { email: normalizedEmail, token: verificationCode, expires: expiryDate },
     });
 
     // Send verification email
     try {
-      await sendVerificationEmail(email, verificationCode, studentName);
+      await sendVerificationEmail(normalizedEmail, verificationCode, sanitizedStudentName);
     } catch (emailError) {
-      console.error('Failed to send email:', emailError);
-      // Clean up the token if email fails
+      logDebug('Failed to send email:', emailError);
       await prisma.email_verification_tokens.deleteMany({
         where: { email: normalizedEmail, token: verificationCode },
       });
-
-      return NextResponse.json(
-        {
-          error: 'Failed to send verification email',
-          message: 'Please try again later or contact support',
-        },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        error: 'Failed to send verification email',
+        message: 'Please try again later or contact support',
+      }, { status: 500 });
     }
 
     // Update rate limit tracker
     rateLimitMap.set(normalizedEmail, now);
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Verification code sent to your email',
-        expiresIn: '15 minutes',
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      success: true,
+      message: 'Verification code sent to your email',
+      expiresIn: '15 minutes',
+    }, { status: 200 });
+
   } catch (error) {
-    console.error('Error in send-verification:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    logDebug('Error in send-verification:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

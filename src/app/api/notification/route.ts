@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
+import sanitizeHtml from "sanitize-html";
 
 export async function GET(request: NextRequest) {
   const session = await getApiSession(request);
@@ -15,10 +16,8 @@ export async function GET(request: NextRequest) {
     select: { id: true }
   });
 
-  // If no notifications, return empty array immediately
   if (!hasNotifications) {
     const response = NextResponse.json([]);
-    // Cache for 30 seconds
     response.headers.set('Cache-Control', 'private, max-age=30');
     return response;
   }
@@ -41,24 +40,28 @@ export async function GET(request: NextRequest) {
   });
 
   const data = latestPerSender.map((n) => {
-    // Resolve sender name: prioritize username, then student name, then company name, finally "System"
     const senderName = n.sender?.username
       || n.sender?.student?.name
       || n.sender?.company?.name
       || "System";
 
+    // Sanitize message to prevent XSS (ASVS 1.3.1)
+    const sanitizedMessage = sanitizeHtml(n.message, {
+      allowedTags: [], // Remove all HTML tags
+      allowedAttributes: {},
+    });
+
     return {
       senderId: n.sender_id,
       senderName,
       senderLogo: n.sender?.logoUrl ?? null,
-      message: n.message,
+      message: sanitizedMessage,
       is_read: n.is_read,
       created_at: n.created_at,
     };
   });
 
   const response = NextResponse.json(data);
-  // Cache for 30 seconds to reduce database load
   response.headers.set('Cache-Control', 'private, max-age=30');
   return response;
 }

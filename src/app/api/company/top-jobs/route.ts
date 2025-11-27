@@ -56,14 +56,14 @@ export async function GET(request: NextRequest) {
     });
 
     const jobsWithStats = jobs.map((job: { id: number; jobName: string; is_Published: boolean; deadline: Date; applications: { id: number }[] }) => {
-      let status: "active" | "draft" | "closed";
+      let jobStatus: "active" | "draft" | "closed";
 
       if (!job.is_Published) {
-        status = "draft";
+        jobStatus = "draft";
       } else if (job.deadline < now) {
-        status = "closed";
+        jobStatus = "closed";
       } else {
-        status = "active";
+        jobStatus = "active";
       }
 
       return {
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
         title: job.jobName,
         applications: job.applications.length,
         views: 0,
-        status: status
+        status: jobStatus
       };
     });
 

@@ -3,33 +3,23 @@ import { getApiSession } from "@/lib/api-auth";
 import { uploadDocument } from "@/lib/uploadDocument";
 import { notifyAdminsAlumniReapplication } from "@/lib/notifyAdmins";
 import { NextRequest, NextResponse } from "next/server";
+import sanitizeHtml from "sanitize-html";
 
-/**
- * POST /api/students/reapply-verification
- * Allow rejected alumni students to re-upload transcript and reset status to PENDING
- */
 export async function POST(request: NextRequest) {
   try {
     const session = await getApiSession(request);
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const formData = await request.formData();
     const transcriptFile = formData.get("transcript") as File | null;
 
     if (!transcriptFile) {
-      return NextResponse.json(
-        { error: "Transcript file is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Transcript file is required" }, { status: 400 });
     }
 
-    // Get student record with name and student_id for notification
     const student = await prisma.student.findUnique({
       where: { account_id: parseInt(session.user.id) },
       select: {
@@ -42,13 +32,9 @@ export async function POST(request: NextRequest) {
     });
 
     if (!student) {
-      return NextResponse.json(
-        { error: "Student not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    // Only allow re-application if student is ALUMNI and currently REJECTED
     if (student.student_status !== "ALUMNI" || student.verification_status !== "REJECTED") {
       return NextResponse.json(
         { error: "Only rejected alumni can re-apply for verification" },
@@ -56,14 +42,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upload the new transcript (docTypeId: 4 for transcript)
-    const transcriptDoc = await uploadDocument(
-      transcriptFile,
-      session.user.id,
-      4
-    );
+    // Sanitize student info before use
+    const safeStudentName = sanitizeHtml(student.name.trim());
+    const safeStudentId = sanitizeHtml(String(student.student_id).trim());
 
-    // Reset verification status to PENDING
+    const transcriptDoc = await uploadDocument(transcriptFile, session.user.id, 4);
+
     await prisma.student.update({
       where: { id: student.id },
       data: {
@@ -74,7 +58,6 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Create notification for the student
     await prisma.notification.create({
       data: {
         account_id: parseInt(session.user.id),
@@ -82,12 +65,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Notify all admins about the re-application
-    await notifyAdminsAlumniReapplication(
-      student.name,
-      student.student_id,
-      parseInt(session.user.id)
-    );
+    await notifyAdminsAlumniReapplication(safeStudentName, safeStudentId, parseInt(session.user.id));
 
     return NextResponse.json({
       success: true,
@@ -95,11 +73,10 @@ export async function POST(request: NextRequest) {
       transcript: transcriptDoc
     });
 
-  } catch (error) {
-    console.error("Error in reapply-verification:", error);
-    return NextResponse.json(
-      { error: "Failed to process re-verification request" },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error in reapply-verification:", error);
+    }
+    return NextResponse.json({ error: "Failed to process re-verification request" }, { status: 500 });
   }
 }

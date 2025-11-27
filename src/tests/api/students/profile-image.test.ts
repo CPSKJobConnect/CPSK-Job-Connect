@@ -16,6 +16,8 @@ import { NextRequest } from "next/server";
 import { POST } from "@/app/api/students/profile-image/route";
 import { prisma } from "@/lib/db";
 import { getApiSession } from "@/lib/api-auth";
+import { uploadImage } from "@/lib/uploadImage";
+import { FileValidationError } from "@/lib/filePolicy";
 
 import { mockStudentAccount, mockStudentSession } from "@/tests/fixtures";
 import { silenceConsole, resetAllMocks } from "@/tests/setup/mocks";
@@ -34,18 +36,8 @@ jest.mock("@/lib/db", () => ({
   },
 }));
 
-const mockSupabaseUpload = jest.fn();
-const mockSupabaseCreateSignedUrl = jest.fn();
-
-jest.mock("@supabase/supabase-js", () => ({
-  createClient: jest.fn(() => ({
-    storage: {
-      from: jest.fn(() => ({
-        upload: mockSupabaseUpload,
-        createSignedUrl: mockSupabaseCreateSignedUrl,
-      })),
-    },
-  })),
+jest.mock("@/lib/uploadImage", () => ({
+  uploadImage: jest.fn(),
 }));
 
 jest.mock("next/server", () => ({
@@ -68,8 +60,8 @@ silenceConsole();
 describe("POST /api/students/profile-image", () => {
   beforeEach(() => {
     resetAllMocks();
-    mockSupabaseUpload.mockReset();
-    mockSupabaseCreateSignedUrl.mockReset();
+    (uploadImage as jest.Mock).mockReset();
+    (uploadImage as jest.Mock).mockResolvedValue("https://example.com/signed-url/image.jpg");
   });
 
   const createMockFile = (name: string = "profile.jpg", type: string = "image/jpeg") => {
@@ -165,15 +157,6 @@ describe("POST /api/students/profile-image", () => {
         ...mockStudentAccount,
         logoUrl: "https://example.com/image.jpg",
       });
-      mockSupabaseUpload.mockResolvedValue({
-        data: { path: "profile-images/1/image.jpg" },
-        error: null,
-      });
-      mockSupabaseCreateSignedUrl.mockResolvedValue({
-        data: { signedUrl: "https://example.com/image.jpg" },
-        error: null,
-      });
-
       const imageTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
       for (const type of imageTypes) {
@@ -230,14 +213,7 @@ describe("POST /api/students/profile-image", () => {
         ...mockStudentAccount,
         logoUrl: "https://example.com/signed-url/image.jpg",
       });
-      mockSupabaseUpload.mockResolvedValue({
-        data: { path: "profile-images/1/1234567890_profile.jpg" },
-        error: null,
-      });
-      mockSupabaseCreateSignedUrl.mockResolvedValue({
-        data: { signedUrl: "https://example.com/signed-url/image.jpg" },
-        error: null,
-      });
+      (uploadImage as jest.Mock).mockResolvedValue("https://example.com/signed-url/image.jpg");
     });
 
     it("uploads profile image successfully", async () => {
@@ -256,7 +232,7 @@ describe("POST /api/students/profile-image", () => {
       expect(data.profile_url).toBe("https://example.com/signed-url/image.jpg");
     });
 
-    it("uploads file to Supabase", async () => {
+    it("invokes shared upload helper", async () => {
       const formData = new FormData();
       const mockFile = createMockFile("test.jpg");
       formData.append("file", mockFile);
@@ -267,26 +243,7 @@ describe("POST /api/students/profile-image", () => {
       });
       await POST(req);
 
-      expect(mockSupabaseUpload).toHaveBeenCalledWith(
-        expect.stringContaining("profile-images/1/"),
-        mockFile
-      );
-    });
-
-    it("creates signed URL for uploaded image", async () => {
-      const formData = new FormData();
-      formData.append("file", createMockFile());
-
-      const req = new NextRequest("http://localhost/api/students/profile-image", {
-        method: "POST",
-        body: formData,
-      });
-      await POST(req);
-
-      expect(mockSupabaseCreateSignedUrl).toHaveBeenCalledWith(
-        "profile-images/1/1234567890_profile.jpg",
-        31536000
-      );
+      expect(uploadImage).toHaveBeenCalledWith(mockFile, mockStudentAccount.id.toString(), "logo");
     });
 
     it("updates account with new logoUrl", async () => {
@@ -318,11 +275,8 @@ describe("POST /api/students/profile-image", () => {
       (prisma.account.findUnique as jest.Mock).mockResolvedValue(mockStudentAccount);
     });
 
-    it("handles Supabase upload errors", async () => {
-      mockSupabaseUpload.mockResolvedValue({
-        data: null,
-        error: { message: "Upload failed" },
-      });
+    it("handles upload helper errors", async () => {
+      (uploadImage as jest.Mock).mockRejectedValue(new Error("Upload failed"));
 
       const formData = new FormData();
       formData.append("file", createMockFile());
@@ -335,18 +289,11 @@ describe("POST /api/students/profile-image", () => {
       const data = await res.json();
 
       expect(res.status).toBe(500);
-      expect(data.error).toBe("Failed to upload image");
+      expect(data.error).toBe("Failed to update profile image");
     });
 
-    it("handles signed URL generation errors", async () => {
-      mockSupabaseUpload.mockResolvedValue({
-        data: { path: "profile-images/1/image.jpg" },
-        error: null,
-      });
-      mockSupabaseCreateSignedUrl.mockResolvedValue({
-        data: null,
-        error: { message: "Failed to create signed URL" },
-      });
+    it("handles file validation errors from upload helper", async () => {
+      (uploadImage as jest.Mock).mockRejectedValue(new FileValidationError("Invalid image"));
 
       const formData = new FormData();
       formData.append("file", createMockFile());
@@ -358,8 +305,8 @@ describe("POST /api/students/profile-image", () => {
       const res = await POST(req);
       const data = await res.json();
 
-      expect(res.status).toBe(500);
-      expect(data.error).toBe("Failed to generate image URL");
+      expect(res.status).toBe(400);
+      expect(data.error).toBe("Invalid image");
     });
 
     it("handles database errors gracefully", async () => {

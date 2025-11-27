@@ -8,7 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { IoPersonOutline, IoIdCardOutline, IoMailOutline, IoCallOutline, IoSchoolOutline, IoShieldCheckmarkOutline, IoSave, IoClose, IoCamera, IoPersonCircleOutline } from "react-icons/io5";
+import { User, Mail, Phone, GraduationCap, ShieldCheck, Save, X, Camera } from "lucide-react";
+
+const IdIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <rect x="2" y="3" width="20" height="18" rx="2" />
+    <circle cx="9" cy="9" r="2" />
+    <path d="M15 8h.01M13 16h-6v-1a2 2 0 0 1 2-2h2" />
+  </svg>
+);
 import Image from "next/image";
 import { isValidImageUrl } from "@/lib/validateImageUrl";
 import { useSession } from "next-auth/react";
@@ -17,6 +25,12 @@ import Link from "next/link";
 interface ProfileTabProps {
   student: Student;
   onUpdate: () => void;
+}
+
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
 }
 
 export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
@@ -64,13 +78,13 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
     }
   };
 
-  const getStatusColor = (status: string, emailVerified: boolean) => {
+  const getStatusColor = (statusKey: string, emailVerified: boolean) => {
     // For alumni who are approved but haven't verified email, show blue (pending email verification)
-    if (status === "APPROVED" && student.student_status === "ALUMNI" && !emailVerified) {
+    if (statusKey === "APPROVED" && student.student_status === "ALUMNI" && !emailVerified) {
       return "bg-blue-100 text-blue-800 border-blue-300";
     }
 
-    switch (status) {
+    switch (statusKey) {
       case "APPROVED":
         return "bg-green-100 text-green-800 border-green-300";
       case "PENDING":
@@ -82,13 +96,13 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
     }
   };
 
-  const getStatusText = (status: string, emailVerified: boolean) => {
+  const getStatusText = (statusKey: string, emailVerified: boolean) => {
     // For alumni who are approved but haven't verified email
-    if (status === "APPROVED" && student.student_status === "ALUMNI" && !emailVerified) {
+    if (statusKey === "APPROVED" && student.student_status === "ALUMNI" && !emailVerified) {
       return "Email Verification Required";
     }
 
-    switch (status) {
+    switch (statusKey) {
       case "APPROVED":
         return "Verified";
       case "PENDING":
@@ -96,7 +110,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
       case "REJECTED":
         return "Verification Rejected";
       default:
-        return status;
+        return statusKey;
     }
   };
 
@@ -162,7 +176,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
 
       if (!res.ok) {
         const errorData = await res.json();
-        console.error("❌ Update failed:", errorData);
+        logDebug("❌ Update failed:", errorData);
         toast.error(errorData.error || "Failed to update profile");
         return;
       }
@@ -173,7 +187,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
       setLogoFile(null);
       onUpdate();
     } catch (error) {
-      console.error("Error updating profile:", error);
+      logDebug("Error updating profile:", error);
       toast.error("Error updating profile");
     } finally {
       setIsSaving(false);
@@ -211,11 +225,11 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
             ) : (
               <>
                 <Button variant="outline" onClick={handleCancel} disabled={isSaving} data-testid="cancel-profile-btn">
-                  <IoClose className="w-4 h-4 mr-2" />
+                  <X className="w-4 h-4 mr-2" />
                   Cancel
                 </Button>
                 <Button onClick={handleSave} disabled={isSaving} data-testid="save-profile-btn">
-                  <IoSave className="w-4 h-4 mr-2" />
+                  <Save className="w-4 h-4 mr-2" />
                   {isSaving ? "Saving..." : "Save Changes"}
                 </Button>
               </>
@@ -246,7 +260,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <IoPersonCircleOutline className="w-12 h-12 text-gray-400" />
+                      <User className="w-12 h-12 text-gray-400" />
                     </div>
                   )}
                 </div>
@@ -266,7 +280,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
                     data-testid="change-picture-btn"
                     onClick={() => logoInputRef.current?.click()}
                   >
-                    <IoCamera className="w-4 h-4 mr-2" />
+                    <Camera className="w-4 h-4 mr-2" />
                     Change Picture
                   </Button>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -280,7 +294,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
 
         {/* Verification Status */}
         <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <IoShieldCheckmarkOutline className="w-6 h-6 text-gray-600" />
+          <ShieldCheck className="w-6 h-6 text-gray-600" />
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-700">Verification Status</p>
             <span className={`inline-block mt-1 px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(student.verification_status, student.email_verified)}`}>
@@ -294,7 +308,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
           {/* Student ID (Read-only) */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <IoIdCardOutline className="w-4 h-4" />
+              <IdIcon className="w-4 h-4" />
               <span>Student ID</span>
             </Label>
             <p className="text-base text-gray-900 pl-6">{student.student_id}</p>
@@ -303,7 +317,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
           {/* Email (Read-only) */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <IoMailOutline className="w-4 h-4" />
+              <Mail className="w-4 h-4" />
               <span>Email</span>
             </Label>
             <p className="text-base text-gray-900 pl-6">{student.email}</p>
@@ -312,7 +326,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
           {/* First Name */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <IoPersonOutline className="w-4 h-4" />
+              <User className="w-4 h-4" />
               <span>First Name</span>
             </Label>
             {isEditing ? (
@@ -331,7 +345,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
           {/* Last Name */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <IoPersonOutline className="w-4 h-4" />
+              <User className="w-4 h-4" />
               <span>Last Name</span>
             </Label>
             {isEditing ? (
@@ -350,7 +364,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
           {/* Faculty */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <IoSchoolOutline className="w-4 h-4" />
+              <GraduationCap className="w-4 h-4" />
               <span>Faculty</span>
             </Label>
             {isEditing ? (
@@ -378,7 +392,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
           {/* Year */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <IoSchoolOutline className="w-4 h-4" />
+              <GraduationCap className="w-4 h-4" />
               <span>Year</span>
             </Label>
             {isEditing ? (
@@ -408,7 +422,7 @@ export default function ProfileTab({ student, onUpdate }: ProfileTabProps) {
           {/* Phone */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <IoCallOutline className="w-4 h-4" />
+              <Phone className="w-4 h-4" />
               <span>Phone</span>
             </Label>
             {isEditing ? (

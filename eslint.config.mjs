@@ -1,6 +1,7 @@
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
+import domClobberPlugin from "./eslint-rules/dom-clobbering/index.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -44,6 +45,19 @@ const eslintConfig = [
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/no-require-imports": "off",
+    },
+  },
+  // DOM clobbering-only rules (applies to JS/TS files project-wide)
+  {
+    plugins: {
+      "dom-clobbering": domClobberPlugin,
+    },
+    files: ["**/*.{ts,tsx,js,jsx}"],
+    rules: {
+      "dom-clobbering/no-var-replace": "error",
+      "dom-clobbering/no-implicit-global-assign": "error",
+      "dom-clobbering/no-window-document-global-assign": "error",
+      "dom-clobbering/no-restricted-dom-names": "error",
     },
   },
 ];

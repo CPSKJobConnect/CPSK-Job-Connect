@@ -27,6 +27,12 @@ interface DocumentViewerModalProps {
   apiEndpoint?: "students" | "company" | "admin";
 }
 
+const logDebug = (...args: any[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(...args)
+  }
+}
+
 export function DocumentViewerModal({
   isOpen,
   onClose,
@@ -77,7 +83,7 @@ export function DocumentViewerModal({
       const data = await response.json();
       setDocumentUrl(data.url);
     } catch (error) {
-      console.error("Error fetching document:", error);
+      logDebug("Error fetching document:", error);
       toast.error("Failed to load document");
       onClose();
     } finally {
@@ -111,7 +117,7 @@ export function DocumentViewerModal({
       toast.dismiss();
       toast.success("Download started");
     } catch (error) {
-      console.error("Download error:", error);
+      logDebug("Download error:", error);
       toast.dismiss();
       toast.error("Failed to download file");
     }

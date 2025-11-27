@@ -26,9 +26,77 @@ jobs:
         run: npm install
 
       - name: Run all tests
+        env:
+          # Database Configuration (mock values for testing)
+          DATABASE_URL: postgresql://test:test@localhost:5432/test?schema=public
+          DIRECT_URL: postgresql://test:test@localhost:5432/test?schema=public
+
+          # Auth Configuration
+          NEXTAUTH_SECRET: test-secret-for-github-actions-only
+          NEXTAUTH_URL: http://localhost:3000
+          JWT_SECRET: test-jwt-secret-for-github-actions-only
+          REFRESH_TOKEN_PEPPER: test-refresh-token-pepper-for-github-actions
+          INTERNAL_JWT_AUDIENCE: cpsk-job-connect
+          INTERNAL_JWT_ISSUER: cpsk-job-connect-auth
+          INTERNAL_JWT_TOKEN_TYPE: session
+
+          # Supabase Configuration (mock values for testing)
+          SUPABASE_URL: https://test.supabase.co
+          SUPABASE_ANON_KEY: test-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: test-service-role-key
+          SUPABASE_ACCESS_TOKEN: test-access-token
+
+          # Email Configuration (dev mode for testing)
+          EMAIL_DEV_MODE: true
+          SMTP_HOST: smtp.example.com
+          SMTP_PORT: 587
+          SMTP_SECURE: false
+          SMTP_USER: test@example.com
+          SMTP_PASS: test-password
+          SMTP_FROM: Test <test@example.com>
+
+          # App URL
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+          # Other configs
+          NODE_ENV: test
         run: npm test
 
       - name: Generate coverage report
+        env:
+          # Database Configuration (mock values for testing)
+          DATABASE_URL: postgresql://test:test@localhost:5432/test?schema=public
+          DIRECT_URL: postgresql://test:test@localhost:5432/test?schema=public
+
+          # Auth Configuration
+          NEXTAUTH_SECRET: test-secret-for-github-actions-only
+          NEXTAUTH_URL: http://localhost:3000
+          JWT_SECRET: test-jwt-secret-for-github-actions-only
+          REFRESH_TOKEN_PEPPER: test-refresh-token-pepper-for-github-actions
+          INTERNAL_JWT_AUDIENCE: cpsk-job-connect
+          INTERNAL_JWT_ISSUER: cpsk-job-connect-auth
+          INTERNAL_JWT_TOKEN_TYPE: session
+
+          # Supabase Configuration (mock values for testing)
+          SUPABASE_URL: https://test.supabase.co
+          SUPABASE_ANON_KEY: test-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: test-service-role-key
+          SUPABASE_ACCESS_TOKEN: test-access-token
+
+          # Email Configuration (dev mode for testing)
+          EMAIL_DEV_MODE: true
+          SMTP_HOST: smtp.example.com
+          SMTP_PORT: 587
+          SMTP_SECURE: false
+          SMTP_USER: test@example.com
+          SMTP_PASS: test-password
+          SMTP_FROM: Test <test@example.com>
+
+          # App URL
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+          # Other configs
+          NODE_ENV: test
         run: npm run test:coverage
 
       - name: Upload coverage

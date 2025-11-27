@@ -2,11 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { format } from "date-fns";
 
-export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
     const { id } = await context.params;
-    const accountId = Number(id);
 
+    // Canonicalize input
+    const accountId = parseInt(id?.trim() ?? "", 10);
     if (isNaN(accountId)) {
       return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });
     }
@@ -34,7 +38,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
     return NextResponse.json(formattedData);
   } catch (error) {
-    console.error("Error fetching applicant data:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching applicant data:", error);
+    }
     return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 });
   }
 }
