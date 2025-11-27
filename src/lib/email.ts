@@ -25,32 +25,23 @@ const recentEmails = new Map<string, number>();
 import { escapeHtml } from './htmlEscape';
 
 export async function sendEmail(options: EmailOptions): Promise<void> {
-  // Prevent duplicate emails within 10 seconds
   const emailKey = `${options.to}:${options.subject}`;
   const now = Date.now();
   const lastSent = recentEmails.get(emailKey);
 
   if (lastSent && now - lastSent < 10000) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`⚠️ Duplicate email prevented: ${options.subject} to ${options.to} (sent ${Math.round((now - lastSent)/1000)}s ago)`);
-    }
-    return; // Skip sending duplicate
+    console.warn(`Duplicate email prevented: ${options.subject} to ${options.to} (sent ${Math.round((now - lastSent) / 1000)}s ago)`);
+    return;
   }
 
   recentEmails.set(emailKey, now);
 
-  // Clean up old entries
   for (const [key, timestamp] of recentEmails.entries()) {
     if (now - timestamp > 30000) recentEmails.delete(key);
   }
 
   try {
-    // 1. SMTP (Production)
     if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`📧 Sending email via SMTP to ${options.to}...`);
-      }
-
       const nodemailer = await import('nodemailer');
       const transporter = nodemailer.default.createTransport({
         host: process.env.SMTP_HOST,
@@ -71,15 +62,14 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
       });
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`✅ Email sent via SMTP to ${options.to}`);
+        console.log(`Email sent via SMTP to ${options.to}`);
       }
       return;
     }
 
-    // 2. Console Logging (Development fallback)
     if (process.env.NODE_ENV === 'development') {
       console.log('\n' + '='.repeat(80));
-      console.log('📧 EMAIL (Development Mode - Not Actually Sent)');
+      console.log('EMAIL (Development Mode - Not Actually Sent)');
       console.log('='.repeat(80));
       console.log(`To: ${options.to}`);
       console.log(`Subject: ${options.subject}`);
@@ -87,16 +77,10 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
       console.log(options.text || 'No text content');
       console.log('='.repeat(80) + '\n');
     }
-
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('❌ Error sending email:', error);
-    }
-    // Generic error in production to prevent info leak
-    if (process.env.NODE_ENV === 'production') {
-      console.error('❌ Error sending email (production)');
-    }
-    throw new Error(`Failed to send email${process.env.NODE_ENV === 'development' && error instanceof Error ? `: ${error.message}` : ''}`);
+    console.error('Error sending email:', error);
+    const detail = error instanceof Error ? `: ${error.message}` : '';
+    throw new Error(`Failed to send email${detail}`);
   }
 }
 
@@ -790,3 +774,4 @@ If you didn't request this, you can safely ignore this email.
     text,
   });
 }
+

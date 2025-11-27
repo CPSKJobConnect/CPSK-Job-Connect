@@ -25,8 +25,8 @@ const RATE_LIMIT_MS = 60000; // 1 minute
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    let studentName = body;
-    const email = body;
+    const payload = body && typeof body === 'object' ? body : {};
+    const { email, studentName } = payload as { email?: unknown; studentName?: unknown };
 
     // Validate email
     if (!email || typeof email !== 'string') {
@@ -37,11 +37,10 @@ export async function POST(req: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // Sanitize studentName to prevent injection/XSS
-    if (studentName && typeof studentName === 'string') {
-      studentName = sanitizeHtml(studentName, { allowedTags: [], allowedAttributes: {} }).trim();
-    } else {
-      studentName = '';
-    }
+    const sanitizedStudentName =
+      typeof studentName === 'string'
+        ? sanitizeHtml(studentName, { allowedTags: [], allowedAttributes: {} }).trim() || undefined
+        : undefined;
 
     // Check if the student is a current student
     const student = await prisma.student.findFirst({
@@ -56,8 +55,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Rate limiting check
-    const lastSentTime = rateLimitMap.get(normalizedEmail);
     const now = Date.now();
+    const lastSentTime = rateLimitMap.get(normalizedEmail);
     if (lastSentTime && now - lastSentTime < RATE_LIMIT_MS) {
       const remainingSeconds = Math.ceil((RATE_LIMIT_MS - (now - lastSentTime)) / 1000);
       return NextResponse.json({
@@ -80,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     // Send verification email
     try {
-      await sendVerificationEmail(normalizedEmail, verificationCode, studentName);
+      await sendVerificationEmail(normalizedEmail, verificationCode, sanitizedStudentName);
     } catch (emailError) {
       logDebug('Failed to send email:', emailError);
       await prisma.email_verification_tokens.deleteMany({

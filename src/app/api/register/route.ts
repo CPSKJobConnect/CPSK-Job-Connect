@@ -1,373 +1,375 @@
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { notifyAdminsNewAlumni, notifyAdminsNewCompany } from "@/lib/notifyAdmins";
-import {
-  companyOAuthRegisterSchema,
-  companyRegisterSchema,
-  studentOAuthRegisterSchema,
-  studentRegisterSchema
-} from "@/lib/validations";
-// bcrypt will be required at runtime to ensure test mocks are used
-import { getServerSession } from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { PasswordPolicyError } from "@/lib/passwordPolicy";
-import { assertPasswordMeetsPolicy } from "@/lib/passwordPolicyEnforcer";
-
-type StudentData = z.infer<typeof studentRegisterSchema>;
-type CompanyData = z.infer<typeof companyRegisterSchema>;
-type StudentOAuthData = z.infer<typeof studentOAuthRegisterSchema>;
-type CompanyOAuthData = z.infer<typeof companyOAuthRegisterSchema>;
-
-export async function POST(req: NextRequest) {
-  try {
-    // Support both multipart/form-data (forms with files) and application/json bodies
-    const contentType = req.headers.get("content-type") || "";
-    let formData: FormData | null = null;
-    let jsonBody: Record<string, unknown> | null = null;
-    if (contentType.includes("application/json")) {
-      try {
-        jsonBody = await req.json();
-      } catch (err) {
-        console.error("Failed to parse JSON request body:", err);
-        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-      }
-    } else {
-      formData = await req.formData();
-    }
-
-    const role = formData ? (formData.get("role") as string) : (String(jsonBody?.role || ""));
-    const isOAuth = formData ? formData.get("isOAuth") === "true" : Boolean(jsonBody?.isOAuth === true || jsonBody?.isOAuth === "true");
-
-    if (!["student", "company"].includes(role)) {
-      return NextResponse.json(
-        { error: "Invalid role" },
-        { status: 400 }
-      )
-    }
-
-    // For OAuth registration, validate session exists
-    if (isOAuth) {
-      const session = await getServerSession(authOptions);
-      if (!session?.user?.email) {
-        return NextResponse.json(
-          { error: "Unauthorized - OAuth session required" },
-          { status: 401 }
-        );
-      }
-    }
-
-    // Convert incoming data (FormData or JSON) to an object for validation
-    const data: Record<string, unknown> = {};
-    if (formData) {
-      for (const [key, value] of formData.entries()) {
-        if (key !== "transcript" && key !== "evidence" && key !== "role") {
-          if (key === "year") {
-            const yearValue = String(value);
-            data[key] = yearValue === "Alumni" ? "Alumni" : parseInt(yearValue);
-          } else {
-            data[key] = value;
-          }
-        }
-      }
-    } else if (jsonBody) {
-      Object.assign(data, jsonBody);
-      // normalize year if provided as string
-      if (data.year !== undefined) {
-        const yearVal = data.year as string | number;
-        if (String(yearVal) === "Alumni") data.year = "Alumni";
-        else data.year = Number(yearVal);
-      }
-    }
-
-    // Handle studentStatus from form or JSON
-    const studentStatus = formData ? (formData.get("studentStatus") as string | null) : (jsonBody?.studentStatus as string | undefined);
-    if (studentStatus) {
-      data.studentStatus = studentStatus;
-    }
-
-    // Add transcript file to data for validation
-    if (role === "student") {
-      const transcriptFile = formData ? (formData.get("transcript") as File | null) : null;
-      if (transcriptFile && transcriptFile.size > 0) {
-        // For OAuth, pass File directly; for regular registration, create FileList-like object
-        if (isOAuth) {
-          data.transcript = transcriptFile;
-        } else {
-          // Create a FileList-like object with the file
-          const fileList = {
-            0: transcriptFile,
-            length: 1,
-            item: (index: number) => index === 0 ? transcriptFile : null,
-            [Symbol.iterator]: function* () {
-              yield transcriptFile;
-            }
-          } as unknown as FileList;
-          data.transcript = fileList;
-        }
-      }
-    }
-
-    // Add company evidence file to data for validation (mirrors transcript handling)
-    if (role === "company") {
-      const evidenceFile = formData ? (formData.get("evidence") as File | null) : null;
-      if (evidenceFile && evidenceFile.size > 0) {
-        if (isOAuth) {
-          data.evidence = evidenceFile;
-        } else {
-          const fileList = {
-            0: evidenceFile,
-            length: 1,
-            item: (index: number) => index === 0 ? evidenceFile : null,
-            [Symbol.iterator]: function* () {
-              yield evidenceFile;
-            }
-          } as unknown as FileList;
-          data.evidence = fileList;
-        }
-      }
-    }
-
-    // Validate data based on role and OAuth status
-    let validatedData: z.ZodSafeParseResult<
-      StudentData | CompanyData | StudentOAuthData | CompanyOAuthData
-    >;
-    if (role === "student") {
-      validatedData = isOAuth
-        ? studentOAuthRegisterSchema.safeParse(data)
-        : studentRegisterSchema.safeParse(data);
-    } else {
-      validatedData = isOAuth
-        ? companyOAuthRegisterSchema.safeParse(data)
-        : companyRegisterSchema.safeParse(data);
-    }
-
-    if (!validatedData.success) {
-      console.error("❌ Validation failed:", validatedData.error.issues);
-      return NextResponse.json(
-        { error: "Invalid data", details: validatedData.error.issues },
-        { status: 400 }
-      );
-    }
-
-    // Check if user already exists
-    const existingUser = await prisma.account.findUnique({
-      where: {
-        email: validatedData.data.email,
-      },
-      include: {
-        student: true,
-        company: true,
-      }
-    })
-
-    // If account exists and has complete registration
-    if (existingUser && (existingUser.student || existingUser.company)) {
-      return NextResponse.json(
-        { error: "User already exists" },
-        { status: 400 }
-      );
-    }
-
-    // If account exists but is orphaned (no student/company record), use it for OAuth
-    if (existingUser && isOAuth) {
-      // For OAuth, we'll update this account with role and create student/company record
-    } else if (existingUser) {
-      // Regular registration - clean up orphaned account
-      await prisma.account.delete({
-        where: { id: existingUser.id }
-      });
-    }
-
-    // Hash password (not needed for OAuth)
-    let hashedPassword: string | null = null;
-    if (!isOAuth) {
-      const dataWithPassword = validatedData.data as StudentData | CompanyData;
-      assertPasswordMeetsPolicy(dataWithPassword.password, {
-        email: dataWithPassword.email,
-        fullName:
-          role === "student"
-            ? (dataWithPassword as StudentData).name
-            : (dataWithPassword as CompanyData).companyName,
-      });
-
-      // Require `bcryptjs` at runtime so that Jest's module mock is used in tests.
-      const bcryptModule = require("bcryptjs");
-      if (!bcryptModule || typeof bcryptModule.hash !== "function") {
-        throw new Error("BCRYPT-REQUIRE-MISSING");
-      }
-      hashedPassword = await bcryptModule.hash(dataWithPassword.password, 12);
-    }
-
-    // Get role ID
-    const roleRecord = await prisma.accountRole.findFirst({
-      where: {
-        name: role
-      }
-    })
-    let roleId: number;
-    if (!roleRecord) {
-      // Create role if it doesn't exist
-      const newRole = await prisma.accountRole.create({
-        data: {
-          name: role
-        }
-      })
-      roleId = newRole.id;
-    } else {
-      roleId = roleRecord.id;
-    }
-
-    // Handle file upload for transcript and evidence (only available for formData requests)
-    let transcriptPath: string | null = null;
-    const transcriptFile = role === "student" ? (formData ? (formData.get("transcript") as File) : null) : null;
-    const evidenceFile = role === "company" ? (formData ? (formData.get("evidence") as File) : null) : null;
-
-    // Parse consent if present (form or JSON). Undefined if not provided.
-    let consentValue: boolean | undefined = undefined;
-    try {
-      const truthy = (v: unknown) => {
-        if (typeof v === "boolean") return v;
-        const s = String(v).toLowerCase();
-        return s === "true" || s === "on" || s === "1";
-      };
-
-      if (formData) {
-        const consentField = formData.get("consent");
-        if (consentField !== null) consentValue = truthy(consentField);
-      } else if (jsonBody && typeof jsonBody.consent !== "undefined") {
-        const c = jsonBody.consent;
-        consentValue = truthy(c);
-      }
-    } catch (err) {
-      console.error("Failed to parse consent field:", err);
-      consentValue = undefined;
-    }
-
-    // Log consent parsing result for debugging
-    console.log("Registration: consent parsed:", { consentValue });
-
-    // Use transaction to ensure atomic account + role-specific record creation
-    const account = await prisma.$transaction(async (tx) => {
-      let account;
-
-      if (isOAuth && existingUser) {
-        // Update existing OAuth account with role
-        account = await tx.account.update({
-          where: { id: existingUser.id },
-          data: {
-            role: roleId,
-            username: role === "student" ? (validatedData.data as StudentData).name : (validatedData.data as CompanyData).companyName,
-          }
-        });
-      } else {
-        // Create new account
-        account = await tx.account.create({
-          data: {
-            email: validatedData.data.email,
-            password: hashedPassword,
-            role: roleId,
-            username: role === "student" ? (validatedData.data as StudentData).name : (validatedData.data as CompanyData).companyName,
-          }
-        });
-      }
-
-      // Create role-specific record (without file paths initially)
-      if (role === "student") {
-        const studentData = validatedData.data as StudentData | StudentOAuthData;
-        const isAlumni = studentData.studentStatus === "ALUMNI";
-
-        await tx.student.create({
-          data: {
-            account_id: account.id,
-            student_id: studentData.studentId,
-            name: studentData.name,
-            faculty: studentData.faculty,
-            year: studentData.year.toString(),
-            phone: studentData.phone,
-            transcript: null, // Will be updated after file upload
-            student_status: isAlumni ? "ALUMNI" : "CURRENT",
-            // Alumni need admin approval, current students just need email verification
-            verification_status: isAlumni ? "PENDING" : "APPROVED",
-            // For OAuth current students, trust Google email verification
-            email_verified: isOAuth && !isAlumni ? true : false,
-            updated_at: new Date(),
-          }
-        })
-      } else {
-        const companyData = validatedData.data as CompanyData | CompanyOAuthData;
-        await tx.company.create({
-          data: {
-            account_id: account.id,
-            name: companyData.companyName,
-            address: companyData.address,
-            phone: companyData.phone,
-            description: companyData.description,
-            website: companyData.website || null,
-            register_day: new Date(),
-            registration_status: "PENDING",
-          }
-        })
-      }
-
-      // If consent was provided in the registration request, record it atomically
-      if (typeof consentValue !== "undefined") {
-        try {
-          const existing = await tx.accountConsentLog.findFirst({
-            where: { account_id: account.id },
-            orderBy: { created_at: 'desc' },
-          });
-          if (existing) {
-            await tx.accountConsentLog.update({ where: { id: existing.id }, data: { consent: consentValue } });
-          } else {
-            await tx.accountConsentLog.create({ data: { account_id: account.id, consent: consentValue } });
-          }
-        } catch (consentErr) {
-          // Log and rethrow so transaction can be rolled back and caller informed
-          console.error("Failed to upsert AccountConsentLog inside transaction:", consentErr);
-          throw consentErr;
-        }
-      }
-
-      return account;
-    }, {
-      maxWait: 5000, // Maximum time to wait for a transaction slot (ms)
-      timeout: 10000, // Maximum time the transaction can run (ms)
-    })
-
-    // Handle file uploads AFTER transaction completes
-    if (transcriptFile && transcriptFile.size > 0) {
-      try {
-        const { uploadDocument } = await import("@/lib/uploadDocument");
-        const document = await uploadDocument(transcriptFile, String(account.id), 4); // 4 = Transcript
-        transcriptPath = document.file_path;
-
-        // Update student record with transcript path
-        await prisma.student.update({
-          where: { account_id: account.id },
-          data: { transcript: transcriptPath }
-        });
-      } catch (error) {
-        console.error("Error uploading transcript file:", error);
-        // Continue with registration even if file upload fails
-      }
-    }
-
-    // Send registration confirmation email to alumni and notify admins
-    if (role === "student") {
-      const studentData = validatedData.data as StudentData;
-      const isAlumni = studentData.studentStatus === "ALUMNI";
-
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { notifyAdminsNewAlumni, notifyAdminsNewCompany } from "@/lib/notifyAdmins";
+import {
+  companyOAuthRegisterSchema,
+  companyRegisterSchema,
+  studentOAuthRegisterSchema,
+  studentRegisterSchema
+} from "@/lib/validations";
+// bcrypt will be required at runtime to ensure test mocks are used
+import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { PasswordPolicyError } from "@/lib/passwordPolicy";
+import { assertPasswordMeetsPolicy } from "@/lib/passwordPolicyEnforcer";
+
+type StudentData = z.infer<typeof studentRegisterSchema>;
+type CompanyData = z.infer<typeof companyRegisterSchema>;
+type StudentOAuthData = z.infer<typeof studentOAuthRegisterSchema>;
+type CompanyOAuthData = z.infer<typeof companyOAuthRegisterSchema>;
+
+export async function POST(req: NextRequest) {
+  try {
+    // Support both multipart/form-data (forms with files) and application/json bodies
+    const contentType = req.headers.get("content-type") || "";
+    let formData: FormData | null = null;
+    let jsonBody: Record<string, unknown> | null = null;
+    if (contentType.includes("application/json")) {
+      try {
+        jsonBody = await req.json();
+      } catch (err) {
+        console.error("Failed to parse JSON request body:", err);
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      }
+    } else {
+      formData = await req.formData();
+    }
+
+    const role = formData ? (formData.get("role") as string) : (String(jsonBody?.role || ""));
+    const isOAuth = formData ? formData.get("isOAuth") === "true" : Boolean(jsonBody?.isOAuth === true || jsonBody?.isOAuth === "true");
+
+    if (!["student", "company"].includes(role)) {
+      return NextResponse.json(
+        { error: "Invalid role" },
+        { status: 400 }
+      )
+    }
+
+    // For OAuth registration, validate session exists
+    if (isOAuth) {
+      const session = await getServerSession(authOptions);
+      if (!session?.user?.email) {
+        return NextResponse.json(
+          { error: "Unauthorized - OAuth session required" },
+          { status: 401 }
+        );
+      }
+    }
+
+    // Convert incoming data (FormData or JSON) to an object for validation
+    const data: Record<string, unknown> = {};
+    if (formData) {
+      for (const [key, value] of formData.entries()) {
+        if (key !== "transcript" && key !== "evidence" && key !== "role") {
+          if (key === "year") {
+            const yearValue = String(value);
+            data[key] = yearValue === "Alumni" ? "Alumni" : parseInt(yearValue);
+          } else {
+            data[key] = value;
+          }
+        }
+      }
+    } else if (jsonBody) {
+      Object.assign(data, jsonBody);
+      // normalize year if provided as string
+      if (data.year !== undefined) {
+        const yearVal = data.year as string | number;
+        if (String(yearVal) === "Alumni") data.year = "Alumni";
+        else data.year = Number(yearVal);
+      }
+    }
+
+    // Handle studentStatus from form or JSON
+    const studentStatus = formData ? (formData.get("studentStatus") as string | null) : (jsonBody?.studentStatus as string | undefined);
+    if (studentStatus) {
+      data.studentStatus = studentStatus;
+    }
+
+    // Add transcript file to data for validation
+    if (role === "student") {
+      const transcriptFile = formData ? (formData.get("transcript") as File | null) : null;
+      if (transcriptFile && transcriptFile.size > 0) {
+        // For OAuth, pass File directly; for regular registration, create FileList-like object
+        if (isOAuth) {
+          data.transcript = transcriptFile;
+        } else {
+          // Create a FileList-like object with the file
+          const fileList = {
+            0: transcriptFile,
+            length: 1,
+            item: (index: number) => index === 0 ? transcriptFile : null,
+            [Symbol.iterator]: function* () {
+              yield transcriptFile;
+            }
+          } as unknown as FileList;
+          data.transcript = fileList;
+        }
+      }
+    }
+
+    // Add company evidence file to data for validation (mirrors transcript handling)
+    if (role === "company") {
+      const evidenceFile = formData ? (formData.get("evidence") as File | null) : null;
+      if (evidenceFile && evidenceFile.size > 0) {
+        if (isOAuth) {
+          data.evidence = evidenceFile;
+        } else {
+          const fileList = {
+            0: evidenceFile,
+            length: 1,
+            item: (index: number) => index === 0 ? evidenceFile : null,
+            [Symbol.iterator]: function* () {
+              yield evidenceFile;
+            }
+          } as unknown as FileList;
+          data.evidence = fileList;
+        }
+      }
+    }
+
+    // Validate data based on role and OAuth status
+    let validatedData: z.ZodSafeParseResult<
+      StudentData | CompanyData | StudentOAuthData | CompanyOAuthData
+    >;
+    if (role === "student") {
+      validatedData = isOAuth
+        ? studentOAuthRegisterSchema.safeParse(data)
+        : studentRegisterSchema.safeParse(data);
+    } else {
+      validatedData = isOAuth
+        ? companyOAuthRegisterSchema.safeParse(data)
+        : companyRegisterSchema.safeParse(data);
+    }
+
+    if (!validatedData.success) {
+      console.error("G�� Validation failed:", validatedData.error.issues);
+      return NextResponse.json(
+        { error: "Invalid data", details: validatedData.error.issues },
+        { status: 400 }
+      );
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.account.findUnique({
+      where: {
+        email: validatedData.data.email,
+      },
+      include: {
+        student: true,
+        company: true,
+      }
+    })
+
+    // If account exists and has complete registration
+    if (existingUser && (existingUser.student || existingUser.company)) {
+      return NextResponse.json(
+        { error: "User already exists" },
+        { status: 400 }
+      );
+    }
+
+    // If account exists but is orphaned (no student/company record), use it for OAuth
+    if (existingUser && isOAuth) {
+      // For OAuth, we'll update this account with role and create student/company record
+    } else if (existingUser) {
+      // Regular registration - clean up orphaned account
+      await prisma.account.delete({
+        where: { id: existingUser.id }
+      });
+    }
+
+    // Hash password (not needed for OAuth)
+    let hashedPassword: string | null = null;
+    if (!isOAuth) {
+      const dataWithPassword = validatedData.data as StudentData | CompanyData;
+      assertPasswordMeetsPolicy(dataWithPassword.password, {
+        email: dataWithPassword.email,
+        fullName:
+          role === "student"
+            ? (dataWithPassword as StudentData).name
+            : (dataWithPassword as CompanyData).companyName,
+      });
+
+      // Require `bcryptjs` at runtime so that Jest's module mock is used in tests.
+      const bcryptModule = require("bcryptjs");
+      if (!bcryptModule || typeof bcryptModule.hash !== "function") {
+        throw new Error("BCRYPT-REQUIRE-MISSING");
+      }
+      hashedPassword = await bcryptModule.hash(dataWithPassword.password, 12);
+    }
+
+    // Get role ID
+    const roleRecord = await prisma.accountRole.findFirst({
+      where: {
+        name: role
+      }
+    })
+    let roleId: number;
+    if (!roleRecord) {
+      // Create role if it doesn't exist
+      const newRole = await prisma.accountRole.create({
+        data: {
+          name: role
+        }
+      })
+      roleId = newRole.id;
+    } else {
+      roleId = roleRecord.id;
+    }
+
+    // Handle file upload for transcript and evidence (only available for formData requests)
+    let transcriptPath: string | null = null;
+    const transcriptFile = role === "student" ? (formData ? (formData.get("transcript") as File) : null) : null;
+    const evidenceFile = role === "company" ? (formData ? (formData.get("evidence") as File) : null) : null;
+
+    // Parse consent if present (form or JSON). Undefined if not provided.
+    let consentValue: boolean | undefined = undefined;
+    try {
+      const truthy = (v: unknown) => {
+        if (typeof v === "boolean") return v;
+        const s = String(v).toLowerCase();
+        return s === "true" || s === "on" || s === "1";
+      };
+
+      if (formData) {
+        const consentField = formData.get("consent");
+        if (consentField !== null) consentValue = truthy(consentField);
+      } else if (jsonBody && typeof jsonBody.consent !== "undefined") {
+        const c = jsonBody.consent;
+        consentValue = truthy(c);
+      }
+    } catch (err) {
+      console.error("Failed to parse consent field:", err);
+      consentValue = undefined;
+    }
+
+    // Log consent parsing result for debugging
+    console.log("Registration: consent parsed:", { consentValue });
+
+    // Use transaction to ensure atomic account + role-specific record creation
+    const account = await prisma.$transaction(async (tx) => {
+      let account;
+
+      if (isOAuth && existingUser) {
+        // Update existing OAuth account with role
+        account = await tx.account.update({
+          where: { id: existingUser.id },
+          data: {
+            role: roleId,
+            username: role === "student" ? (validatedData.data as StudentData).name : (validatedData.data as CompanyData).companyName,
+          }
+        });
+      } else {
+        // Create new account
+        account = await tx.account.create({
+          data: {
+            email: validatedData.data.email,
+            password: hashedPassword,
+            role: roleId,
+            username: role === "student" ? (validatedData.data as StudentData).name : (validatedData.data as CompanyData).companyName,
+          }
+        });
+      }
+
+      // Create role-specific record (without file paths initially)
+      if (role === "student") {
+        const studentData = validatedData.data as StudentData | StudentOAuthData;
+        const isAlumni = studentData.studentStatus === "ALUMNI";
+
+        await tx.student.create({
+          data: {
+            account_id: account.id,
+            student_id: studentData.studentId,
+            name: studentData.name,
+            faculty: studentData.faculty,
+            year: studentData.year.toString(),
+            phone: studentData.phone,
+            transcript: null, // Will be updated after file upload
+            student_status: isAlumni ? "ALUMNI" : "CURRENT",
+            // Alumni need admin approval, current students just need email verification
+            verification_status: isAlumni ? "PENDING" : "APPROVED",
+            // For OAuth current students, trust Google email verification
+            email_verified: isOAuth && !isAlumni ? true : false,
+            updated_at: new Date(),
+          }
+        })
+      } else {
+        const companyData = validatedData.data as CompanyData | CompanyOAuthData;
+        await tx.company.create({
+          data: {
+            account_id: account.id,
+            name: companyData.companyName,
+            address: companyData.address,
+            phone: companyData.phone,
+            description: companyData.description,
+            website: companyData.website || null,
+            register_day: new Date(),
+            registration_status: "PENDING",
+          }
+        })
+      }
+
+      // If consent was provided in the registration request, record it atomically
+      if (typeof consentValue !== "undefined") {
+        try {
+          const existing = await tx.accountConsentLog.findFirst({
+            where: { account_id: account.id },
+            orderBy: { created_at: 'desc' },
+          });
+          if (existing) {
+            await tx.accountConsentLog.update({ where: { id: existing.id }, data: { consent: consentValue } });
+          } else {
+            await tx.accountConsentLog.create({ data: { account_id: account.id, consent: consentValue } });
+          }
+        } catch (consentErr) {
+          // Log and rethrow so transaction can be rolled back and caller informed
+          console.error("Failed to upsert AccountConsentLog inside transaction:", consentErr);
+          throw consentErr;
+        }
+      }
+
+      return account;
+    }, {
+      maxWait: 5000, // Maximum time to wait for a transaction slot (ms)
+      timeout: 10000, // Maximum time the transaction can run (ms)
+    })
+
+    // Handle file uploads AFTER transaction completes
+    if (transcriptFile && transcriptFile.size > 0) {
+      try {
+        const { uploadDocument } = await import("@/lib/uploadDocument");
+        const document = await uploadDocument(transcriptFile, String(account.id), 4); // 4 = Transcript
+        transcriptPath = document.file_path;
+
+        // Update student record with transcript path
+        await prisma.student.update({
+          where: { account_id: account.id },
+          data: { transcript: transcriptPath }
+        });
+      } catch (error) {
+        console.error("Error uploading transcript file:", error);
+        // Continue with registration even if file upload fails
+      }
+    }
+
+    // Send registration confirmation email to alumni and notify admins
+    if (role === "student") {
+      const studentData = validatedData.data as StudentData;
+      const isAlumni = studentData.studentStatus === "ALUMNI";
+
       if (isAlumni) {
-        try {
-          const { sendAlumniRegistrationEmail } = await import("@/lib/email");
-          await sendAlumniRegistrationEmail(
-            validatedData.data.email,
-            studentData.name
-          );
-        } catch (emailError) {
-          console.error("❌ Failed to send registration email:", emailError);
-          // Continue with registration even if email fails
+        if (process.env.NODE_ENV !== "test") {
+          try {
+            const { sendAlumniRegistrationEmail } = await import("@/lib/email");
+            await sendAlumniRegistrationEmail(
+              validatedData.data.email,
+              studentData.name
+            );
+          } catch (emailError) {
+            console.error("Failed to send registration email:", emailError);
+            // Continue with registration even if email fails
+          }
         }
 
         // Notify all admins about new alumni registration
@@ -378,121 +380,121 @@ export async function POST(req: NextRequest) {
             account.id
           );
         } catch (notificationError) {
-          console.error("❌ Failed to notify admins about new alumni:", notificationError);
+          console.error("Failed to notify admins about new alumni:", notificationError);
           // Continue with registration even if notification fails
         }
       }
-    }
-
-    if (evidenceFile && evidenceFile.size > 0) {
-      try {
-        const { uploadDocument } = await import("@/lib/uploadDocument");
-        await uploadDocument(evidenceFile, String(account.id), 7); // 7 = Company Evidence
-        // Evidence is stored in Document table, no need to update Company record
-      } catch (error) {
-        console.error("Error uploading evidence file:", error);
-        // Continue with registration even if file upload fails
-      }
-    }
-
-    // Notify admins about new company registration
-    if (role === "company") {
-      try {
-        const companyData = validatedData.data as CompanyData;
-        await notifyAdminsNewCompany(
-          companyData.companyName,
-          account.id
-        );
-      } catch (notificationError) {
-        console.error("❌ Failed to notify admins about new company:", notificationError);
-        // Continue with registration even if notification fails
-      }
-    }
-
-    const res = NextResponse.json({
-      message: "Account created successfully",
-      // After registering, direct user to their dashboard
-      redirectTo: role === 'student' ? '/student/dashboard' : '/company/dashboard'
-    }, { status: 201 });
-
-    try {
-        if (consentValue === true) {
-        const maxAge = 30 * 24 * 60 * 60; // 30 days
-
-        // Determine if request was over HTTPS. Prefer `x-forwarded-proto`
-        // when the app is behind a proxy/load-balancer; otherwise fall back
-        // to the request URL protocol. Also enable secure in production.
-        const forwardedProto = req.headers.get?.('x-forwarded-proto') || req.headers.get?.('x-forwarded-protocol');
-        const isHttps = forwardedProto
-          ? String(forwardedProto).split(',')[0].trim() === 'https'
-          : (() => {
-              try {
-                return new URL(req.url).protocol === 'https:';
-              } catch (e) {
-                return false;
-              }
-            })();
-
-        // Use __Secure- prefix and follow ASVS requirements: Secure + HttpOnly + SameSite=Strict
-        res.cookies.set("__Secure-pdpa_consent", "true", {
-          httpOnly: true,
-          sameSite: "strict",
-          path: "/",
-          maxAge,
-          secure: process.env.NODE_ENV === "production" || process.env.LOCAL_HTTPS === 'true' || isHttps,
-        });
-      }
-    } catch (cookieErr) {
-      console.error("Failed to set pdpa_consent cookie:", cookieErr);
-    }
-
-    return res;
-  } catch (error) {
-    console.error("Registration error:", error)
-    console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace')
-
-    if (error instanceof PasswordPolicyError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
-    }
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid data", details: error.issues },
-        { status: 400 }
-      );
-    }
-
-    // Handle Prisma unique constraint errors
-    if (error && typeof error === 'object' && 'code' in error) {
-      const prismaError = error as { code: string; meta?: { target?: string[] } };
-
-      if (prismaError.code === 'P2002') {
-        const target = prismaError.meta?.target;
-        console.error("Unique constraint violation on:", target);
-
-        return NextResponse.json(
-          {
-            error: "Registration failed due to duplicate data",
-            details: `A record with this ${target?.join(', ') || 'data'} already exists`
-          },
-          { status: 409 }
-        );
-      }
-
-      if (prismaError.code === 'P2003') {
-        return NextResponse.json(
-          { error: "Registration failed", details: "Invalid reference data" },
-          { status: 400 }
-        );
-      }
-    }
-
-    return NextResponse.json(
-      { error: "Internal server error", details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
-  }
-}
+    }
+
+    if (evidenceFile && evidenceFile.size > 0) {
+      try {
+        const { uploadDocument } = await import("@/lib/uploadDocument");
+        await uploadDocument(evidenceFile, String(account.id), 7); // 7 = Company Evidence
+        // Evidence is stored in Document table, no need to update Company record
+      } catch (error) {
+        console.error("Error uploading evidence file:", error);
+        // Continue with registration even if file upload fails
+      }
+    }
+
+    // Notify admins about new company registration
+    if (role === "company") {
+      try {
+        const companyData = validatedData.data as CompanyData;
+        await notifyAdminsNewCompany(
+          companyData.companyName,
+          account.id
+        );
+      } catch (notificationError) {
+        console.error("G�� Failed to notify admins about new company:", notificationError);
+        // Continue with registration even if notification fails
+      }
+    }
+
+    const res = NextResponse.json({
+      message: "Account created successfully",
+      // After registering, direct user to their dashboard
+      redirectTo: role === 'student' ? '/student/dashboard' : '/company/dashboard'
+    }, { status: 201 });
+
+    try {
+        if (consentValue === true) {
+        const maxAge = 30 * 24 * 60 * 60; // 30 days
+
+        // Determine if request was over HTTPS. Prefer `x-forwarded-proto`
+        // when the app is behind a proxy/load-balancer; otherwise fall back
+        // to the request URL protocol. Also enable secure in production.
+        const forwardedProto = req.headers.get?.('x-forwarded-proto') || req.headers.get?.('x-forwarded-protocol');
+        const isHttps = forwardedProto
+          ? String(forwardedProto).split(',')[0].trim() === 'https'
+          : (() => {
+              try {
+                return new URL(req.url).protocol === 'https:';
+              } catch (e) {
+                return false;
+              }
+            })();
+
+        // Use __Secure- prefix and follow ASVS requirements: Secure + HttpOnly + SameSite=Strict
+        res.cookies.set("__Secure-pdpa_consent", "true", {
+          httpOnly: true,
+          sameSite: "strict",
+          path: "/",
+          maxAge,
+          secure: process.env.NODE_ENV === "production" || process.env.LOCAL_HTTPS === 'true' || isHttps,
+        });
+      }
+    } catch (cookieErr) {
+      console.error("Failed to set pdpa_consent cookie:", cookieErr);
+    }
+
+    return res;
+  } catch (error) {
+    console.error("Registration error:", error)
+    console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace')
+
+    if (error instanceof PasswordPolicyError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Invalid data", details: error.issues },
+        { status: 400 }
+      );
+    }
+
+    // Handle Prisma unique constraint errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as { code: string; meta?: { target?: string[] } };
+
+      if (prismaError.code === 'P2002') {
+        const target = prismaError.meta?.target;
+        console.error("Unique constraint violation on:", target);
+
+        return NextResponse.json(
+          {
+            error: "Registration failed due to duplicate data",
+            details: `A record with this ${target?.join(', ') || 'data'} already exists`
+          },
+          { status: 409 }
+        );
+      }
+
+      if (prismaError.code === 'P2003') {
+        return NextResponse.json(
+          { error: "Registration failed", details: "Invalid reference data" },
+          { status: 400 }
+        );
+      }
+    }
+
+    return NextResponse.json(
+      { error: "Internal server error", details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
+  }
+}

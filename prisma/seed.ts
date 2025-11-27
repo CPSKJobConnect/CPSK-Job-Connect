@@ -231,13 +231,12 @@ async function main() {
     'Engineering',
   ];
 
-  for (let i = 0; i < categories.length; i++) {
+  for (const category of categories) {
     await prisma.jobCategory.upsert({
-      where: { id: i + 1 },
+      where: { name: category },
       update: {},
       create: {
-        id: i + 1,
-        name: categories[i],
+        name: category,
       },
     });
   }

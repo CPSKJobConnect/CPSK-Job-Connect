@@ -37,15 +37,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Attempt to remove existing logo file if present before uploading
-    const existing = await prisma.account.findUnique({ where: { id: account.id }, select: { logoUrl: true } });
-    try {
-      if (existing?.logoUrl) {
+    const existingLogoUrl = account.logoUrl;
+    if (
+      existingLogoUrl &&
+      process.env.NODE_ENV !== "test" &&
+      process.env.SUPABASE_URL &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      try {
         const { createClient } = await import("@supabase/supabase-js");
-        const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-        await supabase.storage.from("documents").remove([existing.logoUrl]);
+        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+        await supabase.storage.from("documents").remove([existingLogoUrl]);
+      } catch (err) {
+        console.error("Failed to remove old student profile image:", err);
       }
-    } catch (err) {
-      console.error("Failed to remove old student profile image:", err);
     }
 
     // Upload and obtain signed URL via shared helper

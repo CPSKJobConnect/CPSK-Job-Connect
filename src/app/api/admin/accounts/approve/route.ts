@@ -42,6 +42,9 @@ export async function POST(request: Request) {
     const parsed = ApproveSchema.safeParse(rawData);
 
     if (!parsed.success) {
+      if (rawData?.accountType && !["student", "company"].includes(rawData.accountType)) {
+        return NextResponse.json({ error: "Invalid account type" }, { status: 400 });
+      }
       return NextResponse.json({ error: "Invalid request data" }, { status: 400 });
     }
 

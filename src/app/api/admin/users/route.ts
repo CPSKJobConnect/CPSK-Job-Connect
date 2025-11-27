@@ -31,6 +31,7 @@ export async function GET(request: Request) {
     const search = DOMPurify.sanitize(rawSearch.trim());
     const role = DOMPurify.sanitize(rawRole.trim());
     const status = DOMPurify.sanitize(rawStatus.trim());
+    const statusParam = status;
 
     const skip = (page - 1) * limit;
 

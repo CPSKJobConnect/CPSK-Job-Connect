@@ -21,16 +21,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Basic MIME type check
-    if (!file.type || !["application/pdf", "image/jpeg", "image/png"].includes(file.type)) {
-      return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
-    }
-
-    // Optional: file size check (example 10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: "File too large" }, { status: 400 });
-    }
-
     if (!docTypeId || docTypeId < 1 || docTypeId > 4) {
       return NextResponse.json({ error: "Invalid document type" }, { status: 400 });
     }

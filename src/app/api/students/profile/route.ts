@@ -99,13 +99,13 @@ export async function PUT(request: NextRequest) {
     name = name?.trim().replace(/[<>\/"'`]/g, "") || "";
     faculty = faculty?.trim().replace(/[<>\/"'`]/g, "") || "";
     phone = phone?.trim().replace(/[^\d+()-]/g, "") || "";
-    year = String(year);
+    const normalizedYear = year === undefined || year === null ? "" : String(year).trim();
 
     // Validate required fields
     const missingFields = [];
     if (!name) missingFields.push("name");
     if (!faculty) missingFields.push("faculty");
-    if (!year) missingFields.push("year");
+    if (!normalizedYear) missingFields.push("year");
     if (!phone) missingFields.push("phone");
 
     if (missingFields.length > 0) {
@@ -129,7 +129,7 @@ export async function PUT(request: NextRequest) {
       data: {
         name,
         faculty,
-        year,
+        year: normalizedYear,
         phone,
         account: { update: { username: name } }
       },
