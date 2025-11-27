@@ -1,34 +1,53 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import DOMPurify from "dompurify"; // สำหรับ sanitize HTML
 import { fetchJobPost } from "./fetch.logic";
 import { updateJobPost } from "./update.logic";
 import { deleteJobPost } from "./delete.logic";
 
-// GET - Fetch single job post
+interface SessionUser {
+  email?: string;
+  role?: string;
+}
+
+// ฟังก์ชันตรวจสอบ Admin
+function isAdmin(user: SessionUser | undefined) {
+  return user?.role?.toLowerCase() === "admin";
+}
+
+// --- GET ---
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    const jobPostId = parseInt(decodeURIComponent(id));
+    if (isNaN(jobPostId)) {
+      return NextResponse.json({ error: "Invalid job post ID" }, { status: 400 });
+    }
+
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin (using session role)
-    const userRole = (session.user as any).role?.toLowerCase();
-    // console.log("🔍 User role:", userRole);
-
-    if (userRole !== "admin") {
+    if (!isAdmin(session.user as SessionUser)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const jobPost = await fetchJobPost({ id });
-
+    const jobPost = await fetchJobPost({ id: jobPostId.toString() });
     if (!jobPost) {
       return NextResponse.json({ error: "Job post not found" }, { status: 404 });
+    }
+
+    // Sanitize HTML fields
+    if (jobPost.description) {
+      jobPost.description = DOMPurify.sanitize(jobPost.description) as string;
+    }
+    if (jobPost.requirements) {
+      jobPost.requirements = DOMPurify.sanitize(jobPost.requirements) as string;
     }
 
     return NextResponse.json(jobPost, { status: 200 });
@@ -39,7 +58,7 @@ export async function GET(
   }
 }
 
-// PUT - Update job post
+// --- PUT ---
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -50,17 +69,23 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin (using session role)
-    const userRole = (session.user as any).role?.toLowerCase();
-    // console.log("🔍 User role:", userRole);
-
-    if (userRole !== "admin") {
+    if (!isAdmin(session.user as SessionUser)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { id } = await params;
+    const jobPostId = parseInt(decodeURIComponent(id));
+    if (isNaN(jobPostId)) {
+      return NextResponse.json({ error: "Invalid job post ID" }, { status: 400 });
+    }
+
     const data = await request.json();
-    const jobPost = await updateJobPost({ id }, data);
+
+    // Sanitize any HTML fields coming from client
+    if (data.description) data.description = DOMPurify.sanitize(data.description) as string;
+    if (data.requirements) data.requirements = DOMPurify.sanitize(data.requirements) as string;
+
+    const jobPost = await updateJobPost({ id: jobPostId.toString() }, data);
 
     if (!jobPost) {
       return NextResponse.json({ error: "Job post not found" }, { status: 404 });
@@ -74,7 +99,7 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete job post
+// --- DELETE ---
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -85,16 +110,17 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin (using session role)
-    const userRole = (session.user as any).role?.toLowerCase();
-    // console.log("🔍 User role:", userRole);
-
-    if (userRole !== "admin") {
+    if (!isAdmin(session.user as SessionUser)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { id } = await params;
-    const deleted = await deleteJobPost({ id });
+    const jobPostId = parseInt(decodeURIComponent(id));
+    if (isNaN(jobPostId)) {
+      return NextResponse.json({ error: "Invalid job post ID" }, { status: 400 });
+    }
+
+    const deleted = await deleteJobPost({ id: jobPostId.toString() });
 
     return NextResponse.json({ message: "Successfully deleted", deleted }, { status: 200 });
 

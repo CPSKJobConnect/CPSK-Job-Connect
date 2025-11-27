@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getApiSession } from "@/lib/api-auth";
+import DOMPurify from "isomorphic-dompurify";
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -46,7 +47,11 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       },
     });
 
-    const message = `Your application for "${updated.jobPost.jobName}" has been updated to "${updated.applicationStatus.name}".`;
+    // Sanitize data from DB to prevent XSS
+    const sanitizedJobName = DOMPurify.sanitize(updated.jobPost.jobName);
+    const sanitizedStatusName = DOMPurify.sanitize(updated.applicationStatus.name);
+
+    const message = `Your application for "${sanitizedJobName}" has been updated to "${sanitizedStatusName}".`;
 
     await prisma.notification.create({
       data: {

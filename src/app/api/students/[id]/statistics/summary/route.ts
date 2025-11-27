@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    const accountId = Number(id);
+    const accountId = parseInt(id, 10); // ใช้ parseInt กับ radix
 
     if (isNaN(accountId)) {
       return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });

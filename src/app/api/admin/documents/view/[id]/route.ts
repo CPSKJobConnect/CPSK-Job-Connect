@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import DOMPurify from "isomorphic-dompurify";
 
 export async function GET(
   request: Request,
@@ -25,7 +26,7 @@ export async function GET(
     }
 
     const { id } = await params;
-    const documentId = parseInt(id);
+    const documentId = parseInt(id.trim()); // trim input for canonicalization
 
     if (!documentId || isNaN(documentId)) {
       return NextResponse.json({ error: "Invalid document ID" }, { status: 400 });
@@ -60,8 +61,8 @@ export async function GET(
 
     return NextResponse.json({
       url: data.signedUrl,
-      fileName: document.file_name,
-      fileType: document.documentType.name
+      fileName: DOMPurify.sanitize(document.file_name), // sanitize output
+      fileType: DOMPurify.sanitize(document.documentType.name) // sanitize output
     });
 
   } catch (error) {

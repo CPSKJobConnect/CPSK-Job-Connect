@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import DOMPurify from "isomorphic-dompurify"; // ✅ เพิ่มสำหรับ sanitization
 
 export async function GET(request: Request) {
   try {
@@ -12,24 +13,37 @@ export async function GET(request: Request) {
 
     // Check if user is admin
     const userRole = (session.user as any).role?.toLowerCase();
-
     if (userRole !== "admin") {
-      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Forbidden - Admin access required" },
+        { status: 403 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search") || "";
-    const accountType = searchParams.get("type") || "all"; // "all", "student", "company"
-    const statusFilter = searchParams.get("status") || "pending"; // "pending", "approved", "rejected", "all"
+
+    // -----------------------------
+    // ✅ OWASP ASVS 1.1.1 + 1.3.1
+    // Sanitizing untrusted input (search, type, status)
+    // -----------------------------
+    const rawSearch = searchParams.get("search") || "";
+    const rawType = searchParams.get("type") || "all";
+    const rawStatus = searchParams.get("status") || "pending";
+
+    const search = DOMPurify.sanitize(rawSearch);
+    const accountType = DOMPurify.sanitize(rawType);
+    const statusFilter = DOMPurify.sanitize(rawStatus);
 
     // Build where clauses for search
-    const searchConditions = search ? {
-      OR: [
-        { email: { contains: search, mode: "insensitive" as const } },
-        { student: { name: { contains: search, mode: "insensitive" as const } } },
-        { company: { name: { contains: search, mode: "insensitive" as const } } },
-      ]
-    } : {};
+    const searchConditions = search
+      ? {
+          OR: [
+            { email: { contains: search, mode: "insensitive" as const } },
+            { student: { name: { contains: search, mode: "insensitive" as const } } },
+            { company: { name: { contains: search, mode: "insensitive" as const } } },
+          ],
+        }
+      : {};
 
     const pendingAccounts: {
       type: "student" | "company";
@@ -43,17 +57,23 @@ export async function GET(request: Request) {
     }[] = [];
 
     // Build verification status filter for students
-    const studentStatusFilter = statusFilter === "all"
-      ? {}
-      : { verification_status: statusFilter.toUpperCase() as "PENDING" | "APPROVED" | "REJECTED" };
+    const studentStatusFilter =
+      statusFilter === "all"
+        ? {}
+        : {
+            verification_status: statusFilter.toUpperCase() as
+              | "PENDING"
+              | "APPROVED"
+              | "REJECTED",
+          };
 
-    // Fetch students (alumni with filtered verification status)
+    // Fetch students
     if (accountType === "all" || accountType === "student") {
       const pendingStudents = await prisma.student.findMany({
         where: {
           student_status: "ALUMNI",
           ...studentStatusFilter,
-          account: searchConditions
+          account: searchConditions,
         },
         include: {
           account: {
@@ -63,22 +83,22 @@ export async function GET(request: Request) {
               documents: {
                 where: {
                   documentType: {
-                    name: "Transcript"
-                  }
+                    name: "Transcript",
+                  },
                 },
                 include: {
-                  documentType: true
-                }
-              }
-            }
-          }
+                  documentType: true,
+                },
+              },
+            },
+          },
         },
         orderBy: {
-          created_at: "desc"
-        }
+          created_at: "desc",
+        },
       });
 
-      pendingStudents.forEach(student => {
+      pendingStudents.forEach((student) => {
         const isReapplication = student.account.documents.length > 1;
         pendingAccounts.push({
           type: "student",
@@ -95,23 +115,29 @@ export async function GET(request: Request) {
             phone: student.phone,
             transcript: student.transcript,
             documents: student.account.documents,
-            isReapplication
-          }
+            isReapplication,
+          },
         });
       });
     }
 
     // Build registration status filter for companies
-    const companyStatusFilter = statusFilter === "all"
-      ? {}
-      : { registration_status: statusFilter.toUpperCase() as "PENDING" | "APPROVED" | "REJECTED" };
+    const companyStatusFilter =
+      statusFilter === "all"
+        ? {}
+        : {
+            registration_status: statusFilter.toUpperCase() as
+              | "PENDING"
+              | "APPROVED"
+              | "REJECTED",
+          };
 
-    // Fetch companies with filtered registration status
+    // Fetch companies
     if (accountType === "all" || accountType === "company") {
       const pendingCompanies = await prisma.company.findMany({
         where: {
           ...companyStatusFilter,
-          account: searchConditions
+          account: searchConditions,
         },
         include: {
           account: {
@@ -121,23 +147,22 @@ export async function GET(request: Request) {
               documents: {
                 where: {
                   documentType: {
-                    name: "Company Evidence"
-                  }
+                    name: "Company Evidence",
+                  },
                 },
                 include: {
-                  documentType: true
-                }
-              }
-            }
-          }
+                  documentType: true,
+                },
+              },
+            },
+          },
         },
         orderBy: {
-          register_day: "desc"
-        }
+          register_day: "desc",
+        },
       });
 
-      pendingCompanies.forEach(company => {
-        // Detect re-application: if company has more than one evidence document
+      pendingCompanies.forEach((company) => {
         const isReapplication = company.account.documents.length > 1;
 
         pendingAccounts.push({
@@ -154,19 +179,22 @@ export async function GET(request: Request) {
             description: company.description,
             website: company.website,
             documents: company.account.documents,
-            isReapplication
-          }
+            isReapplication,
+          },
         });
       });
     }
 
-    // Sort by creation date (newest first)
-    pendingAccounts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    pendingAccounts.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
 
     return NextResponse.json(pendingAccounts, { status: 200 });
-
   } catch (error) {
     console.error("API error:", error);
-    return NextResponse.json({ error: "Failed to fetch pending accounts" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch pending accounts" },
+      { status: 500 }
+    );
   }
 }

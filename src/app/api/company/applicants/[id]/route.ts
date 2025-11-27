@@ -19,10 +19,7 @@ export async function GET(
     const session = await getApiSession(request);
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized. Please login." },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized. Please login." }, { status: 401 });
     }
 
     const company = await prisma.company.findUnique({
@@ -31,131 +28,48 @@ export async function GET(
     });
 
     if (!company) {
-      return NextResponse.json(
-        { error: "No company found for this account." },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "No company found for this account." }, { status: 403 });
     }
 
-    const { id } = await params;
-    const applicationId = parseInt(id);
+    // Canonicalize route param (1.1.1)
+    const idParam = decodeURIComponent((await params).id).trim();
+    const applicationId = parseInt(idParam, 10);
 
     if (isNaN(applicationId)) {
-      return NextResponse.json(
-        { error: "Invalid application ID." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid application ID." }, { status: 400 });
     }
 
     // Fetch the application with student details
     const application = await prisma.application.findUnique({
       where: { id: applicationId },
       include: {
-        student: {
-          include: {
-            account: {
-              select: {
-                email: true,
-                logoUrl: true
-              }
-            }
-          }
-        },
-        jobPost: {
-          select: {
-            id: true,
-            jobName: true,
-            company_id: true
-          }
-        },
-        resumeDocument: {
-          select: {
-            id: true,
-            file_path: true,
-            file_name: true
-          }
-        },
-        cvDocument: {
-          select: {
-            id: true,
-            file_path: true,
-            file_name: true
-          }
-        },
-        portfolioDocument: {
-          select: {
-            id: true,
-            file_path: true,
-            file_name: true
-          }
-        },
-        transcriptDocument: {
-          select: {
-            id: true,
-            file_path: true,
-            file_name: true
-          }
-        }
+        student: { include: { account: { select: { email: true, logoUrl: true } } } },
+        jobPost: { select: { id: true, jobName: true, company_id: true } },
+        resumeDocument: { select: { id: true, file_path: true, file_name: true } },
+        cvDocument: { select: { id: true, file_path: true, file_name: true } },
+        portfolioDocument: { select: { id: true, file_path: true, file_name: true } },
+        transcriptDocument: { select: { id: true, file_path: true, file_name: true } }
       }
     });
 
     if (!application) {
-      return NextResponse.json(
-        { error: "Application not found." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Application not found." }, { status: 404 });
     }
 
-    // Verify that the application belongs to this company
     if (application.jobPost.company_id !== company.id) {
-      return NextResponse.json(
-        { error: "You do not have permission to view this applicant." },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "You do not have permission to view this applicant." }, { status: 403 });
     }
 
-    // Split name into first and last name
     const [firstname, ...lastnameParts] = application.student.name.split(" ");
     const lastname = lastnameParts.join(" ");
 
-    // Generate signed URLs for documents (valid for 1 hour)
-    const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
-    let resumeUrl = null;
-    let cvUrl = null;
-    let portfolioUrl = null;
-    let transcriptUrl = null;
-
-    if (application.resumeDocument) {
-      const { data } = await supabase.storage
-        .from("documents")
-        .createSignedUrl(application.resumeDocument.file_path, 3600);
-      resumeUrl = data?.signedUrl || null;
-    }
-
-    if (application.cvDocument) {
-      const { data } = await supabase.storage
-        .from("documents")
-        .createSignedUrl(application.cvDocument.file_path, 3600);
-      cvUrl = data?.signedUrl || null;
-    }
-
-    if (application.portfolioDocument) {
-      const { data } = await supabase.storage
-        .from("documents")
-        .createSignedUrl(application.portfolioDocument.file_path, 3600);
-      portfolioUrl = data?.signedUrl || null;
-    }
-
-    if (application.transcriptDocument) {
-      const { data } = await supabase.storage
-        .from("documents")
-        .createSignedUrl(application.transcriptDocument.file_path, 3600);
-      transcriptUrl = data?.signedUrl || null;
-    }
+    const createSignedUrl = async (filePath?: string) => {
+      if (!filePath) return null;
+      const { data } = await supabase.storage.from("documents").createSignedUrl(filePath, 3600);
+      return data?.signedUrl || null;
+    };
 
     const applicantInfo = {
       applicant_id: application.student.id.toString(),
@@ -169,35 +83,28 @@ export async function GET(
       student_id: application.student.student_id,
       documents: {
         resume_id: application.resumeDocument?.id || null,
-        resume_url: resumeUrl,
+        resume_url: await createSignedUrl(application.resumeDocument?.file_path),
         resume_name: application.resumeDocument?.file_name || null,
         cv_id: application.cvDocument?.id || null,
-        cv_url: cvUrl,
+        cv_url: await createSignedUrl(application.cvDocument?.file_path),
         cv_name: application.cvDocument?.file_name || null,
         portfolio_id: application.portfolioDocument?.id || null,
-        portfolio_url: portfolioUrl,
+        portfolio_url: await createSignedUrl(application.portfolioDocument?.file_path),
         portfolio_name: application.portfolioDocument?.file_name || null,
         transcript_id: application.transcriptDocument?.id || null,
-        transcript_url: transcriptUrl,
+        transcript_url: await createSignedUrl(application.transcriptDocument?.file_path),
         transcript_name: application.transcriptDocument?.file_name || null
       },
       applied_position: application.jobPost.jobName,
       applied_at: application.applied_at,
-      // TODO: Add work experience and certifications when those models are added to schema
       work_experience: [],
       certification: []
     };
 
-    return NextResponse.json({
-      success: true,
-      data: applicantInfo
-    });
+    return NextResponse.json({ success: true, data: applicantInfo });
 
   } catch (error) {
     console.error("Error fetching applicant info:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

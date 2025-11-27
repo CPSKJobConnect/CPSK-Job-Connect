@@ -7,8 +7,9 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    const accountId = Number(id);
 
+    // Canonicalize input
+    const accountId = parseInt(id?.trim() ?? "", 10);
     if (isNaN(accountId)) {
       return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });
     }

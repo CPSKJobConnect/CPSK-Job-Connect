@@ -18,9 +18,7 @@ export async function GET(
       where: { email: session.user.email },
       include: {
         accountRole: true,
-        student: {
-          select: { id: true }
-        }
+        student: { select: { id: true } }
       }
     });
 
@@ -28,8 +26,9 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Canonicalize document ID
     const { id } = await params;
-    const documentId = parseInt(id);
+    const documentId = parseInt(id.trim(), 10);
 
     if (!documentId || isNaN(documentId)) {
       return NextResponse.json({ error: "Invalid document ID" }, { status: 400 });
@@ -38,21 +37,18 @@ export async function GET(
     // Find the document and verify ownership
     const document = await prisma.document.findUnique({
       where: { id: documentId },
-      include: {
-        documentType: true
-      }
+      include: { documentType: true }
     });
 
     if (!document) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 });
     }
 
-    // Verify the document belongs to this student
     if (document.account_id !== account.id) {
       return NextResponse.json({ error: "Forbidden - Not your document" }, { status: 403 });
     }
 
-    // Get file from Supabase
+    // Get signed URL from Supabase
     const supabase = createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!

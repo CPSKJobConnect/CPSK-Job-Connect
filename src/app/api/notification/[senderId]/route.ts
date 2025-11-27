@@ -13,8 +13,17 @@ export async function GET(
 
   const accountId = Number(session.user.id);
 
-  // Handle "system" or "null" as null sender_id
-  const senderIdNum = (senderId === "system" || senderId === "null") ? null : Number(senderId);
+  // Canonicalize senderId (ASVS 1.1.1)
+  let senderIdNum: number | null = null;
+  if (senderId !== "system" && senderId !== "null") {
+    const decodedSenderId = decodeURIComponent(senderId);
+    const parsedSenderId = Number(decodedSenderId);
+    if (!isNaN(parsedSenderId)) {
+      senderIdNum = parsedSenderId;
+    } else {
+      return NextResponse.json({ error: "Invalid sender ID" }, { status: 400 });
+    }
+  }
 
   const messages = await prisma.notification.findMany({
     where: { account_id: accountId, sender_id: senderIdNum },

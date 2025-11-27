@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import bycrypt from "bcryptjs";
 import { sign } from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
+import { INTERNAL_JWT_AUDIENCE, INTERNAL_JWT_ISSUER, INTERNAL_JWT_TOKEN_TYPE } from "@/lib/securityConstants";
 
 // Rate limiting: Track failed login attempts per email/IP
 interface LoginAttempt {
@@ -42,7 +43,8 @@ function recordFailedAttempt(identifier: string, timestamp: number) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = body;
+    let email = body.email;
+    const password = body.password;
 
     // Validate input
     if (!email || !password) {
@@ -52,9 +54,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Canonicalize email
+    email = email.trim().toLowerCase().normalize("NFC");
+
     // Get client identifier (email + IP for better security)
     const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
-    const identifier = `${email.toLowerCase().trim()}:${clientIp}`;
+    const identifier = `${email}:${clientIp}`;
     const now = Date.now();
 
     // Check rate limit
@@ -85,9 +90,7 @@ export async function POST(request: NextRequest) {
 
     // Find user
     const user = await prisma.account.findUnique({
-      where: {
-        email: email,
-      },
+      where: { email },
       select: {
         id: true,
         email: true,
@@ -96,11 +99,7 @@ export async function POST(request: NextRequest) {
         role: true,
         logoUrl: true,
         backgroundUrl: true,
-        accountRole: {
-          select: {
-            name: true,
-          },
-        },
+        accountRole: { select: { name: true } },
       },
     });
 
@@ -139,12 +138,10 @@ export async function POST(request: NextRequest) {
     // Create JWT token (mimicking NextAuth session)
     const secret = process.env.NEXTAUTH_SECRET;
     if (!secret) {
-      return NextResponse.json(
-        { error: "Server configuration error" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
     }
 
+    // Create JWT token with security claims
     const token = sign(
       {
         sub: user.id.toString(),
@@ -154,6 +151,10 @@ export async function POST(request: NextRequest) {
         username: user.username,
         logoUrl: user.logoUrl,
         backgroundUrl: user.backgroundUrl,
+        aud: INTERNAL_JWT_AUDIENCE,
+        iss: INTERNAL_JWT_ISSUER,
+        tokenType: INTERNAL_JWT_TOKEN_TYPE,
+        tokenVersion: 0, // Initial token version
       },
       secret,
       {
@@ -161,7 +162,6 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Return success response with token and user info
     return NextResponse.json(
       {
         success: true,
@@ -179,9 +179,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Login error:", error);
-    return NextResponse.json(
-      { error: "An error occurred during login" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "An error occurred during login" }, { status: 500 });
   }
 }

@@ -5,27 +5,20 @@ import { verify } from "jsonwebtoken";
 import { getServerSession } from "next-auth/next";
 import { NextRequest } from "next/server";
 
-/**
- * Get session from either NextAuth cookies or Authorization header (for API testing)
- * This allows both browser-based authentication and Postman/API testing
- */
 export async function getApiSession(request?: NextRequest) {
-  // First, try to get session from NextAuth (normal browser flow)
+  // Browser-based session
   const session = await getServerSession(authOptions);
-  if (session) {
-    return session;
-  }
+  if (session) return session;
 
-  // If no session, try to get token from Authorization header (API testing)
+  // API testing via Authorization header
   if (request) {
     const authHeader = request.headers.get("authorization");
     if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.substring(7);
+      // Canonicalize: trim whitespace
+      const token = authHeader.substring(7).trim();
       try {
         const secret = process.env.NEXTAUTH_SECRET;
-        if (!secret) {
-          throw new Error("NEXTAUTH_SECRET not configured");
-        }
+        if (!secret) throw new Error("NEXTAUTH_SECRET not configured");
 
         const decoded = verify(token, secret, {
           audience: INTERNAL_JWT_AUDIENCE,
@@ -70,7 +63,7 @@ export async function getApiSession(request?: NextRequest) {
             logoUrl: decoded.logoUrl,
             backgroundUrl: decoded.backgroundUrl,
           },
-          expires: "", // Not used for JWT-based sessions
+          expires: "",
         };
       } catch (error) {
         console.error("Invalid token:", error);

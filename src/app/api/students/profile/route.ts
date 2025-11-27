@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
     const [firstname, ...lastnameParts] = student.name.split(" ");
     const lastname = lastnameParts.join(" ");
 
-    // Handle year field: can be numeric (1-8) or "Alumni"
     const yearValue = student.year === "Alumni" ? "Alumni" : Number(student.year);
 
     const responseStudent = {
@@ -53,17 +52,17 @@ export async function GET(request: NextRequest) {
       email_verified: student.email_verified,
       documents: {
         resume: student.account.documents
-          .filter((d: { doc_type_id: number }) => d.doc_type_id === 1)
-          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter(d => d.doc_type_id === 1)
+          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
         cv: student.account.documents
-          .filter((d: { doc_type_id: number }) => d.doc_type_id === 2)
-          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter(d => d.doc_type_id === 2)
+          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
         portfolio: student.account.documents
-          .filter((d: { doc_type_id: number }) => d.doc_type_id === 3)
-          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter(d => d.doc_type_id === 3)
+          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
         transcript: student.account.documents
-          .filter((d: { doc_type_id: number }) => d.doc_type_id === 4)
-          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter(d => d.doc_type_id === 4)
+          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
       }
     };
 
@@ -88,19 +87,22 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, faculty, year, phone } = body;
+    let { name, faculty, year, phone } = body;
 
-    console.log("📝 Update request body:", { name, faculty, year, phone });
+    // Minimal canonicalization / sanitization for ASVS 1.1.1
+    name = name?.trim().replace(/[<>\/"'`]/g, "") || "";
+    faculty = faculty?.trim().replace(/[<>\/"'`]/g, "") || "";
+    phone = phone?.trim().replace(/[^\d+()-]/g, "") || "";
+    year = String(year);
 
     // Validate required fields
     const missingFields = [];
-    if (!name || name.trim() === "") missingFields.push("name");
-    if (!faculty || faculty.trim() === "") missingFields.push("faculty");
-    if (!year && year !== 0) missingFields.push("year");
-    if (!phone || phone.trim() === "") missingFields.push("phone");
+    if (!name) missingFields.push("name");
+    if (!faculty) missingFields.push("faculty");
+    if (!year) missingFields.push("year");
+    if (!phone) missingFields.push("phone");
 
     if (missingFields.length > 0) {
-      console.error("❌ Missing fields:", missingFields);
       return NextResponse.json({
         error: "Missing required fields",
         fields: missingFields,
@@ -109,40 +111,30 @@ export async function PUT(request: NextRequest) {
     }
 
     const student = await prisma.student.findUnique({
-      where: {
-        account_id: parseInt(session.user.id)
-      }
+      where: { account_id: parseInt(session.user.id) }
     });
 
     if (!student) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    // Update student profile and account username
     const updatedStudent = await prisma.student.update({
       where: { id: student.id },
       data: {
         name,
         faculty,
-        year: String(year),
+        year,
         phone,
-        account: {
-          update: {
-            username: name
-          }
-        }
+        account: { update: { username: name } }
       },
       include: {
-        account: {
-          include: { documents: true }
-        }
+        account: { include: { documents: true } }
       }
     });
 
     const [firstname, ...lastnameParts] = updatedStudent.name.split(" ");
     const lastname = lastnameParts.join(" ");
 
-    // Handle year field: can be numeric (1-8) or "Alumni"
     const yearValueUpdated = updatedStudent.year === "Alumni" ? "Alumni" : Number(updatedStudent.year);
 
     const responseStudent = {
@@ -163,21 +155,20 @@ export async function PUT(request: NextRequest) {
       email_verified: updatedStudent.email_verified,
       documents: {
         resume: updatedStudent.account.documents
-          .filter((d: { doc_type_id: number }) => d.doc_type_id === 1)
-          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter(d => d.doc_type_id === 1)
+          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
         cv: updatedStudent.account.documents
-          .filter((d: { doc_type_id: number }) => d.doc_type_id === 2)
-          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter(d => d.doc_type_id === 2)
+          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
         portfolio: updatedStudent.account.documents
-          .filter((d: { doc_type_id: number }) => d.doc_type_id === 3)
-          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter(d => d.doc_type_id === 3)
+          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
         transcript: updatedStudent.account.documents
-          .filter((d: { doc_type_id: number }) => d.doc_type_id === 4)
-          .map((d: { id: number; file_path: string; file_name: string; created_at: Date }) => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
+          .filter(d => d.doc_type_id === 4)
+          .map(d => ({ id: d.id, url: d.file_path, name: d.file_name, uploadedAt: d.created_at })),
       }
     };
 
-    console.log("✅ Profile updated successfully for student:", student.id);
     return NextResponse.json(responseStudent);
 
   } catch (error) {

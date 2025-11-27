@@ -26,10 +26,16 @@ async function POST_impl(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const docTypeIdValue = formData.get("docTypeId");
-    const docTypeId = docTypeIdValue ? Number.parseInt(docTypeIdValue as string, 10) : NaN;
 
-    if (!file || Number.isNaN(docTypeId)) {
+    if (!file || !docTypeIdValue) {
       return NextResponse.json({ error: "Missing file or document type" }, { status: 400 });
+    }
+
+    // Canonicalize / decode input (OWASP ASVS 1.1.1)
+    const docTypeId = Number.parseInt(decodeURIComponent(docTypeIdValue as string), 10);
+
+    if (Number.isNaN(docTypeId)) {
+      return NextResponse.json({ error: "Invalid document type" }, { status: 400 });
     }
 
     if (!ALLOWED_COMPANY_DOC_TYPES.has(docTypeId)) {
@@ -37,6 +43,7 @@ async function POST_impl(request: NextRequest) {
     }
 
     // Ensure policy exists before upload for clearer error messages
+    // This also validates file size and type based on policy
     getPolicyForDocType(docTypeId);
 
     const document = await uploadDocument(file, account.id.toString(), docTypeId);

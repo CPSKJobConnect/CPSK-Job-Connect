@@ -13,12 +13,15 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const accountId = Number(session.user.id);
-  const notifId = Number(notificationId);
+  // Canonicalize and validate notificationId (ASVS 1.1.1)
+  const decodedNotifId = decodeURIComponent(notificationId);
+  const notifId = Number(decodedNotifId);
 
   if (isNaN(notifId)) {
     return NextResponse.json({ error: "Invalid notification ID" }, { status: 400 });
   }
+
+  const accountId = Number(session.user.id);
 
   try {
     // Update only if the notification belongs to the current user

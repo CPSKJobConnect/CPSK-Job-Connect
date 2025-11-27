@@ -1,6 +1,7 @@
-import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import DOMPurify from "isomorphic-dompurify";
+import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
 
 // GET - Fetch all users with pagination and filtering
@@ -11,10 +12,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin (using session role)
     const userRole = (session.user as any).role?.toLowerCase();
-    console.log("🔍 User role:", userRole);
-
     if (userRole !== "admin") {
       return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
@@ -22,9 +20,17 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
-    const search = searchParams.get("search") || "";
-    const role = searchParams.get("role") || "";
-    const statusParam = searchParams.get("status") || "";
+    if (isNaN(page) || page < 1) return NextResponse.json({ error: "Invalid page" }, { status: 400 });
+    if (isNaN(limit) || limit < 1) return NextResponse.json({ error: "Invalid limit" }, { status: 400 });
+
+    const rawSearch = searchParams.get("search") || "";
+    const rawRole = searchParams.get("role") || "";
+    const rawStatus = searchParams.get("status") || "";
+
+    // Canonicalize and sanitize inputs
+    const search = DOMPurify.sanitize(rawSearch.trim());
+    const role = DOMPurify.sanitize(rawRole.trim());
+    const status = DOMPurify.sanitize(rawStatus.trim());
 
     const skip = (page - 1) * limit;
 
@@ -40,21 +46,15 @@ export async function GET(request: Request) {
     }
 
     if (role && role !== "all") {
-      whereClause.accountRole = {
-        name: { equals: role.toLowerCase(), mode: "insensitive" }
-      };
+      whereClause.accountRole = { name: { equals: role.toLowerCase(), mode: "insensitive" } };
     }
 
     if (statusParam && statusParam !== "all") {
       whereClause.is_active = statusParam === "active";
     }
 
-    // Exclude pending companies from Manage Users
-    whereClause.NOT = {
-      company: {
-        registration_status: "pending"
-      }
-    };
+    // Exclude pending companies
+    whereClause.NOT = { company: { registration_status: "pending" } };
 
     const [accounts, totalCount] = await Promise.all([
       prisma.account.findMany({
@@ -66,37 +66,11 @@ export async function GET(request: Request) {
           created_at: true,
           updated_at: true,
           is_active: true,
-          accountRole: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          student: {
-            select: {
-              id: true,
-              student_id: true,
-              name: true,
-              faculty: true,
-              year: true,
-              phone: true
-            }
-          },
-          company: {
-            select: {
-              id: true,
-              name: true,
-              address: true,
-              phone: true,
-              description: true,
-              website: true,
-              registration_status: true
-            }
-          }
+          accountRole: { select: { id: true, name: true } },
+          student: { select: { id: true, student_id: true, name: true, faculty: true, year: true, phone: true } },
+          company: { select: { id: true, name: true, address: true, phone: true, description: true, website: true, registration_status: true } }
         },
-        orderBy: {
-          created_at: "desc"
-        },
+        orderBy: { created_at: "desc" },
         skip,
         take: limit
       }),
@@ -106,8 +80,8 @@ export async function GET(request: Request) {
     const processedUsers = accounts.map(account => {
       const user: any = {
         id: account.id,
-        name: account.username || account.email.split('@')[0],
-        email: account.email,
+        name: DOMPurify.sanitize(account.username || account.email.split('@')[0]),
+        email: DOMPurify.sanitize(account.email),
         role: account.accountRole?.name?.toLowerCase() || "unknown",
         isActive: account.is_active,
         createdAt: account.created_at,
@@ -115,19 +89,18 @@ export async function GET(request: Request) {
         profile: {}
       };
 
-      // Add role-specific profile information
       if (account.student) {
         user.profile = {
-          phone: account.student.phone,
-          department: account.student.faculty,
-          studentId: account.student.student_id
+          phone: DOMPurify.sanitize(account.student.phone),
+          department: DOMPurify.sanitize(account.student.faculty),
+          studentId: DOMPurify.sanitize(account.student.student_id)
         };
       } else if (account.company) {
         user.profile = {
-          phone: account.company.phone,
-          location: account.company.address,
-          companyName: account.company.name,
-          companySize: account.company.description // Using description as company size placeholder
+          phone: DOMPurify.sanitize(account.company.phone),
+          location: DOMPurify.sanitize(account.company.address),
+          companyName: DOMPurify.sanitize(account.company.name),
+          companySize: DOMPurify.sanitize(account.company.description)
         };
       }
 

@@ -2,6 +2,7 @@ import { getApiSession } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { withResponseCsrfGuard } from '@/lib/csrfGuard';
+import DOMPurify from "isomorphic-dompurify";
 
 async function POST_impl(request: NextRequest) {
   try {
@@ -11,18 +12,37 @@ async function POST_impl(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
+    // Canonicalize / decode input (1.1.1)
+    const bodyRaw = await request.text();
+    let body;
+    try {
+      body = JSON.parse(bodyRaw);
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
 
+    // Sanitize string inputs from WYSIWYG or text fields (1.3.1)
+    const title = DOMPurify.sanitize(body.title || "");
+    const location = DOMPurify.sanitize(body.location || "");
+    const descriptionOverview = DOMPurify.sanitize(body.description?.overview || "");
+    const descriptionResponsibility = DOMPurify.sanitize(body.description?.responsibility || "-");
+    const descriptionRequirement = DOMPurify.sanitize(body.description?.requirement || "");
+    const descriptionQualification = DOMPurify.sanitize(body.description?.qualification || "");
+
+    // Validate and canonicalize job arrangement
+    const jobArrangementName = decodeURIComponent(body.arrangement || "");
     const jobArrangement = await prisma.jobArrangement.findUnique({
-      where: { name: body.arrangement },
+      where: { name: jobArrangementName },
     });
 
     if (!jobArrangement) {
       return NextResponse.json({ error: "Job arrangement not found" }, { status: 400 });
     }
 
+    // Validate and canonicalize job type
+    const jobTypeName = decodeURIComponent(body.type || "");
     const jobType = await prisma.jobType.findUnique({
-      where: { name: body.type },
+      where: { name: jobTypeName },
     });
 
     if (!jobType) {
@@ -41,33 +61,28 @@ async function POST_impl(request: NextRequest) {
       );
     }
 
-    // Check if company is verified (APPROVED status)
+    // Check if company is verified
     if (account.company.registration_status !== "APPROVED") {
       return NextResponse.json(
-        { error: "Your company must be verified before posting jobs. Please check your verification status in your profile page and wait for admin approval." },
+        { error: "Your company must be verified before posting jobs." },
         { status: 403 }
       );
     }
-    // Handle tags: find existing or create new ones
+
+    // Handle tags
     const tagIds: { id: number }[] = [];
     if (body.skills?.length) {
-      for (const skillName of body.skills) {
-        // Try to find existing tag
-        let tag = await prisma.jobTag.findFirst({
-          where: { name: skillName },
-        });
-
-        // If tag doesn't exist, create it
+      for (const skillNameRaw of body.skills) {
+        const skillName = DOMPurify.sanitize(skillNameRaw);
+        let tag = await prisma.jobTag.findFirst({ where: { name: skillName } });
         if (!tag) {
-          tag = await prisma.jobTag.create({
-            data: { name: skillName },
-          });
+          tag = await prisma.jobTag.create({ data: { name: skillName } });
         }
-
         tagIds.push({ id: tag.id });
       }
     }
 
+    // Handle required documents
     let documentIds: Array<{ id: number }> = [];
     if (Array.isArray(body.requiredDocuments) && body.requiredDocuments.length) {
       const inputSet = new Set(
@@ -75,36 +90,34 @@ async function POST_impl(request: NextRequest) {
       );
       const allDocTypes = await prisma.documentType.findMany({ select: { id: true, name: true } });
       documentIds = allDocTypes
-        .filter((d) => {
-          const nameNorm = d.name.toLowerCase().replace(/\s+/g, "");
-          return inputSet.has(nameNorm) || inputSet.has(d.name.toLowerCase());
-        })
+        .filter((d) => inputSet.has(d.name.toLowerCase().replace(/\s+/g, "")))
         .map((d) => ({ id: d.id }));
     }
 
+    // Handle category
     let categoryId: number | null = null;
     if (body.category) {
-      const category = await prisma.jobCategory.findUnique({
-        where: { name: body.category },
-      });
+      const categoryName = decodeURIComponent(body.category);
+      const category = await prisma.jobCategory.findUnique({ where: { name: categoryName } });
       if (!category) {
         return NextResponse.json({ error: "Category not found" }, { status: 400 });
       }
       categoryId = category.id;
     }
 
+    // Create job post
     const newJob = await prisma.jobPost.create({
       data: {
         company_id: account.company.id,
-        jobName: body.title,
-        location: body.location,
-        aboutRole: body.description?.overview || "",
-        responsibilities: body.description?.responsibility || "-",
-        requirements: body.description?.requirement
-          ? body.description.requirement.split(",").map((s: string) => s.trim())
+        jobName: title,
+        location,
+        aboutRole: descriptionOverview,
+        responsibilities: descriptionResponsibility,
+        requirements: descriptionRequirement
+          ? descriptionRequirement.split(",").map((s: string) => s.trim())
           : [],
-        qualifications: body.description?.qualification
-          ? body.description.qualification.split(",").map((s: string) => s.trim())
+        qualifications: descriptionQualification
+          ? descriptionQualification.split(",").map((s: string) => s.trim())
           : [],
         min_salary: Number(body.salary?.min) || 0,
         max_salary: Number(body.salary?.max) || 0,
@@ -116,21 +129,13 @@ async function POST_impl(request: NextRequest) {
         job_arrangement_id: jobArrangement.id,
         job_category_id: categoryId,
 
-        tags: tagIds.length
-          ? {
-              connect: tagIds.map(tag => ({ id: tag.id })),
-            }
-          : undefined,
-        
-        documents: documentIds.length 
-          ? {
-              connect: documentIds.map((doc: { id: number }) => ({ id: doc.id })),
-            }
-          : undefined,
-        }
+        tags: tagIds.length ? { connect: tagIds } : undefined,
+        documents: documentIds.length ? { connect: documentIds } : undefined,
+      },
     });
 
     return NextResponse.json(newJob, { status: 201 });
+
   } catch (error) {
     console.error("Error creating job:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
