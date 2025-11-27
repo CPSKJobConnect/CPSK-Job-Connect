@@ -12,9 +12,8 @@ function canonicalize(input: string | null): string | undefined {
   return DOMPurify.sanitize(decoded); // sanitize to remove any unexpected HTML/JS
 }
 
-export async function GET(request?: Request) {
+export async function GET(request: Request) {
   try {
-    const req = request ?? new Request("http://localhost/api/admin/reference-data");
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -27,7 +26,7 @@ export async function GET(request?: Request) {
     }
 
     // Optional: handle query params safely
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const search = canonicalize(searchParams.get("search"));
     const statusParam = canonicalize(searchParams.get("status"));
     const page = Number(canonicalize(searchParams.get("page")) || 1);
