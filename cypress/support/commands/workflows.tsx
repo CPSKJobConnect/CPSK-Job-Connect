@@ -18,7 +18,7 @@ Cypress.Commands.add('createJobViaAPI', (opts: any = {}) => {
     // @ts-ignore
     return cy.task('db:createJob', opts as any)
   } catch (err) {
-    const base = Cypress.config('baseUrl') || 'http://localhost:3000'
+    const base = Cypress.config('baseUrl') || 'https://localhost:3000'
     const body = Object.assign({ title: `E2E Job ${Date.now()}` }, opts)
     return cy.request({ method: 'POST', url: `${base}/api/company/jobs/create`, body, headers: { 'x-app-request': '1', 'content-type': 'application/json' } }).then((r) => r.body)
   }

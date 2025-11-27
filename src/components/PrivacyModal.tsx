@@ -105,6 +105,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose, onAccept }
         <div className="flex flex-col sm:flex-row sm:justify-end gap-3 p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
           <button
             type="button"
+            data-testid="privacy-close"
             className="w-full sm:w-auto inline-flex justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
             onClick={onClose}
             aria-label="Close privacy modal"
@@ -114,6 +115,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose, onAccept }
 
           <button
             type="button"
+            data-testid="privacy-accept"
             className="w-full sm:w-auto inline-flex justify-center rounded-md bg-[#2BA17C] px-4 py-2 text-sm font-medium text-white hover:bg-[#228969]"
             onClick={async () => {
               try {

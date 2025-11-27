@@ -162,6 +162,7 @@ const JobCard = (job: JobCardProps) => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button
+                    data-testid={`job-actions-trigger-${job.info.id}`}
                     onClick={(e) => e.stopPropagation()}
                     aria-label="More options"
                     type="button"
@@ -172,6 +173,8 @@ const JobCard = (job: JobCardProps) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
                   <DropdownMenuItem
+                    data-testid={`bookmark-job-${job.info.id}`}
+                    aria-pressed={isSaved}
                     onClick={(e) => { e.stopPropagation(); handleSaveToggle(); }}
                     disabled={isLoading || isCheckingStatus}
                   >

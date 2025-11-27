@@ -163,6 +163,7 @@ export default function ConsentProvider({ children }: Props) {
               <button
                 type="button"
                 disabled={submitting}
+                data-testid="privacy-decline"
                 className="inline-flex justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
                 onClick={async () => {
                   await declineConsent();
@@ -182,6 +183,7 @@ export default function ConsentProvider({ children }: Props) {
               <button
                 type="button"
                 disabled={submitting}
+                data-testid="privacy-accept"
                 className="inline-flex justify-center rounded-md bg-[#2BA17C] px-6 py-2 text-sm font-medium text-white hover:bg-[#228969] disabled:opacity-50"
                 onClick={acceptConsent}
               >
