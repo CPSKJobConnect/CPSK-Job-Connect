@@ -223,7 +223,7 @@ SUPABASE_ACCESS_TOKEN=your-supabase-access-token
    - `documents` (for resumes, transcripts, portfolios)
    - `profile-images` (for profile pictures)
    - `company-logos` (for company logos)
-3. Configure Row Level Security (RLS) policies (see [docs/SUPABASE_STORAGE_SETUP.md](docs/SUPABASE_STORAGE_SETUP.md))
+3. Configure Row Level Security (RLS) policies
 
 #### Email Configuration
 
@@ -464,8 +464,6 @@ The application implements multiple security layers:
 - **Rate Limiting**: Protection against brute force attacks
 - **HTTPS**: Enforced in production environments
 
-For more details, see [docs/last_phase/security/03-SECURITY_IMPLEMENTATION.md](docs/last_phase/security/03-SECURITY_IMPLEMENTATION.md)
-
 ## Project Structure
 
 ```
@@ -684,7 +682,6 @@ We welcome contributions! Please follow these guidelines:
 For issues, questions, or contributions:
 
 - **Issues**: [GitHub Issues](https://github.com/CPSKJobConnect/CPSK-Job-Connect/issues)
-- **Documentation**: [docs/](docs/) directory
 - **Email**: Contact your project administrator
 
 ## License
