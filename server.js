@@ -57,7 +57,9 @@ const handle = app.getRequestHandler();
 
 const sanitizeForLog = (value) => {
   if (typeof value !== 'string') return '[non-string]';
-  return value.replace(/[\r\n\t]/g, ' ');
+  // Strip control characters (incl. newlines, tabs, escape sequences) to avoid log forging
+  const cleaned = value.replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ');
+  return cleaned.length > 2048 ? `${cleaned.slice(0, 2048)}...` : cleaned;
 };
 
 app.prepare().then(() => {
@@ -67,7 +69,7 @@ app.prepare().then(() => {
       await handle(req, res, parsedUrl);
     } catch (err) {
       const safeUrl = sanitizeForLog(req.url || '');
-      console.error('Error occurred handling', safeUrl, err);
+      console.error('Error occurred handling request', { url: safeUrl, error: err });
       res.statusCode = 500;
       res.end('Internal server error');
     }
